@@ -1,6 +1,6 @@
 package main
 
-import "github.com/revil/gate-cli/cmd"
+import "github.com/gate/gate-cli/cmd"
 
 func main() {
 	cmd.Execute()

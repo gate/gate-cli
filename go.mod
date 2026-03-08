@@ -1,4 +1,4 @@
-module github.com/revil/gate-cli
+module github.com/gate/gate-cli
 
 go 1.25.1
 

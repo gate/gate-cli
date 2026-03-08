@@ -5,8 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/revil/gate-cli/cmd/futures"
-	"github.com/revil/gate-cli/cmd/spot"
+	"github.com/gate/gate-cli/cmd/futures"
+	"github.com/gate/gate-cli/cmd/spot"
 )
 
 var rootCmd = &cobra.Command{

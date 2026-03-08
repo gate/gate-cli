@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/revil/gate-cli/internal/config"
+	"github.com/gate/gate-cli/internal/config"
 )
 
 func TestLoadFromFile(t *testing.T) {
