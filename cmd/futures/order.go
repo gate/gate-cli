@@ -42,7 +42,8 @@ func init() {
 		RunE:  runFuturesClose,
 	}
 	closeCmd.Flags().String("contract", "", "Contract name, e.g. BTC_USDT (required)")
-	closeCmd.Flags().String("size", "0", "Partial close size (default 0 = full close via close flag)")
+	closeCmd.Flags().String("size", "0", "Partial close size (default 0 = full close)")
+	closeCmd.Flags().String("side", "long", "Position side to close: long or short (relevant in dual-position mode)")
 	closeCmd.MarkFlagRequired("contract")
 	addSettleFlag(closeCmd)
 
@@ -141,6 +142,7 @@ func runFuturesDirectionOrder(cmd *cobra.Command, direction string) error {
 func runFuturesClose(cmd *cobra.Command, args []string) error {
 	contract, _ := cmd.Flags().GetString("contract")
 	sizeStr, _ := cmd.Flags().GetString("size")
+	side, _ := cmd.Flags().GetString("side")
 	settle := getSettle(cmd)
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
@@ -151,18 +153,45 @@ func runFuturesClose(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	isDual := c.IsDualMode(settle)
+	isFullClose := sizeStr == "0" || sizeStr == ""
+
 	order := gateapi.FuturesOrder{
 		Contract: contract,
 		Price:    "0",
 		Tif:      "ioc",
 	}
-	if sizeStr == "0" || sizeStr == "" {
-		// Full close: set size=0 and close=true
+
+	switch {
+	case isDual && isFullClose:
+		// Dual mode full close: AutoSize tells Gate which side to flatten.
+		// "close_long" submits a sell order of the full long size;
+		// "close_short" submits a buy order of the full short size.
+		autoSize := "close_long"
+		if side == "short" {
+			autoSize = "close_short"
+		}
+		order.Size = "0"
+		order.AutoSize = autoSize
+
+	case isDual && !isFullClose:
+		// Dual mode partial close: reduce-only with explicit signed size.
+		// Selling reduces longs; buying reduces shorts.
+		if side == "short" {
+			order.Size = sizeStr // positive = buy = reduce short
+		} else {
+			order.Size = "-" + sizeStr // negative = sell = reduce long
+		}
+		order.ReduceOnly = true
+
+	case !isDual && isFullClose:
+		// Single mode full close: gate closes whichever direction is open.
 		order.Size = "0"
 		order.Close = true
-	} else {
-		// Partial close via reduce-only
-		order.Size = "-" + sizeStr // reduce longs; works for standard single-direction positions
+
+	default:
+		// Single mode partial close.
+		order.Size = "-" + sizeStr
 		order.ReduceOnly = true
 	}
 

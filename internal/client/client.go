@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
 
 	gateapi "github.com/gate/gateapi-go/v7"
 
@@ -17,6 +18,9 @@ type Client struct {
 	FuturesAPI *gateapi.FuturesApiService
 	ctx        context.Context
 	auth       bool
+
+	dualMu    sync.Mutex
+	dualCache map[string]bool // settle → isDualMode
 }
 
 // New creates a Gate API client from the resolved config.
@@ -38,6 +42,7 @@ func New(cfg *config.Config) (*Client, error) {
 		FuturesAPI: apiClient.FuturesApi,
 		ctx:        context.Background(),
 		auth:       cfg.APIKey != "" && cfg.APISecret != "",
+		dualCache:  make(map[string]bool),
 	}, nil
 }
 
@@ -57,6 +62,60 @@ func (c *Client) RequireAuth() error {
 		return fmt.Errorf("API key and secret required — set GATE_API_KEY/GATE_API_SECRET or run: gate-cli config init")
 	}
 	return nil
+}
+
+// IsDualMode returns true when the futures account uses dual-position (hedge) mode
+// for the given settle currency. The result is cached after the first successful call.
+func (c *Client) IsDualMode(settle string) bool {
+	c.dualMu.Lock()
+	defer c.dualMu.Unlock()
+
+	if v, ok := c.dualCache[settle]; ok {
+		return v
+	}
+
+	acc, _, err := c.FuturesAPI.ListFuturesAccounts(c.ctx, settle)
+	if err != nil {
+		return false // assume single mode on error
+	}
+	c.dualCache[settle] = acc.InDualMode
+	return acc.InDualMode
+}
+
+// GetFuturesPosition returns open position(s) for a contract.
+//
+// In single mode the slice has at most one element.
+// In dual mode the slice has up to two elements (long side, short side);
+// positions with size "0" are included to preserve the full dual-mode snapshot.
+func (c *Client) GetFuturesPosition(settle, contract string) ([]gateapi.Position, *http.Response, error) {
+	if c.IsDualMode(settle) {
+		return c.FuturesAPI.GetDualModePosition(c.ctx, settle, contract)
+	}
+	pos, resp, err := c.FuturesAPI.GetPosition(c.ctx, settle, contract)
+	if err != nil {
+		return nil, resp, err
+	}
+	return []gateapi.Position{pos}, resp, nil
+}
+
+// UpdateFuturesPositionLeverage sets leverage for a contract.
+// In dual mode uses UpdateDualModePositionLeverage (returns []Position).
+// In single mode uses UpdatePositionLeverage (returns Position, wrapped in a slice).
+func (c *Client) UpdateFuturesPositionLeverage(settle, contract, leverage string, opts *gateapi.UpdatePositionLeverageOpts) ([]gateapi.Position, *http.Response, error) {
+	if c.IsDualMode(settle) {
+		var dualOpts *gateapi.UpdateDualModePositionLeverageOpts
+		if opts != nil {
+			dualOpts = &gateapi.UpdateDualModePositionLeverageOpts{
+				CrossLeverageLimit: opts.CrossLeverageLimit,
+			}
+		}
+		return c.FuturesAPI.UpdateDualModePositionLeverage(c.ctx, settle, contract, leverage, dualOpts)
+	}
+	pos, resp, err := c.FuturesAPI.UpdatePositionLeverage(c.ctx, settle, contract, leverage, opts)
+	if err != nil {
+		return nil, resp, err
+	}
+	return []gateapi.Position{pos}, resp, nil
 }
 
 // ParseGateError converts a Gate SDK error + HTTP response into a GateError.

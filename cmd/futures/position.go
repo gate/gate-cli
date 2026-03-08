@@ -77,16 +77,27 @@ func runFuturesPositionGet(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pos, httpResp, err := c.FuturesAPI.GetPosition(c.Context(), settle, contract)
+	// GetFuturesPosition handles both single and dual mode transparently.
+	positions, httpResp, err := c.GetFuturesPosition(settle, contract)
 	if err != nil {
 		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/positions/"+contract, ""))
 		return nil
 	}
 	if p.IsJSON() {
-		return p.Print(pos)
+		if len(positions) == 1 {
+			return p.Print(positions[0])
+		}
+		return p.Print(positions)
+	}
+	rows := make([][]string, 0, len(positions))
+	for _, pos := range positions {
+		rows = append(rows, []string{
+			pos.Contract, pos.Mode, pos.Size, pos.EntryPrice,
+			pos.MarkPrice, pos.UnrealisedPnl, pos.Leverage, pos.LiqPrice,
+		})
 	}
 	return p.Table(
-		[]string{"Contract", "Size", "Entry Price", "Mark Price", "Unrealised PNL", "Leverage", "Liq Price"},
-		[][]string{{pos.Contract, pos.Size, pos.EntryPrice, pos.MarkPrice, pos.UnrealisedPnl, pos.Leverage, pos.LiqPrice}},
+		[]string{"Contract", "Mode", "Size", "Entry Price", "Mark Price", "Unrealised PNL", "Leverage", "Liq Price"},
+		rows,
 	)
 }
