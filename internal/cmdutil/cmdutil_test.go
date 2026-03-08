@@ -35,9 +35,15 @@ func newChildCmd(root *cobra.Command) *cobra.Command {
 
 // --- GetClient flag priority ---
 
-func TestGetClient_FlagOverridesEnvAndFile(t *testing.T) {
-	t.Setenv("GATE_API_KEY", "env-key")
-	t.Setenv("GATE_API_SECRET", "env-secret")
+func TestGetClient_UsesFlagCredentials(t *testing.T) {
+	// Verify that --api-key/--api-secret cobra flags are wired through to
+	// config.Load and result in an authenticated client.
+	// flag > env ordering is proven at the config.Load layer in
+	// internal/config/config_test.go::TestFlagOverridesEnv; here we only
+	// verify that GetClient reads the flags from the cobra command tree at all.
+	t.Setenv("HOME", t.TempDir()) // no config file
+	t.Setenv("GATE_API_KEY", "")
+	t.Setenv("GATE_API_SECRET", "")
 
 	root := newRootCmd()
 	require.NoError(t, root.PersistentFlags().Set("api-key", "flag-key"))
@@ -46,10 +52,8 @@ func TestGetClient_FlagOverridesEnvAndFile(t *testing.T) {
 
 	c, err := cmdutil.GetClient(child)
 	require.NoError(t, err)
+	// env and file are both empty; IsAuthenticated=true can only come from the flags.
 	assert.True(t, c.IsAuthenticated())
-	// We can't read APIKey back from the client, but IsAuthenticated proves
-	// credentials were accepted and the flag path was reached (env alone
-	// would also satisfy this; see next test for the distinction).
 }
 
 func TestGetClient_CredentialsFromEnvWhenNoFile(t *testing.T) {
