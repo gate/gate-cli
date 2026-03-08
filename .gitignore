@@ -1,9 +1,18 @@
 # Build output
 gate-cli
+gate-cli.exe
 dist/
 
 # Integration test credentials — never commit
 testdata/integration.yaml
 
+# Claude Code local settings (personal, not team-shared)
+.claude/settings.local.json
+
 # macOS
 .DS_Store
+
+# Go test cache / coverage
+*.test
+*.out
+coverage.html
