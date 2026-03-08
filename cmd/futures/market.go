@@ -16,15 +16,6 @@ var marketCmd = &cobra.Command{
 	Short: "Futures market data (public, no authentication required)",
 }
 
-// getSettle reads --settle flag, defaulting to "usdt".
-func getSettle(cmd *cobra.Command) string {
-	s, _ := cmd.Flags().GetString("settle")
-	if s == "" {
-		return "usdt"
-	}
-	return s
-}
-
 func addSettleFlag(cmd *cobra.Command) {
 	cmd.Flags().String("settle", "usdt", "Settlement currency: usdt, btc")
 }
@@ -93,7 +84,7 @@ func init() {
 
 func runFuturesTicker(cmd *cobra.Command, args []string) error {
 	contract, _ := cmd.Flags().GetString("contract")
-	settle := getSettle(cmd)
+	settle := cmdutil.GetSettle(cmd)
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
@@ -118,7 +109,7 @@ func runFuturesTicker(cmd *cobra.Command, args []string) error {
 }
 
 func runFuturesTickers(cmd *cobra.Command, args []string) error {
-	settle := getSettle(cmd)
+	settle := cmdutil.GetSettle(cmd)
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
@@ -143,7 +134,7 @@ func runFuturesTickers(cmd *cobra.Command, args []string) error {
 func runFuturesOrderbook(cmd *cobra.Command, args []string) error {
 	contract, _ := cmd.Flags().GetString("contract")
 	depth, _ := cmd.Flags().GetInt32("depth")
-	settle := getSettle(cmd)
+	settle := cmdutil.GetSettle(cmd)
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
@@ -163,7 +154,7 @@ func runFuturesOrderbook(cmd *cobra.Command, args []string) error {
 func runFuturesTrades(cmd *cobra.Command, args []string) error {
 	contract, _ := cmd.Flags().GetString("contract")
 	limit, _ := cmd.Flags().GetInt32("limit")
-	settle := getSettle(cmd)
+	settle := cmdutil.GetSettle(cmd)
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
@@ -191,7 +182,7 @@ func runFuturesCandlesticks(cmd *cobra.Command, args []string) error {
 	contract, _ := cmd.Flags().GetString("contract")
 	interval, _ := cmd.Flags().GetString("interval")
 	limit, _ := cmd.Flags().GetInt32("limit")
-	settle := getSettle(cmd)
+	settle := cmdutil.GetSettle(cmd)
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
@@ -219,7 +210,7 @@ func runFuturesCandlesticks(cmd *cobra.Command, args []string) error {
 func runFuturesFundingRate(cmd *cobra.Command, args []string) error {
 	contract, _ := cmd.Flags().GetString("contract")
 	limit, _ := cmd.Flags().GetInt32("limit")
-	settle := getSettle(cmd)
+	settle := cmdutil.GetSettle(cmd)
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {

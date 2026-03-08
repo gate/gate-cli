@@ -26,6 +26,8 @@ func init() {
 	rootCmd.PersistentFlags().String("format", "table", "Output format: table or json")
 	rootCmd.PersistentFlags().String("profile", "default", "Config profile to use")
 	rootCmd.PersistentFlags().Bool("debug", false, "Print raw HTTP request/response")
+	rootCmd.PersistentFlags().String("api-key", "", "Gate API key (overrides config file and GATE_API_KEY env)")
+	rootCmd.PersistentFlags().String("api-secret", "", "Gate API secret (overrides config file and GATE_API_SECRET env)")
 
 	rootCmd.AddCommand(configcmd.Cmd)
 	rootCmd.AddCommand(spot.Cmd)
