@@ -182,7 +182,7 @@ func runFuturesTrades(cmd *cobra.Command, args []string) error {
 	}
 	rows := make([][]string, len(trades))
 	for i, t := range trades {
-		rows[i] = []string{fmt.Sprintf("%d", t.Id), t.Contract, t.Price, fmt.Sprintf("%d", t.Size), fmt.Sprintf("%g", t.CreateTimeMs)}
+		rows[i] = []string{fmt.Sprintf("%d", t.Id), t.Contract, t.Price, t.Size, fmt.Sprintf("%g", t.CreateTimeMs)}
 	}
 	return p.Table([]string{"ID", "Contract", "Price", "Size", "Time(ms)"}, rows)
 }
@@ -211,7 +211,7 @@ func runFuturesCandlesticks(cmd *cobra.Command, args []string) error {
 	}
 	rows := make([][]string, len(candles))
 	for i, c := range candles {
-		rows[i] = []string{fmt.Sprintf("%d", c.T), c.O, c.C, c.H, c.L, c.V}
+		rows[i] = []string{fmt.Sprintf("%g", c.T), c.O, c.C, c.H, c.L, c.V}
 	}
 	return p.Table([]string{"Timestamp", "Open", "Close", "High", "Low", "Volume"}, rows)
 }
