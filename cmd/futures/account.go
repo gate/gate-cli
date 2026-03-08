@@ -25,7 +25,7 @@ func init() {
 }
 
 func runFuturesAccountGet(cmd *cobra.Command, args []string) error {
-	settle := getSettle(cmd)
+	settle := cmdutil.GetSettle(cmd)
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {

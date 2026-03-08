@@ -178,10 +178,10 @@ gate-cli spot account get --currency BTC
 ### Spot Orders
 
 ```bash
-gate-cli spot order buy  --pair BTC_USDT --amount 0.01 --price 80000
-gate-cli spot order buy  --pair BTC_USDT --amount 0.01              # market order
-gate-cli spot order sell --pair BTC_USDT --amount 0.01 --price 82000
-gate-cli spot order sell --pair BTC_USDT --amount 0.01              # market order
+gate-cli spot order buy  --pair BTC_USDT --amount 0.01 --price 80000  # limit buy
+gate-cli spot order buy  --pair BTC_USDT --quote 10                    # market buy (spend 10 USDT)
+gate-cli spot order sell --pair BTC_USDT --amount 0.01 --price 82000  # limit sell
+gate-cli spot order sell --pair BTC_USDT --amount 0.01                 # market sell
 
 gate-cli spot order get --id 12345678 --pair BTC_USDT
 gate-cli spot order list --pair BTC_USDT [--status open|closed|cancelled]

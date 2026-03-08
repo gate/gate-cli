@@ -20,10 +20,14 @@ var orderCmd = &cobra.Command{
 func init() {
 	buyCmd := &cobra.Command{
 		Use:   "buy",
-		Short: "Place a buy order (omit --price for market order)",
+		Short: "Place a buy order (--price for limit; --quote for market)",
 		RunE:  func(cmd *cobra.Command, args []string) error { return runSpotCreateOrder(cmd, "buy") },
 	}
-	addOrderFlags(buyCmd)
+	buyCmd.Flags().String("pair", "", "Currency pair, e.g. BTC_USDT (required)")
+	buyCmd.Flags().String("amount", "", "Amount of base currency to buy (required for limit orders)")
+	buyCmd.Flags().String("quote", "", "Amount of quote currency to spend (market buy only; e.g. --quote 10 to spend 10 USDT)")
+	buyCmd.Flags().String("price", "", "Limit price (omit for market order)")
+	buyCmd.MarkFlagRequired("pair")
 
 	sellCmd := &cobra.Command{
 		Use:   "sell",
@@ -74,10 +78,51 @@ func addOrderFlags(cmd *cobra.Command) {
 	cmd.MarkFlagRequired("amount")
 }
 
+// buildSpotOrder assembles the Order struct from CLI arguments and validates
+// buy-specific flag semantics. For market buy orders Gate treats Amount as
+// quote currency (e.g. USDT to spend), so the CLI requires --quote to make
+// this explicit and rejects --amount to prevent confusion.
+func buildSpotOrder(side, pair, amount, price, quote string) (gateapi.Order, error) {
+	order := gateapi.Order{CurrencyPair: pair, Side: side}
+	if price == "" {
+		order.Type = "market"
+		if side == "buy" {
+			// Gate market buy: Amount = quote currency to spend, not base amount.
+			if amount != "" {
+				return gateapi.Order{}, fmt.Errorf("for market buy, use --quote <quote-amount> (e.g. --quote 10 to spend 10 USDT);\n--amount specifies base currency and is not applicable to market buy orders")
+			}
+			if quote == "" {
+				return gateapi.Order{}, fmt.Errorf("market buy requires --quote <amount> (quote currency to spend, e.g. --quote 10)")
+			}
+			order.Amount = quote
+		} else {
+			if amount == "" {
+				return gateapi.Order{}, fmt.Errorf("market sell requires --amount <base-amount>")
+			}
+			order.Amount = amount
+		}
+	} else {
+		order.Type = "limit"
+		order.Price = price
+		if amount == "" {
+			return gateapi.Order{}, fmt.Errorf("limit %s requires --amount <base-amount>", side)
+		}
+		order.Amount = amount
+	}
+	return order, nil
+}
+
 func runSpotCreateOrder(cmd *cobra.Command, side string) error {
 	pair, _ := cmd.Flags().GetString("pair")
 	amount, _ := cmd.Flags().GetString("amount")
 	price, _ := cmd.Flags().GetString("price")
+	quote, _ := cmd.Flags().GetString("quote")
+
+	order, err := buildSpotOrder(side, pair, amount, price, quote)
+	if err != nil {
+		return err
+	}
+
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
@@ -85,18 +130,6 @@ func runSpotCreateOrder(cmd *cobra.Command, side string) error {
 	}
 	if err := c.RequireAuth(); err != nil {
 		return err
-	}
-
-	order := gateapi.Order{
-		CurrencyPair: pair,
-		Side:         side,
-		Amount:       amount,
-	}
-	if price == "" {
-		order.Type = "market"
-	} else {
-		order.Type = "limit"
-		order.Price = price
 	}
 
 	body, _ := json.Marshal(order)

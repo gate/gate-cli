@@ -34,7 +34,7 @@ func init() {
 }
 
 func runFuturesPositionList(cmd *cobra.Command, args []string) error {
-	settle := getSettle(cmd)
+	settle := cmdutil.GetSettle(cmd)
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
@@ -67,7 +67,7 @@ func runFuturesPositionList(cmd *cobra.Command, args []string) error {
 
 func runFuturesPositionGet(cmd *cobra.Command, args []string) error {
 	contract, _ := cmd.Flags().GetString("contract")
-	settle := getSettle(cmd)
+	settle := cmdutil.GetSettle(cmd)
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {

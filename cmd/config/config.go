@@ -21,6 +21,7 @@ var Cmd = &cobra.Command{
 
 func init() {
 	setCmd.Flags().String("profile", "default", "Profile to update")
+	listCmd.Flags().Bool("show-secrets", false, "Show api_secret in plain text (hidden by default)")
 	Cmd.AddCommand(initCmd, listCmd, setCmd)
 }
 
@@ -97,12 +98,30 @@ func runInit(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+func maskSecrets(content string) string {
+	lines := strings.Split(content, "\n")
+	for i, line := range lines {
+		trimmed := strings.TrimLeft(line, " \t")
+		if strings.HasPrefix(trimmed, "api_key:") || strings.HasPrefix(trimmed, "api_secret:") {
+			indent := line[:len(line)-len(trimmed)]
+			field := trimmed[:strings.Index(trimmed, ":")]
+			lines[i] = indent + field + ": ****"
+		}
+	}
+	return strings.Join(lines, "\n")
+}
+
 func runList(cmd *cobra.Command, args []string) error {
+	showSecrets, _ := cmd.Flags().GetBool("show-secrets")
 	data, err := os.ReadFile(config.DefaultConfigPath())
 	if err != nil {
 		return fmt.Errorf("no config file found — run: gate-cli config init")
 	}
-	fmt.Print(string(data))
+	output := string(data)
+	if !showSecrets {
+		output = maskSecrets(output)
+	}
+	fmt.Print(output)
 	return nil
 }
 
