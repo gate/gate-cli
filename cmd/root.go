@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	configcmd "github.com/gate/gate-cli/cmd/config"
 	"github.com/gate/gate-cli/cmd/futures"
 	"github.com/gate/gate-cli/cmd/spot"
 )
@@ -26,6 +27,7 @@ func init() {
 	rootCmd.PersistentFlags().String("profile", "default", "Config profile to use")
 	rootCmd.PersistentFlags().Bool("debug", false, "Print raw HTTP request/response")
 
+	rootCmd.AddCommand(configcmd.Cmd)
 	rootCmd.AddCommand(spot.Cmd)
 	rootCmd.AddCommand(futures.Cmd)
 }
