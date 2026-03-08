@@ -1,0 +1,9 @@
+# Build output
+gate-cli
+dist/
+
+# Integration test credentials — never commit
+testdata/integration.yaml
+
+# macOS
+.DS_Store

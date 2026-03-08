@@ -1,0 +1,14 @@
+# Integration test configuration — copy to integration.yaml and fill in your keys.
+# Uses Gate testnet by default: https://api-testnet.gateapi.io
+#
+# Copy: cp testdata/integration.yaml.example testdata/integration.yaml
+# integration.yaml is gitignored and will never be committed.
+
+default_profile: testnet
+default_settle: usdt
+
+profiles:
+  testnet:
+    api_key: "YOUR_TESTNET_API_KEY"
+    api_secret: "YOUR_TESTNET_API_SECRET"
+    base_url: "https://api-testnet.gateapi.io"

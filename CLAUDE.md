@@ -7,8 +7,16 @@
 
 ## 常用命令
 - 构建: `go build -o gate-cli .`
-- 测试: `go test ./...`
+- 单元测试: `go test ./...`
+- Integration 测试: `go test -tags integration ./internal/integration/... -v`
 - 本地 smoke test（公共 API 无需 key）: `./gate-cli spot market ticker --pair BTC_USDT`
+
+## Integration 测试
+- 配置文件: `testdata/integration.yaml`（gitignored，**不会提交**）
+- 模板: `testdata/integration.yaml.example`（复制后填入 testnet key）
+- Testnet 域名: `https://api-testnet.gateapi.io`
+- 无 api_key / api_secret 时测试强制 Fatal（不会 skip，必须配置才能通过）
+- build tag `integration` 隔离，`go test ./...` 不会触发
 
 ## SDK v7 调用方式
 - **不是**方法链，而是 Opts 结构体 + `github.com/antihax/optional`
