@@ -92,17 +92,66 @@ func addFuturesOrderFlags(cmd *cobra.Command) {
 	addSettleFlag(cmd)
 }
 
-// runFuturesDirectionOrder handles long/short/add/remove with sign conversion:
+// positionIsShort returns true if the current position is short (negative size).
+// Returns an error if no open position exists.
+func positionIsShort(positions []gateapi.Position) (bool, error) {
+	for _, pos := range positions {
+		if pos.Size == "" || pos.Size == "0" {
+			continue
+		}
+		return len(pos.Size) > 0 && pos.Size[0] == '-', nil
+	}
+	return false, fmt.Errorf("no open position found")
+}
+
+// applyDirectionSign computes the signed size and reduce-only flag for add/remove orders.
+// sizeStr is the raw (positive) size from the user flag.
+// isShort indicates whether the existing position is short.
+func applyDirectionSign(direction, sizeStr string, isShort bool) (finalSize string, reduceOnly bool) {
+	finalSize = sizeStr
+	if direction == "add" {
+		// Add in the same direction as the existing position.
+		if isShort && len(sizeStr) > 0 && sizeStr[0] != '-' {
+			finalSize = "-" + sizeStr
+		}
+	} else {
+		// Remove: opposite direction + reduce-only.
+		if isShort {
+			// Buy to reduce short → positive size.
+			if len(sizeStr) > 0 && sizeStr[0] == '-' {
+				finalSize = sizeStr[1:]
+			}
+		} else {
+			// Sell to reduce long → negative size.
+			if len(sizeStr) > 0 && sizeStr[0] != '-' {
+				finalSize = "-" + sizeStr
+			}
+		}
+		reduceOnly = true
+	}
+	return
+}
+
+// closePartialSingleSize returns the signed contract size for a single-mode partial close.
+// sizeStr is the raw (positive) size from the user flag.
+func closePartialSingleSize(sizeStr string, isShort bool) string {
+	if isShort {
+		return sizeStr // positive = buy = reduce short
+	}
+	return "-" + sizeStr // negative = sell = reduce long
+}
+
+// runFuturesDirectionOrder handles long/short/add/remove:
 //
-//	long  → +size  (buy / open long)
-//	short → -size  (sell / open short)
-//	add   → +size  (increase position, same direction assumed)
-//	remove→ -size  (decrease position)
+//	long   → +size (open or add to long)
+//	short  → -size (open or add to short)
+//	add    → queries current position; uses same direction as existing position
+//	remove → queries current position; uses opposite direction with reduce-only
 func runFuturesDirectionOrder(cmd *cobra.Command, direction string) error {
 	contract, _ := cmd.Flags().GetString("contract")
 	sizeStr, _ := cmd.Flags().GetString("size")
 	price, _ := cmd.Flags().GetString("price")
-	settle := getSettle(cmd)
+	settle := cmdutil.GetSettle(cmd)
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
@@ -112,15 +161,34 @@ func runFuturesDirectionOrder(cmd *cobra.Command, direction string) error {
 		return err
 	}
 
-	// Negate size for short/remove directions
 	finalSize := sizeStr
-	if (direction == "short" || direction == "remove") && len(sizeStr) > 0 && sizeStr[0] != '-' {
-		finalSize = "-" + sizeStr
+	var reduceOnly bool
+
+	switch direction {
+	case "long":
+		// positive size — already set
+	case "short":
+		if len(sizeStr) > 0 && sizeStr[0] != '-' {
+			finalSize = "-" + sizeStr
+		}
+	case "add", "remove":
+		// Query current position to determine the correct direction.
+		positions, httpResp, posErr := c.GetFuturesPosition(settle, contract)
+		if posErr != nil {
+			p.PrintError(client.ParseGateError(posErr, httpResp, "GET", "/api/v4/futures/"+settle+"/positions/"+contract, ""))
+			return nil
+		}
+		isShort, posErr := positionIsShort(positions)
+		if posErr != nil {
+			return fmt.Errorf("cannot %s: %w", direction, posErr)
+		}
+		finalSize, reduceOnly = applyDirectionSign(direction, sizeStr, isShort)
 	}
 
 	order := gateapi.FuturesOrder{
-		Contract: contract,
-		Size:     finalSize,
+		Contract:   contract,
+		Size:       finalSize,
+		ReduceOnly: reduceOnly,
 	}
 	if price == "" {
 		order.Price = "0"
@@ -143,7 +211,7 @@ func runFuturesClose(cmd *cobra.Command, args []string) error {
 	contract, _ := cmd.Flags().GetString("contract")
 	sizeStr, _ := cmd.Flags().GetString("size")
 	side, _ := cmd.Flags().GetString("side")
-	settle := getSettle(cmd)
+	settle := cmdutil.GetSettle(cmd)
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
@@ -190,8 +258,17 @@ func runFuturesClose(cmd *cobra.Command, args []string) error {
 		order.Close = true
 
 	default:
-		// Single mode partial close.
-		order.Size = "-" + sizeStr
+		// Single mode partial close: query position to determine direction.
+		positions, httpResp2, posErr := c.GetFuturesPosition(settle, contract)
+		if posErr != nil {
+			p.PrintError(client.ParseGateError(posErr, httpResp2, "GET", "/api/v4/futures/"+settle+"/positions/"+contract, ""))
+			return nil
+		}
+		isShort, posErr := positionIsShort(positions)
+		if posErr != nil {
+			return fmt.Errorf("cannot partial close: %w", posErr)
+		}
+		order.Size = closePartialSingleSize(sizeStr, isShort)
 		order.ReduceOnly = true
 	}
 
@@ -206,7 +283,7 @@ func runFuturesClose(cmd *cobra.Command, args []string) error {
 
 func runFuturesOrderGet(cmd *cobra.Command, args []string) error {
 	id, _ := cmd.Flags().GetInt64("id")
-	settle := getSettle(cmd)
+	settle := cmdutil.GetSettle(cmd)
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
@@ -228,7 +305,7 @@ func runFuturesOrderList(cmd *cobra.Command, args []string) error {
 	contract, _ := cmd.Flags().GetString("contract")
 	status, _ := cmd.Flags().GetString("status")
 	limit, _ := cmd.Flags().GetInt32("limit")
-	settle := getSettle(cmd)
+	settle := cmdutil.GetSettle(cmd)
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
@@ -261,7 +338,7 @@ func runFuturesOrderList(cmd *cobra.Command, args []string) error {
 }
 
 func runFuturesOrderCancel(cmd *cobra.Command, args []string) error {
-	settle := getSettle(cmd)
+	settle := cmdutil.GetSettle(cmd)
 	all, _ := cmd.Flags().GetBool("all")
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
