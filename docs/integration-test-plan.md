@@ -1,19 +1,19 @@
 # Integration Test Plan
 
-集成测试覆盖 Gate Testnet 真实 API 调用，验证 CLI 核心交易流程的正确性。
+Integration tests make live API calls against the Gate testnet to verify that core trading workflows behave correctly end-to-end.
 
-## 环境要求
+## Environment Setup
 
-| 项目 | 说明 |
-|------|------|
-| 配置文件 | `testdata/integration.yaml`（gitignored，不提交） |
-| 模板 | `testdata/integration.yaml.example` |
-| Testnet 域名 | `https://api-testnet.gateapi.io` |
-| Build tag | `integration`（`go test ./...` 不会触发） |
+| Item | Details |
+|------|---------|
+| Config file | `testdata/integration.yaml` (gitignored, never committed) |
+| Template | `testdata/integration.yaml.example` |
+| Testnet base URL | `https://api-testnet.gateapi.io` |
+| Build tag | `integration` (excluded from `go test ./...`) |
 
-配置文件缺失或 `api_key` / `api_secret` 为空时，测试强制 `t.Fatal`，不会 skip。
+If the config file is missing or `api_key` / `api_secret` are empty, the test calls `t.Fatal` — there is no skip path.
 
-**运行命令：**
+**Run command:**
 
 ```bash
 go test -tags integration ./internal/integration/... -v
@@ -21,169 +21,168 @@ go test -tags integration ./internal/integration/... -v
 
 ---
 
-## 现货测试（`spot_test.go`）
+## Spot Tests (`spot_test.go`)
 
 ### TestSpotAccountList
 
-**目的：** 验证现货账户查询接口可用，有返回数据。
+Verifies that the spot account query returns at least one currency balance.
 
-| 步骤 | 操作 | 断言 |
-|------|------|------|
-| 1 | `ListSpotAccounts` | HTTP 200，返回至少 1 条货币余额 |
+| Step | Action | Assertion |
+|------|--------|-----------|
+| 1 | `ListSpotAccounts` | HTTP 200, non-empty account list |
 
 ---
 
 ### TestSpotOrderList
 
-**目的：** 验证现货挂单列表查询。
+Verifies the open spot order list query.
 
-| 步骤 | 操作 | 断言 |
-|------|------|------|
-| 1 | `ListOrders(BTC_USDT, open)` | HTTP 200，正常返回（空列表也可） |
+| Step | Action | Assertion |
+|------|--------|-----------|
+| 1 | `ListOrders(BTC_USDT, open)` | HTTP 200, response well-formed (empty list is acceptable) |
 
 ---
 
 ### TestSpotMarketTicker
 
-**目的：** 验证公共行情接口（无需鉴权）。
+Verifies the public ticker endpoint (no authentication required).
 
-| 步骤 | 操作 | 断言 |
-|------|------|------|
-| 1 | `ListTickers` | HTTP 200，返回非空 ticker 列表 |
+| Step | Action | Assertion |
+|------|--------|-----------|
+| 1 | `ListTickers` | HTTP 200, non-empty ticker list |
 
 ---
 
 ### TestSpotOrderCreateAndCancel
 
-**目的：** 验证现货限价下单与撤单完整流程。
+Verifies the full spot limit-order lifecycle: place → cancel.
 
-**前置条件：** 账户有余额（≥5 USDT 或 ≥0.001 BTC），否则 skip。
-**金额控制：** 挂单挂在远离市场的价格，不会成交，不产生实际资金占用。
+**Precondition:** account holds ≥5 USDT or ≥0.001 BTC; otherwise the test is skipped.
+**Amount control:** orders are placed far outside the market and will never fill.
 
-| 步骤 | 操作 | 参数 | 断言 |
-|------|------|------|------|
-| 1 | 查询现货账户余额 | — | 确定可用币种 |
-| 2 | 限价下单 | USDT 路径：买 0.001 BTC @ $5,000<br>BTC 路径：卖 0.001 BTC @ $999,000 | HTTP 201，status=open |
-| 3 | 撤销订单 | 步骤 2 的订单 ID | HTTP 200，status=cancelled，finish_as=cancelled |
+| Step | Action | Parameters | Assertion |
+|------|--------|-----------|-----------|
+| 1 | Query spot account balances | — | Determine available currency |
+| 2 | Place limit order | USDT path: buy 0.001 BTC @ $5,000<br>BTC path: sell 0.001 BTC @ $999,000 | HTTP 201, status=open |
+| 3 | Cancel the order | Order ID from step 2 | HTTP 200, status=cancelled, finish_as=cancelled |
 
-**清理机制：** `t.Cleanup` 兜底撤单，防止测试中途失败时挂单残留。
+**Cleanup:** `t.Cleanup` cancels the order as a safety net if the test fails before the cancel step.
 
 ---
 
-## 合约测试（`futures_test.go`）
+## Futures Tests (`futures_test.go`)
 
-默认结算货币：`usdt`，默认测试合约：`BTC_USDT`。
+Default settle currency: `usdt`. Default test contract: `BTC_USDT`.
 
 ### TestFuturesAccountGet
 
-**目的：** 验证合约账户基础信息查询，包括双仓模式标志。
+Verifies the futures account query including the dual-mode flag.
 
-| 步骤 | 操作 | 断言 |
-|------|------|------|
-| 1 | `ListFuturesAccounts(usdt)` | HTTP 200，Currency 大小写不敏感等于 "usdt" |
+| Step | Action | Assertion |
+|------|--------|-----------|
+| 1 | `ListFuturesAccounts(usdt)` | HTTP 200, currency equals "usdt" (case-insensitive) |
 
-日志输出 total、available、dual_mode 供人工核查。
+Logs total balance, available balance, and dual_mode flag for manual inspection.
 
 ---
 
 ### TestFuturesPositionList
 
-**目的：** 验证合约持仓列表查询。
+Verifies the futures position list query.
 
-| 步骤 | 操作 | 断言 |
-|------|------|------|
-| 1 | `ListPositions(usdt)` | HTTP 200，正常返回 |
+| Step | Action | Assertion |
+|------|--------|-----------|
+| 1 | `ListPositions(usdt)` | HTTP 200, well-formed response |
 
 ---
 
 ### TestFuturesOrderList
 
-**目的：** 验证合约挂单列表查询。
+Verifies the futures open order list query.
 
-| 步骤 | 操作 | 断言 |
-|------|------|------|
-| 1 | `ListFuturesOrders(usdt, open)` | HTTP 200，正常返回 |
+| Step | Action | Assertion |
+|------|--------|-----------|
+| 1 | `ListFuturesOrders(usdt, open)` | HTTP 200, well-formed response |
 
 ---
 
 ### TestFuturesOrderCreateAndCancel
 
-**目的：** 验证合约限价下单与撤单流程。
+Verifies the futures limit-order lifecycle: place → cancel.
 
-**金额控制：** 限价 $1,000（远低于 BTC 市价），5 合约 ≈ 5 USDT 名义价值，不会成交。
+**Amount control:** limit price $1,000 (far below any realistic BTC price), 5 contracts ≈ 5 USDT notional, will never fill.
 
-| 步骤 | 操作 | 参数 | 断言 |
-|------|------|------|------|
-| 1 | 限价开多 | BTC_USDT，size=5，price=1000，tif=gtc | HTTP 201，status=open |
-| 2 | 撤销订单 | 步骤 1 的订单 ID | HTTP 200，status=finished，finish_as=cancelled |
+| Step | Action | Parameters | Assertion |
+|------|--------|-----------|-----------|
+| 1 | Place limit long | BTC_USDT, size=5, price=1000, tif=gtc | HTTP 201, status=open |
+| 2 | Cancel the order | Order ID from step 1 | HTTP 200, status=finished, finish_as=cancelled |
 
-**清理机制：** `t.Cleanup` 兜底撤单。
+**Cleanup:** `t.Cleanup` cancels the order as a safety net.
 
 ---
 
 ### TestFuturesGetPosition
 
-**目的：** 验证 `client.GetFuturesPosition` 在单仓/双仓模式下均能正确返回持仓数据。
+Verifies that `client.GetFuturesPosition` returns correct position data in both single and dual mode.
 
-**前置条件：** 账户有任意非零持仓，否则 skip。
+**Precondition:** account has at least one non-zero position; otherwise skipped.
 
-| 步骤 | 操作 | 断言 |
-|------|------|------|
-| 1 | `ListPositions` 找到有持仓的合约 | — |
-| 2 | `client.GetFuturesPosition(settle, contract)` | HTTP 200，返回非空列表 |
+| Step | Action | Assertion |
+|------|--------|-----------|
+| 1 | `ListPositions` to find a contract with open positions | — |
+| 2 | `client.GetFuturesPosition(settle, contract)` | HTTP 200, non-empty slice |
 
-- 单仓模式：返回 1 条，`mode=single`
-- 双仓模式：返回 2 条，`mode=dual_long` + `mode=dual_short`
+- Single mode: returns 1 entry, `mode=single`
+- Dual mode: returns 2 entries, `mode=dual_long` + `mode=dual_short`
 
 ---
 
 ### TestFuturesLeverageUpdate
 
-**目的：** 验证杠杆修改在单仓/双仓、跨保证金/逐仓模式下均能正确路由并生效。
+Verifies that leverage modification routes correctly to the right endpoint in single/dual mode and cross/isolated margin mode.
 
-**前置条件：** 账户有任意非零持仓（`UpdatePositionLeverage` 在无持仓时返回空数组），否则 skip。
+**Precondition:** account has at least one non-zero position (`UpdatePositionLeverage` returns an empty array when no position exists); otherwise skipped.
 
-**实现说明：**
-`client.UpdateFuturesPositionLeverage` 自动检测账户模式：
-- 双仓模式 → `UpdateDualModePositionLeverage`
-- 单仓模式 → `UpdatePositionLeverage`
+`client.UpdateFuturesPositionLeverage` detects the account mode automatically:
+- Dual mode → `UpdateDualModePositionLeverage`
+- Single mode → `UpdatePositionLeverage`
 
-| 步骤 | 操作 | 断言 |
-|------|------|------|
-| 1 | 记录当前 `cross_leverage_limit` | — |
-| 2 | 修改为不同值（10↔20） | HTTP 200，返回值与目标一致 |
-| 3 | 恢复原始值 | HTTP 200，返回值与原始一致 |
+| Step | Action | Assertion |
+|------|--------|-----------|
+| 1 | Record current `cross_leverage_limit` | — |
+| 2 | Update to a different value (10 ↔ 20) | HTTP 200, returned value matches target |
+| 3 | Restore original value | HTTP 200, returned value matches original |
 
 ---
 
 ### TestFuturesPositionLifecycle
 
-**目的：** 端到端验证合约仓位完整生命周期：开仓 → 加仓 → 减仓 → 平仓。
+End-to-end test of the full position lifecycle: open → add → reduce → close.
 
-**金额控制：** 全程使用市价单，峰值持仓 10 合约 ≈ 10 USDT 名义价值（1 合约 = 1 USD）。
+**Amount control:** all orders use market execution. Peak exposure is 10 contracts ≈ 10 USDT notional (1 contract = 1 USD).
 
-| 步骤 | 操作 | 参数 | 断言 |
-|------|------|------|------|
-| 1 | **开仓**：市价买入 | size=+5，price=0，tif=ioc | HTTP 201，持仓 size > 0 |
-| 2 | 查询持仓 | `client.GetFuturesPosition` | 存在多头仓位，记录 mode/leverage/entry |
-| 3 | **加仓**：市价再买入 | size=+5，price=0，tif=ioc | HTTP 201 |
-| 4 | **减仓**：市价卖出（reduce_only） | size=-5，price=0，tif=ioc | HTTP 201 |
-| 5 | **平仓**：市价卖出剩余（reduce_only） | size=-(已开-已减)，price=0，tif=ioc | HTTP 201 |
-| 6 | 查询最终持仓 | `client.GetFuturesPosition` | 多头 size 回到开仓前水平 |
+| Step | Action | Parameters | Assertion |
+|------|--------|-----------|-----------|
+| 1 | **Open** — market long | size=+5, price=0, tif=ioc | HTTP 201, long position size > 0 |
+| 2 | Verify position | `client.GetFuturesPosition` | Long position present; log mode/leverage/entry |
+| 3 | **Add** — market long | size=+5, price=0, tif=ioc | HTTP 201 |
+| 4 | **Reduce** — market sell, reduce-only | size=-5, price=0, tif=ioc | HTTP 201 |
+| 5 | **Close** — market sell remaining, reduce-only | size=-(opened−reduced), price=0, tif=ioc | HTTP 201 |
+| 6 | Verify final position | `client.GetFuturesPosition` | Long size back to pre-test level |
 
-**清理机制：** `t.Cleanup` 追踪 `opened` 计数器，若测试中途失败则以 reduce_only 卖出剩余合约，不会影响账户既有仓位。
+**Cleanup:** `t.Cleanup` tracks the `opened` counter; if the test fails mid-way it issues a reduce-only sell for any remaining contracts without touching pre-existing positions.
 
 ---
 
-## 双仓模式适配说明
+## Dual-Position Mode Compatibility
 
-账户启用双仓模式（`InDualMode=true`）时，部分 Gate API 行为与单仓不同：
+When an account has dual-position mode enabled (`InDualMode=true`), several Gate API endpoints behave differently from single mode:
 
-| 场景 | 单仓（Single Mode） | 双仓（Dual Mode） |
-|------|---------------------|-------------------|
-| 获取持仓 | `GetPosition` → `Position` | `GetDualModePosition` → `[]Position` |
-| 修改杠杆 | `UpdatePositionLeverage` → `Position` | `UpdateDualModePositionLeverage` → `[]Position` |
-| 全平多头 | `Close=true, Size=0` | `AutoSize="close_long", Size=0` |
-| 全平空头 | `Close=true, Size=0` | `AutoSize="close_short", Size=0` |
+| Operation | Single Mode | Dual Mode |
+|-----------|-------------|-----------|
+| Get position | `GetPosition` → `Position` | `GetDualModePosition` → `[]Position` |
+| Update leverage | `UpdatePositionLeverage` → `Position` | `UpdateDualModePositionLeverage` → `[]Position` |
+| Full close long | `Close=true, Size=0` | `AutoSize="close_long", Size=0` |
+| Full close short | `Close=true, Size=0` | `AutoSize="close_short", Size=0` |
 
-CLI 通过 `client.IsDualMode(settle)` 自动检测并路由，用户无需关心底层接口差异。
+The CLI detects the mode via `client.IsDualMode(settle)` (lazily cached after the first call) and routes to the correct endpoint transparently. Users do not need to be aware of which mode the account is in.
