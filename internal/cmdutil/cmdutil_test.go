@@ -52,17 +52,11 @@ func TestGetClient_FlagOverridesEnvAndFile(t *testing.T) {
 	// would also satisfy this; see next test for the distinction).
 }
 
-func TestGetClient_EnvOverridesFile(t *testing.T) {
-	// Write a config file with file-key; env should win.
-	dir := t.TempDir()
-	cfgFile := filepath.Join(dir, "config.yaml")
-	os.WriteFile(cfgFile, []byte(`
-profiles:
-  default:
-    api_key: file-key
-    api_secret: file-secret
-`), 0600)
-	t.Setenv("GATE_CLI_CONFIG", cfgFile) // not supported yet — use profile trick below
+func TestGetClient_CredentialsFromEnvWhenNoFile(t *testing.T) {
+	// Verify that env-var credentials are picked up when no config file exists.
+	// (env > file ordering is tested at the config.Load layer in internal/config/config_test.go;
+	// here we only verify the cobra→config.Load plumbing for the env path.)
+	t.Setenv("HOME", t.TempDir()) // ensure no real ~/.gate-cli/config.yaml interferes
 	t.Setenv("GATE_API_KEY", "env-key")
 	t.Setenv("GATE_API_SECRET", "env-secret")
 
@@ -71,7 +65,6 @@ profiles:
 
 	c, err := cmdutil.GetClient(child)
 	require.NoError(t, err)
-	// env credentials present → client is authenticated
 	assert.True(t, c.IsAuthenticated())
 }
 
