@@ -102,9 +102,10 @@ func maskSecrets(content string) string {
 	lines := strings.Split(content, "\n")
 	for i, line := range lines {
 		trimmed := strings.TrimLeft(line, " \t")
-		if strings.HasPrefix(trimmed, "api_secret:") {
+		if strings.HasPrefix(trimmed, "api_key:") || strings.HasPrefix(trimmed, "api_secret:") {
 			indent := line[:len(line)-len(trimmed)]
-			lines[i] = indent + "api_secret: ****"
+			field := trimmed[:strings.Index(trimmed, ":")]
+			lines[i] = indent + field + ": ****"
 		}
 	}
 	return strings.Join(lines, "\n")

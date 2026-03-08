@@ -16,8 +16,8 @@ func TestMaskSecrets_BasicYAML(t *testing.T) {
 	out := maskSecrets(input)
 	assert.Contains(t, out, "api_secret: ****")
 	assert.NotContains(t, out, "mysecret")
-	// api_key must be left untouched.
-	assert.Contains(t, out, "api_key: mykey")
+	assert.Contains(t, out, "api_key: ****")
+	assert.NotContains(t, out, "mykey")
 }
 
 func TestMaskSecrets_PreservesIndentation(t *testing.T) {
@@ -26,8 +26,8 @@ func TestMaskSecrets_PreservesIndentation(t *testing.T) {
 	assert.Equal(t, "    api_secret: ****", out)
 }
 
-func TestMaskSecrets_NoSecretField(t *testing.T) {
-	input := "api_key: mykey\nbase_url: https://example.com"
+func TestMaskSecrets_NoCredentialFields(t *testing.T) {
+	input := "base_url: https://example.com\ndefault_settle: usdt"
 	out := maskSecrets(input)
 	assert.Equal(t, input, out)
 }
@@ -43,8 +43,15 @@ func TestMaskSecrets_MultipleProfiles(t *testing.T) {
 	out := maskSecrets(input)
 	assert.NotContains(t, out, "prodsecret")
 	assert.NotContains(t, out, "testsecret")
-	assert.Contains(t, out, "api_key: prodkey")
-	assert.Contains(t, out, "api_key: testkey")
+	assert.NotContains(t, out, "prodkey")
+	assert.NotContains(t, out, "testkey")
+}
+
+func TestMaskSecrets_APIKeyMasked(t *testing.T) {
+	input := "    api_key: abc123"
+	out := maskSecrets(input)
+	assert.Equal(t, "    api_key: ****", out)
+	assert.NotContains(t, out, "abc123")
 }
 
 func TestMaskSecrets_EmptySecret(t *testing.T) {
