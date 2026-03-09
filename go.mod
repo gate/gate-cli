@@ -1,6 +1,6 @@
 module github.com/gate/gate-cli
 
-go 1.25.1
+go 1.21
 
 require (
 	github.com/antihax/optional v1.0.0 // indirect
