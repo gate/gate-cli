@@ -1,10 +1,107 @@
 package configcmd
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 )
+
+// writeConfig writes a YAML config file under dir/.gate-cli/config.yaml and
+// returns the config dir path.
+func writeConfig(t *testing.T, fc fileLayout) string {
+	t.Helper()
+	home := t.TempDir()
+	cfgDir := filepath.Join(home, ".gate-cli")
+	require.NoError(t, os.MkdirAll(cfgDir, 0700))
+	data, err := yaml.Marshal(fc)
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(filepath.Join(cfgDir, "config.yaml"), data, 0600))
+	t.Setenv("HOME", home)
+	return home
+}
+
+// readConfig reads the YAML config file from the test home dir.
+func readConfig(t *testing.T, home string) fileLayout {
+	t.Helper()
+	data, err := os.ReadFile(filepath.Join(home, ".gate-cli", "config.yaml"))
+	require.NoError(t, err)
+	var fc fileLayout
+	require.NoError(t, yaml.Unmarshal(data, &fc))
+	return fc
+}
+
+// runSetCmd executes the setCmd cobra command with the given args.
+func runSetCmd(t *testing.T, args ...string) error {
+	t.Helper()
+	setCmd.ResetFlags()
+	setCmd.Flags().String("profile", "default", "Profile to update")
+	return setCmd.RunE(setCmd, args)
+}
+
+// --- runSet / default_profile resolution ---
+
+// TestRunSet_UsesDefaultProfileFromConfig verifies that "config set" without
+// --profile writes to the profile named in default_profile, not hardcoded "default".
+func TestRunSet_UsesDefaultProfileFromConfig(t *testing.T) {
+	home := writeConfig(t, fileLayout{
+		DefaultProfile: "myprofile",
+		DefaultSettle:  "usdt",
+		Profiles: map[string]profileEntry{
+			"myprofile": {APIKey: "oldkey", APISecret: "oldsecret"},
+		},
+	})
+
+	err := runSetCmd(t, "api-key", "newkey")
+	require.NoError(t, err)
+
+	fc := readConfig(t, home)
+	assert.Equal(t, "newkey", fc.Profiles["myprofile"].APIKey, "should update the default_profile, not 'default'")
+	assert.Empty(t, fc.Profiles["default"], "should NOT create a 'default' profile")
+}
+
+// TestRunSet_ExplicitProfileFlagTakesPrecedence verifies that an explicit
+// --profile flag always wins over default_profile.
+func TestRunSet_ExplicitProfileFlagTakesPrecedence(t *testing.T) {
+	home := writeConfig(t, fileLayout{
+		DefaultProfile: "myprofile",
+		DefaultSettle:  "usdt",
+		Profiles: map[string]profileEntry{
+			"myprofile": {APIKey: "a", APISecret: "b"},
+			"other":     {APIKey: "x", APISecret: "y"},
+		},
+	})
+
+	setCmd.ResetFlags()
+	setCmd.Flags().String("profile", "default", "Profile to update")
+	require.NoError(t, setCmd.Flags().Set("profile", "other"))
+	err := setCmd.RunE(setCmd, []string{"api-key", "updated"})
+	require.NoError(t, err)
+
+	fc := readConfig(t, home)
+	assert.Equal(t, "updated", fc.Profiles["other"].APIKey)
+	assert.Equal(t, "a", fc.Profiles["myprofile"].APIKey, "myprofile should be untouched")
+}
+
+// TestRunSet_DefaultFallsBackToDefaultWhenNoDefaultProfile verifies that when
+// default_profile is empty, --profile defaults to "default" as before.
+func TestRunSet_DefaultFallsBackToDefaultWhenNoDefaultProfile(t *testing.T) {
+	home := writeConfig(t, fileLayout{
+		DefaultSettle: "usdt",
+		Profiles: map[string]profileEntry{
+			"default": {APIKey: "origkey", APISecret: "origsecret"},
+		},
+	})
+
+	err := runSetCmd(t, "api-key", "changedkey")
+	require.NoError(t, err)
+
+	fc := readConfig(t, home)
+	assert.Equal(t, "changedkey", fc.Profiles["default"].APIKey)
+}
 
 // --- maskSecrets (P2-1) ---
 
