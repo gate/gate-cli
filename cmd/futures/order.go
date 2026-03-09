@@ -141,6 +141,19 @@ func closePartialSingleSize(sizeStr string, isShort bool) string {
 	return "-" + sizeStr // negative = sell = reduce long
 }
 
+// applyFuturesTif sets Price and Tif on a FuturesOrder based on whether
+// a limit price was provided. Market orders use Price="0" and Tif="ioc";
+// limit orders use the given price with Tif="gtc".
+func applyFuturesTif(order *gateapi.FuturesOrder, price string) {
+	if price == "" {
+		order.Price = "0"
+		order.Tif = "ioc"
+	} else {
+		order.Price = price
+		order.Tif = "gtc"
+	}
+}
+
 // runFuturesDirectionOrder handles long/short/add/remove:
 //
 //	long   → +size (open or add to long)
@@ -190,13 +203,7 @@ func runFuturesDirectionOrder(cmd *cobra.Command, direction string) error {
 		Size:       finalSize,
 		ReduceOnly: reduceOnly,
 	}
-	if price == "" {
-		order.Price = "0"
-		order.Tif = "ioc"
-	} else {
-		order.Price = price
-		order.Tif = "gtc"
-	}
+	applyFuturesTif(&order, price)
 
 	body, _ := json.Marshal(order)
 	result, httpResp, err := c.FuturesAPI.CreateFuturesOrder(c.Context(), settle, order, nil)
@@ -226,9 +233,8 @@ func runFuturesClose(cmd *cobra.Command, args []string) error {
 
 	order := gateapi.FuturesOrder{
 		Contract: contract,
-		Price:    "0",
-		Tif:      "ioc",
 	}
+	applyFuturesTif(&order, "") // close is always a market order
 
 	switch {
 	case isDual && isFullClose:

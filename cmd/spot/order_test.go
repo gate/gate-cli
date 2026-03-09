@@ -72,3 +72,22 @@ func TestBuildSpotOrder_LimitSell(t *testing.T) {
 	assert.Equal(t, "0.001", order.Amount)
 	assert.Equal(t, "999000", order.Price)
 }
+
+func TestBuildSpotOrder_MarketBuyTifIsIoc(t *testing.T) {
+	order, err := buildSpotOrder("buy", "BTC_USDT", "", "", "10")
+	require.NoError(t, err)
+	assert.Equal(t, "ioc", order.TimeInForce)
+}
+
+func TestBuildSpotOrder_MarketSellTifIsIoc(t *testing.T) {
+	order, err := buildSpotOrder("sell", "BTC_USDT", "0.001", "", "")
+	require.NoError(t, err)
+	assert.Equal(t, "ioc", order.TimeInForce)
+}
+
+func TestBuildSpotOrder_LimitOrderNoTif(t *testing.T) {
+	// Limit orders do not set time_in_force; the API defaults to gtc.
+	order, err := buildSpotOrder("buy", "BTC_USDT", "0.001", "80000", "")
+	require.NoError(t, err)
+	assert.Equal(t, "", order.TimeInForce)
+}

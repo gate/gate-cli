@@ -86,6 +86,7 @@ func buildSpotOrder(side, pair, amount, price, quote string) (gateapi.Order, err
 	order := gateapi.Order{CurrencyPair: pair, Side: side}
 	if price == "" {
 		order.Type = "market"
+		order.TimeInForce = "ioc"
 		if side == "buy" {
 			// Gate market buy: Amount = quote currency to spend, not base amount.
 			if amount != "" {
