@@ -84,6 +84,22 @@ func TestApplyDirectionSign_RemoveShortAlreadyNegated(t *testing.T) {
 	assert.True(t, reduceOnly)
 }
 
+// --- applyFuturesTif ---
+
+func TestApplyFuturesTif_MarketOrder(t *testing.T) {
+	order := gateapi.FuturesOrder{}
+	applyFuturesTif(&order, "")
+	assert.Equal(t, "0", order.Price)
+	assert.Equal(t, "ioc", order.Tif)
+}
+
+func TestApplyFuturesTif_LimitOrder(t *testing.T) {
+	order := gateapi.FuturesOrder{}
+	applyFuturesTif(&order, "80000")
+	assert.Equal(t, "80000", order.Price)
+	assert.Equal(t, "gtc", order.Tif)
+}
+
 // --- closePartialSingleSize (P1-2) ---
 
 func TestClosePartialSingleSize_Long(t *testing.T) {
