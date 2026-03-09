@@ -127,7 +127,6 @@ func runList(cmd *cobra.Command, args []string) error {
 
 func runSet(cmd *cobra.Command, args []string) error {
 	key, value := args[0], args[1]
-	profileName, _ := cmd.Flags().GetString("profile")
 
 	cfgPath := config.DefaultConfigPath()
 	data, err := os.ReadFile(cfgPath)
@@ -141,6 +140,12 @@ func runSet(cmd *cobra.Command, args []string) error {
 	}
 	if fc.Profiles == nil {
 		fc.Profiles = make(map[string]profileEntry)
+	}
+
+	// Resolve profile name: explicit --profile flag > default_profile in file > "default".
+	profileName, _ := cmd.Flags().GetString("profile")
+	if !cmd.Flags().Changed("profile") && fc.DefaultProfile != "" {
+		profileName = fc.DefaultProfile
 	}
 
 	p := fc.Profiles[profileName]
