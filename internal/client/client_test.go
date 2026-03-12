@@ -1,6 +1,7 @@
 package client_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -27,6 +28,13 @@ func TestNewClientWithAuth(t *testing.T) {
 	c, err := client.New(cfg)
 	require.NoError(t, err)
 	assert.True(t, c.IsAuthenticated())
+}
+
+func TestNewClientSetsUserAgent(t *testing.T) {
+	cfg := &config.Config{BaseURL: "https://api.gateio.ws"}
+	c, err := client.New(cfg)
+	require.NoError(t, err)
+	assert.True(t, strings.HasPrefix(c.UserAgent(), "gate-cli/"), "UserAgent should start with gate-cli/, got: %s", c.UserAgent())
 }
 
 func TestRequireAuthFailsWhenNoKey(t *testing.T) {

@@ -10,6 +10,7 @@ import (
 
 	"github.com/gate/gate-cli/internal/config"
 	"github.com/gate/gate-cli/internal/output"
+	"github.com/gate/gate-cli/internal/version"
 )
 
 // Client wraps the Gate SDK API client with auth state tracking.
@@ -18,6 +19,7 @@ type Client struct {
 	FuturesAPI *gateapi.FuturesApiService
 	ctx        context.Context
 	auth       bool
+	userAgent  string
 
 	dualMu    sync.Mutex
 	dualCache map[string]bool // settle → isDualMode
@@ -26,6 +28,7 @@ type Client struct {
 // New creates a Gate API client from the resolved config.
 func New(cfg *config.Config) (*Client, error) {
 	gateCfg := gateapi.NewConfiguration()
+	gateCfg.UserAgent = "gate-cli/" + version.Version
 	if cfg.BaseURL != "" {
 		gateCfg.BasePath = cfg.BaseURL + "/api/v4"
 	}
@@ -42,6 +45,7 @@ func New(cfg *config.Config) (*Client, error) {
 		FuturesAPI: apiClient.FuturesApi,
 		ctx:        context.Background(),
 		auth:       cfg.APIKey != "" && cfg.APISecret != "",
+		userAgent:  gateCfg.UserAgent,
 		dualCache:  make(map[string]bool),
 	}, nil
 }
@@ -54,6 +58,11 @@ func (c *Client) Context() context.Context {
 // IsAuthenticated returns true when API key + secret are configured.
 func (c *Client) IsAuthenticated() bool {
 	return c.auth
+}
+
+// UserAgent returns the User-Agent string sent with every API request.
+func (c *Client) UserAgent() string {
+	return c.userAgent
 }
 
 // RequireAuth returns an error if the client has no API credentials.
