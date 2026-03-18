@@ -9,8 +9,11 @@ import (
 	"github.com/gate/gate-cli/cmd/alpha"
 	configcmd "github.com/gate/gate-cli/cmd/config"
 	"github.com/gate/gate-cli/cmd/futures"
+	"github.com/gate/gate-cli/cmd/delivery"
+	"github.com/gate/gate-cli/cmd/options"
 	"github.com/gate/gate-cli/cmd/spot"
 	"github.com/gate/gate-cli/cmd/tradfi"
+	"github.com/gate/gate-cli/cmd/wallet"
 )
 
 var rootCmd = &cobra.Command{
@@ -38,4 +41,7 @@ func init() {
 	rootCmd.AddCommand(tradfi.Cmd)
 	rootCmd.AddCommand(alpha.Cmd)
 	rootCmd.AddCommand(account.Cmd)
+	rootCmd.AddCommand(wallet.Cmd)
+	rootCmd.AddCommand(options.Cmd)
+	rootCmd.AddCommand(delivery.Cmd)
 }
