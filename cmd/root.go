@@ -8,6 +8,7 @@ import (
 	configcmd "github.com/gate/gate-cli/cmd/config"
 	"github.com/gate/gate-cli/cmd/futures"
 	"github.com/gate/gate-cli/cmd/spot"
+	"github.com/gate/gate-cli/cmd/tradfi"
 )
 
 var rootCmd = &cobra.Command{
@@ -32,4 +33,5 @@ func init() {
 	rootCmd.AddCommand(configcmd.Cmd)
 	rootCmd.AddCommand(spot.Cmd)
 	rootCmd.AddCommand(futures.Cmd)
+	rootCmd.AddCommand(tradfi.Cmd)
 }

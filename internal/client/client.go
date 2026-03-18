@@ -17,6 +17,7 @@ import (
 type Client struct {
 	SpotAPI    *gateapi.SpotApiService
 	FuturesAPI *gateapi.FuturesApiService
+	TradFiAPI  *gateapi.TradFiApiService
 	ctx        context.Context
 	auth       bool
 	userAgent  string
@@ -43,6 +44,7 @@ func New(cfg *config.Config) (*Client, error) {
 	return &Client{
 		SpotAPI:    apiClient.SpotApi,
 		FuturesAPI: apiClient.FuturesApi,
+		TradFiAPI:  apiClient.TradFiApi,
 		ctx:        context.Background(),
 		auth:       cfg.APIKey != "" && cfg.APISecret != "",
 		userAgent:  gateCfg.UserAgent,
