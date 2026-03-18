@@ -21,8 +21,9 @@ type Client struct {
 	AlphaAPI   *gateapi.AlphaApiService
 	AccountAPI *gateapi.AccountApiService
 	WalletAPI  *gateapi.WalletApiService
-	OptionsAPI *gateapi.OptionsApiService
-	ctx        context.Context
+	OptionsAPI  *gateapi.OptionsApiService
+	DeliveryAPI *gateapi.DeliveryApiService
+	ctx         context.Context
 	auth       bool
 	userAgent  string
 
@@ -52,8 +53,9 @@ func New(cfg *config.Config) (*Client, error) {
 		AlphaAPI:   apiClient.AlphaApi,
 		AccountAPI: apiClient.AccountApi,
 		WalletAPI:  apiClient.WalletApi,
-		OptionsAPI: apiClient.OptionsApi,
-		ctx:        context.Background(),
+		OptionsAPI:  apiClient.OptionsApi,
+		DeliveryAPI: apiClient.DeliveryApi,
+		ctx:         context.Background(),
 		auth:       cfg.APIKey != "" && cfg.APISecret != "",
 		userAgent:  gateCfg.UserAgent,
 		dualCache:  make(map[string]bool),

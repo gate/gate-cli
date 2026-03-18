@@ -9,6 +9,7 @@ import (
 	"github.com/gate/gate-cli/cmd/alpha"
 	configcmd "github.com/gate/gate-cli/cmd/config"
 	"github.com/gate/gate-cli/cmd/futures"
+	"github.com/gate/gate-cli/cmd/delivery"
 	"github.com/gate/gate-cli/cmd/options"
 	"github.com/gate/gate-cli/cmd/spot"
 	"github.com/gate/gate-cli/cmd/tradfi"
@@ -42,4 +43,5 @@ func init() {
 	rootCmd.AddCommand(account.Cmd)
 	rootCmd.AddCommand(wallet.Cmd)
 	rootCmd.AddCommand(options.Cmd)
+	rootCmd.AddCommand(delivery.Cmd)
 }
