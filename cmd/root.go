@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/gate/gate-cli/cmd/alpha"
 	configcmd "github.com/gate/gate-cli/cmd/config"
 	"github.com/gate/gate-cli/cmd/futures"
 	"github.com/gate/gate-cli/cmd/spot"
@@ -34,4 +35,5 @@ func init() {
 	rootCmd.AddCommand(spot.Cmd)
 	rootCmd.AddCommand(futures.Cmd)
 	rootCmd.AddCommand(tradfi.Cmd)
+	rootCmd.AddCommand(alpha.Cmd)
 }
