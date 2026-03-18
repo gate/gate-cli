@@ -20,6 +20,7 @@ type Client struct {
 	TradFiAPI  *gateapi.TradFiApiService
 	AlphaAPI   *gateapi.AlphaApiService
 	AccountAPI *gateapi.AccountApiService
+	WalletAPI  *gateapi.WalletApiService
 	ctx        context.Context
 	auth       bool
 	userAgent  string
@@ -49,6 +50,7 @@ func New(cfg *config.Config) (*Client, error) {
 		TradFiAPI:  apiClient.TradFiApi,
 		AlphaAPI:   apiClient.AlphaApi,
 		AccountAPI: apiClient.AccountApi,
+		WalletAPI:  apiClient.WalletApi,
 		ctx:        context.Background(),
 		auth:       cfg.APIKey != "" && cfg.APISecret != "",
 		userAgent:  gateCfg.UserAgent,
