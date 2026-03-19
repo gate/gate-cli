@@ -59,7 +59,54 @@ func init() {
 	candlesticksCmd.Flags().Int32("limit", 100, "Number of candlesticks to return")
 	candlesticksCmd.MarkFlagRequired("pair")
 
-	marketCmd.AddCommand(tickerCmd, tickersCmd, orderbookCmd, tradesCmd, candlesticksCmd)
+	currenciesCmd := &cobra.Command{
+		Use:   "currencies",
+		Short: "List all currencies (public, no authentication required)",
+		RunE:  runSpotCurrencies,
+	}
+
+	currencyCmd := &cobra.Command{
+		Use:   "currency",
+		Short: "Get details for a currency (public, no authentication required)",
+		RunE:  runSpotCurrency,
+	}
+	currencyCmd.Flags().String("currency", "", "Currency symbol, e.g. BTC (required)")
+	currencyCmd.MarkFlagRequired("currency")
+
+	pairsCmd := &cobra.Command{
+		Use:   "pairs",
+		Short: "List all currency pairs (public, no authentication required)",
+		RunE:  runSpotPairs,
+	}
+
+	pairCmd := &cobra.Command{
+		Use:   "pair",
+		Short: "Get details for a currency pair (public, no authentication required)",
+		RunE:  runSpotPair,
+	}
+	pairCmd.Flags().String("pair", "", "Currency pair, e.g. BTC_USDT (required)")
+	pairCmd.MarkFlagRequired("pair")
+
+	insuranceCmd := &cobra.Command{
+		Use:   "insurance",
+		Short: "Get spot insurance fund historical data (public, no authentication required)",
+		RunE:  runSpotInsurance,
+	}
+	insuranceCmd.Flags().String("business", "margin", "Leverage business: margin, unified")
+	insuranceCmd.Flags().String("currency", "", "Currency name (required)")
+	insuranceCmd.Flags().Int64("from", 0, "Start Unix timestamp (seconds)")
+	insuranceCmd.Flags().Int64("to", 0, "End Unix timestamp (seconds)")
+	insuranceCmd.Flags().Int32("limit", 0, "Number of records to return")
+	insuranceCmd.MarkFlagRequired("currency")
+
+	timeCmd := &cobra.Command{
+		Use:   "time",
+		Short: "Get server time (public, no authentication required)",
+		RunE:  runSpotServerTime,
+	}
+
+	marketCmd.AddCommand(tickerCmd, tickersCmd, orderbookCmd, tradesCmd, candlesticksCmd,
+		currenciesCmd, currencyCmd, pairsCmd, pairCmd, insuranceCmd, timeCmd)
 	Cmd.AddCommand(marketCmd)
 }
 
@@ -188,4 +235,153 @@ func runSpotCandlesticks(cmd *cobra.Command, args []string) error {
 		}
 	}
 	return p.Table([]string{"Timestamp", "Open", "Close", "High", "Low", "Volume"}, rows)
+}
+
+func runSpotCurrencies(cmd *cobra.Command, args []string) error {
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+
+	result, httpResp, err := c.SpotAPI.ListCurrencies(c.Context())
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/currencies", ""))
+		return nil
+	}
+	if p.IsJSON() {
+		return p.Print(result)
+	}
+	rows := make([][]string, len(result))
+	for i, cur := range result {
+		delisted := "false"
+		if cur.Delisted {
+			delisted = "true"
+		}
+		rows[i] = []string{cur.Currency, cur.Name, delisted}
+	}
+	return p.Table([]string{"Currency", "Name", "Delisted"}, rows)
+}
+
+func runSpotCurrency(cmd *cobra.Command, args []string) error {
+	currency, _ := cmd.Flags().GetString("currency")
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+
+	result, httpResp, err := c.SpotAPI.GetCurrency(c.Context(), currency)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/currencies/"+currency, ""))
+		return nil
+	}
+	if p.IsJSON() {
+		return p.Print(result)
+	}
+	delisted := "false"
+	if result.Delisted {
+		delisted = "true"
+	}
+	return p.Table(
+		[]string{"Currency", "Name", "Delisted"},
+		[][]string{{result.Currency, result.Name, delisted}},
+	)
+}
+
+func runSpotPairs(cmd *cobra.Command, args []string) error {
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+
+	result, httpResp, err := c.SpotAPI.ListCurrencyPairs(c.Context())
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/currency_pairs", ""))
+		return nil
+	}
+	if p.IsJSON() {
+		return p.Print(result)
+	}
+	rows := make([][]string, len(result))
+	for i, cp := range result {
+		rows[i] = []string{cp.Id, cp.Base, cp.Quote, cp.TradeStatus}
+	}
+	return p.Table([]string{"ID", "Base", "Quote", "Status"}, rows)
+}
+
+func runSpotPair(cmd *cobra.Command, args []string) error {
+	pair, _ := cmd.Flags().GetString("pair")
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+
+	result, httpResp, err := c.SpotAPI.GetCurrencyPair(c.Context(), pair)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/currency_pairs/"+pair, ""))
+		return nil
+	}
+	if p.IsJSON() {
+		return p.Print(result)
+	}
+	return p.Table(
+		[]string{"ID", "Base", "Quote", "Status"},
+		[][]string{{result.Id, result.Base, result.Quote, result.TradeStatus}},
+	)
+}
+
+func runSpotInsurance(cmd *cobra.Command, args []string) error {
+	business, _ := cmd.Flags().GetString("business")
+	currency, _ := cmd.Flags().GetString("currency")
+	from, _ := cmd.Flags().GetInt64("from")
+	to, _ := cmd.Flags().GetInt64("to")
+	limit, _ := cmd.Flags().GetInt32("limit")
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+
+	opts := &gateapi.GetSpotInsuranceHistoryOpts{}
+	if limit != 0 {
+		opts.Limit = optional.NewInt32(limit)
+	}
+
+	result, httpResp, err := c.SpotAPI.GetSpotInsuranceHistory(c.Context(), business, currency, from, to, opts)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/insurance_history", ""))
+		return nil
+	}
+	if p.IsJSON() {
+		return p.Print(result)
+	}
+	rows := make([][]string, len(result))
+	for i, r := range result {
+		rows[i] = []string{r.Currency, r.Balance, fmt.Sprintf("%d", r.Time)}
+	}
+	return p.Table([]string{"Currency", "Balance", "Time(ms)"}, rows)
+}
+
+func runSpotServerTime(cmd *cobra.Command, args []string) error {
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+
+	result, httpResp, err := c.SpotAPI.GetSystemTime(c.Context())
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/time", ""))
+		return nil
+	}
+	if p.IsJSON() {
+		return p.Print(result)
+	}
+	return p.Table(
+		[]string{"Server Time (ms)"},
+		[][]string{{fmt.Sprintf("%d", result.ServerTime)}},
+	)
 }

@@ -66,7 +66,83 @@ func init() {
 	cancelCmd.Flags().Bool("all", false, "Cancel all open orders for the pair")
 	cancelCmd.MarkFlagRequired("pair")
 
-	orderCmd.AddCommand(buyCmd, sellCmd, getCmd, listCmd, cancelCmd)
+	myTradesCmd := &cobra.Command{
+		Use:   "my-trades",
+		Short: "List personal trading history",
+		RunE:  runSpotMyTrades,
+	}
+	myTradesCmd.Flags().String("pair", "", "Filter by currency pair")
+	myTradesCmd.Flags().Int32("limit", 0, "Number of records to return")
+	myTradesCmd.Flags().Int64("from", 0, "Start Unix timestamp")
+	myTradesCmd.Flags().Int64("to", 0, "End Unix timestamp")
+
+	amendCmd := &cobra.Command{
+		Use:   "amend",
+		Short: "Amend an order (change amount or price)",
+		RunE:  runSpotAmendOrder,
+	}
+	amendCmd.Flags().String("id", "", "Order ID (required)")
+	amendCmd.Flags().String("pair", "", "Currency pair (required)")
+	amendCmd.Flags().String("amount", "", "New amount")
+	amendCmd.Flags().String("price", "", "New price")
+	amendCmd.MarkFlagRequired("id")
+	amendCmd.MarkFlagRequired("pair")
+
+	batchCreateCmd := &cobra.Command{
+		Use:   "batch-create",
+		Short: "Batch place orders (JSON array of orders)",
+		RunE:  runSpotBatchCreateOrders,
+	}
+	batchCreateCmd.Flags().String("orders-json", "", "JSON array of orders (required)")
+	batchCreateCmd.MarkFlagRequired("orders-json")
+
+	batchCancelCmd := &cobra.Command{
+		Use:   "batch-cancel",
+		Short: "Cancel orders by ID list",
+		RunE:  runSpotBatchCancelOrders,
+	}
+	batchCancelCmd.Flags().String("orders-json", "", "JSON array of {currency_pair, id} objects (required)")
+	batchCancelCmd.MarkFlagRequired("orders-json")
+
+	batchAmendCmd := &cobra.Command{
+		Use:   "batch-amend",
+		Short: "Batch amend orders",
+		RunE:  runSpotBatchAmendOrders,
+	}
+	batchAmendCmd.Flags().String("orders-json", "", "JSON array of BatchAmendItem objects (required)")
+	batchAmendCmd.MarkFlagRequired("orders-json")
+
+	allOpenCmd := &cobra.Command{
+		Use:   "all-open",
+		Short: "List all open orders across all currency pairs",
+		RunE:  runSpotAllOpenOrders,
+	}
+	allOpenCmd.Flags().Int32("limit", 0, "Number of records per page")
+
+	crossLiquidateCmd := &cobra.Command{
+		Use:   "cross-liquidate",
+		Short: "Create a cross margin liquidation order",
+		RunE:  runSpotCrossLiquidate,
+	}
+	crossLiquidateCmd.Flags().String("pair", "", "Currency pair (required)")
+	crossLiquidateCmd.Flags().String("amount", "", "Trade amount (required)")
+	crossLiquidateCmd.Flags().String("price", "", "Order price (required)")
+	crossLiquidateCmd.MarkFlagRequired("pair")
+	crossLiquidateCmd.MarkFlagRequired("amount")
+	crossLiquidateCmd.MarkFlagRequired("price")
+
+	countdownCmd := &cobra.Command{
+		Use:   "countdown-cancel-all",
+		Short: "Set countdown to cancel all spot orders",
+		RunE:  runSpotCountdownCancelAll,
+	}
+	countdownCmd.Flags().Int32("timeout", 0, "Countdown in seconds (0 = cancel countdown, min 5) (required)")
+	countdownCmd.Flags().String("pair", "", "Limit cancellation to this currency pair")
+	countdownCmd.MarkFlagRequired("timeout")
+
+	orderCmd.AddCommand(buyCmd, sellCmd, getCmd, listCmd, cancelCmd,
+		myTradesCmd, amendCmd, batchCreateCmd, batchCancelCmd, batchAmendCmd,
+		allOpenCmd, crossLiquidateCmd, countdownCmd)
 	Cmd.AddCommand(orderCmd)
 }
 
@@ -225,4 +301,230 @@ func runSpotOrderCancel(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 	return p.Print(result)
+}
+
+func runSpotMyTrades(cmd *cobra.Command, args []string) error {
+	pair, _ := cmd.Flags().GetString("pair")
+	limit, _ := cmd.Flags().GetInt32("limit")
+	from, _ := cmd.Flags().GetInt64("from")
+	to, _ := cmd.Flags().GetInt64("to")
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+	if err := c.RequireAuth(); err != nil {
+		return err
+	}
+
+	opts := &gateapi.ListMyTradesOpts{}
+	if pair != "" {
+		opts.CurrencyPair = optional.NewString(pair)
+	}
+	if limit != 0 {
+		opts.Limit = optional.NewInt32(limit)
+	}
+	if from != 0 {
+		opts.From = optional.NewInt64(from)
+	}
+	if to != 0 {
+		opts.To = optional.NewInt64(to)
+	}
+
+	result, httpResp, err := c.SpotAPI.ListMyTrades(c.Context(), opts)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/my_trades", ""))
+		return nil
+	}
+	if p.IsJSON() {
+		return p.Print(result)
+	}
+	rows := make([][]string, len(result))
+	for i, t := range result {
+		rows[i] = []string{t.Id, t.CurrencyPair, t.Side, t.Role, t.Amount, t.Price, t.Fee, t.FeeCurrency}
+	}
+	return p.Table([]string{"ID", "Pair", "Side", "Role", "Amount", "Price", "Fee", "Fee Currency"}, rows)
+}
+
+func runSpotAmendOrder(cmd *cobra.Command, args []string) error {
+	id, _ := cmd.Flags().GetString("id")
+	pair, _ := cmd.Flags().GetString("pair")
+	amount, _ := cmd.Flags().GetString("amount")
+	price, _ := cmd.Flags().GetString("price")
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+	if err := c.RequireAuth(); err != nil {
+		return err
+	}
+
+	patch := gateapi.OrderPatch{CurrencyPair: pair}
+	if amount != "" {
+		patch.Amount = amount
+	}
+	if price != "" {
+		patch.Price = price
+	}
+	body, _ := json.Marshal(patch)
+	result, httpResp, err := c.SpotAPI.AmendOrder(c.Context(), id, patch, &gateapi.AmendOrderOpts{
+		CurrencyPair: optional.NewString(pair),
+	})
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "PATCH", fmt.Sprintf("/api/v4/spot/orders/%s", id), string(body)))
+		return nil
+	}
+	return p.Print(result)
+}
+
+func runSpotBatchCreateOrders(cmd *cobra.Command, args []string) error {
+	ordersJSON, _ := cmd.Flags().GetString("orders-json")
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+	if err := c.RequireAuth(); err != nil {
+		return err
+	}
+
+	var orders []gateapi.Order
+	if err := json.Unmarshal([]byte(ordersJSON), &orders); err != nil {
+		return fmt.Errorf("invalid --orders-json: %w", err)
+	}
+	result, httpResp, err := c.SpotAPI.CreateBatchOrders(c.Context(), orders, nil)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/spot/batch_orders", ordersJSON))
+		return nil
+	}
+	return p.Print(result)
+}
+
+func runSpotBatchCancelOrders(cmd *cobra.Command, args []string) error {
+	ordersJSON, _ := cmd.Flags().GetString("orders-json")
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+	if err := c.RequireAuth(); err != nil {
+		return err
+	}
+
+	var orders []gateapi.CancelBatchOrder
+	if err := json.Unmarshal([]byte(ordersJSON), &orders); err != nil {
+		return fmt.Errorf("invalid --orders-json: %w", err)
+	}
+	result, httpResp, err := c.SpotAPI.CancelBatchOrders(c.Context(), orders, nil)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/spot/cancel_batch_orders", ordersJSON))
+		return nil
+	}
+	return p.Print(result)
+}
+
+func runSpotBatchAmendOrders(cmd *cobra.Command, args []string) error {
+	ordersJSON, _ := cmd.Flags().GetString("orders-json")
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+	if err := c.RequireAuth(); err != nil {
+		return err
+	}
+
+	var items []gateapi.BatchAmendItem
+	if err := json.Unmarshal([]byte(ordersJSON), &items); err != nil {
+		return fmt.Errorf("invalid --orders-json: %w", err)
+	}
+	result, httpResp, err := c.SpotAPI.AmendBatchOrders(c.Context(), items, nil)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/spot/amend_batch_orders", ordersJSON))
+		return nil
+	}
+	return p.Print(result)
+}
+
+func runSpotAllOpenOrders(cmd *cobra.Command, args []string) error {
+	limit, _ := cmd.Flags().GetInt32("limit")
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+	if err := c.RequireAuth(); err != nil {
+		return err
+	}
+
+	opts := &gateapi.ListAllOpenOrdersOpts{}
+	if limit != 0 {
+		opts.Limit = optional.NewInt32(limit)
+	}
+
+	result, httpResp, err := c.SpotAPI.ListAllOpenOrders(c.Context(), opts)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/open_orders", ""))
+		return nil
+	}
+	if p.IsJSON() {
+		return p.Print(result)
+	}
+	rows := make([][]string, len(result))
+	for i, o := range result {
+		rows[i] = []string{o.CurrencyPair, fmt.Sprintf("%d", o.Total)}
+	}
+	return p.Table([]string{"Pair", "Open Orders"}, rows)
+}
+
+func runSpotCrossLiquidate(cmd *cobra.Command, args []string) error {
+	pair, _ := cmd.Flags().GetString("pair")
+	amount, _ := cmd.Flags().GetString("amount")
+	price, _ := cmd.Flags().GetString("price")
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+	if err := c.RequireAuth(); err != nil {
+		return err
+	}
+
+	req := gateapi.LiquidateOrder{CurrencyPair: pair, Amount: amount, Price: price}
+	body, _ := json.Marshal(req)
+	result, httpResp, err := c.SpotAPI.CreateCrossLiquidateOrder(c.Context(), req)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/spot/cross_liquidate_orders", string(body)))
+		return nil
+	}
+	return p.Print(result)
+}
+
+func runSpotCountdownCancelAll(cmd *cobra.Command, args []string) error {
+	timeout, _ := cmd.Flags().GetInt32("timeout")
+	pair, _ := cmd.Flags().GetString("pair")
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+	if err := c.RequireAuth(); err != nil {
+		return err
+	}
+
+	req := gateapi.CountdownCancelAllSpotTask{Timeout: timeout, CurrencyPair: pair}
+	body, _ := json.Marshal(req)
+	result, httpResp, err := c.SpotAPI.CountdownCancelAllSpot(c.Context(), req)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/spot/countdown_cancel_all", string(body)))
+		return nil
+	}
+	if p.IsJSON() {
+		return p.Print(result)
+	}
+	return p.Table(
+		[]string{"Trigger Time (ms)"},
+		[][]string{{fmt.Sprintf("%d", result.TriggerTime)}},
+	)
 }
