@@ -9,24 +9,30 @@ import (
 	"github.com/gate/gate-cli/internal/cmdutil"
 )
 
+var accountCmd = &cobra.Command{
+	Use:   "account",
+	Short: "Delivery futures account commands",
+}
+
 func init() {
-	accountCmd := &cobra.Command{
-		Use:   "account",
+	getCmd := &cobra.Command{
+		Use:   "get",
 		Short: "Get delivery futures account information",
 		RunE:  runDeliveryAccount,
 	}
-	accountCmd.Flags().String("settle", "usdt", "Settlement currency")
+	getCmd.Flags().String("settle", "usdt", "Settlement currency")
 
-	accountBookCmd := &cobra.Command{
-		Use:   "account-book",
+	bookCmd := &cobra.Command{
+		Use:   "book",
 		Short: "List delivery futures account change history",
 		RunE:  runDeliveryAccountBook,
 	}
-	accountBookCmd.Flags().String("settle", "usdt", "Settlement currency")
-	accountBookCmd.Flags().Int32("limit", 0, "Number of records to return")
-	accountBookCmd.Flags().String("type", "", "Change type filter")
+	bookCmd.Flags().String("settle", "usdt", "Settlement currency")
+	bookCmd.Flags().Int32("limit", 0, "Number of records to return")
+	bookCmd.Flags().String("type", "", "Change type filter")
 
-	Cmd.AddCommand(accountCmd, accountBookCmd)
+	accountCmd.AddCommand(getCmd, bookCmd)
+	Cmd.AddCommand(accountCmd)
 }
 
 func runDeliveryAccount(cmd *cobra.Command, args []string) error {

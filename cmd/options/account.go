@@ -11,33 +11,39 @@ import (
 	"github.com/gate/gate-cli/internal/cmdutil"
 )
 
+var accountCmd = &cobra.Command{
+	Use:   "account",
+	Short: "Options account commands",
+}
+
 func init() {
-	accountCmd := &cobra.Command{
-		Use:   "account",
+	getCmd := &cobra.Command{
+		Use:   "get",
 		Short: "Get options account information",
 		RunE:  runOptionsAccount,
 	}
 
-	accountBookCmd := &cobra.Command{
-		Use:   "account-book",
+	bookCmd := &cobra.Command{
+		Use:   "book",
 		Short: "List options account change history",
 		RunE:  runOptionsAccountBook,
 	}
-	accountBookCmd.Flags().Int32("limit", 0, "Number of records to return")
-	accountBookCmd.Flags().Int32("offset", 0, "Number of records to skip")
-	accountBookCmd.Flags().Int64("from", 0, "Start Unix timestamp")
-	accountBookCmd.Flags().Int64("to", 0, "End Unix timestamp")
-	accountBookCmd.Flags().String("type", "", "Change type filter")
+	bookCmd.Flags().Int32("limit", 0, "Number of records to return")
+	bookCmd.Flags().Int32("offset", 0, "Number of records to skip")
+	bookCmd.Flags().Int64("from", 0, "Start Unix timestamp")
+	bookCmd.Flags().Int64("to", 0, "End Unix timestamp")
+	bookCmd.Flags().String("type", "", "Change type filter")
 
-	mySettlementsCmd := &cobra.Command{
-		Use:   "my-settlements",
+	settlementsCmd := &cobra.Command{
+		Use:   "settlements",
 		Short: "List personal settlement history",
 		RunE:  runOptionsMySettlements,
 	}
-	mySettlementsCmd.Flags().String("underlying", "", "Underlying name (required)")
-	mySettlementsCmd.MarkFlagRequired("underlying")
+	settlementsCmd.Flags().String("underlying", "", "Underlying name (required)")
+	settlementsCmd.MarkFlagRequired("underlying")
 
-	Cmd.AddCommand(accountCmd, accountBookCmd, mySettlementsCmd)
+	accountCmd.AddCommand(getCmd, bookCmd, settlementsCmd)
+	Cmd.AddCommand(accountCmd)
 }
 
 func runOptionsAccount(cmd *cobra.Command, args []string) error {

@@ -13,68 +13,73 @@ import (
 	"github.com/gate/gate-cli/internal/cmdutil"
 )
 
+var orderCmd = &cobra.Command{
+	Use:   "order",
+	Short: "Options order commands",
+}
+
 func init() {
-	ordersCmd := &cobra.Command{
-		Use:   "orders",
+	listCmd := &cobra.Command{
+		Use:   "list",
 		Short: "List options orders",
 		RunE:  runOptionsOrders,
 	}
-	ordersCmd.Flags().String("status", "open", "Order status: open or finished (required)")
-	ordersCmd.Flags().String("contract", "", "Filter by contract name")
-	ordersCmd.Flags().String("underlying", "", "Filter by underlying")
-	ordersCmd.Flags().Int32("limit", 0, "Number of records to return")
-	ordersCmd.Flags().Int32("offset", 0, "Number of records to skip")
-	ordersCmd.MarkFlagRequired("status")
+	listCmd.Flags().String("status", "open", "Order status: open or finished (required)")
+	listCmd.Flags().String("contract", "", "Filter by contract name")
+	listCmd.Flags().String("underlying", "", "Filter by underlying")
+	listCmd.Flags().Int32("limit", 0, "Number of records to return")
+	listCmd.Flags().Int32("offset", 0, "Number of records to skip")
+	listCmd.MarkFlagRequired("status")
 
-	createOrderCmd := &cobra.Command{
-		Use:   "create-order",
+	createCmd := &cobra.Command{
+		Use:   "create",
 		Short: "Create an options order",
 		RunE:  runOptionsCreateOrder,
 	}
-	createOrderCmd.Flags().String("contract", "", "Options contract name (required)")
-	createOrderCmd.Flags().Int64("size", 0, "Order size, positive for buy, negative for sell (required)")
-	createOrderCmd.Flags().String("price", "", "Order price (0 for market order with ioc)")
-	createOrderCmd.Flags().String("tif", "", "Time in force: gtc, ioc, poc, fok")
-	createOrderCmd.MarkFlagRequired("contract")
-	createOrderCmd.MarkFlagRequired("size")
+	createCmd.Flags().String("contract", "", "Options contract name (required)")
+	createCmd.Flags().Int64("size", 0, "Order size, positive for buy, negative for sell (required)")
+	createCmd.Flags().String("price", "", "Order price (0 for market order with ioc)")
+	createCmd.Flags().String("tif", "", "Time in force: gtc, ioc, poc, fok")
+	createCmd.MarkFlagRequired("contract")
+	createCmd.MarkFlagRequired("size")
 
-	cancelOrdersCmd := &cobra.Command{
-		Use:   "cancel-orders",
+	cancelAllCmd := &cobra.Command{
+		Use:   "cancel-all",
 		Short: "Cancel all open options orders",
 		RunE:  runOptionsCancelOrders,
 	}
-	cancelOrdersCmd.Flags().String("contract", "", "Filter by contract name")
-	cancelOrdersCmd.Flags().String("underlying", "", "Filter by underlying")
-	cancelOrdersCmd.Flags().String("side", "", "Filter by side: ask or bid")
+	cancelAllCmd.Flags().String("contract", "", "Filter by contract name")
+	cancelAllCmd.Flags().String("underlying", "", "Filter by underlying")
+	cancelAllCmd.Flags().String("side", "", "Filter by side: ask or bid")
 
-	getOrderCmd := &cobra.Command{
-		Use:   "order",
+	getCmd := &cobra.Command{
+		Use:   "get",
 		Short: "Get details of an options order",
 		RunE:  runOptionsGetOrder,
 	}
-	getOrderCmd.Flags().Int64("id", 0, "Order ID (required)")
-	getOrderCmd.MarkFlagRequired("id")
+	getCmd.Flags().Int64("id", 0, "Order ID (required)")
+	getCmd.MarkFlagRequired("id")
 
-	amendOrderCmd := &cobra.Command{
-		Use:   "amend-order",
+	amendCmd := &cobra.Command{
+		Use:   "amend",
 		Short: "Amend an options order",
 		RunE:  runOptionsAmendOrder,
 	}
-	amendOrderCmd.Flags().Int64("id", 0, "Order ID (required)")
-	amendOrderCmd.Flags().String("contract", "", "Options contract name (required)")
-	amendOrderCmd.Flags().String("price", "", "New price (required)")
-	amendOrderCmd.Flags().Int64("size", 0, "New size")
-	amendOrderCmd.MarkFlagRequired("id")
-	amendOrderCmd.MarkFlagRequired("contract")
-	amendOrderCmd.MarkFlagRequired("price")
+	amendCmd.Flags().Int64("id", 0, "Order ID (required)")
+	amendCmd.Flags().String("contract", "", "Options contract name (required)")
+	amendCmd.Flags().String("price", "", "New price (required)")
+	amendCmd.Flags().Int64("size", 0, "New size")
+	amendCmd.MarkFlagRequired("id")
+	amendCmd.MarkFlagRequired("contract")
+	amendCmd.MarkFlagRequired("price")
 
-	cancelOrderCmd := &cobra.Command{
-		Use:   "cancel-order",
+	cancelCmd := &cobra.Command{
+		Use:   "cancel",
 		Short: "Cancel a single options order",
 		RunE:  runOptionsCancelOrder,
 	}
-	cancelOrderCmd.Flags().Int64("id", 0, "Order ID (required)")
-	cancelOrderCmd.MarkFlagRequired("id")
+	cancelCmd.Flags().Int64("id", 0, "Order ID (required)")
+	cancelCmd.MarkFlagRequired("id")
 
 	countdownCmd := &cobra.Command{
 		Use:   "countdown-cancel-all",
@@ -85,7 +90,8 @@ func init() {
 	countdownCmd.Flags().String("underlying", "", "Filter by underlying")
 	countdownCmd.MarkFlagRequired("timeout")
 
-	Cmd.AddCommand(ordersCmd, createOrderCmd, cancelOrdersCmd, getOrderCmd, amendOrderCmd, cancelOrderCmd, countdownCmd)
+	orderCmd.AddCommand(listCmd, createCmd, cancelAllCmd, getCmd, amendCmd, cancelCmd, countdownCmd)
+	Cmd.AddCommand(orderCmd)
 }
 
 func runOptionsOrders(cmd *cobra.Command, args []string) error {

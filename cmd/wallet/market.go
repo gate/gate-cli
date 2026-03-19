@@ -11,6 +11,11 @@ import (
 	"github.com/gate/gate-cli/internal/cmdutil"
 )
 
+var marketCmd = &cobra.Command{
+	Use:   "market",
+	Short: "Wallet market info and fee commands",
+}
+
 func init() {
 	chainsCmd := &cobra.Command{
 		Use:   "chains",
@@ -41,7 +46,8 @@ func init() {
 		RunE:  runWalletLowCap,
 	}
 
-	Cmd.AddCommand(chainsCmd, withdrawStatusCmd, tradeFeeCmd, lowCapCmd)
+	marketCmd.AddCommand(chainsCmd, withdrawStatusCmd, tradeFeeCmd, lowCapCmd)
+	Cmd.AddCommand(marketCmd)
 }
 
 func runWalletChains(cmd *cobra.Command, args []string) error {

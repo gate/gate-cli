@@ -12,6 +12,11 @@ import (
 	"github.com/gate/gate-cli/internal/cmdutil"
 )
 
+var marketCmd = &cobra.Command{
+	Use:   "market",
+	Short: "Options market data (public, no authentication required)",
+}
+
 func init() {
 	underlyingsCmd := &cobra.Command{
 		Use:   "underlyings",
@@ -118,11 +123,12 @@ func init() {
 	tradesCmd.Flags().String("contract", "", "Filter by contract name")
 	tradesCmd.Flags().Int32("limit", 0, "Number of records")
 
-	Cmd.AddCommand(
+	marketCmd.AddCommand(
 		underlyingsCmd, expirationsCmd, contractsCmd, contractCmd,
 		settlementsCmd, settlementCmd, orderBookCmd, tickersCmd,
 		underlyingTickersCmd, candlesticksCmd, underlyingCandlesticksCmd, tradesCmd,
 	)
+	Cmd.AddCommand(marketCmd)
 }
 
 func runOptionsUnderlyings(cmd *cobra.Command, args []string) error {

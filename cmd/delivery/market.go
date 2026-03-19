@@ -20,6 +20,11 @@ func getSettle(cmd *cobra.Command) string {
 	return settle
 }
 
+var marketCmd = &cobra.Command{
+	Use:   "market",
+	Short: "Delivery market data (public, no authentication required)",
+}
+
 func init() {
 	contractsCmd := &cobra.Command{
 		Use:   "contracts",
@@ -93,7 +98,8 @@ func init() {
 	riskLimitTiersCmd.Flags().String("contract", "", "Futures contract name (required)")
 	riskLimitTiersCmd.MarkFlagRequired("contract")
 
-	Cmd.AddCommand(contractsCmd, contractCmd, orderBookCmd, tradesCmd, candlesticksCmd, tickersCmd, insuranceCmd, riskLimitTiersCmd)
+	marketCmd.AddCommand(contractsCmd, contractCmd, orderBookCmd, tradesCmd, candlesticksCmd, tickersCmd, insuranceCmd, riskLimitTiersCmd)
+	Cmd.AddCommand(marketCmd)
 }
 
 func runDeliveryContracts(cmd *cobra.Command, args []string) error {
