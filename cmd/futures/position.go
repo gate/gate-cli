@@ -27,7 +27,7 @@ func init() {
 
 	getCmd := &cobra.Command{
 		Use:   "get",
-		Short: "Get a specific futures position",
+		Short: "Get position(s) for a contract (works in both single and dual mode)",
 		RunE:  runFuturesPositionGet,
 	}
 	getCmd.Flags().String("contract", "", "Contract name, e.g. BTC_USDT (required)")
@@ -62,6 +62,7 @@ func init() {
 	}
 	updateMarginCmd.Flags().String("contract", "", "Contract name (required)")
 	updateMarginCmd.Flags().String("change", "", "Margin change amount (required)")
+	updateMarginCmd.Flags().String("dual-side", "", "Position side for dual mode: dual_long or dual_short (omit for single mode)")
 	updateMarginCmd.MarkFlagRequired("contract")
 	updateMarginCmd.MarkFlagRequired("change")
 	addSettleFlag(updateMarginCmd)
@@ -92,7 +93,7 @@ func init() {
 
 	updateCrossCmd := &cobra.Command{
 		Use:   "update-cross-mode",
-		Short: "Update position cross/isolated margin mode",
+		Short: "Update position cross/isolated margin mode (works in both single and dual mode)",
 		RunE:  runFuturesUpdatePositionCrossMode,
 	}
 	updateCrossCmd.Flags().String("contract", "", "Contract name (required)")
@@ -100,17 +101,6 @@ func init() {
 	updateCrossCmd.MarkFlagRequired("contract")
 	updateCrossCmd.MarkFlagRequired("mode")
 	addSettleFlag(updateCrossCmd)
-
-	dualCrossModeCmd := &cobra.Command{
-		Use:   "dual-cross-mode",
-		Short: "Update dual position cross/isolated margin mode",
-		RunE:  runFuturesUpdateDualCrossMode,
-	}
-	dualCrossModeCmd.Flags().String("contract", "", "Contract name (required)")
-	dualCrossModeCmd.Flags().String("mode", "", "Margin mode: ISOLATED or CROSS (required)")
-	dualCrossModeCmd.MarkFlagRequired("contract")
-	dualCrossModeCmd.MarkFlagRequired("mode")
-	addSettleFlag(dualCrossModeCmd)
 
 	updateRiskLimitCmd := &cobra.Command{
 		Use:   "update-risk-limit",
@@ -122,50 +112,6 @@ func init() {
 	updateRiskLimitCmd.MarkFlagRequired("contract")
 	updateRiskLimitCmd.MarkFlagRequired("risk-limit")
 	addSettleFlag(updateRiskLimitCmd)
-
-	dualGetCmd := &cobra.Command{
-		Use:   "dual-get",
-		Short: "Get position in dual (hedge) mode",
-		RunE:  runFuturesDualGetPosition,
-	}
-	dualGetCmd.Flags().String("contract", "", "Contract name (required)")
-	dualGetCmd.MarkFlagRequired("contract")
-	addSettleFlag(dualGetCmd)
-
-	dualUpdateMarginCmd := &cobra.Command{
-		Use:   "dual-update-margin",
-		Short: "Update position margin in dual mode",
-		RunE:  runFuturesDualUpdateMargin,
-	}
-	dualUpdateMarginCmd.Flags().String("contract", "", "Contract name (required)")
-	dualUpdateMarginCmd.Flags().String("change", "", "Margin change amount (required)")
-	dualUpdateMarginCmd.Flags().String("dual-side", "dual_long", "Position side: dual_long or dual_short (required)")
-	dualUpdateMarginCmd.MarkFlagRequired("contract")
-	dualUpdateMarginCmd.MarkFlagRequired("change")
-	dualUpdateMarginCmd.MarkFlagRequired("dual-side")
-	addSettleFlag(dualUpdateMarginCmd)
-
-	dualUpdateLeverageCmd := &cobra.Command{
-		Use:   "dual-update-leverage",
-		Short: "Update position leverage in dual mode",
-		RunE:  runFuturesDualUpdateLeverage,
-	}
-	dualUpdateLeverageCmd.Flags().String("contract", "", "Contract name (required)")
-	dualUpdateLeverageCmd.Flags().String("leverage", "", "New leverage (required)")
-	dualUpdateLeverageCmd.MarkFlagRequired("contract")
-	dualUpdateLeverageCmd.MarkFlagRequired("leverage")
-	addSettleFlag(dualUpdateLeverageCmd)
-
-	dualUpdateRiskLimitCmd := &cobra.Command{
-		Use:   "dual-update-risk-limit",
-		Short: "Update position risk limit in dual mode",
-		RunE:  runFuturesDualUpdateRiskLimit,
-	}
-	dualUpdateRiskLimitCmd.Flags().String("contract", "", "Contract name (required)")
-	dualUpdateRiskLimitCmd.Flags().String("risk-limit", "", "New risk limit (required)")
-	dualUpdateRiskLimitCmd.MarkFlagRequired("contract")
-	dualUpdateRiskLimitCmd.MarkFlagRequired("risk-limit")
-	addSettleFlag(dualUpdateRiskLimitCmd)
 
 	closeHistoryCmd := &cobra.Command{
 		Use:   "close-history",
@@ -199,8 +145,7 @@ func init() {
 	positionCmd.AddCommand(listCmd, getCmd,
 		listTimerangeCmd, leverageCmd,
 		updateMarginCmd, updateLeverageCmd, updateContractLeverageCmd,
-		updateCrossCmd, dualCrossModeCmd, updateRiskLimitCmd,
-		dualGetCmd, dualUpdateMarginCmd, dualUpdateLeverageCmd, dualUpdateRiskLimitCmd,
+		updateCrossCmd, updateRiskLimitCmd,
 		closeHistoryCmd, liquidatesCmd, adlCmd)
 	Cmd.AddCommand(positionCmd)
 }
@@ -249,10 +194,9 @@ func runFuturesPositionGet(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// GetFuturesPosition handles both single and dual mode transparently.
-	positions, httpResp, err := c.GetFuturesPosition(settle, contract)
+	positions, httpResp, err := c.FuturesAPI.GetDualModePosition(c.Context(), settle, contract)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/positions/"+contract, ""))
+		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/dual_comp/positions/"+contract, ""))
 		return nil
 	}
 	if p.IsJSON() {
@@ -344,6 +288,7 @@ func runFuturesPositionLeverage(cmd *cobra.Command, args []string) error {
 func runFuturesUpdatePositionMargin(cmd *cobra.Command, args []string) error {
 	contract, _ := cmd.Flags().GetString("contract")
 	change, _ := cmd.Flags().GetString("change")
+	dualSide, _ := cmd.Flags().GetString("dual-side")
 	settle := cmdutil.GetSettle(cmd)
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
@@ -354,9 +299,9 @@ func runFuturesUpdatePositionMargin(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	result, httpResp, err := c.FuturesAPI.UpdatePositionMargin(c.Context(), settle, contract, change)
+	result, httpResp, err := c.FuturesAPI.UpdateDualModePositionMargin(c.Context(), settle, contract, change, dualSide)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/positions/"+contract+"/margin", ""))
+		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/dual_comp/positions/"+contract+"/margin", ""))
 		return nil
 	}
 	return p.Print(result)
@@ -375,9 +320,9 @@ func runFuturesUpdatePositionLeverage(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	result, httpResp, err := c.FuturesAPI.UpdatePositionLeverage(c.Context(), settle, contract, leverage, nil)
+	result, httpResp, err := c.FuturesAPI.UpdateDualModePositionLeverage(c.Context(), settle, contract, leverage, nil)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/positions/"+contract+"/leverage", ""))
+		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/dual_comp/positions/"+contract+"/leverage", ""))
 		return nil
 	}
 	return p.Print(result)
@@ -418,29 +363,6 @@ func runFuturesUpdatePositionCrossMode(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	req := gateapi.FuturesPositionCrossMode{Contract: contract, Mode: mode}
-	body, _ := json.Marshal(req)
-	result, httpResp, err := c.FuturesAPI.UpdatePositionCrossMode(c.Context(), settle, req)
-	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/positions/cross_mode", string(body)))
-		return nil
-	}
-	return p.Print(result)
-}
-
-func runFuturesUpdateDualCrossMode(cmd *cobra.Command, args []string) error {
-	contract, _ := cmd.Flags().GetString("contract")
-	mode, _ := cmd.Flags().GetString("mode")
-	settle := cmdutil.GetSettle(cmd)
-	p := cmdutil.GetPrinter(cmd)
-	c, err := cmdutil.GetClient(cmd)
-	if err != nil {
-		return err
-	}
-	if err := c.RequireAuth(); err != nil {
-		return err
-	}
-
 	req := gateapi.InlineObject{Contract: contract, Mode: mode}
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.FuturesAPI.UpdateDualCompPositionCrossMode(c.Context(), settle, req)
@@ -452,90 +374,6 @@ func runFuturesUpdateDualCrossMode(cmd *cobra.Command, args []string) error {
 }
 
 func runFuturesUpdatePositionRiskLimit(cmd *cobra.Command, args []string) error {
-	contract, _ := cmd.Flags().GetString("contract")
-	riskLimit, _ := cmd.Flags().GetString("risk-limit")
-	settle := cmdutil.GetSettle(cmd)
-	p := cmdutil.GetPrinter(cmd)
-	c, err := cmdutil.GetClient(cmd)
-	if err != nil {
-		return err
-	}
-	if err := c.RequireAuth(); err != nil {
-		return err
-	}
-
-	result, httpResp, err := c.FuturesAPI.UpdatePositionRiskLimit(c.Context(), settle, contract, riskLimit)
-	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/positions/"+contract+"/risk_limit", ""))
-		return nil
-	}
-	return p.Print(result)
-}
-
-func runFuturesDualGetPosition(cmd *cobra.Command, args []string) error {
-	contract, _ := cmd.Flags().GetString("contract")
-	settle := cmdutil.GetSettle(cmd)
-	p := cmdutil.GetPrinter(cmd)
-	c, err := cmdutil.GetClient(cmd)
-	if err != nil {
-		return err
-	}
-	if err := c.RequireAuth(); err != nil {
-		return err
-	}
-
-	result, httpResp, err := c.FuturesAPI.GetDualModePosition(c.Context(), settle, contract)
-	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/dual_comp/positions/"+contract, ""))
-		return nil
-	}
-	return p.Print(result)
-}
-
-func runFuturesDualUpdateMargin(cmd *cobra.Command, args []string) error {
-	contract, _ := cmd.Flags().GetString("contract")
-	change, _ := cmd.Flags().GetString("change")
-	dualSide, _ := cmd.Flags().GetString("dual-side")
-	settle := cmdutil.GetSettle(cmd)
-	p := cmdutil.GetPrinter(cmd)
-	c, err := cmdutil.GetClient(cmd)
-	if err != nil {
-		return err
-	}
-	if err := c.RequireAuth(); err != nil {
-		return err
-	}
-
-	result, httpResp, err := c.FuturesAPI.UpdateDualModePositionMargin(c.Context(), settle, contract, change, dualSide)
-	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/dual_comp/positions/"+contract+"/margin", ""))
-		return nil
-	}
-	return p.Print(result)
-}
-
-func runFuturesDualUpdateLeverage(cmd *cobra.Command, args []string) error {
-	contract, _ := cmd.Flags().GetString("contract")
-	leverage, _ := cmd.Flags().GetString("leverage")
-	settle := cmdutil.GetSettle(cmd)
-	p := cmdutil.GetPrinter(cmd)
-	c, err := cmdutil.GetClient(cmd)
-	if err != nil {
-		return err
-	}
-	if err := c.RequireAuth(); err != nil {
-		return err
-	}
-
-	result, httpResp, err := c.FuturesAPI.UpdateDualModePositionLeverage(c.Context(), settle, contract, leverage, nil)
-	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/dual_comp/positions/"+contract+"/leverage", ""))
-		return nil
-	}
-	return p.Print(result)
-}
-
-func runFuturesDualUpdateRiskLimit(cmd *cobra.Command, args []string) error {
 	contract, _ := cmd.Flags().GetString("contract")
 	riskLimit, _ := cmd.Flags().GetString("risk-limit")
 	settle := cmdutil.GetSettle(cmd)
