@@ -12,37 +12,42 @@ import (
 	"github.com/gate/gate-cli/internal/cmdutil"
 )
 
+var transferCmd = &cobra.Command{
+	Use:   "transfer",
+	Short: "Wallet transfer commands",
+}
+
 func init() {
-	transferCmd := &cobra.Command{
-		Use:   "transfer",
+	createCmd := &cobra.Command{
+		Use:   "create",
 		Short: "Transfer between accounts",
 		RunE:  runWalletTransfer,
 	}
-	transferCmd.Flags().String("currency", "", "Currency name (required)")
-	transferCmd.Flags().String("from", "", "Source account type (required)")
-	transferCmd.Flags().String("to", "", "Destination account type (required)")
-	transferCmd.Flags().String("amount", "", "Transfer amount (required)")
-	transferCmd.Flags().String("currency-pair", "", "Margin trading pair (required for margin accounts)")
-	transferCmd.Flags().String("settle", "", "Settlement currency (required for contract accounts)")
-	transferCmd.MarkFlagRequired("currency")
-	transferCmd.MarkFlagRequired("from")
-	transferCmd.MarkFlagRequired("to")
-	transferCmd.MarkFlagRequired("amount")
+	createCmd.Flags().String("currency", "", "Currency name (required)")
+	createCmd.Flags().String("from", "", "Source account type (required)")
+	createCmd.Flags().String("to", "", "Destination account type (required)")
+	createCmd.Flags().String("amount", "", "Transfer amount (required)")
+	createCmd.Flags().String("currency-pair", "", "Margin trading pair (required for margin accounts)")
+	createCmd.Flags().String("settle", "", "Settlement currency (required for contract accounts)")
+	createCmd.MarkFlagRequired("currency")
+	createCmd.MarkFlagRequired("from")
+	createCmd.MarkFlagRequired("to")
+	createCmd.MarkFlagRequired("amount")
 
-	subTransferCmd := &cobra.Command{
-		Use:   "sub-transfer",
+	toSubCmd := &cobra.Command{
+		Use:   "to-sub",
 		Short: "Transfer between main and sub accounts",
 		RunE:  runWalletSubTransfer,
 	}
-	subTransferCmd.Flags().String("currency", "", "Currency name (required)")
-	subTransferCmd.Flags().String("sub-account", "", "Sub-account user ID (required)")
-	subTransferCmd.Flags().String("direction", "", "Transfer direction: to or from (required)")
-	subTransferCmd.Flags().String("amount", "", "Transfer amount (required)")
-	subTransferCmd.Flags().String("sub-account-type", "", "Sub-account trading account type")
-	subTransferCmd.MarkFlagRequired("currency")
-	subTransferCmd.MarkFlagRequired("sub-account")
-	subTransferCmd.MarkFlagRequired("direction")
-	subTransferCmd.MarkFlagRequired("amount")
+	toSubCmd.Flags().String("currency", "", "Currency name (required)")
+	toSubCmd.Flags().String("sub-account", "", "Sub-account user ID (required)")
+	toSubCmd.Flags().String("direction", "", "Transfer direction: to or from (required)")
+	toSubCmd.Flags().String("amount", "", "Transfer amount (required)")
+	toSubCmd.Flags().String("sub-account-type", "", "Sub-account trading account type")
+	toSubCmd.MarkFlagRequired("currency")
+	toSubCmd.MarkFlagRequired("sub-account")
+	toSubCmd.MarkFlagRequired("direction")
+	toSubCmd.MarkFlagRequired("amount")
 
 	subToSubCmd := &cobra.Command{
 		Use:   "sub-to-sub",
@@ -62,26 +67,27 @@ func init() {
 	subToSubCmd.MarkFlagRequired("to-type")
 	subToSubCmd.MarkFlagRequired("amount")
 
-	transferStatusCmd := &cobra.Command{
-		Use:   "transfer-status",
+	statusCmd := &cobra.Command{
+		Use:   "status",
 		Short: "Query main-sub account transfer status",
 		RunE:  runWalletTransferStatus,
 	}
-	transferStatusCmd.Flags().String("client-order-id", "", "Client-defined transfer order ID")
-	transferStatusCmd.Flags().String("tx-id", "", "Transaction ID returned from transfer")
+	statusCmd.Flags().String("client-order-id", "", "Client-defined transfer order ID")
+	statusCmd.Flags().String("tx-id", "", "Transaction ID returned from transfer")
 
-	subTransfersCmd := &cobra.Command{
-		Use:   "sub-transfers",
+	subListCmd := &cobra.Command{
+		Use:   "sub-list",
 		Short: "List transfer records between main and sub accounts",
 		RunE:  runWalletSubTransfers,
 	}
-	subTransfersCmd.Flags().String("sub-uid", "", "Filter by sub-account user ID")
-	subTransfersCmd.Flags().Int64("from", 0, "Start Unix timestamp")
-	subTransfersCmd.Flags().Int64("to", 0, "End Unix timestamp")
-	subTransfersCmd.Flags().Int32("limit", 0, "Number of records to return")
-	subTransfersCmd.Flags().Int32("offset", 0, "Number of records to skip")
+	subListCmd.Flags().String("sub-uid", "", "Filter by sub-account user ID")
+	subListCmd.Flags().Int64("from", 0, "Start Unix timestamp")
+	subListCmd.Flags().Int64("to", 0, "End Unix timestamp")
+	subListCmd.Flags().Int32("limit", 0, "Number of records to return")
+	subListCmd.Flags().Int32("offset", 0, "Number of records to skip")
 
-	Cmd.AddCommand(transferCmd, subTransferCmd, subToSubCmd, transferStatusCmd, subTransfersCmd)
+	transferCmd.AddCommand(createCmd, toSubCmd, subToSubCmd, statusCmd, subListCmd)
+	Cmd.AddCommand(transferCmd)
 }
 
 func runWalletTransfer(cmd *cobra.Command, args []string) error {

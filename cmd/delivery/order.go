@@ -13,59 +13,64 @@ import (
 	"github.com/gate/gate-cli/internal/cmdutil"
 )
 
+var orderCmd = &cobra.Command{
+	Use:   "order",
+	Short: "Delivery futures order commands",
+}
+
 func init() {
-	ordersCmd := &cobra.Command{
-		Use:   "orders",
+	listCmd := &cobra.Command{
+		Use:   "list",
 		Short: "List delivery futures orders",
 		RunE:  runDeliveryOrders,
 	}
-	ordersCmd.Flags().String("settle", "usdt", "Settlement currency")
-	ordersCmd.Flags().String("status", "open", "Order status: open or finished (required)")
-	ordersCmd.Flags().String("contract", "", "Filter by contract name")
-	ordersCmd.Flags().Int32("limit", 0, "Number of records to return")
-	ordersCmd.Flags().Int32("offset", 0, "Number of records to skip")
-	ordersCmd.MarkFlagRequired("status")
+	listCmd.Flags().String("settle", "usdt", "Settlement currency")
+	listCmd.Flags().String("status", "open", "Order status: open or finished (required)")
+	listCmd.Flags().String("contract", "", "Filter by contract name")
+	listCmd.Flags().Int32("limit", 0, "Number of records to return")
+	listCmd.Flags().Int32("offset", 0, "Number of records to skip")
+	listCmd.MarkFlagRequired("status")
 
-	createOrderCmd := &cobra.Command{
-		Use:   "create-order",
+	createCmd := &cobra.Command{
+		Use:   "create",
 		Short: "Create a delivery futures order",
 		RunE:  runDeliveryCreateOrder,
 	}
-	createOrderCmd.Flags().String("settle", "usdt", "Settlement currency")
-	createOrderCmd.Flags().String("contract", "", "Futures contract name (required)")
-	createOrderCmd.Flags().Int64("size", 0, "Order size, positive for buy, negative for sell (required)")
-	createOrderCmd.Flags().String("price", "", "Order price (0 for market order)")
-	createOrderCmd.Flags().String("tif", "", "Time in force: gtc, ioc, poc, fok")
-	createOrderCmd.MarkFlagRequired("contract")
-	createOrderCmd.MarkFlagRequired("size")
+	createCmd.Flags().String("settle", "usdt", "Settlement currency")
+	createCmd.Flags().String("contract", "", "Futures contract name (required)")
+	createCmd.Flags().Int64("size", 0, "Order size, positive for buy, negative for sell (required)")
+	createCmd.Flags().String("price", "", "Order price (0 for market order)")
+	createCmd.Flags().String("tif", "", "Time in force: gtc, ioc, poc, fok")
+	createCmd.MarkFlagRequired("contract")
+	createCmd.MarkFlagRequired("size")
 
-	cancelOrdersCmd := &cobra.Command{
-		Use:   "cancel-orders",
+	cancelAllCmd := &cobra.Command{
+		Use:   "cancel-all",
 		Short: "Cancel all open delivery orders for a contract",
 		RunE:  runDeliveryCancelOrders,
 	}
-	cancelOrdersCmd.Flags().String("settle", "usdt", "Settlement currency")
-	cancelOrdersCmd.Flags().String("contract", "", "Futures contract name (required)")
-	cancelOrdersCmd.Flags().String("side", "", "Filter by side: ask or bid")
-	cancelOrdersCmd.MarkFlagRequired("contract")
+	cancelAllCmd.Flags().String("settle", "usdt", "Settlement currency")
+	cancelAllCmd.Flags().String("contract", "", "Futures contract name (required)")
+	cancelAllCmd.Flags().String("side", "", "Filter by side: ask or bid")
+	cancelAllCmd.MarkFlagRequired("contract")
 
-	getOrderCmd := &cobra.Command{
-		Use:   "order",
+	getCmd := &cobra.Command{
+		Use:   "get",
 		Short: "Get details of a delivery futures order",
 		RunE:  runDeliveryGetOrder,
 	}
-	getOrderCmd.Flags().String("settle", "usdt", "Settlement currency")
-	getOrderCmd.Flags().String("id", "", "Order ID (required)")
-	getOrderCmd.MarkFlagRequired("id")
+	getCmd.Flags().String("settle", "usdt", "Settlement currency")
+	getCmd.Flags().String("id", "", "Order ID (required)")
+	getCmd.MarkFlagRequired("id")
 
-	cancelOrderCmd := &cobra.Command{
-		Use:   "cancel-order",
+	cancelCmd := &cobra.Command{
+		Use:   "cancel",
 		Short: "Cancel a single delivery futures order",
 		RunE:  runDeliveryCancelOrder,
 	}
-	cancelOrderCmd.Flags().String("settle", "usdt", "Settlement currency")
-	cancelOrderCmd.Flags().String("id", "", "Order ID (required)")
-	cancelOrderCmd.MarkFlagRequired("id")
+	cancelCmd.Flags().String("settle", "usdt", "Settlement currency")
+	cancelCmd.Flags().String("id", "", "Order ID (required)")
+	cancelCmd.MarkFlagRequired("id")
 
 	myTradesCmd := &cobra.Command{
 		Use:   "my-trades",
@@ -76,7 +81,8 @@ func init() {
 	myTradesCmd.Flags().String("contract", "", "Filter by contract name")
 	myTradesCmd.Flags().Int32("limit", 0, "Number of records to return")
 
-	Cmd.AddCommand(ordersCmd, createOrderCmd, cancelOrdersCmd, getOrderCmd, cancelOrderCmd, myTradesCmd)
+	orderCmd.AddCommand(listCmd, createCmd, cancelAllCmd, getCmd, cancelCmd, myTradesCmd)
+	Cmd.AddCommand(orderCmd)
 }
 
 func runDeliveryOrders(cmd *cobra.Command, args []string) error {

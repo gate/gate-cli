@@ -12,76 +12,82 @@ import (
 	"github.com/gate/gate-cli/internal/cmdutil"
 )
 
+var balanceCmd = &cobra.Command{
+	Use:   "balance",
+	Short: "Wallet balance commands",
+}
+
 func init() {
-	totalBalanceCmd := &cobra.Command{
-		Use:   "total-balance",
+	totalCmd := &cobra.Command{
+		Use:   "total",
 		Short: "Get total estimated balance across all accounts",
 		RunE:  runWalletTotalBalance,
 	}
-	totalBalanceCmd.Flags().String("currency", "", "Target currency for conversion (BTC, CNY, USD, USDT)")
+	totalCmd.Flags().String("currency", "", "Target currency for conversion (BTC, CNY, USD, USDT)")
 
-	subBalancesCmd := &cobra.Command{
-		Use:   "sub-balances",
+	subCmd := &cobra.Command{
+		Use:   "sub",
 		Short: "List sub-account spot balances",
 		RunE:  runWalletSubBalances,
 	}
-	subBalancesCmd.Flags().String("sub-uid", "", "Filter by sub-account user IDs (comma-separated)")
+	subCmd.Flags().String("sub-uid", "", "Filter by sub-account user IDs (comma-separated)")
 
-	subMarginBalancesCmd := &cobra.Command{
-		Use:   "sub-margin-balances",
+	subMarginCmd := &cobra.Command{
+		Use:   "sub-margin",
 		Short: "List sub-account margin account balances",
 		RunE:  runWalletSubMarginBalances,
 	}
-	subMarginBalancesCmd.Flags().String("sub-uid", "", "Filter by sub-account user IDs (comma-separated)")
+	subMarginCmd.Flags().String("sub-uid", "", "Filter by sub-account user IDs (comma-separated)")
 
-	subFuturesBalancesCmd := &cobra.Command{
-		Use:   "sub-futures-balances",
+	subFuturesCmd := &cobra.Command{
+		Use:   "sub-futures",
 		Short: "List sub-account perpetual futures account balances",
 		RunE:  runWalletSubFuturesBalances,
 	}
-	subFuturesBalancesCmd.Flags().String("sub-uid", "", "Filter by sub-account user IDs (comma-separated)")
-	subFuturesBalancesCmd.Flags().String("settle", "", "Filter by settlement currency")
+	subFuturesCmd.Flags().String("sub-uid", "", "Filter by sub-account user IDs (comma-separated)")
+	subFuturesCmd.Flags().String("settle", "", "Filter by settlement currency")
 
-	subCrossMarginBalancesCmd := &cobra.Command{
-		Use:   "sub-cross-margin-balances",
+	subCrossMarginCmd := &cobra.Command{
+		Use:   "sub-cross-margin",
 		Short: "List sub-account cross-margin account balances",
 		RunE:  runWalletSubCrossMarginBalances,
 	}
-	subCrossMarginBalancesCmd.Flags().String("sub-uid", "", "Filter by sub-account user IDs (comma-separated)")
+	subCrossMarginCmd.Flags().String("sub-uid", "", "Filter by sub-account user IDs (comma-separated)")
 
-	smallBalanceCmd := &cobra.Command{
-		Use:   "small-balance",
+	smallCmd := &cobra.Command{
+		Use:   "small",
 		Short: "List small balances convertible to GT",
 		RunE:  runWalletSmallBalance,
 	}
 
-	smallBalanceHistoryCmd := &cobra.Command{
-		Use:   "small-balance-history",
+	smallHistoryCmd := &cobra.Command{
+		Use:   "small-history",
 		Short: "List small balance conversion history",
 		RunE:  runWalletSmallBalanceHistory,
 	}
-	smallBalanceHistoryCmd.Flags().String("currency", "", "Filter by currency")
-	smallBalanceHistoryCmd.Flags().Int32("page", 0, "Page number")
-	smallBalanceHistoryCmd.Flags().Int32("limit", 0, "Number of records to return")
+	smallHistoryCmd.Flags().String("currency", "", "Filter by currency")
+	smallHistoryCmd.Flags().Int32("page", 0, "Page number")
+	smallHistoryCmd.Flags().Int32("limit", 0, "Number of records to return")
 
-	convertSmallBalanceCmd := &cobra.Command{
-		Use:   "convert-small-balance",
+	convertSmallCmd := &cobra.Command{
+		Use:   "convert-small",
 		Short: "Convert small balances to GT",
 		RunE:  runWalletConvertSmallBalance,
 	}
-	convertSmallBalanceCmd.Flags().StringSlice("currencies", nil, "Currencies to convert (omit for all)")
-	convertSmallBalanceCmd.Flags().Bool("all", false, "Convert all small balances")
+	convertSmallCmd.Flags().StringSlice("currencies", nil, "Currencies to convert (omit for all)")
+	convertSmallCmd.Flags().Bool("all", false, "Convert all small balances")
 
-	Cmd.AddCommand(
-		totalBalanceCmd,
-		subBalancesCmd,
-		subMarginBalancesCmd,
-		subFuturesBalancesCmd,
-		subCrossMarginBalancesCmd,
-		smallBalanceCmd,
-		smallBalanceHistoryCmd,
-		convertSmallBalanceCmd,
+	balanceCmd.AddCommand(
+		totalCmd,
+		subCmd,
+		subMarginCmd,
+		subFuturesCmd,
+		subCrossMarginCmd,
+		smallCmd,
+		smallHistoryCmd,
+		convertSmallCmd,
 	)
+	Cmd.AddCommand(balanceCmd)
 }
 
 func runWalletTotalBalance(cmd *cobra.Command, args []string) error {

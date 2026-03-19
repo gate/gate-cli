@@ -12,22 +12,27 @@ import (
 	"github.com/gate/gate-cli/internal/cmdutil"
 )
 
+var positionCmd = &cobra.Command{
+	Use:   "position",
+	Short: "Delivery futures position commands",
+}
+
 func init() {
-	positionsCmd := &cobra.Command{
-		Use:   "positions",
+	listCmd := &cobra.Command{
+		Use:   "list",
 		Short: "List all delivery positions",
 		RunE:  runDeliveryPositions,
 	}
-	positionsCmd.Flags().String("settle", "usdt", "Settlement currency")
+	listCmd.Flags().String("settle", "usdt", "Settlement currency")
 
-	positionCmd := &cobra.Command{
-		Use:   "position",
+	getCmd := &cobra.Command{
+		Use:   "get",
 		Short: "Get details of a delivery position",
 		RunE:  runDeliveryPosition,
 	}
-	positionCmd.Flags().String("settle", "usdt", "Settlement currency")
-	positionCmd.Flags().String("contract", "", "Futures contract name (required)")
-	positionCmd.MarkFlagRequired("contract")
+	getCmd.Flags().String("settle", "usdt", "Settlement currency")
+	getCmd.Flags().String("contract", "", "Futures contract name (required)")
+	getCmd.MarkFlagRequired("contract")
 
 	updateMarginCmd := &cobra.Command{
 		Use:   "update-margin",
@@ -62,14 +67,14 @@ func init() {
 	updateRiskLimitCmd.MarkFlagRequired("contract")
 	updateRiskLimitCmd.MarkFlagRequired("risk-limit")
 
-	positionCloseCmd := &cobra.Command{
-		Use:   "position-close",
+	closeCmd := &cobra.Command{
+		Use:   "close",
 		Short: "List position close history",
 		RunE:  runDeliveryPositionClose,
 	}
-	positionCloseCmd.Flags().String("settle", "usdt", "Settlement currency")
-	positionCloseCmd.Flags().String("contract", "", "Filter by contract name")
-	positionCloseCmd.Flags().Int32("limit", 0, "Number of records to return")
+	closeCmd.Flags().String("settle", "usdt", "Settlement currency")
+	closeCmd.Flags().String("contract", "", "Filter by contract name")
+	closeCmd.Flags().Int32("limit", 0, "Number of records to return")
 
 	liquidatesCmd := &cobra.Command{
 		Use:   "liquidates",
@@ -89,7 +94,8 @@ func init() {
 	settlementsCmd.Flags().String("contract", "", "Filter by contract name")
 	settlementsCmd.Flags().Int32("limit", 0, "Number of records to return")
 
-	Cmd.AddCommand(positionsCmd, positionCmd, updateMarginCmd, updateLeverageCmd, updateRiskLimitCmd, positionCloseCmd, liquidatesCmd, settlementsCmd)
+	positionCmd.AddCommand(listCmd, getCmd, updateMarginCmd, updateLeverageCmd, updateRiskLimitCmd, closeCmd, liquidatesCmd, settlementsCmd)
+	Cmd.AddCommand(positionCmd)
 }
 
 func printDeliveryPosition(p interface{ Table([]string, [][]string) error }, pos gateapi.DeliveryPosition) error {

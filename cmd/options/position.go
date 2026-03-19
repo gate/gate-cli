@@ -11,30 +11,35 @@ import (
 	"github.com/gate/gate-cli/internal/cmdutil"
 )
 
+var positionCmd = &cobra.Command{
+	Use:   "position",
+	Short: "Options position commands",
+}
+
 func init() {
-	positionsCmd := &cobra.Command{
-		Use:   "positions",
+	listCmd := &cobra.Command{
+		Use:   "list",
 		Short: "List options positions",
 		RunE:  runOptionsPositions,
 	}
-	positionsCmd.Flags().String("underlying", "", "Filter by underlying")
+	listCmd.Flags().String("underlying", "", "Filter by underlying")
 
-	positionCmd := &cobra.Command{
-		Use:   "position",
+	getCmd := &cobra.Command{
+		Use:   "get",
 		Short: "Get details of an options position",
 		RunE:  runOptionsPosition,
 	}
-	positionCmd.Flags().String("contract", "", "Options contract name (required)")
-	positionCmd.MarkFlagRequired("contract")
+	getCmd.Flags().String("contract", "", "Options contract name (required)")
+	getCmd.MarkFlagRequired("contract")
 
-	positionCloseCmd := &cobra.Command{
-		Use:   "position-close",
+	closeCmd := &cobra.Command{
+		Use:   "close",
 		Short: "List position close history for an underlying",
 		RunE:  runOptionsPositionClose,
 	}
-	positionCloseCmd.Flags().String("underlying", "", "Underlying name (required)")
-	positionCloseCmd.Flags().String("contract", "", "Filter by contract name")
-	positionCloseCmd.MarkFlagRequired("underlying")
+	closeCmd.Flags().String("underlying", "", "Underlying name (required)")
+	closeCmd.Flags().String("contract", "", "Filter by contract name")
+	closeCmd.MarkFlagRequired("underlying")
 
 	myTradesCmd := &cobra.Command{
 		Use:   "my-trades",
@@ -47,7 +52,8 @@ func init() {
 	myTradesCmd.Flags().Int32("offset", 0, "Number of records to skip")
 	myTradesCmd.MarkFlagRequired("underlying")
 
-	Cmd.AddCommand(positionsCmd, positionCmd, positionCloseCmd, myTradesCmd)
+	positionCmd.AddCommand(listCmd, getCmd, closeCmd, myTradesCmd)
+	Cmd.AddCommand(positionCmd)
 }
 
 func runOptionsPositions(cmd *cobra.Command, args []string) error {

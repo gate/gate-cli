@@ -11,25 +11,30 @@ import (
 	"github.com/gate/gate-cli/internal/cmdutil"
 )
 
+var depositCmd = &cobra.Command{
+	Use:   "deposit",
+	Short: "Wallet deposit and withdrawal commands",
+}
+
 func init() {
-	depositAddressCmd := &cobra.Command{
-		Use:   "deposit-address",
+	addressCmd := &cobra.Command{
+		Use:   "address",
 		Short: "Get deposit address for a currency",
 		RunE:  runWalletDepositAddress,
 	}
-	depositAddressCmd.Flags().String("currency", "", "Currency name (required)")
-	depositAddressCmd.MarkFlagRequired("currency")
+	addressCmd.Flags().String("currency", "", "Currency name (required)")
+	addressCmd.MarkFlagRequired("currency")
 
-	depositsCmd := &cobra.Command{
-		Use:   "deposits",
+	listCmd := &cobra.Command{
+		Use:   "list",
 		Short: "List deposit records",
 		RunE:  runWalletDeposits,
 	}
-	depositsCmd.Flags().String("currency", "", "Filter by currency name")
-	depositsCmd.Flags().Int64("from", 0, "Start Unix timestamp")
-	depositsCmd.Flags().Int64("to", 0, "End Unix timestamp")
-	depositsCmd.Flags().Int32("limit", 0, "Number of records to return")
-	depositsCmd.Flags().Int32("offset", 0, "Number of records to skip")
+	listCmd.Flags().String("currency", "", "Filter by currency name")
+	listCmd.Flags().Int64("from", 0, "Start Unix timestamp")
+	listCmd.Flags().Int64("to", 0, "End Unix timestamp")
+	listCmd.Flags().Int32("limit", 0, "Number of records to return")
+	listCmd.Flags().Int32("offset", 0, "Number of records to skip")
 
 	withdrawalsCmd := &cobra.Command{
 		Use:   "withdrawals",
@@ -42,14 +47,14 @@ func init() {
 	withdrawalsCmd.Flags().Int32("limit", 0, "Number of records to return")
 	withdrawalsCmd.Flags().Int32("offset", 0, "Number of records to skip")
 
-	savedAddressCmd := &cobra.Command{
-		Use:   "saved-address",
+	savedCmd := &cobra.Command{
+		Use:   "saved",
 		Short: "List saved withdrawal address whitelist",
 		RunE:  runWalletSavedAddress,
 	}
-	savedAddressCmd.Flags().String("currency", "", "Currency name (required)")
-	savedAddressCmd.Flags().String("chain", "", "Filter by chain name")
-	savedAddressCmd.MarkFlagRequired("currency")
+	savedCmd.Flags().String("currency", "", "Currency name (required)")
+	savedCmd.Flags().String("chain", "", "Filter by chain name")
+	savedCmd.MarkFlagRequired("currency")
 
 	pushOrdersCmd := &cobra.Command{
 		Use:   "push-orders",
@@ -61,7 +66,8 @@ func init() {
 	pushOrdersCmd.Flags().Int32("limit", 0, "Number of records to return")
 	pushOrdersCmd.Flags().Int32("offset", 0, "Number of records to skip")
 
-	Cmd.AddCommand(depositAddressCmd, depositsCmd, withdrawalsCmd, savedAddressCmd, pushOrdersCmd)
+	depositCmd.AddCommand(addressCmd, listCmd, withdrawalsCmd, savedCmd, pushOrdersCmd)
+	Cmd.AddCommand(depositCmd)
 }
 
 func runWalletDepositAddress(cmd *cobra.Command, args []string) error {
