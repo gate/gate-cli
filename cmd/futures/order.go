@@ -79,7 +79,102 @@ func init() {
 	cancelCmd.Flags().Bool("all", false, "Cancel all open orders for the contract")
 	addSettleFlag(cancelCmd)
 
-	orderCmd.AddCommand(closeCmd, getCmd, listCmd, cancelCmd)
+	myTradesCmd := &cobra.Command{
+		Use:   "my-trades",
+		Short: "List personal futures trade history",
+		RunE:  runFuturesMyTrades,
+	}
+	myTradesCmd.Flags().String("contract", "", "Filter by contract name")
+	myTradesCmd.Flags().Int32("limit", 0, "Number of records to return")
+	addSettleFlag(myTradesCmd)
+
+	myTradesTimerangeCmd := &cobra.Command{
+		Use:   "my-trades-timerange",
+		Short: "List personal futures trade history by time range",
+		RunE:  runFuturesMyTradesTimerange,
+	}
+	myTradesTimerangeCmd.Flags().String("contract", "", "Filter by contract name")
+	myTradesTimerangeCmd.Flags().Int64("from", 0, "Start Unix timestamp")
+	myTradesTimerangeCmd.Flags().Int64("to", 0, "End Unix timestamp")
+	myTradesTimerangeCmd.Flags().Int32("limit", 0, "Number of records to return")
+	addSettleFlag(myTradesTimerangeCmd)
+
+	amendCmd := &cobra.Command{
+		Use:   "amend",
+		Short: "Amend a futures order",
+		RunE:  runFuturesAmendOrder,
+	}
+	amendCmd.Flags().Int64("id", 0, "Order ID (required)")
+	amendCmd.Flags().String("size", "", "New order size (including filled)")
+	amendCmd.Flags().String("price", "", "New order price")
+	amendCmd.MarkFlagRequired("id")
+	addSettleFlag(amendCmd)
+
+	batchCreateCmd := &cobra.Command{
+		Use:   "batch-create",
+		Short: "Batch create futures orders (JSON array)",
+		RunE:  runFuturesBatchCreateOrders,
+	}
+	batchCreateCmd.Flags().String("orders-json", "", "JSON array of FuturesOrder objects (required)")
+	batchCreateCmd.MarkFlagRequired("orders-json")
+	addSettleFlag(batchCreateCmd)
+
+	batchCancelCmd := &cobra.Command{
+		Use:   "batch-cancel",
+		Short: "Cancel futures orders by ID list",
+		RunE:  runFuturesBatchCancelOrders,
+	}
+	batchCancelCmd.Flags().StringSlice("ids", nil, "Order IDs to cancel (required)")
+	batchCancelCmd.MarkFlagRequired("ids")
+	addSettleFlag(batchCancelCmd)
+
+	batchAmendCmd := &cobra.Command{
+		Use:   "batch-amend",
+		Short: "Batch amend futures orders",
+		RunE:  runFuturesBatchAmendOrders,
+	}
+	batchAmendCmd.Flags().String("orders-json", "", "JSON array of BatchAmendOrderReq objects (required)")
+	batchAmendCmd.MarkFlagRequired("orders-json")
+	addSettleFlag(batchAmendCmd)
+
+	bboCmd := &cobra.Command{
+		Use:   "bbo",
+		Short: "Create a best bid/offer (BBO) futures order",
+		RunE:  runFuturesBBOOrder,
+	}
+	bboCmd.Flags().String("contract", "", "Contract name (required)")
+	bboCmd.Flags().Int64("size", 0, "Number of contracts, positive=buy, negative=sell (required)")
+	bboCmd.Flags().String("direction", "", "Direction: buy or sell (required)")
+	bboCmd.MarkFlagRequired("contract")
+	bboCmd.MarkFlagRequired("size")
+	bboCmd.MarkFlagRequired("direction")
+	addSettleFlag(bboCmd)
+
+	countdownCmd := &cobra.Command{
+		Use:   "countdown-cancel-all",
+		Short: "Set countdown to cancel all futures orders",
+		RunE:  runFuturesCountdownCancelAll,
+	}
+	countdownCmd.Flags().Int32("timeout", 0, "Countdown in seconds (0 = cancel countdown, min 5) (required)")
+	countdownCmd.Flags().String("contract", "", "Limit cancellation to this contract")
+	countdownCmd.MarkFlagRequired("timeout")
+	addSettleFlag(countdownCmd)
+
+	listTimerangeCmd := &cobra.Command{
+		Use:   "list-timerange",
+		Short: "List futures orders by time range",
+		RunE:  runFuturesOrdersTimerange,
+	}
+	listTimerangeCmd.Flags().String("contract", "", "Filter by contract name")
+	listTimerangeCmd.Flags().Int64("from", 0, "Start Unix timestamp")
+	listTimerangeCmd.Flags().Int64("to", 0, "End Unix timestamp")
+	listTimerangeCmd.Flags().Int32("limit", 0, "Number of records to return")
+	addSettleFlag(listTimerangeCmd)
+
+	orderCmd.AddCommand(closeCmd, getCmd, listCmd, cancelCmd,
+		myTradesCmd, myTradesTimerangeCmd, amendCmd,
+		batchCreateCmd, batchCancelCmd, batchAmendCmd,
+		bboCmd, countdownCmd, listTimerangeCmd)
 	Cmd.AddCommand(orderCmd)
 }
 
@@ -380,4 +475,279 @@ func runFuturesOrderCancel(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 	return p.Print(result)
+}
+
+func runFuturesMyTrades(cmd *cobra.Command, args []string) error {
+	contract, _ := cmd.Flags().GetString("contract")
+	limit, _ := cmd.Flags().GetInt32("limit")
+	settle := cmdutil.GetSettle(cmd)
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+	if err := c.RequireAuth(); err != nil {
+		return err
+	}
+
+	opts := &gateapi.GetMyTradesOpts{}
+	if contract != "" {
+		opts.Contract = optional.NewString(contract)
+	}
+	if limit != 0 {
+		opts.Limit = optional.NewInt32(limit)
+	}
+
+	result, httpResp, err := c.FuturesAPI.GetMyTrades(c.Context(), settle, opts)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/my_trades", ""))
+		return nil
+	}
+	if p.IsJSON() {
+		return p.Print(result)
+	}
+	rows := make([][]string, len(result))
+	for i, t := range result {
+		rows[i] = []string{fmt.Sprintf("%d", t.Id), t.Contract, t.OrderId, t.Size, t.Price, fmt.Sprintf("%g", t.CreateTime)}
+	}
+	return p.Table([]string{"ID", "Contract", "Order ID", "Size", "Price", "Time"}, rows)
+}
+
+func runFuturesMyTradesTimerange(cmd *cobra.Command, args []string) error {
+	contract, _ := cmd.Flags().GetString("contract")
+	from, _ := cmd.Flags().GetInt64("from")
+	to, _ := cmd.Flags().GetInt64("to")
+	limit, _ := cmd.Flags().GetInt32("limit")
+	settle := cmdutil.GetSettle(cmd)
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+	if err := c.RequireAuth(); err != nil {
+		return err
+	}
+
+	opts := &gateapi.GetMyTradesWithTimeRangeOpts{}
+	if contract != "" {
+		opts.Contract = optional.NewString(contract)
+	}
+	if from != 0 {
+		opts.From = optional.NewInt64(from)
+	}
+	if to != 0 {
+		opts.To = optional.NewInt64(to)
+	}
+	if limit != 0 {
+		opts.Limit = optional.NewInt32(limit)
+	}
+
+	result, httpResp, err := c.FuturesAPI.GetMyTradesWithTimeRange(c.Context(), settle, opts)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/my_trades/timerange", ""))
+		return nil
+	}
+	if p.IsJSON() {
+		return p.Print(result)
+	}
+	rows := make([][]string, len(result))
+	for i, t := range result {
+		rows[i] = []string{t.TradeId, t.Contract, t.OrderId, t.Size, fmt.Sprintf("%g", t.CreateTime)}
+	}
+	return p.Table([]string{"Trade ID", "Contract", "Order ID", "Size", "Time"}, rows)
+}
+
+func runFuturesAmendOrder(cmd *cobra.Command, args []string) error {
+	id, _ := cmd.Flags().GetInt64("id")
+	size, _ := cmd.Flags().GetString("size")
+	price, _ := cmd.Flags().GetString("price")
+	settle := cmdutil.GetSettle(cmd)
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+	if err := c.RequireAuth(); err != nil {
+		return err
+	}
+
+	amendment := gateapi.FuturesOrderAmendment{}
+	if size != "" {
+		amendment.Size = size
+	}
+	if price != "" {
+		amendment.Price = price
+	}
+	body, _ := json.Marshal(amendment)
+	result, httpResp, err := c.FuturesAPI.AmendFuturesOrder(c.Context(), settle, fmt.Sprintf("%d", id), amendment, nil)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "PUT", fmt.Sprintf("/api/v4/futures/%s/orders/%d", settle, id), string(body)))
+		return nil
+	}
+	return p.Print(result)
+}
+
+func runFuturesBatchCreateOrders(cmd *cobra.Command, args []string) error {
+	ordersJSON, _ := cmd.Flags().GetString("orders-json")
+	settle := cmdutil.GetSettle(cmd)
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+	if err := c.RequireAuth(); err != nil {
+		return err
+	}
+
+	var orders []gateapi.FuturesOrder
+	if err := json.Unmarshal([]byte(ordersJSON), &orders); err != nil {
+		return fmt.Errorf("invalid --orders-json: %w", err)
+	}
+	result, httpResp, err := c.FuturesAPI.CreateBatchFuturesOrder(c.Context(), settle, orders, nil)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/batch_orders", ordersJSON))
+		return nil
+	}
+	return p.Print(result)
+}
+
+func runFuturesBatchCancelOrders(cmd *cobra.Command, args []string) error {
+	ids, _ := cmd.Flags().GetStringSlice("ids")
+	settle := cmdutil.GetSettle(cmd)
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+	if err := c.RequireAuth(); err != nil {
+		return err
+	}
+
+	result, httpResp, err := c.FuturesAPI.CancelBatchFutureOrders(c.Context(), settle, ids, nil)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/batch_cancel_orders", ""))
+		return nil
+	}
+	return p.Print(result)
+}
+
+func runFuturesBatchAmendOrders(cmd *cobra.Command, args []string) error {
+	ordersJSON, _ := cmd.Flags().GetString("orders-json")
+	settle := cmdutil.GetSettle(cmd)
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+	if err := c.RequireAuth(); err != nil {
+		return err
+	}
+
+	var items []gateapi.BatchAmendOrderReq
+	if err := json.Unmarshal([]byte(ordersJSON), &items); err != nil {
+		return fmt.Errorf("invalid --orders-json: %w", err)
+	}
+	result, httpResp, err := c.FuturesAPI.AmendBatchFutureOrders(c.Context(), settle, items, nil)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/batch_amend_orders", ordersJSON))
+		return nil
+	}
+	return p.Print(result)
+}
+
+func runFuturesBBOOrder(cmd *cobra.Command, args []string) error {
+	contract, _ := cmd.Flags().GetString("contract")
+	size, _ := cmd.Flags().GetInt64("size")
+	direction, _ := cmd.Flags().GetString("direction")
+	settle := cmdutil.GetSettle(cmd)
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+	if err := c.RequireAuth(); err != nil {
+		return err
+	}
+
+	req := gateapi.FuturesBboOrder{Contract: contract, Size: size, Direction: direction}
+	body, _ := json.Marshal(req)
+	result, httpResp, err := c.FuturesAPI.CreateFuturesBBOOrder(c.Context(), settle, req, nil)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/bbo_order", string(body)))
+		return nil
+	}
+	return p.Print(result)
+}
+
+func runFuturesCountdownCancelAll(cmd *cobra.Command, args []string) error {
+	timeout, _ := cmd.Flags().GetInt32("timeout")
+	contract, _ := cmd.Flags().GetString("contract")
+	settle := cmdutil.GetSettle(cmd)
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+	if err := c.RequireAuth(); err != nil {
+		return err
+	}
+
+	req := gateapi.CountdownCancelAllFuturesTask{Timeout: timeout, Contract: contract}
+	body, _ := json.Marshal(req)
+	result, httpResp, err := c.FuturesAPI.CountdownCancelAllFutures(c.Context(), settle, req)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/countdown_cancel_all", string(body)))
+		return nil
+	}
+	if p.IsJSON() {
+		return p.Print(result)
+	}
+	return p.Table(
+		[]string{"Trigger Time (ms)"},
+		[][]string{{fmt.Sprintf("%d", result.TriggerTime)}},
+	)
+}
+
+func runFuturesOrdersTimerange(cmd *cobra.Command, args []string) error {
+	contract, _ := cmd.Flags().GetString("contract")
+	from, _ := cmd.Flags().GetInt64("from")
+	to, _ := cmd.Flags().GetInt64("to")
+	limit, _ := cmd.Flags().GetInt32("limit")
+	settle := cmdutil.GetSettle(cmd)
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+	if err := c.RequireAuth(); err != nil {
+		return err
+	}
+
+	opts := &gateapi.GetOrdersWithTimeRangeOpts{}
+	if contract != "" {
+		opts.Contract = optional.NewString(contract)
+	}
+	if from != 0 {
+		opts.From = optional.NewInt64(from)
+	}
+	if to != 0 {
+		opts.To = optional.NewInt64(to)
+	}
+	if limit != 0 {
+		opts.Limit = optional.NewInt32(limit)
+	}
+
+	result, httpResp, err := c.FuturesAPI.GetOrdersWithTimeRange(c.Context(), settle, opts)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/orders_timerange", ""))
+		return nil
+	}
+	if p.IsJSON() {
+		return p.Print(result)
+	}
+	rows := make([][]string, len(result))
+	for i, o := range result {
+		rows[i] = []string{fmt.Sprintf("%d", o.Id), o.Contract, o.Size, o.Price, o.Tif, o.Status}
+	}
+	return p.Table([]string{"ID", "Contract", "Size", "Price", "TIF", "Status"}, rows)
 }
