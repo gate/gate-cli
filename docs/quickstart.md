@@ -171,7 +171,7 @@ gate-cli futures order cancel --contract BTC_USDT --all
 
 ## Delivery futures
 
-Delivery futures follow the same pattern as perpetual futures. Use `--settle btc` for coin-settled contracts.
+Delivery futures follow the same pattern as perpetual futures. Only USDT settlement is supported.
 
 ```bash
 # Market data (public)

@@ -172,7 +172,7 @@ gate-cli futures order cancel --contract BTC_USDT --all
 
 ## 交割合约
 
-交割合约用法与永续合约相同。BTC 结算合约使用 `--settle btc`。
+交割合约用法与永续合约相同，仅支持 USDT 结算。
 
 ```bash
 # 行情（无需 API Key）

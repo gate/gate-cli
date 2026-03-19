@@ -12,12 +12,8 @@ import (
 	"github.com/gate/gate-cli/internal/cmdutil"
 )
 
-func getSettle(cmd *cobra.Command) string {
-	settle, _ := cmd.Flags().GetString("settle")
-	if settle == "" {
-		settle = "usdt"
-	}
-	return settle
+func getSettle(_ *cobra.Command) string {
+	return "usdt"
 }
 
 var marketCmd = &cobra.Command{
@@ -31,14 +27,12 @@ func init() {
 		Short: "List delivery contracts (public, no authentication required)",
 		RunE:  runDeliveryContracts,
 	}
-	contractsCmd.Flags().String("settle", "usdt", "Settlement currency")
 
 	contractCmd := &cobra.Command{
 		Use:   "contract",
 		Short: "Get details of a delivery contract (public, no authentication required)",
 		RunE:  runDeliveryContract,
 	}
-	contractCmd.Flags().String("settle", "usdt", "Settlement currency")
 	contractCmd.Flags().String("contract", "", "Futures contract name (required)")
 	contractCmd.MarkFlagRequired("contract")
 
@@ -47,7 +41,6 @@ func init() {
 		Short: "Get order book for a delivery contract (public, no authentication required)",
 		RunE:  runDeliveryOrderBook,
 	}
-	orderBookCmd.Flags().String("settle", "usdt", "Settlement currency")
 	orderBookCmd.Flags().String("contract", "", "Futures contract name (required)")
 	orderBookCmd.Flags().Int32("limit", 0, "Order book depth limit")
 	orderBookCmd.MarkFlagRequired("contract")
@@ -57,7 +50,6 @@ func init() {
 		Short: "List recent trades for a delivery contract (public, no authentication required)",
 		RunE:  runDeliveryTrades,
 	}
-	tradesCmd.Flags().String("settle", "usdt", "Settlement currency")
 	tradesCmd.Flags().String("contract", "", "Futures contract name (required)")
 	tradesCmd.Flags().Int32("limit", 0, "Number of records to return")
 	tradesCmd.MarkFlagRequired("contract")
@@ -67,7 +59,6 @@ func init() {
 		Short: "List candlesticks for a delivery contract (public, no authentication required)",
 		RunE:  runDeliveryCandlesticks,
 	}
-	candlesticksCmd.Flags().String("settle", "usdt", "Settlement currency")
 	candlesticksCmd.Flags().String("contract", "", "Futures contract name (required)")
 	candlesticksCmd.Flags().String("interval", "", "Candlestick interval")
 	candlesticksCmd.Flags().Int32("limit", 0, "Number of records")
@@ -78,7 +69,6 @@ func init() {
 		Short: "List delivery tickers (public, no authentication required)",
 		RunE:  runDeliveryTickers,
 	}
-	tickersCmd.Flags().String("settle", "usdt", "Settlement currency")
 	tickersCmd.Flags().String("contract", "", "Filter by contract name")
 
 	insuranceCmd := &cobra.Command{
@@ -86,7 +76,6 @@ func init() {
 		Short: "List insurance fund records (public, no authentication required)",
 		RunE:  runDeliveryInsurance,
 	}
-	insuranceCmd.Flags().String("settle", "usdt", "Settlement currency")
 	insuranceCmd.Flags().Int32("limit", 0, "Number of records to return")
 
 	riskLimitTiersCmd := &cobra.Command{
@@ -94,7 +83,6 @@ func init() {
 		Short: "List risk limit tiers for a contract (public, no authentication required)",
 		RunE:  runDeliveryRiskLimitTiers,
 	}
-	riskLimitTiersCmd.Flags().String("settle", "usdt", "Settlement currency")
 	riskLimitTiersCmd.Flags().String("contract", "", "Futures contract name (required)")
 	riskLimitTiersCmd.MarkFlagRequired("contract")
 

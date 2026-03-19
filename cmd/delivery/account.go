@@ -20,14 +20,12 @@ func init() {
 		Short: "Get delivery futures account information",
 		RunE:  runDeliveryAccount,
 	}
-	getCmd.Flags().String("settle", "usdt", "Settlement currency")
 
 	bookCmd := &cobra.Command{
 		Use:   "book",
 		Short: "List delivery futures account change history",
 		RunE:  runDeliveryAccountBook,
 	}
-	bookCmd.Flags().String("settle", "usdt", "Settlement currency")
 	bookCmd.Flags().Int32("limit", 0, "Number of records to return")
 	bookCmd.Flags().String("type", "", "Change type filter")
 

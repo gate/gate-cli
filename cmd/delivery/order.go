@@ -24,7 +24,6 @@ func init() {
 		Short: "List delivery futures orders",
 		RunE:  runDeliveryOrders,
 	}
-	listCmd.Flags().String("settle", "usdt", "Settlement currency")
 	listCmd.Flags().String("status", "open", "Order status: open or finished (required)")
 	listCmd.Flags().String("contract", "", "Filter by contract name")
 	listCmd.Flags().Int32("limit", 0, "Number of records to return")
@@ -36,7 +35,6 @@ func init() {
 		Short: "Create a delivery futures order",
 		RunE:  runDeliveryCreateOrder,
 	}
-	createCmd.Flags().String("settle", "usdt", "Settlement currency")
 	createCmd.Flags().String("contract", "", "Futures contract name (required)")
 	createCmd.Flags().Int64("size", 0, "Order size, positive for buy, negative for sell (required)")
 	createCmd.Flags().String("price", "", "Order price (0 for market order)")
@@ -49,7 +47,6 @@ func init() {
 		Short: "Cancel all open delivery orders for a contract",
 		RunE:  runDeliveryCancelOrders,
 	}
-	cancelAllCmd.Flags().String("settle", "usdt", "Settlement currency")
 	cancelAllCmd.Flags().String("contract", "", "Futures contract name (required)")
 	cancelAllCmd.Flags().String("side", "", "Filter by side: ask or bid")
 	cancelAllCmd.MarkFlagRequired("contract")
@@ -59,7 +56,6 @@ func init() {
 		Short: "Get details of a delivery futures order",
 		RunE:  runDeliveryGetOrder,
 	}
-	getCmd.Flags().String("settle", "usdt", "Settlement currency")
 	getCmd.Flags().String("id", "", "Order ID (required)")
 	getCmd.MarkFlagRequired("id")
 
@@ -68,7 +64,6 @@ func init() {
 		Short: "Cancel a single delivery futures order",
 		RunE:  runDeliveryCancelOrder,
 	}
-	cancelCmd.Flags().String("settle", "usdt", "Settlement currency")
 	cancelCmd.Flags().String("id", "", "Order ID (required)")
 	cancelCmd.MarkFlagRequired("id")
 
@@ -77,7 +72,6 @@ func init() {
 		Short: "List personal delivery futures trading records",
 		RunE:  runDeliveryMyTrades,
 	}
-	myTradesCmd.Flags().String("settle", "usdt", "Settlement currency")
 	myTradesCmd.Flags().String("contract", "", "Filter by contract name")
 	myTradesCmd.Flags().Int32("limit", 0, "Number of records to return")
 
