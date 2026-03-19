@@ -169,6 +169,131 @@ gate-cli futures order cancel --contract BTC_USDT --all
 
 ---
 
+## Delivery futures
+
+Delivery futures follow the same pattern as perpetual futures. Use `--settle btc` for coin-settled contracts.
+
+```bash
+# Market data (public)
+gate-cli delivery market contracts
+gate-cli delivery market ticker   --contract BTC_USDT_20260327
+gate-cli delivery market orderbook --contract BTC_USDT_20260327
+
+# Account & positions
+gate-cli delivery account get
+gate-cli delivery position list
+
+# Orders
+gate-cli delivery order long  --contract BTC_USDT_20260327 --size 5 --price 80000
+gate-cli delivery order close --contract BTC_USDT_20260327
+gate-cli delivery order list  --contract BTC_USDT_20260327
+```
+
+---
+
+## Options
+
+```bash
+# Market data (public)
+gate-cli options market underlyings
+gate-cli options market contracts --underlying BTC_USDT
+gate-cli options market tickers   --underlying BTC_USDT
+
+# Account & positions
+gate-cli options account list
+gate-cli options position list
+
+# Orders
+gate-cli options order create --contract BTC_USDT-20260327-80000-C --size 1 --price 500
+gate-cli options order list
+gate-cli options order cancel --order-id 123456789
+
+# Market Maker Protection
+gate-cli options mmp get   --underlying BTC_USDT
+gate-cli options mmp set   --underlying BTC_USDT --window 5000 --freeze-period 30000 --qty-limit 100 --delta-limit 50
+gate-cli options mmp reset --underlying BTC_USDT
+```
+
+---
+
+## Wallet
+
+```bash
+# Balances
+gate-cli wallet balance total                         # total balance across all accounts
+gate-cli wallet balance small                         # list dust balances
+gate-cli wallet balance sa --sa-uid 12345             # sub-account balance
+
+# Deposits & withdrawals
+gate-cli wallet deposit address --currency USDT --chain TRX
+gate-cli wallet deposit list    --currency USDT --limit 20
+gate-cli wallet withdraw list   --currency USDT --limit 20
+gate-cli wallet withdraw status                       # supported currencies and chain info
+
+# Transfers
+gate-cli wallet transfer create --currency USDT --amount 100 --from spot --to futures
+gate-cli wallet transfer sa     --currency USDT --amount 100 --sa-uid 12345 --direction to
+```
+
+---
+
+## Account
+
+```bash
+gate-cli account detail                       # UID, email, tier, KYC status
+gate-cli account rate-limit                   # API rate limit info
+gate-cli account main-keys                    # list main account API keys
+
+# STP (Self-Trade Prevention) groups
+gate-cli account stp list
+gate-cli account stp create --name my-group
+gate-cli account stp users  --id 1
+```
+
+---
+
+## Price-triggered orders
+
+Place an order automatically when the market reaches a trigger price.
+
+```bash
+# Spot
+gate-cli spot price-trigger list
+gate-cli spot price-trigger create \
+  --market BTC_USDT --trigger-price 90000 --side sell \
+  --price 90500 --amount 0.001
+gate-cli spot price-trigger cancel     --id 123456
+gate-cli spot price-trigger cancel-all --market BTC_USDT
+
+# Futures
+gate-cli futures price-trigger list
+gate-cli futures price-trigger create \
+  --contract BTC_USDT --trigger-price 90000 --price 0 --size -10
+gate-cli futures price-trigger get    --id 456
+gate-cli futures price-trigger update --id 456 --trigger-price 91000
+gate-cli futures price-trigger cancel --id 456
+```
+
+---
+
+## Trailing stop orders (futures)
+
+Trail the market by a ratio or price distance; order triggers automatically when the market reverses.
+
+```bash
+gate-cli futures trail create \
+  --contract BTC_USDT --amount -10 --price-offset 0.02   # trail short by 2%
+
+gate-cli futures trail list
+gate-cli futures trail get    --id 789
+gate-cli futures trail update --id 789 --price-offset 0.015
+gate-cli futures trail log    --id 789                    # change history
+gate-cli futures trail stop   --id 789
+gate-cli futures trail stop-all --contract BTC_USDT
+```
+
+---
+
 ## Output formats
 
 ### Table (default, human-friendly)
