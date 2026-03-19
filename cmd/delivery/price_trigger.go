@@ -23,7 +23,6 @@ func init() {
 		Short: "List price-triggered delivery orders",
 		RunE:  runDeliveryPriceTriggerList,
 	}
-	listCmd.Flags().String("settle", "usdt", "Settlement currency")
 	listCmd.Flags().String("status", "open", "Order status: open or finished (required)")
 	listCmd.Flags().String("contract", "", "Filter by contract name")
 	listCmd.Flags().Int32("limit", 0, "Number of records to return")
@@ -35,7 +34,6 @@ func init() {
 		Short: "Create a price-triggered delivery order",
 		RunE:  runDeliveryPriceTriggerCreate,
 	}
-	createCmd.Flags().String("settle", "usdt", "Settlement currency")
 	createCmd.Flags().String("contract", "", "Futures contract name (required)")
 	createCmd.Flags().String("trigger-price", "", "Trigger price (required)")
 	createCmd.Flags().String("order-price", "", "Order price (0 for market)")
@@ -49,7 +47,6 @@ func init() {
 		Short: "Cancel all price-triggered delivery orders for a contract",
 		RunE:  runDeliveryPriceTriggerCancelAll,
 	}
-	cancelListCmd.Flags().String("settle", "usdt", "Settlement currency")
 	cancelListCmd.Flags().String("contract", "", "Futures contract name (required)")
 	cancelListCmd.MarkFlagRequired("contract")
 
@@ -58,7 +55,6 @@ func init() {
 		Short: "Get details of a price-triggered delivery order",
 		RunE:  runDeliveryPriceTriggerGet,
 	}
-	getCmd.Flags().String("settle", "usdt", "Settlement currency")
 	getCmd.Flags().String("id", "", "Order ID (required)")
 	getCmd.MarkFlagRequired("id")
 
@@ -67,7 +63,6 @@ func init() {
 		Short: "Cancel a single price-triggered delivery order",
 		RunE:  runDeliveryPriceTriggerCancel,
 	}
-	cancelCmd.Flags().String("settle", "usdt", "Settlement currency")
 	cancelCmd.Flags().String("id", "", "Order ID (required)")
 	cancelCmd.MarkFlagRequired("id")
 

@@ -23,14 +23,12 @@ func init() {
 		Short: "List all delivery positions",
 		RunE:  runDeliveryPositions,
 	}
-	listCmd.Flags().String("settle", "usdt", "Settlement currency")
 
 	getCmd := &cobra.Command{
 		Use:   "get",
 		Short: "Get details of a delivery position",
 		RunE:  runDeliveryPosition,
 	}
-	getCmd.Flags().String("settle", "usdt", "Settlement currency")
 	getCmd.Flags().String("contract", "", "Futures contract name (required)")
 	getCmd.MarkFlagRequired("contract")
 
@@ -39,7 +37,6 @@ func init() {
 		Short: "Update delivery position margin",
 		RunE:  runDeliveryUpdateMargin,
 	}
-	updateMarginCmd.Flags().String("settle", "usdt", "Settlement currency")
 	updateMarginCmd.Flags().String("contract", "", "Futures contract name (required)")
 	updateMarginCmd.Flags().String("change", "", "Margin change amount (required)")
 	updateMarginCmd.MarkFlagRequired("contract")
@@ -50,7 +47,6 @@ func init() {
 		Short: "Update delivery position leverage",
 		RunE:  runDeliveryUpdateLeverage,
 	}
-	updateLeverageCmd.Flags().String("settle", "usdt", "Settlement currency")
 	updateLeverageCmd.Flags().String("contract", "", "Futures contract name (required)")
 	updateLeverageCmd.Flags().String("leverage", "", "New leverage value (required)")
 	updateLeverageCmd.MarkFlagRequired("contract")
@@ -61,7 +57,6 @@ func init() {
 		Short: "Update delivery position risk limit",
 		RunE:  runDeliveryUpdateRiskLimit,
 	}
-	updateRiskLimitCmd.Flags().String("settle", "usdt", "Settlement currency")
 	updateRiskLimitCmd.Flags().String("contract", "", "Futures contract name (required)")
 	updateRiskLimitCmd.Flags().String("risk-limit", "", "New risk limit value (required)")
 	updateRiskLimitCmd.MarkFlagRequired("contract")
@@ -72,7 +67,6 @@ func init() {
 		Short: "List position close history",
 		RunE:  runDeliveryPositionClose,
 	}
-	closeCmd.Flags().String("settle", "usdt", "Settlement currency")
 	closeCmd.Flags().String("contract", "", "Filter by contract name")
 	closeCmd.Flags().Int32("limit", 0, "Number of records to return")
 
@@ -81,7 +75,6 @@ func init() {
 		Short: "List liquidation history",
 		RunE:  runDeliveryLiquidates,
 	}
-	liquidatesCmd.Flags().String("settle", "usdt", "Settlement currency")
 	liquidatesCmd.Flags().String("contract", "", "Filter by contract name")
 	liquidatesCmd.Flags().Int32("limit", 0, "Number of records to return")
 
@@ -90,7 +83,6 @@ func init() {
 		Short: "List settlement records",
 		RunE:  runDeliverySettlements,
 	}
-	settlementsCmd.Flags().String("settle", "usdt", "Settlement currency")
 	settlementsCmd.Flags().String("contract", "", "Filter by contract name")
 	settlementsCmd.Flags().Int32("limit", 0, "Number of records to return")
 
