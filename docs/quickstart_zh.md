@@ -170,6 +170,131 @@ gate-cli futures order cancel --contract BTC_USDT --all
 
 ---
 
+## 交割合约
+
+交割合约用法与永续合约相同。BTC 结算合约使用 `--settle btc`。
+
+```bash
+# 行情（无需 API Key）
+gate-cli delivery market contracts
+gate-cli delivery market ticker    --contract BTC_USDT_20260327
+gate-cli delivery market orderbook --contract BTC_USDT_20260327
+
+# 账户与持仓
+gate-cli delivery account get
+gate-cli delivery position list
+
+# 下单
+gate-cli delivery order long  --contract BTC_USDT_20260327 --size 5 --price 80000
+gate-cli delivery order close --contract BTC_USDT_20260327
+gate-cli delivery order list  --contract BTC_USDT_20260327
+```
+
+---
+
+## 期权
+
+```bash
+# 行情（无需 API Key）
+gate-cli options market underlyings
+gate-cli options market contracts --underlying BTC_USDT
+gate-cli options market tickers   --underlying BTC_USDT
+
+# 账户与持仓
+gate-cli options account list
+gate-cli options position list
+
+# 下单
+gate-cli options order create --contract BTC_USDT-20260327-80000-C --size 1 --price 500
+gate-cli options order list
+gate-cli options order cancel --order-id 123456789
+
+# 做市商保护（MMP）
+gate-cli options mmp get   --underlying BTC_USDT
+gate-cli options mmp set   --underlying BTC_USDT --window 5000 --freeze-period 30000 --qty-limit 100 --delta-limit 50
+gate-cli options mmp reset --underlying BTC_USDT
+```
+
+---
+
+## 钱包
+
+```bash
+# 余额查询
+gate-cli wallet balance total                         # 所有账户总资产
+gate-cli wallet balance small                         # 小额（粉尘）余额
+gate-cli wallet balance sa --sa-uid 12345             # 子账号余额
+
+# 充提记录
+gate-cli wallet deposit address --currency USDT --chain TRX
+gate-cli wallet deposit list    --currency USDT --limit 20
+gate-cli wallet withdraw list   --currency USDT --limit 20
+gate-cli wallet withdraw status                       # 支持的币种与链信息
+
+# 划转
+gate-cli wallet transfer create --currency USDT --amount 100 --from spot --to futures
+gate-cli wallet transfer sa     --currency USDT --amount 100 --sa-uid 12345 --direction to
+```
+
+---
+
+## 账户管理
+
+```bash
+gate-cli account detail                       # UID、邮箱、等级、KYC 状态
+gate-cli account rate-limit                   # API 频率限制信息
+gate-cli account main-keys                    # 主账号 API Key 列表
+
+# 自成交防护（STP）组
+gate-cli account stp list
+gate-cli account stp create --name my-group
+gate-cli account stp users  --id 1
+```
+
+---
+
+## 价格触发订单
+
+价格触发订单在市场价格到达指定触发价时自动下单。
+
+```bash
+# 现货
+gate-cli spot price-trigger list
+gate-cli spot price-trigger create \
+  --market BTC_USDT --trigger-price 90000 --side sell \
+  --price 90500 --amount 0.001
+gate-cli spot price-trigger cancel     --id 123456
+gate-cli spot price-trigger cancel-all --market BTC_USDT
+
+# 合约
+gate-cli futures price-trigger list
+gate-cli futures price-trigger create \
+  --contract BTC_USDT --trigger-price 90000 --price 0 --size -10
+gate-cli futures price-trigger get    --id 456
+gate-cli futures price-trigger update --id 456 --trigger-price 91000
+gate-cli futures price-trigger cancel --id 456
+```
+
+---
+
+## 跟踪委托（合约）
+
+跟踪委托以固定比例或价格距离追踪市场，当行情反转时自动触发。
+
+```bash
+gate-cli futures trail create \
+  --contract BTC_USDT --amount -10 --price-offset 0.02   # 空头，追踪幅度 2%
+
+gate-cli futures trail list
+gate-cli futures trail get    --id 789
+gate-cli futures trail update --id 789 --price-offset 0.015
+gate-cli futures trail log    --id 789                    # 变更记录
+gate-cli futures trail stop   --id 789
+gate-cli futures trail stop-all --contract BTC_USDT
+```
+
+---
+
 ## 输出格式
 
 ### 表格（默认，适合人工阅读）

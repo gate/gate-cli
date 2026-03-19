@@ -1,6 +1,6 @@
 # gate-cli
 
-A command-line interface for the [Gate](https://gate.com) API. Supports spot and futures trading, account queries, and public market data. Designed for developers, quants, and AI agents.
+A command-line interface for the [Gate](https://gate.com) API. Covers spot, futures, delivery, options, wallet, margin, alpha, tradfi, and account management. Designed for developers, quants, and AI agents.
 
 ## Quick Start
 
@@ -9,9 +9,15 @@ A command-line interface for the [Gate](https://gate.com) API. Supports spot and
 
 ## Features
 
-- **Spot** — market data, account balances, limit/market orders
-- **Futures** — market data, account, positions, long/short/add/remove/close orders
-- **Dual-position mode** — `add`, `remove`, `close` automatically detect position direction; single and dual (hedge) mode are handled transparently
+- **Spot** — currencies, pairs, market data, account, orders, price-triggered orders
+- **Futures** — contracts, market data, account, positions, orders, price-triggered orders, trailing stop orders
+- **Delivery** — delivery contracts, market data, account, positions, orders, price-triggered orders
+- **Options** — underlyings, contracts, market data, account, positions, orders, MMP
+- **Wallet** — balances, deposits, withdrawals, transfers (main↔sub, cross-account)
+- **Account** — account detail, rate limits, STP groups, debit fee settings
+- **Alpha** — alpha token market data, account, orders
+- **TradFi** — MT5 account, symbols, positions, orders, transactions
+- **Dual-position mode** — `add`, `remove`, `close` automatically detect position direction; single and dual (hedge) mode handled transparently via the `dual_comp` API
 - **Two output modes** — human-friendly table (default) or `--format json` for scripts and agents
 - **Multiple profiles** — manage several API keys in one config file
 - **Credential priority** — `--api-key` flag > env var > config file
@@ -43,10 +49,14 @@ export GATE_API_SECRET=your-secret
 # Public market data — no API key required
 gate-cli spot market ticker --pair BTC_USDT
 gate-cli futures market funding-rate --contract BTC_USDT
+gate-cli delivery market contracts
+gate-cli options market underlyings
 
-# Account
+# Account & wallet
+gate-cli account detail
 gate-cli spot account list
-gate-cli futures position list
+gate-cli wallet balance total
+gate-cli wallet deposit list
 
 # Spot orders
 gate-cli spot order buy  --pair BTC_USDT --amount 0.001 --price 80000
@@ -57,6 +67,10 @@ gate-cli spot order sell --pair BTC_USDT --amount 0.001
 gate-cli futures order long   --contract BTC_USDT --size 10 --price 80000
 gate-cli futures order add    --contract BTC_USDT --size 5   # add to current position
 gate-cli futures order close  --contract BTC_USDT            # close entire position
+
+# Price-triggered & trailing stop orders
+gate-cli futures price-trigger create --contract BTC_USDT --trigger-price 90000 --price 0 --size -10
+gate-cli futures trail create --contract BTC_USDT --amount -10 --price-offset 0.02
 
 # JSON output for scripting
 gate-cli spot market ticker --pair BTC_USDT --format json | jq '.last'
