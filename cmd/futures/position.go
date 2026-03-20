@@ -298,6 +298,9 @@ func runFuturesUpdatePositionMargin(cmd *cobra.Command, args []string) error {
 	if err := c.RequireAuth(); err != nil {
 		return err
 	}
+	if dualSide == "" && c.IsDualMode(settle) {
+		return fmt.Errorf("--dual-side is required in dual position mode (dual_long or dual_short)")
+	}
 
 	result, httpResp, err := c.FuturesAPI.UpdateDualModePositionMargin(c.Context(), settle, contract, change, dualSide)
 	if err != nil {
