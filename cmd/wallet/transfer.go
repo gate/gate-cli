@@ -3,6 +3,7 @@ package wallet
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
@@ -11,6 +12,24 @@ import (
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
 )
+
+// futuresSettle maps a currency to its futures settlement currency.
+// Only USDT and BTC are supported for spot↔futures transfers.
+func futuresSettle(currency string) (string, error) {
+	switch strings.ToUpper(currency) {
+	case "USDT":
+		return "usdt", nil
+	case "BTC":
+		return "btc", nil
+	default:
+		return "", fmt.Errorf("currency %s is not supported for futures transfers: only USDT and BTC are accepted", currency)
+	}
+}
+
+// isContractAccount returns true for account types that require a settle parameter.
+func isContractAccount(accountType string) bool {
+	return accountType == "futures" || accountType == "delivery"
+}
 
 var transferCmd = &cobra.Command{
 	Use:   "transfer",
@@ -28,7 +47,6 @@ func init() {
 	createCmd.Flags().String("to", "", "Destination account type (required)")
 	createCmd.Flags().String("amount", "", "Transfer amount (required)")
 	createCmd.Flags().String("currency-pair", "", "Margin trading pair (required for margin accounts)")
-	createCmd.Flags().String("settle", "", "Settlement currency (required for contract accounts)")
 	createCmd.MarkFlagRequired("currency")
 	createCmd.MarkFlagRequired("from")
 	createCmd.MarkFlagRequired("to")
@@ -96,7 +114,6 @@ func runWalletTransfer(cmd *cobra.Command, args []string) error {
 	to, _ := cmd.Flags().GetString("to")
 	amount, _ := cmd.Flags().GetString("amount")
 	currencyPair, _ := cmd.Flags().GetString("currency-pair")
-	settle, _ := cmd.Flags().GetString("settle")
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
@@ -104,6 +121,14 @@ func runWalletTransfer(cmd *cobra.Command, args []string) error {
 	}
 	if err := c.RequireAuth(); err != nil {
 		return err
+	}
+
+	var settle string
+	if isContractAccount(from) || isContractAccount(to) {
+		settle, err = futuresSettle(currency)
+		if err != nil {
+			return err
+		}
 	}
 
 	req := gateapi.Transfer{
@@ -141,6 +166,12 @@ func runWalletSubTransfer(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if isContractAccount(subAccountType) {
+		if _, err := futuresSettle(currency); err != nil {
+			return err
+		}
+	}
+
 	req := gateapi.SubAccountTransfer{
 		Currency:       currency,
 		SubAccount:     subAccount,
@@ -174,6 +205,12 @@ func runWalletSubToSub(cmd *cobra.Command, args []string) error {
 	}
 	if err := c.RequireAuth(); err != nil {
 		return err
+	}
+
+	if isContractAccount(fromType) || isContractAccount(toType) {
+		if _, err := futuresSettle(currency); err != nil {
+			return err
+		}
 	}
 
 	req := gateapi.SubAccountToSubAccount{
