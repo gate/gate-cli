@@ -2,19 +2,41 @@
 
 ## Installation
 
-Build from source (requires Go 1.21+):
+### macOS / Linux — shell script
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/gate/gate-cli/main/install.sh | sh
+```
+
+### macOS — Homebrew
+
+```sh
+brew install gate/tap/gate-cli
+```
+
+### Windows — PowerShell
+
+```powershell
+irm https://raw.githubusercontent.com/gate/gate-cli/main/install.ps1 | iex
+```
+
+### Pin to a specific version
+
+```sh
+# Unix
+curl -fsSL https://raw.githubusercontent.com/gate/gate-cli/main/install.sh | sh -s -- --version v0.3.2
+
+# Windows
+$env:GATE_CLI_VERSION="v0.3.2"; irm https://raw.githubusercontent.com/gate/gate-cli/main/install.ps1 | iex
+```
+
+### Build from source (requires Go 1.21+)
 
 ```bash
 git clone https://github.com/gate/gate-cli.git
 cd gate-cli
 go build -o gate-cli .
-sudo mv gate-cli /usr/local/bin/   # optional: install system-wide
-```
-
-Verify the install:
-
-```bash
-gate-cli --help
+sudo mv gate-cli /usr/local/bin/
 ```
 
 ---
