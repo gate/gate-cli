@@ -8,9 +8,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var orderCmd = &cobra.Command{
@@ -261,7 +261,7 @@ func runOptionsAmendOrder(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	req := gateapi.InlineObject1{
+	req := gateapi.AmendOptionsOrderRequest{
 		Contract: contract,
 		Price:    price,
 		Size:     size,

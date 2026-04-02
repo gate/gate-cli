@@ -10,6 +10,7 @@ import (
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/config"
 	"github.com/gate/gate-cli/internal/output"
+	"github.com/gate/gate-cli/internal/useragent"
 )
 
 // GetPrinter returns an output.Printer configured from the --format flag.
@@ -36,7 +37,9 @@ func GetClient(cmd *cobra.Command) (*client.Client, error) {
 		return nil, err
 	}
 	cfg.Debug = debug
-	return client.New(cfg)
+
+	cmdPath := useragent.ExtractCmdPath(cmd.CommandPath())
+	return client.New(cfg, cmdPath)
 }
 
 // GetSettle returns the futures settlement currency for the given command.

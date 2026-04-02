@@ -13,7 +13,7 @@ import (
 
 func TestNewClientNoAuth(t *testing.T) {
 	cfg := &config.Config{BaseURL: "https://api.gateio.ws"}
-	c, err := client.New(cfg)
+	c, err := client.New(cfg, "test")
 	require.NoError(t, err)
 	assert.NotNil(t, c)
 	assert.False(t, c.IsAuthenticated())
@@ -25,21 +25,25 @@ func TestNewClientWithAuth(t *testing.T) {
 		APIKey:    "key",
 		APISecret: "secret",
 	}
-	c, err := client.New(cfg)
+	c, err := client.New(cfg, "test")
 	require.NoError(t, err)
 	assert.True(t, c.IsAuthenticated())
 }
 
 func TestNewClientSetsUserAgent(t *testing.T) {
 	cfg := &config.Config{BaseURL: "https://api.gateio.ws"}
-	c, err := client.New(cfg)
+	c, err := client.New(cfg, "spot/order/create")
 	require.NoError(t, err)
-	assert.True(t, strings.HasPrefix(c.UserAgent(), "gate-cli/"), "UserAgent should start with gate-cli/, got: %s", c.UserAgent())
+
+	ua := c.UserAgent()
+	assert.True(t, strings.HasPrefix(ua, "gate-cli/"), "UserAgent should start with gate-cli/, got: %s", ua)
+	assert.Contains(t, ua, "/spot/order/create/", "UserAgent should contain command path")
+	assert.Contains(t, ua, "OpenAPI-Generator/", "UserAgent should contain SDK UA")
 }
 
 func TestRequireAuthFailsWhenNoKey(t *testing.T) {
 	cfg := &config.Config{BaseURL: "https://api.gateio.ws"}
-	c, _ := client.New(cfg)
+	c, _ := client.New(cfg, "test")
 	err := c.RequireAuth()
 	assert.ErrorContains(t, err, "API key")
 }
@@ -50,6 +54,6 @@ func TestRequireAuthSucceedsWhenKeySet(t *testing.T) {
 		APIKey:    "key",
 		APISecret: "secret",
 	}
-	c, _ := client.New(cfg)
+	c, _ := client.New(cfg, "test")
 	assert.NoError(t, c.RequireAuth())
 }

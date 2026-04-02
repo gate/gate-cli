@@ -46,7 +46,7 @@ func LoadClient(t *testing.T) *client.Client {
 			"Fill in your Gate testnet credentials to run integration tests.", cfgPath)
 	}
 
-	c, err := client.New(cfg)
+	c, err := client.New(cfg, "integration-test")
 	if err != nil {
 		t.Fatalf("failed to create Gate client: %v", err)
 	}

@@ -7,9 +7,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var positionCmd = &cobra.Command{
@@ -52,6 +52,8 @@ func init() {
 		RunE:  runFuturesPositionLeverage,
 	}
 	leverageCmd.Flags().String("contract", "", "Contract name (required)")
+	leverageCmd.Flags().String("pos-margin-mode", "", "Position margin mode: isolated, cross (required for split position mode)")
+	leverageCmd.Flags().String("dual-side", "", "Dual side: long, short (required for dual-position mode)")
 	leverageCmd.MarkFlagRequired("contract")
 	addSettleFlag(leverageCmd)
 
@@ -271,7 +273,9 @@ func runFuturesPositionLeverage(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	result, httpResp, err := c.FuturesAPI.GetLeverage(c.Context(), settle, contract, nil)
+	posMarginMode, _ := cmd.Flags().GetString("pos-margin-mode")
+	dualSide, _ := cmd.Flags().GetString("dual-side")
+	result, httpResp, err := c.FuturesAPI.GetLeverage(c.Context(), settle, contract, posMarginMode, dualSide)
 	if err != nil {
 		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/positions/"+contract+"/leverage", ""))
 		return nil
@@ -366,7 +370,7 @@ func runFuturesUpdatePositionCrossMode(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	req := gateapi.InlineObject{Contract: contract, Mode: mode}
+	req := gateapi.UpdateDualCompPositionCrossModeRequest{Contract: contract, Mode: mode}
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.FuturesAPI.UpdateDualCompPositionCrossMode(c.Context(), settle, req)
 	if err != nil {

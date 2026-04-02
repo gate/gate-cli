@@ -10,31 +10,51 @@ import (
 
 	"github.com/gate/gate-cli/internal/config"
 	"github.com/gate/gate-cli/internal/output"
-	"github.com/gate/gate-cli/internal/version"
+	"github.com/gate/gate-cli/internal/useragent"
 )
 
 // Client wraps the Gate SDK API client with auth state tracking.
 type Client struct {
-	SpotAPI    *gateapi.SpotApiService
-	FuturesAPI *gateapi.FuturesApiService
-	TradFiAPI  *gateapi.TradFiApiService
-	AlphaAPI   *gateapi.AlphaApiService
-	AccountAPI *gateapi.AccountApiService
-	WalletAPI  *gateapi.WalletApiService
-	OptionsAPI  *gateapi.OptionsApiService
-	DeliveryAPI *gateapi.DeliveryApiService
-	ctx         context.Context
-	auth       bool
-	userAgent  string
+	SpotAPI                *gateapi.SpotApiService
+	FuturesAPI             *gateapi.FuturesApiService
+	TradFiAPI              *gateapi.TradFiApiService
+	AlphaAPI               *gateapi.AlphaApiService
+	AccountAPI             *gateapi.AccountApiService
+	WalletAPI              *gateapi.WalletApiService
+	OptionsAPI             *gateapi.OptionsApiService
+	DeliveryAPI            *gateapi.DeliveryApiService
+	MarginAPI              *gateapi.MarginApiService
+	MarginUniAPI           *gateapi.MarginUniApiService
+	UnifiedAPI             *gateapi.UnifiedApiService
+	SubAccountAPI          *gateapi.SubAccountApiService
+	EarnAPI                *gateapi.EarnApiService
+	EarnUniAPI             *gateapi.EarnUniApiService
+	FlashSwapAPI           *gateapi.FlashSwapApiService
+	MultiCollateralLoanAPI *gateapi.MultiCollateralLoanApiService
+	CrossExAPI             *gateapi.CrossExApiService
+	P2pAPI                 *gateapi.P2pApiService
+	RebateAPI              *gateapi.RebateApiService
+	WithdrawalAPI          *gateapi.WithdrawalApiService
+	ActivityAPI            *gateapi.ActivityApiService
+	CouponAPI              *gateapi.CouponApiService
+	LaunchAPI              *gateapi.LaunchApiService
+	SquareAPI              *gateapi.SquareApiService
+	WelfareAPI             *gateapi.WelfareApiService
+	ctx                    context.Context
+	auth                   bool
+	userAgent              string
 
 	dualMu    sync.Mutex
 	dualCache map[string]bool // settle → isDualMode
 }
 
 // New creates a Gate API client from the resolved config.
-func New(cfg *config.Config) (*Client, error) {
+// cmdPath is the slash-separated command path (e.g. "spot/order/create").
+func New(cfg *config.Config, cmdPath string) (*Client, error) {
 	gateCfg := gateapi.NewConfiguration()
-	gateCfg.UserAgent = "gate-cli/" + version.Version
+
+	sdkUA := gateCfg.UserAgent
+	gateCfg.UserAgent = useragent.Build(cmdPath, sdkUA)
 	if cfg.BaseURL != "" {
 		gateCfg.BasePath = cfg.BaseURL + "/api/v4"
 	}
@@ -47,18 +67,35 @@ func New(cfg *config.Config) (*Client, error) {
 	apiClient := gateapi.NewAPIClient(gateCfg)
 
 	return &Client{
-		SpotAPI:    apiClient.SpotApi,
-		FuturesAPI: apiClient.FuturesApi,
-		TradFiAPI:  apiClient.TradFiApi,
-		AlphaAPI:   apiClient.AlphaApi,
-		AccountAPI: apiClient.AccountApi,
-		WalletAPI:  apiClient.WalletApi,
-		OptionsAPI:  apiClient.OptionsApi,
-		DeliveryAPI: apiClient.DeliveryApi,
-		ctx:         context.Background(),
-		auth:       cfg.APIKey != "" && cfg.APISecret != "",
-		userAgent:  gateCfg.UserAgent,
-		dualCache:  make(map[string]bool),
+		SpotAPI:                apiClient.SpotApi,
+		FuturesAPI:             apiClient.FuturesApi,
+		TradFiAPI:              apiClient.TradFiApi,
+		AlphaAPI:               apiClient.AlphaApi,
+		AccountAPI:             apiClient.AccountApi,
+		WalletAPI:              apiClient.WalletApi,
+		OptionsAPI:             apiClient.OptionsApi,
+		DeliveryAPI:            apiClient.DeliveryApi,
+		MarginAPI:              apiClient.MarginApi,
+		MarginUniAPI:           apiClient.MarginUniApi,
+		UnifiedAPI:             apiClient.UnifiedApi,
+		SubAccountAPI:          apiClient.SubAccountApi,
+		EarnAPI:                apiClient.EarnApi,
+		EarnUniAPI:             apiClient.EarnUniApi,
+		FlashSwapAPI:           apiClient.FlashSwapApi,
+		MultiCollateralLoanAPI: apiClient.MultiCollateralLoanApi,
+		CrossExAPI:             apiClient.CrossExApi,
+		P2pAPI:                 apiClient.P2pApi,
+		RebateAPI:              apiClient.RebateApi,
+		WithdrawalAPI:          apiClient.WithdrawalApi,
+		ActivityAPI:            apiClient.ActivityApi,
+		CouponAPI:              apiClient.CouponApi,
+		LaunchAPI:              apiClient.LaunchApi,
+		SquareAPI:              apiClient.SquareApi,
+		WelfareAPI:             apiClient.WelfareApi,
+		ctx:                    context.Background(),
+		auth:                   cfg.APIKey != "" && cfg.APISecret != "",
+		userAgent:              gateCfg.UserAgent,
+		dualCache:              make(map[string]bool),
 	}, nil
 }
 

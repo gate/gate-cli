@@ -7,9 +7,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var priceTriggerCmd = &cobra.Command{
@@ -58,7 +58,7 @@ func init() {
 		Short: "Get a price-triggered order by ID",
 		RunE:  runFuturesPriceTriggerGet,
 	}
-	getCmd.Flags().Int32("id", 0, "Order ID (required)")
+	getCmd.Flags().Int64("id", 0, "Order ID (required)")
 	getCmd.MarkFlagRequired("id")
 	addSettleFlag(getCmd)
 
@@ -67,7 +67,7 @@ func init() {
 		Short: "Cancel a price-triggered order by ID",
 		RunE:  runFuturesPriceTriggerCancel,
 	}
-	cancelCmd.Flags().Int32("id", 0, "Order ID (required)")
+	cancelCmd.Flags().Int64("id", 0, "Order ID (required)")
 	cancelCmd.MarkFlagRequired("id")
 	addSettleFlag(cancelCmd)
 
@@ -76,7 +76,7 @@ func init() {
 		Short: "Update a price-triggered order",
 		RunE:  runFuturesPriceTriggerUpdate,
 	}
-	updateCmd.Flags().Int32("id", 0, "Order ID (required)")
+	updateCmd.Flags().Int64("id", 0, "Order ID (required)")
 	updateCmd.Flags().Int64("size", 0, "New order size")
 	updateCmd.Flags().String("price", "", "New order price")
 	updateCmd.Flags().String("trigger-price", "", "New trigger price")
@@ -205,7 +205,7 @@ func runFuturesPriceTriggerCancelAll(cmd *cobra.Command, args []string) error {
 }
 
 func runFuturesPriceTriggerGet(cmd *cobra.Command, args []string) error {
-	id, _ := cmd.Flags().GetInt32("id")
+	id, _ := cmd.Flags().GetInt64("id")
 	settle := cmdutil.GetSettle(cmd)
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
@@ -225,7 +225,7 @@ func runFuturesPriceTriggerGet(cmd *cobra.Command, args []string) error {
 }
 
 func runFuturesPriceTriggerCancel(cmd *cobra.Command, args []string) error {
-	id, _ := cmd.Flags().GetInt32("id")
+	id, _ := cmd.Flags().GetInt64("id")
 	settle := cmdutil.GetSettle(cmd)
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
@@ -245,7 +245,7 @@ func runFuturesPriceTriggerCancel(cmd *cobra.Command, args []string) error {
 }
 
 func runFuturesPriceTriggerUpdate(cmd *cobra.Command, args []string) error {
-	id, _ := cmd.Flags().GetInt32("id")
+	id, _ := cmd.Flags().GetInt64("id")
 	size, _ := cmd.Flags().GetInt64("size")
 	price, _ := cmd.Flags().GetString("price")
 	triggerPrice, _ := cmd.Flags().GetString("trigger-price")
