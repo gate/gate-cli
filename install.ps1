@@ -33,7 +33,9 @@ try {
 
     # --- Verify checksum ---
     Write-Host "Verifying checksum..."
-    $Expected = (Get-Content "$Tmp\checksums.txt" | Where-Object { $_ -match [regex]::Escape("  $Archive") }) -split '\s+' | Select-Object -First 1
+    $ChecksumLines = (Get-Content "$Tmp\checksums.txt") -replace '\r', ''
+    $Expected = ($ChecksumLines | Where-Object { $_ -match [regex]::Escape("  $Archive") }) -split '\s+' | Select-Object -First 1
+    $Expected = $Expected.Trim().ToLower()
     if (-not $Expected) {
         throw "Archive '$Archive' not found in checksums.txt"
     }

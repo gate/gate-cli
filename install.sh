@@ -69,15 +69,18 @@ curl -fsSL "${BASE_URL}/checksums.txt" -o "${TMP}/checksums.txt"
 
 # --- Verify checksum ---
 echo "Verifying checksum..."
-cd "$TMP"
+CHECKSUM_LINE=$(grep -F "  ${ARCHIVE}" "${TMP}/checksums.txt" || true)
+if [ -z "$CHECKSUM_LINE" ]; then
+  echo "Error: ${ARCHIVE} not found in checksums.txt" >&2
+  exit 1
+fi
 if command -v shasum > /dev/null 2>&1; then
-  grep -F "  ${ARCHIVE}" checksums.txt | shasum -a 256 --check --status
+  echo "$CHECKSUM_LINE" | shasum -a 256 --check --status
 elif command -v sha256sum > /dev/null 2>&1; then
-  grep -F "  ${ARCHIVE}" checksums.txt | sha256sum --check --status
+  echo "$CHECKSUM_LINE" | sha256sum --check --status
 else
   echo "Warning: no sha256sum or shasum found, skipping checksum verification" >&2
 fi
-cd - > /dev/null
 
 # --- Extract ---
 tar -xzf "${TMP}/${ARCHIVE}" -C "$TMP" "${BINARY}"

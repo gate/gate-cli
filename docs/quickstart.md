@@ -36,7 +36,7 @@ $env:GATE_CLI_VERSION="v0.3.2"; irm https://raw.githubusercontent.com/gate/gate-
 git clone https://github.com/gate/gate-cli.git
 cd gate-cli
 go build -o gate-cli .
-sudo mv gate-cli /usr/local/bin/
+sudo install -m 755 gate-cli /usr/local/bin/gate-cli
 ```
 
 ---
