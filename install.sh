@@ -75,9 +75,9 @@ if [ -z "$CHECKSUM_LINE" ]; then
   exit 1
 fi
 if command -v shasum > /dev/null 2>&1; then
-  echo "$CHECKSUM_LINE" | shasum -a 256 --check --status
+  (cd "$TMP" && echo "$CHECKSUM_LINE" | shasum -a 256 --check --status)
 elif command -v sha256sum > /dev/null 2>&1; then
-  echo "$CHECKSUM_LINE" | sha256sum --check --status
+  (cd "$TMP" && echo "$CHECKSUM_LINE" | sha256sum --check --status)
 else
   echo "Warning: no sha256sum or shasum found, skipping checksum verification" >&2
 fi
