@@ -35,6 +35,21 @@ archives:
 checksum:
   name_template: "checksums.txt"
 
+brews:
+  - name: gate-cli
+    repository:
+      owner: gate
+      name: homebrew-tap
+      branch: main
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    homepage: "https://www.gate.com"
+    description: "Gate CLI - command-line interface for Gate"
+    license: "MIT"
+    install: |
+      bin.install "gate-cli"
+    test: |
+      system bin/"gate-cli", "--version"
+
 changelog:
   sort: asc
   filters:
