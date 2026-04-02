@@ -42,6 +42,7 @@ brews:
       name: homebrew-tap
       branch: main
       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Formula
     homepage: "https://www.gate.com"
     description: "Gate CLI - command-line interface for Gate"
     license: "MIT"
