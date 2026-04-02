@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/gate/gate-cli/cmd/account"
+	"github.com/gate/gate-cli/internal/version"
 	"github.com/gate/gate-cli/cmd/activity"
 	"github.com/gate/gate-cli/cmd/alpha"
 	configcmd "github.com/gate/gate-cli/cmd/config"
@@ -32,9 +33,10 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "gate-cli",
-	Short: "Gate API command-line interface",
-	Long:  "gate-cli wraps the Gate API for easy use from the terminal and in scripts.",
+	Use:     "gate-cli",
+	Short:   "Gate API command-line interface",
+	Long:    "gate-cli wraps the Gate API for easy use from the terminal and in scripts.",
+	Version: version.Version,
 }
 
 func Execute() {
@@ -44,6 +46,14 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "version",
+		Short: "Print the version",
+		Run: func(cmd *cobra.Command, args []string) {
+			cmd.Printf("gate-cli version %s\n", version.Version)
+		},
+	})
+
 	rootCmd.PersistentFlags().String("format", "table", "Output format: table or json")
 	rootCmd.PersistentFlags().String("profile", "default", "Config profile to use")
 	rootCmd.PersistentFlags().Bool("debug", false, "Print raw HTTP request/response")
