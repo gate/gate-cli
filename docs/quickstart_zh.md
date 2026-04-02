@@ -2,19 +2,41 @@
 
 ## 安装
 
-从源码构建（需要 Go 1.21+）：
+### macOS / Linux — shell 脚本
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/gate/gate-cli/main/install.sh | sh
+```
+
+### macOS — Homebrew
+
+```sh
+brew install gate/tap/gate-cli
+```
+
+### Windows — PowerShell
+
+```powershell
+irm https://raw.githubusercontent.com/gate/gate-cli/main/install.ps1 | iex
+```
+
+### 指定版本
+
+```sh
+# Unix
+curl -fsSL https://raw.githubusercontent.com/gate/gate-cli/main/install.sh | sh -s -- --version v0.4.0
+
+# Windows
+$env:GATE_CLI_VERSION="v0.4.0"; irm https://raw.githubusercontent.com/gate/gate-cli/main/install.ps1 | iex
+```
+
+### 从源码构建（需要 Go 1.21+）
 
 ```bash
 git clone https://github.com/gate/gate-cli.git
 cd gate-cli
 go build -o gate-cli .
-sudo mv gate-cli /usr/local/bin/   # 可选：安装到系统路径
-```
-
-验证安装：
-
-```bash
-gate-cli --help
+sudo install -m 755 gate-cli /usr/local/bin/gate-cli
 ```
 
 ---

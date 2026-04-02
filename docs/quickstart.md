@@ -24,10 +24,10 @@ irm https://raw.githubusercontent.com/gate/gate-cli/main/install.ps1 | iex
 
 ```sh
 # Unix
-curl -fsSL https://raw.githubusercontent.com/gate/gate-cli/main/install.sh | sh -s -- --version v0.3.2
+curl -fsSL https://raw.githubusercontent.com/gate/gate-cli/main/install.sh | sh -s -- --version v0.4.0
 
 # Windows
-$env:GATE_CLI_VERSION="v0.3.2"; irm https://raw.githubusercontent.com/gate/gate-cli/main/install.ps1 | iex
+$env:GATE_CLI_VERSION="v0.4.0"; irm https://raw.githubusercontent.com/gate/gate-cli/main/install.ps1 | iex
 ```
 
 ### Build from source (requires Go 1.21+)

@@ -1,11 +1,29 @@
 # gate-cli
 
-A command-line interface for the [Gate](https://gate.com) API. Covers spot, futures, delivery, options, margin, unified account, earn, wallet, and 15+ more modules. Designed for developers, quants, and AI agents.
+A command-line interface for the [Gate](https://gate.com) API. Covers spot, futures, delivery, options, margin, unified account, earn, wallet, and 15+ more modules. Designed for developers, quants, and AI agents. For a full walkthrough, see the [English Quick Start](docs/quickstart.md) or [中文快速上手](docs/quickstart_zh.md).
 
-## Quick Start
+## Installation
 
-- [English Quick Start](docs/quickstart.md)
-- [中文快速上手](docs/quickstart_zh.md)
+**macOS / Linux:**
+```sh
+curl -fsSL https://raw.githubusercontent.com/gate/gate-cli/main/install.sh | sh
+```
+
+**macOS — Homebrew:**
+```sh
+brew install gate/tap/gate-cli
+```
+
+**Windows:**
+```powershell
+irm https://raw.githubusercontent.com/gate/gate-cli/main/install.ps1 | iex
+```
+
+## Configuration
+
+```bash
+gate-cli config init
+```
 
 ## Features
 
@@ -45,29 +63,6 @@ A command-line interface for the [Gate](https://gate.com) API. Covers spot, futu
 - **Two output modes** — human-friendly table (default) or `--format json` for scripts and agents
 - **Multiple profiles** — manage several API keys in one config file
 - **Credential priority** — `--api-key` flag > env var > config file
-
-## Installation
-
-```bash
-git clone https://github.com/gate/gate-cli.git
-cd gate-cli
-go build -o gate-cli .
-```
-
-Requires Go 1.23+.
-
-## Configuration
-
-```bash
-gate-cli config init          # interactive setup -> ~/.gate-cli/config.yaml
-```
-
-Or use environment variables:
-
-```bash
-export GATE_API_KEY=your-key
-export GATE_API_SECRET=your-secret
-```
 
 ## Usage examples
 
@@ -125,8 +120,6 @@ gate-cli sub-account key list --user-id 12345
 gate-cli spot market ticker --pair BTC_USDT --format json | jq '.last'
 ```
 
-See the [Quick Start guide](docs/quickstart.md) for a full walkthrough.
-
 ## Modules
 
 | Module | Command | Description |
@@ -165,11 +158,3 @@ See the [Quick Start guide](docs/quickstart.md) for a full walkthrough.
 | `--api-key` | — | API key (overrides env and config file) |
 | `--api-secret` | — | API secret (overrides env and config file) |
 | `--debug` | `false` | Print raw HTTP request/response |
-
-## Documentation
-
-| Document | Description |
-|----------|-------------|
-| [docs/quickstart.md](docs/quickstart.md) | English quick start guide |
-| [docs/quickstart_zh.md](docs/quickstart_zh.md) | Chinese quick start guide |
-| [docs/integration-test-plan.md](docs/integration-test-plan.md) | Integration test plan |
