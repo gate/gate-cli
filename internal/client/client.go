@@ -11,6 +11,7 @@ import (
 	"github.com/gate/gate-cli/internal/config"
 	"github.com/gate/gate-cli/internal/output"
 	"github.com/gate/gate-cli/internal/useragent"
+	"github.com/gate/gate-cli/internal/version"
 )
 
 // Client wraps the Gate SDK API client with auth state tracking.
@@ -43,6 +44,7 @@ type Client struct {
 	ctx                    context.Context
 	auth                   bool
 	userAgent              string
+	defaultHeaders         map[string]string
 
 	dualMu    sync.Mutex
 	dualCache map[string]bool // settle → isDualMode
@@ -55,6 +57,14 @@ func New(cfg *config.Config, cmdPath string) (*Client, error) {
 
 	sdkUA := gateCfg.UserAgent
 	gateCfg.UserAgent = useragent.Build(cmdPath, sdkUA)
+
+	// Custom headers for backend analytics
+	agent := useragent.Detect()
+	gateCfg.DefaultHeader["X-Gate-Agent"] = agent.Name
+	gateCfg.DefaultHeader["X-Gate-Agent-Version"] = agent.Extra
+	gateCfg.DefaultHeader["X-Gate-Cli-Name"] = "gate-cli"
+	gateCfg.DefaultHeader["X-Gate-Cli-Version"] = version.Version
+
 	if cfg.BaseURL != "" {
 		gateCfg.BasePath = cfg.BaseURL + "/api/v4"
 	}
@@ -95,6 +105,7 @@ func New(cfg *config.Config, cmdPath string) (*Client, error) {
 		ctx:                    context.Background(),
 		auth:                   cfg.APIKey != "" && cfg.APISecret != "",
 		userAgent:              gateCfg.UserAgent,
+		defaultHeaders:         gateCfg.DefaultHeader,
 		dualCache:              make(map[string]bool),
 	}, nil
 }
@@ -112,6 +123,11 @@ func (c *Client) IsAuthenticated() bool {
 // UserAgent returns the User-Agent string sent with every API request.
 func (c *Client) UserAgent() string {
 	return c.userAgent
+}
+
+// DefaultHeader returns the value of a default HTTP header, or empty string if not set.
+func (c *Client) DefaultHeader(key string) string {
+	return c.defaultHeaders[key]
 }
 
 // RequireAuth returns an error if the client has no API credentials.
