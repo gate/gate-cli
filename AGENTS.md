@@ -32,6 +32,11 @@
 - `FuturesTrade.Size` → `string`
 - `FuturesTrade.CreateTimeMs` → `float64`
 
+## MCP / `tool`（信息与研究能力，规划中）
+- 通过 MCP Streamable HTTP 对接 news / info / docs 服务；**规范主命令**为 `gate-cli tool`（`list` / `call` / `describe`），与交易 API（`gateapi-go`）**鉴权隔离**：勿用 `GATE_API_KEY` 充当 MCP Bearer。
+- 规格与待办：[`specs/README.md`](specs/README.md)、[`specs/open-items-and-dependencies.md`](specs/open-items-and-dependencies.md)；**技术评审只读** [`specs/clidocs/gate-cli-intel-mcp-technical-solution-feishu.md`](specs/clidocs/gate-cli-intel-mcp-technical-solution-feishu.md)；评审摘要：[`docs/plans/2026-04-10-gate-cli-tool-mcp-review.md`](docs/plans/2026-04-10-gate-cli-tool-mcp-review.md)。
+- **Cursor**：默认决策见 [`.cursor/rules/`](.cursor/rules/) — **`gate-cli-cli-layer-conventions.mdc`**（`GetPrinter`/`PrintError`、失败 **stderr** `{"error":...}`，与交易子命令一致；MCP 仅替换 `mcpclient`）、**`gate-cli-intel-mcp-specs.mdc`**、**`mcp-intel-curl-endpoints.mdc`**；Wire **`specs/cli/mcp-wire-appendix.md` v0.4**。
+
 ## 架构约定
 - 共享 CLI helper（GetPrinter/GetClient）放在 `internal/cmdutil/`，**不要**放 `cmd/root.go`（会循环 import）
 - 错误输出走 stderr，正常数据走 stdout（agent 管道安全）

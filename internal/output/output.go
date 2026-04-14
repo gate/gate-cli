@@ -15,16 +15,23 @@ import (
 type Format string
 
 const (
-	FormatTable Format = "table"
-	FormatJSON  Format = "json"
+	FormatPretty Format = "pretty"
+	FormatTable  Format = "table" // legacy alias of pretty
+	FormatJSON   Format = "json"
 )
 
 // ParseFormat converts a string flag value to Format.
 func ParseFormat(s string) Format {
-	if s == "json" {
+	switch s {
+	case "json":
 		return FormatJSON
+	case "table":
+		return FormatPretty
+	case "pretty":
+		return FormatPretty
+	default:
+		return FormatPretty
 	}
-	return FormatTable
 }
 
 // RequestInfo captures the HTTP request that triggered an error.
@@ -36,11 +43,14 @@ type RequestInfo struct {
 
 // GateError is a unified error representation for all Gate API errors.
 type GateError struct {
-	Status  int          `json:"status"`
-	Label   string       `json:"label,omitempty"`
-	Message string       `json:"message"`
-	TraceID string       `json:"trace_id,omitempty"`
-	Request *RequestInfo `json:"request,omitempty"`
+	Status       int          `json:"status"`
+	Label        string       `json:"label,omitempty"`
+	Message      string       `json:"message"`
+	TraceID      string       `json:"trace_id,omitempty"`
+	RequestID    string       `json:"request_id,omitempty"`
+	ToolName     string       `json:"tool_name,omitempty"`
+	JSONRPCCode  *int         `json:"jsonrpc_code,omitempty"`
+	Request      *RequestInfo `json:"request,omitempty"`
 }
 
 // Printer writes structured output to stdout and errors to stderr.
@@ -130,6 +140,15 @@ func (p *Printer) PrintError(gateErr *GateError) {
 	fmt.Fprintf(p.errOut, "Error [%d %s]: %s\n", gateErr.Status, label, gateErr.Message)
 	if gateErr.TraceID != "" {
 		fmt.Fprintf(p.errOut, "Trace ID: %s\n", gateErr.TraceID)
+	}
+	if gateErr.RequestID != "" {
+		fmt.Fprintf(p.errOut, "Request ID: %s\n", gateErr.RequestID)
+	}
+	if gateErr.ToolName != "" {
+		fmt.Fprintf(p.errOut, "Tool: %s\n", gateErr.ToolName)
+	}
+	if gateErr.JSONRPCCode != nil {
+		fmt.Fprintf(p.errOut, "JSON-RPC Code: %d\n", *gateErr.JSONRPCCode)
 	}
 	if gateErr.Request != nil {
 		fmt.Fprintf(p.errOut, "Request: %s %s\n", gateErr.Request.Method, gateErr.Request.URL)

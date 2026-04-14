@@ -12,3 +12,19 @@ profiles:
     api_key: "YOUR_TESTNET_API_KEY"
     api_secret: "YOUR_TESTNET_API_SECRET"
     base_url: "https://api-testnet.gateapi.io"
+
+# --- Intel / MCP (optional)
+# Copy these into your environment when running `go test -tags integration` for Intel/MCP tests,
+# or extend this yaml if a future integration test reads intel URLs from file (not wired in repo yet).
+# Full variable list and precedence: specs/intel-config-and-security.md
+#
+# Local debug quick start (public QC endpoints):
+# export GATE_INTEL_NEWS_MCP_URL="https://api.gatemcp.ai/mcp/news"
+# export GATE_INTEL_INFO_MCP_URL="https://api.gatemcp.ai/mcp/info"
+# Optional internal test environment (replace host/port by current deployment):
+# export GATE_INTEL_NEWS_MCP_URL="http://<host>:30725/mcp"
+# export GATE_INTEL_INFO_MCP_URL="http://<host>:30729/mcp"
+#
+# Optional auth and transport tuning:
+# GATE_INTEL_BEARER_TOKEN=...          # optional per QC; see Wire appendix / intel-config §2
+# GATE_INTEL_HTTP_TIMEOUT=60s          # optional
