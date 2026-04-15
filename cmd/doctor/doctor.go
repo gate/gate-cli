@@ -45,7 +45,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 			return exitcode.New(30, err)
 		}
 	} else {
-		_ = p.Table(
+		if err := p.Table(
 			[]string{"Status", "CLIInstalled", "CLIVersion", "MinVersion", "LegacyMCPDetected"},
 			[][]string{{
 				report.Status,
@@ -54,21 +54,21 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 				report.Summary.MinimumRequiredVersion,
 				boolString(report.Summary.LegacyMCPDetected),
 			}},
-		)
+		); err != nil {
+			return exitcode.New(30, err)
+		}
 		checkRows := make([][]string, 0, len(report.Checks))
 		for _, c := range report.Checks {
 			checkRows = append(checkRows, []string{c.ID, c.Status, boolString(c.Blocking), c.Message})
 		}
-		_ = p.Table([]string{"ID", "Status", "Blocking", "Message"}, checkRows)
+		if err := p.Table([]string{"ID", "Status", "Blocking", "Message"}, checkRows); err != nil {
+			return exitcode.New(30, err)
+		}
 	}
 
 	if report.Status == "fail" {
 		p.PrintError(&output.GateError{Status: 422, Label: "DOCTOR_FAILED", Message: "doctor checks failed"})
 		return exitcode.New(migration.DoctorExitCode(report), errors.New("doctor failed"))
-	}
-	if report.Status == "warn" && strict {
-		p.PrintError(&output.GateError{Status: 422, Label: "DOCTOR_STRICT_FAILED", Message: "doctor warnings found in strict mode"})
-		return exitcode.New(migration.DoctorExitCode(report), errors.New("doctor strict failed"))
 	}
 	if report.Status == "warn" {
 		return exitcode.New(migration.DoctorExitCode(report), nil)

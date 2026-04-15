@@ -60,7 +60,9 @@ func runMigrate(cmd *cobra.Command, args []string) error {
 			return exitcode.New(30, err)
 		}
 	} else {
-		_ = p.Table([]string{"Mode", "Status", "RecommendedNextStep"}, [][]string{{report.Mode, report.Status, report.RecommendedNextStep}})
+		if err := p.Table([]string{"Mode", "Status", "RecommendedNextStep"}, [][]string{{report.Mode, report.Status, report.RecommendedNextStep}}); err != nil {
+			return exitcode.New(30, err)
+		}
 		rows := make([][]string, 0, len(report.Providers))
 		for _, pr := range report.Providers {
 			rows = append(rows, []string{
@@ -74,7 +76,9 @@ func runMigrate(cmd *cobra.Command, args []string) error {
 		if len(rows) == 0 {
 			rows = append(rows, []string{"-", "pass", "none", "-", "-"})
 		}
-		_ = p.Table([]string{"Provider", "Status", "Action", "FilePath", "BackupFile"}, rows)
+		if err := p.Table([]string{"Provider", "Status", "Action", "FilePath", "BackupFile"}, rows); err != nil {
+			return exitcode.New(30, err)
+		}
 	}
 
 	if report.Status == "fail" {
