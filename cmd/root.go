@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"os"
 	"strconv"
 	"strings"
@@ -20,10 +21,12 @@ import (
 	"github.com/gate/gate-cli/cmd/info"
 	"github.com/gate/gate-cli/cmd/launch"
 	"github.com/gate/gate-cli/cmd/margin"
+	"github.com/gate/gate-cli/cmd/migrate"
 	"github.com/gate/gate-cli/cmd/mcl"
 	"github.com/gate/gate-cli/cmd/news"
 	"github.com/gate/gate-cli/cmd/options"
 	"github.com/gate/gate-cli/cmd/p2p"
+	"github.com/gate/gate-cli/cmd/preflight"
 	"github.com/gate/gate-cli/cmd/rebate"
 	"github.com/gate/gate-cli/cmd/spot"
 	"github.com/gate/gate-cli/cmd/square"
@@ -33,6 +36,8 @@ import (
 	"github.com/gate/gate-cli/cmd/wallet"
 	"github.com/gate/gate-cli/cmd/welfare"
 	"github.com/gate/gate-cli/cmd/withdrawal"
+	"github.com/gate/gate-cli/cmd/doctor"
+	"github.com/gate/gate-cli/internal/exitcode"
 	"github.com/gate/gate-cli/internal/version"
 )
 
@@ -45,6 +50,10 @@ var rootCmd = &cobra.Command{
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
+		var codedErr *exitcode.Error
+		if errors.As(err, &codedErr) {
+			os.Exit(codedErr.Code)
+		}
 		os.Exit(1)
 	}
 }
@@ -74,6 +83,9 @@ func init() {
 	rootCmd.AddCommand(wallet.Cmd)
 	rootCmd.AddCommand(news.Cmd)
 	rootCmd.AddCommand(info.Cmd)
+	rootCmd.AddCommand(preflight.Cmd)
+	rootCmd.AddCommand(doctor.Cmd)
+	rootCmd.AddCommand(migrate.Cmd)
 	rootCmd.AddCommand(options.Cmd)
 	rootCmd.AddCommand(delivery.Cmd)
 	rootCmd.AddCommand(margin.Cmd)

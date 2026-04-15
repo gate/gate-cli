@@ -81,17 +81,8 @@ func runNewsCallByName(cmd *cobra.Command, name string, reserved map[string]stru
 		})
 		return nil
 	}
-	if p.IsJSON() {
-		return p.Print(toolrender.ApplyOutputLimit(toolrender.BuildCLIEnvelope(name, result), maxOutputBytes))
-	}
-
-	isError, renderErr := toolrender.RenderCallResult(p, name, result, maxOutputBytes)
-	if renderErr != nil {
-		return renderErr
-	}
-	if isError {
-		p.PrintError(&output.GateError{Status: 502, Label: "INTEL_RESULT_ERROR", Message: "tool returned isError=true", ToolName: name})
-		return nil
+	if err := toolrender.RenderCallResult(p, name, result, maxOutputBytes); err != nil {
+		return err
 	}
 	return nil
 }

@@ -16,13 +16,12 @@ func TestRenderCallResult_JSONMode(t *testing.T) {
 	var errOut bytes.Buffer
 	p := output.NewWithStderr(&out, &errOut, output.FormatJSON)
 
-	isErr, err := RenderCallResult(p, "news_feed_search_news", &mcpclient.CallResult{
+	err := RenderCallResult(p, "news_feed_search_news", &mcpclient.CallResult{
 		Content: []mcpclient.ContentItem{
 			{"type": "text", "text": `{"ok":true}`},
 		},
 	}, 0)
 	require.NoError(t, err)
-	assert.False(t, isErr)
 	assert.Contains(t, out.String(), `"tool_name": "news_feed_search_news"`)
 	assert.Contains(t, out.String(), `"data_source": "content"`)
 	assert.Contains(t, out.String(), `"ok": true`)
@@ -33,11 +32,10 @@ func TestRenderCallResult_PrettyModeAlsoUsesStableEnvelope(t *testing.T) {
 	var errOut bytes.Buffer
 	p := output.NewWithStderr(&out, &errOut, output.FormatPretty)
 
-	isErr, err := RenderCallResult(p, "info_coin_get_coin_info", &mcpclient.CallResult{
+	err := RenderCallResult(p, "info_coin_get_coin_info", &mcpclient.CallResult{
 		Raw: map[string]interface{}{"v": 1},
 	}, 0)
 	require.NoError(t, err)
-	assert.False(t, isErr)
 	assert.Contains(t, out.String(), `"tool_name": "info_coin_get_coin_info"`)
 	assert.Contains(t, out.String(), `"data_source": "raw"`)
 	assert.Contains(t, out.String(), `"v": 1`)
