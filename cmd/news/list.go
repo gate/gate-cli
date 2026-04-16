@@ -3,6 +3,7 @@ package news
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/gate/gate-cli/internal/intelfacade"
 	"github.com/gate/gate-cli/internal/mcpclient"
 )
 
@@ -34,13 +35,17 @@ func runNewsList(cmd *cobra.Command, args []string) error {
 		return p.Print(items)
 	}
 
-	rows := make([][]string, 0, len(items))
-	for _, item := range items {
-		hasSchema := "no"
-		if item.HasInputSchema {
-			hasSchema = "yes"
+	if p.IsTable() {
+		rows := make([][]string, 0, len(items))
+		for _, item := range items {
+			params := "no"
+			if item.HasInputSchema {
+				params = "yes"
+			}
+			rows = append(rows, []string{item.Name, item.Description, params})
 		}
-		rows = append(rows, []string{item.Name, item.Description, hasSchema})
+		return p.Table([]string{"Name", "Description", "Accepts parameters"}, rows)
 	}
-	return p.Table([]string{"Name", "Description", "HasInputSchema"}, rows)
+
+	return p.WritePretty(intelfacade.ListCapabilitiesPrettyText(items))
 }

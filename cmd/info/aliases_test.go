@@ -43,3 +43,25 @@ func TestInfoAliasesCoverBaselineTools(t *testing.T) {
 		}
 	}
 }
+
+func TestInfoGetCoinInfoHasStaticFlatFlagsWhenLoaderEmpty(t *testing.T) {
+	oldLoader := infoSchemaLoader
+	infoSchemaLoader = func() map[string]toolschema.ToolSummary { return map[string]toolschema.ToolSummary{} }
+	t.Cleanup(func() { infoSchemaLoader = oldLoader })
+
+	cmd := &cobra.Command{Use: "info"}
+	orig := Cmd
+	Cmd = cmd
+	t.Cleanup(func() { Cmd = orig })
+
+	buildInfoAliases()
+	leafCmd, _, err := cmd.Find([]string{"coin", "get-coin-info"})
+	if err != nil || leafCmd == nil {
+		t.Fatalf("find get-coin-info: %v", err)
+	}
+	for _, name := range []string{"query", "query-type", "size", "symbol"} {
+		if leafCmd.Flags().Lookup(name) == nil {
+			t.Fatalf("missing --%s on get-coin-info", name)
+		}
+	}
+}

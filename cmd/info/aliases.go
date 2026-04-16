@@ -24,7 +24,7 @@ func makeInfoAliasCommand(use, toolName string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   use,
 		Short: "Shortcut for " + toolName,
-		Long:  "Calls " + toolName + ". Prefer flat business flags; use --params/--args-json/--args-file only as fallback.",
+		Long:  "Calls " + toolName + ". Flat flags come from a static baseline plus any extra fields from the intel backend; use --params/--args-json/--args-file as JSON fallback.",
 		Example: "  gate-cli info " + group + " " + use + " --format json\n" +
 			"  gate-cli info " + group + " " + use + " --params '{\"key\":\"value\"}'",
 		Args:  cobra.NoArgs,
@@ -67,10 +67,13 @@ func buildInfoAliases() {
 		if aliases, ok := infoBusinessAliases[tool]; ok {
 			alias.Aliases = aliases
 		}
+		if b := intelfacade.InfoBaselineInputSchema(tool); b != nil {
+			toolschema.ApplyInputSchemaFlags(alias, b)
+		}
 		if tool == "info_coin_get_coin_info" && alias.Flags().Lookup("symbol") == nil {
 			alias.Flags().String("symbol", "", "Coin symbol alias to query")
 		}
-		if schema, ok := schemas[tool]; ok {
+		if schema, ok := schemas[tool]; ok && !toolschema.IsEmptyInputSchema(schema.InputSchema) {
 			toolschema.ApplyInputSchemaFlags(alias, schema.InputSchema)
 		}
 		group.AddCommand(alias)
@@ -82,6 +85,7 @@ func buildInfoAliases() {
 
 func loadInfoToolSchemas() map[string]toolschema.ToolSummary {
 	out := map[string]toolschema.ToolSummary{}
+	defer mergeInfoBaselineInto(out)
 	if !toolschema.IsBackendInvoked("info") {
 		if cached, _, err := toolschema.LoadCache("info"); err == nil {
 			for _, t := range cached {
@@ -123,6 +127,29 @@ func loadInfoToolSchemas() map[string]toolschema.ToolSummary {
 	}
 	_ = toolschema.SaveCache("info", payload)
 	return out
+}
+
+func mergeInfoBaselineInto(out map[string]toolschema.ToolSummary) {
+	for _, name := range intelfacade.InfoToolBaseline {
+		baseline := intelfacade.InfoBaselineInputSchema(name)
+		if baseline == nil {
+			continue
+		}
+		existing, ok := out[name]
+		if !ok {
+			out[name] = toolschema.ToolSummary{
+				Name:           name,
+				HasInputSchema: true,
+				InputSchema:    baseline,
+			}
+			continue
+		}
+		if !existing.HasInputSchema || toolschema.IsEmptyInputSchema(existing.InputSchema) {
+			existing.HasInputSchema = true
+			existing.InputSchema = baseline
+			out[name] = existing
+		}
+	}
 }
 
 var infoBusinessAliases = map[string][]string{

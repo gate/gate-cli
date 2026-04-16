@@ -24,7 +24,7 @@ func makeNewsAliasCommand(use, toolName string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   use,
 		Short: "Shortcut for " + toolName,
-		Long:  "Calls " + toolName + ". Prefer flat business flags; use --params/--args-json/--args-file only as fallback.",
+		Long:  "Calls " + toolName + ". Flat flags come from a static baseline plus any extra fields from the intel backend; use --params/--args-json/--args-file as JSON fallback.",
 		Example: "  gate-cli news " + group + " " + use + " --format json\n" +
 			"  gate-cli news " + group + " " + use + " --params '{\"key\":\"value\"}'",
 		Args:  cobra.NoArgs,
@@ -67,7 +67,10 @@ func buildNewsAliases() {
 		if aliases, ok := newsBusinessAliases[tool]; ok {
 			alias.Aliases = aliases
 		}
-		if schema, ok := schemas[tool]; ok {
+		if b := intelfacade.NewsBaselineInputSchema(tool); b != nil {
+			toolschema.ApplyInputSchemaFlags(alias, b)
+		}
+		if schema, ok := schemas[tool]; ok && !toolschema.IsEmptyInputSchema(schema.InputSchema) {
 			toolschema.ApplyInputSchemaFlags(alias, schema.InputSchema)
 		}
 		group.AddCommand(alias)
@@ -79,6 +82,8 @@ func buildNewsAliases() {
 
 func loadNewsToolSchemas() map[string]toolschema.ToolSummary {
 	out := map[string]toolschema.ToolSummary{}
+	defer mergeNewsBaselineInto(out)
+
 	if !toolschema.IsBackendInvoked("news") {
 		if cached, _, err := toolschema.LoadCache("news"); err == nil {
 			for _, t := range cached {
@@ -120,6 +125,29 @@ func loadNewsToolSchemas() map[string]toolschema.ToolSummary {
 	}
 	_ = toolschema.SaveCache("news", payload)
 	return out
+}
+
+func mergeNewsBaselineInto(out map[string]toolschema.ToolSummary) {
+	for _, name := range intelfacade.NewsToolBaseline {
+		baseline := intelfacade.NewsBaselineInputSchema(name)
+		if baseline == nil {
+			continue
+		}
+		existing, ok := out[name]
+		if !ok {
+			out[name] = toolschema.ToolSummary{
+				Name:           name,
+				HasInputSchema: true,
+				InputSchema:    baseline,
+			}
+			continue
+		}
+		if !existing.HasInputSchema || toolschema.IsEmptyInputSchema(existing.InputSchema) {
+			existing.HasInputSchema = true
+			existing.InputSchema = baseline
+			out[name] = existing
+		}
+	}
 }
 
 var newsBusinessAliases = map[string][]string{

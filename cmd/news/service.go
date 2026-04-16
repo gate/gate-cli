@@ -19,12 +19,12 @@ type newsService interface {
 }
 
 var newNewsService = func(cmd *cobra.Command) (newsService, error) {
-	debug, _ := cmd.Root().PersistentFlags().GetBool("debug")
 	endpoint, err := toolconfig.Resolve(toolconfig.ResolveOptions{Backend: "news"})
 	if err != nil {
 		return nil, err
 	}
-	client := mcpclient.New(endpoint, mcpclient.WithDebug(debug))
+	diag, tag := cmdutil.IntelMCPTransportDiag(cmd)
+	client := mcpclient.New(endpoint, mcpclient.WithTransportDiag(diag, tag))
 	return intelfacade.NewNewsService(client), nil
 }
 

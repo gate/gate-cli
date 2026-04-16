@@ -30,10 +30,26 @@ type Tool struct {
 // Option mutates client construction behavior.
 type Option func(*Client)
 
-// WithDebug enables debug logs to stderr.
+// WithDebug enables RPC transport logs to stderr with a [debug] prefix (Gate API --debug
+// convention). Prefer WithTransportDiag when choosing a prefix explicitly.
 func WithDebug(debug bool) Option {
+	return WithTransportDiag(debug, "[debug]")
+}
+
+// WithTransportDiag enables or disables RPC transport logs to stderr. When enabled, tag
+// is printed as a line prefix (e.g. "[verbose]" or "[debug]"); empty tag defaults to "[debug]".
+func WithTransportDiag(enabled bool, tag string) Option {
 	return func(c *Client) {
-		c.debug = debug
+		c.transportDiag = enabled
+		if !enabled {
+			c.transportDiagTag = ""
+			return
+		}
+		if tag != "" {
+			c.transportDiagTag = tag
+		} else {
+			c.transportDiagTag = "[debug]"
+		}
 	}
 }
 
@@ -80,13 +96,14 @@ type CallResult struct {
 
 // Client calls MCP JSON-RPC over HTTP for intel features.
 type Client struct {
-	backend      string
-	baseURL      string
-	bearerToken  string
-	extraHeaders map[string]string
-	httpClient   *http.Client
-	debug        bool
-	errOut       io.Writer
+	backend          string
+	baseURL          string
+	bearerToken      string
+	extraHeaders     map[string]string
+	httpClient       *http.Client
+	transportDiag    bool
+	transportDiagTag string
+	errOut           io.Writer
 
 	sessionID string
 	idSeq     uint64
@@ -345,8 +362,12 @@ func (c *Client) applyHeaders(req *http.Request) {
 }
 
 func (c *Client) logDebug(method, requestID string, elapsed time.Duration, resp *http.Response) {
-	if !c.debug {
+	if !c.transportDiag {
 		return
+	}
+	tag := c.transportDiagTag
+	if tag == "" {
+		tag = "[debug]"
 	}
 	traceID := ""
 	status := 0
@@ -357,8 +378,8 @@ func (c *Client) logDebug(method, requestID string, elapsed time.Duration, resp 
 	c.mu.Lock()
 	sessionSet := c.sessionID != ""
 	c.mu.Unlock()
-	fmt.Fprintf(c.errOut, "[debug] backend=%s rpc_method=%s request_id=%s status=%d elapsed_ms=%d trace_id=%s session_set=%t\n",
-		c.backend, method, requestID, status, elapsed.Milliseconds(), traceID, sessionSet)
+	fmt.Fprintf(c.errOut, "%s backend=%s rpc_method=%s request_id=%s status=%d elapsed_ms=%d trace_id=%s session_set=%t\n",
+		tag, c.backend, method, requestID, status, elapsed.Milliseconds(), traceID, sessionSet)
 }
 
 func (c *Client) resetSession() {

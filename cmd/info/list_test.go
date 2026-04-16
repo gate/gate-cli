@@ -38,6 +38,7 @@ func newTestCmd(format string) *cobra.Command {
 	root := &cobra.Command{Use: "gate-cli"}
 	root.PersistentFlags().String("format", format, "Output format")
 	root.PersistentFlags().Bool("debug", false, "Debug")
+	root.PersistentFlags().Bool("verbose", false, "Verbose")
 	root.AddCommand(Cmd)
 	list := listCmd
 	list.SetContext(context.Background())
@@ -95,4 +96,60 @@ func TestRunInfoListErrorGoesStderr(t *testing.T) {
 	assert.Empty(t, out.String())
 	assert.Contains(t, errOut.String(), `"error"`)
 	assert.Contains(t, errOut.String(), "list failed")
+}
+
+func TestRunInfoListPrettySegmented(t *testing.T) {
+	oldFactory := newInfoService
+	oldPrinter := getPrinter
+	t.Cleanup(func() { newInfoService = oldFactory })
+	t.Cleanup(func() { getPrinter = oldPrinter })
+
+	newInfoService = func(cmd *cobra.Command) (infoService, error) {
+		return &fakeInfoLister{
+			items: []intelfacade.ToolSummary{
+				{Name: "info_coin_get_coin_info", Description: "Coin", HasInputSchema: true},
+			},
+		}, nil
+	}
+
+	cmd := newTestCmd("pretty")
+	var out bytes.Buffer
+	var errOut bytes.Buffer
+	getPrinter = func(cmd *cobra.Command) *output.Printer {
+		return output.NewWithStderr(&out, &errOut, output.FormatPretty)
+	}
+
+	require.NoError(t, runInfoList(cmd, nil))
+	assert.Contains(t, out.String(), "Capabilities")
+	assert.Contains(t, out.String(), "info_coin_get_coin_info")
+	assert.Contains(t, out.String(), "Accepts parameters: yes")
+	assert.NotContains(t, out.String(), "HasInputSchema")
+	assert.Empty(t, errOut.String())
+}
+
+func TestRunInfoListTableColumns(t *testing.T) {
+	oldFactory := newInfoService
+	oldPrinter := getPrinter
+	t.Cleanup(func() { newInfoService = oldFactory })
+	t.Cleanup(func() { getPrinter = oldPrinter })
+
+	newInfoService = func(cmd *cobra.Command) (infoService, error) {
+		return &fakeInfoLister{
+			items: []intelfacade.ToolSummary{
+				{Name: "info_coin_get_coin_info", Description: "Coin", HasInputSchema: false},
+			},
+		}, nil
+	}
+
+	cmd := newTestCmd("table")
+	var out bytes.Buffer
+	var errOut bytes.Buffer
+	getPrinter = func(cmd *cobra.Command) *output.Printer {
+		return output.NewWithStderr(&out, &errOut, output.FormatTable)
+	}
+
+	require.NoError(t, runInfoList(cmd, nil))
+	assert.Contains(t, out.String(), "Accepts parameters")
+	assert.Contains(t, out.String(), "info_coin_get_coin_info")
+	assert.Empty(t, errOut.String())
 }

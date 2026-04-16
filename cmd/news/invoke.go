@@ -1,6 +1,9 @@
 package news
 
 import (
+	"fmt"
+	"os"
+	"regexp"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -12,22 +15,41 @@ import (
 	"github.com/gate/gate-cli/internal/toolschema"
 )
 
-var callCmd = &cobra.Command{
-	Use:   "call --name <tool-name> [flags]",
-	Short: "Call one News capability",
-	RunE:  runNewsCall,
+var invokeCmd = &cobra.Command{
+	Use:     "invoke --name <tool-name> [flags]",
+	Short:   "Run one News capability by tool name (flat flags when --name is on the command line)",
+	Hidden:  true,
+	Aliases: []string{"call"},
+	RunE:    runNewsInvoke,
 }
 
 func init() {
-	callCmd.Flags().String("name", "", "News tool name")
-	callCmd.Flags().String("params", "", "JSON object arguments (fallback)")
-	callCmd.Flags().String("args-json", "", "JSON object arguments (alias of --params)")
-	callCmd.Flags().String("args-file", "", "Path to JSON file containing arguments object")
-	_ = callCmd.MarkFlagRequired("name")
-	Cmd.AddCommand(callCmd)
+	invokeCmd.Flags().String("name", "", "News tool name")
+	invokeCmd.Flags().String("params", "", "JSON object arguments (fallback)")
+	invokeCmd.Flags().String("args-json", "", "JSON object arguments (alias of --params)")
+	invokeCmd.Flags().String("args-file", "", "Path to JSON file containing arguments object")
+	_ = invokeCmd.MarkFlagRequired("name")
+	toolschema.AttachInvokeFlagsFromArgv(invokeCmd, os.Args, "news", loadNewsToolSchemas())
+	Cmd.AddCommand(invokeCmd)
+	wrapInvokeHelpWithoutAliases(invokeCmd)
 }
 
-func runNewsCall(cmd *cobra.Command, args []string) error {
+var cobraAliasesSectionRx = regexp.MustCompile(`(?m)^Aliases:\s*\r?\n(?:[ \t]+.*\r?\n)+`)
+
+func wrapInvokeHelpWithoutAliases(cmd *cobra.Command) {
+	inner := cmd.HelpFunc()
+	cmd.SetHelpFunc(func(c *cobra.Command, args []string) {
+		dest := c.OutOrStdout()
+		var buf strings.Builder
+		c.SetOut(&buf)
+		inner(c, args)
+		c.SetOut(dest)
+		out := cobraAliasesSectionRx.ReplaceAllString(buf.String(), "")
+		_, _ = fmt.Fprint(dest, out)
+	})
+}
+
+func runNewsInvoke(cmd *cobra.Command, args []string) error {
 	name, _ := cmd.Flags().GetString("name")
 	return runNewsCallByName(cmd, name, map[string]struct{}{
 		"name":      {},
@@ -39,10 +61,14 @@ func runNewsCall(cmd *cobra.Command, args []string) error {
 
 func runNewsCallByName(cmd *cobra.Command, name string, reserved map[string]struct{}) error {
 	p := getPrinter(cmd)
+	if p.IsTable() {
+		p.PrintError(output.UnsupportedTableFormatError())
+		return nil
+	}
 	maxOutputBytes, _ := cmd.Root().PersistentFlags().GetInt64("max-output-bytes")
 	svc, err := newNewsService(cmd)
 	if err != nil {
-		p.PrintError(mcpclient.ParseError(err, nil, "POST", "news/call", name))
+		p.PrintError(mcpclient.ParseError(err, nil, "POST", "news/invoke", name))
 		return nil
 	}
 
@@ -69,7 +95,7 @@ func runNewsCallByName(cmd *cobra.Command, name string, reserved map[string]stru
 
 	result, httpResp, err := svc.CallTool(cmd.Context(), name, arguments)
 	if err != nil {
-		p.PrintError(mcpclient.ParseError(err, httpResp, "POST", "news/call", name))
+		p.PrintError(mcpclient.ParseError(err, httpResp, "POST", "news/invoke", name))
 		return nil
 	}
 	if result.IsError {

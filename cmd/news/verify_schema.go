@@ -28,6 +28,10 @@ func init() {
 
 func runNewsVerifySchema(cmd *cobra.Command, args []string) error {
 	p := getPrinter(cmd)
+	if p.IsTable() {
+		p.PrintError(output.UnsupportedTableFormatError())
+		return errors.New("unsupported format")
+	}
 	items, fresh, err := toolschema.LoadCache("news")
 	if err != nil {
 		p.PrintError(&output.GateError{Status: 500, Label: "SCHEMA_CACHE_READ_FAILED", Message: err.Error()})

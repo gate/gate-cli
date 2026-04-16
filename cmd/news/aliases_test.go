@@ -43,3 +43,25 @@ func TestNewsAliasesCoverBaselineTools(t *testing.T) {
 		}
 	}
 }
+
+func TestNewsSearchNewsHasStaticFlatFlagsWhenLoaderEmpty(t *testing.T) {
+	oldLoader := newsSchemaLoader
+	newsSchemaLoader = func() map[string]toolschema.ToolSummary { return map[string]toolschema.ToolSummary{} }
+	t.Cleanup(func() { newsSchemaLoader = oldLoader })
+
+	cmd := &cobra.Command{Use: "news"}
+	orig := Cmd
+	Cmd = cmd
+	t.Cleanup(func() { Cmd = orig })
+
+	buildNewsAliases()
+	leafCmd, _, err := cmd.Find([]string{"feed", "search-news"})
+	if err != nil || leafCmd == nil {
+		t.Fatalf("find search-news: %v", err)
+	}
+	for _, name := range []string{"query", "coin", "limit", "sort-by"} {
+		if leafCmd.Flags().Lookup(name) == nil {
+			t.Fatalf("missing --%s on search-news", name)
+		}
+	}
+}

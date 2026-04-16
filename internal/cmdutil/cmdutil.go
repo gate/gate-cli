@@ -19,6 +19,21 @@ func GetPrinter(cmd *cobra.Command) *output.Printer {
 	return output.New(os.Stdout, output.ParseFormat(format))
 }
 
+// IntelMCPTransportDiag reports whether info/news MCP clients should emit RPC transport
+// summaries to stderr, and which prefix to use (--debug wins over --verbose; PRD §3.7.13).
+func IntelMCPTransportDiag(cmd *cobra.Command) (enabled bool, tag string) {
+	root := cmd.Root().PersistentFlags()
+	d, _ := root.GetBool("debug")
+	v, _ := root.GetBool("verbose")
+	if d {
+		return true, "[debug]"
+	}
+	if v {
+		return true, "[verbose]"
+	}
+	return false, ""
+}
+
 // GetClient builds a Gate API client.
 // Priority: --api-key/--api-secret flag > GATE_API_KEY/GATE_API_SECRET env > config file.
 func GetClient(cmd *cobra.Command) (*client.Client, error) {

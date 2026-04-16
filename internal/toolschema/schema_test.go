@@ -155,6 +155,27 @@ func TestSchemaTypeSupportsUnionTypeArray(t *testing.T) {
 	}
 }
 
+func TestIsEmptyInputSchema(t *testing.T) {
+	t.Parallel()
+	if !IsEmptyInputSchema(nil) {
+		t.Fatal("nil should be empty")
+	}
+	if !IsEmptyInputSchema(map[string]interface{}{"type": "object"}) {
+		t.Fatal("missing properties should be empty")
+	}
+	if !IsEmptyInputSchema(map[string]interface{}{"type": "object", "properties": map[string]interface{}{}}) {
+		t.Fatal("empty properties should be empty")
+	}
+	if IsEmptyInputSchema(map[string]interface{}{
+		"type": "object",
+		"properties": map[string]interface{}{
+			"x": map[string]interface{}{"type": "string"},
+		},
+	}) {
+		t.Fatal("non-empty properties should not be empty")
+	}
+}
+
 func stringsContainsAll(in string, parts []string) bool {
 	for _, p := range parts {
 		if !strings.Contains(in, p) {

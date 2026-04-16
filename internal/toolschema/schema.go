@@ -133,6 +133,16 @@ func getCacheTTL() (time.Duration, error) {
 	return time.Duration(seconds) * time.Second, nil
 }
 
+// IsEmptyInputSchema reports true when schema has no usable properties for flag generation.
+func IsEmptyInputSchema(schemaAny interface{}) bool {
+	schema, ok := schemaAny.(map[string]interface{})
+	if !ok {
+		return true
+	}
+	props, ok := schema["properties"].(map[string]interface{})
+	return !ok || len(props) == 0
+}
+
 func ApplyInputSchemaFlags(cmd *cobra.Command, schemaAny interface{}) {
 	schema, ok := schemaAny.(map[string]interface{})
 	if !ok {

@@ -170,4 +170,19 @@ func TestDebugLogDoesNotContainMCPWord(t *testing.T) {
 		Header:     http.Header{"x-gate-trace-id": []string{"trace-1"}},
 	})
 	assert.NotContains(t, strings.ToLower(errOut.String()), "mcp")
+	assert.Contains(t, errOut.String(), "[debug]")
+}
+
+func TestVerboseTransportDiagUsesVerboseTag(t *testing.T) {
+	var errOut strings.Builder
+	c := New(&toolconfig.ResolvedEndpoint{
+		Backend: "info",
+		BaseURL: "http://example.invalid",
+		Timeout: 1 * time.Second,
+	}, WithTransportDiag(true, "[verbose]"))
+	c.errOut = &errOut
+
+	c.logDebug("tools/call", "7", 5*time.Millisecond, &http.Response{StatusCode: 200})
+	assert.Contains(t, errOut.String(), "[verbose]")
+	assert.NotContains(t, errOut.String(), "[debug]")
 }

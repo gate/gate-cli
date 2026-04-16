@@ -19,12 +19,12 @@ type infoService interface {
 }
 
 var newInfoService = func(cmd *cobra.Command) (infoService, error) {
-	debug, _ := cmd.Root().PersistentFlags().GetBool("debug")
 	endpoint, err := toolconfig.Resolve(toolconfig.ResolveOptions{Backend: "info"})
 	if err != nil {
 		return nil, err
 	}
-	client := mcpclient.New(endpoint, mcpclient.WithDebug(debug))
+	diag, tag := cmdutil.IntelMCPTransportDiag(cmd)
+	client := mcpclient.New(endpoint, mcpclient.WithTransportDiag(diag, tag))
 	return intelfacade.NewInfoService(client), nil
 }
 

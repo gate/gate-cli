@@ -38,6 +38,7 @@ func newTestCmd(format string) *cobra.Command {
 	root := &cobra.Command{Use: "gate-cli"}
 	root.PersistentFlags().String("format", format, "Output format")
 	root.PersistentFlags().Bool("debug", false, "Debug")
+	root.PersistentFlags().Bool("verbose", false, "Verbose")
 	root.AddCommand(Cmd)
 	list := listCmd
 	list.SetContext(context.Background())
@@ -95,4 +96,59 @@ func TestRunNewsListErrorGoesStderr(t *testing.T) {
 	assert.Empty(t, out.String())
 	assert.Contains(t, errOut.String(), `"error"`)
 	assert.Contains(t, errOut.String(), "list failed")
+}
+
+func TestRunNewsListPrettySegmented(t *testing.T) {
+	oldFactory := newNewsService
+	oldPrinter := getPrinter
+	t.Cleanup(func() { newNewsService = oldFactory })
+	t.Cleanup(func() { getPrinter = oldPrinter })
+
+	newNewsService = func(cmd *cobra.Command) (newsService, error) {
+		return &fakeNewsLister{
+			items: []intelfacade.ToolSummary{
+				{Name: "news_feed_search_news", Description: "Search", HasInputSchema: true},
+			},
+		}, nil
+	}
+
+	cmd := newTestCmd("pretty")
+	var out bytes.Buffer
+	var errOut bytes.Buffer
+	getPrinter = func(cmd *cobra.Command) *output.Printer {
+		return output.NewWithStderr(&out, &errOut, output.FormatPretty)
+	}
+
+	require.NoError(t, runNewsList(cmd, nil))
+	assert.Contains(t, out.String(), "Capabilities")
+	assert.Contains(t, out.String(), "news_feed_search_news")
+	assert.NotContains(t, out.String(), "HasInputSchema")
+	assert.Empty(t, errOut.String())
+}
+
+func TestRunNewsListTableColumns(t *testing.T) {
+	oldFactory := newNewsService
+	oldPrinter := getPrinter
+	t.Cleanup(func() { newNewsService = oldFactory })
+	t.Cleanup(func() { getPrinter = oldPrinter })
+
+	newNewsService = func(cmd *cobra.Command) (newsService, error) {
+		return &fakeNewsLister{
+			items: []intelfacade.ToolSummary{
+				{Name: "news_feed_search_news", Description: "Search", HasInputSchema: false},
+			},
+		}, nil
+	}
+
+	cmd := newTestCmd("table")
+	var out bytes.Buffer
+	var errOut bytes.Buffer
+	getPrinter = func(cmd *cobra.Command) *output.Printer {
+		return output.NewWithStderr(&out, &errOut, output.FormatTable)
+	}
+
+	require.NoError(t, runNewsList(cmd, nil))
+	assert.Contains(t, out.String(), "Accepts parameters")
+	assert.Contains(t, out.String(), "news_feed_search_news")
+	assert.Empty(t, errOut.String())
 }

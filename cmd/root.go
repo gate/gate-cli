@@ -67,10 +67,11 @@ func init() {
 		},
 	})
 
-	rootCmd.PersistentFlags().String("format", "pretty", "Output format: pretty or json (table is accepted as alias)")
+	rootCmd.PersistentFlags().String("format", "pretty", "Output format: json, pretty (default), or table (only for tabular list-style commands)")
 	rootCmd.PersistentFlags().String("profile", "default", "Config profile to use")
 	rootCmd.PersistentFlags().Bool("debug", false, "Print HTTP debug summary (no auth headers/body)")
-	rootCmd.PersistentFlags().Int64("max-output-bytes", defaultMaxOutputBytes(), "Maximum bytes for info/news call output (0 means unlimited; env: GATE_MAX_OUTPUT_BYTES)")
+	rootCmd.PersistentFlags().Bool("verbose", false, "Print Intel MCP transport lines to stderr (info/news); does not change stdout JSON shape")
+	rootCmd.PersistentFlags().Int64("max-output-bytes", defaultMaxOutputBytes(), "Maximum bytes for info/news tool command output (0 means unlimited; env: GATE_MAX_OUTPUT_BYTES)")
 	rootCmd.PersistentFlags().String("api-key", "", "Gate API key (overrides config file and GATE_API_KEY env)")
 	rootCmd.PersistentFlags().String("api-secret", "", "Gate API secret (overrides config file and GATE_API_SECRET env)")
 

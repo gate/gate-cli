@@ -2,13 +2,15 @@ package toolrender
 
 import "encoding/json"
 
-// ApplyOutputLimit truncates oversized envelope payloads in a stable way.
-// maxBytes <= 0 means unlimited.
+// ApplyOutputLimit truncates oversized business payloads (the envelope "data" field) in a stable way.
+// maxBytes <= 0 means unlimited. JSON stdout for Intel tool calls is the data value only, so the
+// limit applies to serialised data, not wrapper fields.
 func ApplyOutputLimit(envelope map[string]interface{}, maxBytes int64) map[string]interface{} {
 	if maxBytes <= 0 {
 		return envelope
 	}
-	b, err := json.Marshal(envelope)
+	data := envelope["data"]
+	b, err := json.Marshal(data)
 	if err != nil || int64(len(b)) <= maxBytes {
 		return envelope
 	}

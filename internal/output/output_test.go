@@ -12,6 +12,21 @@ import (
 	"github.com/gate/gate-cli/internal/output"
 )
 
+func TestWritePrettyRejectedInJSONMode(t *testing.T) {
+	var buf bytes.Buffer
+	p := output.New(&buf, output.FormatJSON)
+	err := p.WritePretty("hello")
+	require.Error(t, err)
+	assert.Empty(t, buf.String())
+}
+
+func TestWritePrettyPrettyMode(t *testing.T) {
+	var buf bytes.Buffer
+	p := output.New(&buf, output.FormatPretty)
+	require.NoError(t, p.WritePretty("hello"))
+	assert.Equal(t, "hello\n", buf.String())
+}
+
 func TestJSONOutput(t *testing.T) {
 	var buf bytes.Buffer
 	p := output.New(&buf, output.FormatJSON)
@@ -108,16 +123,34 @@ func TestErrorTableMode(t *testing.T) {
 
 func TestIsJSON(t *testing.T) {
 	pJSON := output.New(nil, output.FormatJSON)
-	pTable := output.New(nil, output.FormatPretty)
+	pPretty := output.New(nil, output.FormatPretty)
+	pTable := output.New(nil, output.FormatTable)
 	assert.True(t, pJSON.IsJSON())
+	assert.False(t, pPretty.IsJSON())
 	assert.False(t, pTable.IsJSON())
 }
 
-func TestParseFormat_PrettyAndTableAlias(t *testing.T) {
+func TestIsTable(t *testing.T) {
+	pJSON := output.New(nil, output.FormatJSON)
+	pPretty := output.New(nil, output.FormatPretty)
+	pTable := output.New(nil, output.FormatTable)
+	assert.False(t, pJSON.IsTable())
+	assert.False(t, pPretty.IsTable())
+	assert.True(t, pTable.IsTable())
+}
+
+func TestParseFormat(t *testing.T) {
 	assert.Equal(t, output.FormatPretty, output.ParseFormat("pretty"))
-	assert.Equal(t, output.FormatPretty, output.ParseFormat("table"))
+	assert.Equal(t, output.FormatTable, output.ParseFormat("table"))
 	assert.Equal(t, output.FormatJSON, output.ParseFormat("json"))
 	assert.Equal(t, output.FormatPretty, output.ParseFormat("unknown"))
+}
+
+func TestUnsupportedTableFormatError(t *testing.T) {
+	err := output.UnsupportedTableFormatError()
+	require.NotNil(t, err)
+	assert.Equal(t, 400, err.Status)
+	assert.Equal(t, "UNSUPPORTED_FORMAT", err.Label)
 }
 
 func TestUserFacingErrorOutputDoesNotContainMCPWord(t *testing.T) {

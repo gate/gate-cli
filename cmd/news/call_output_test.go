@@ -48,11 +48,9 @@ func TestRunNewsCall_JSONEnvelope(t *testing.T) {
 	cmd.Flags().String("args-json", "", "")
 	cmd.Flags().String("args-file", "", "")
 	require.NoError(t, runNewsCallByName(cmd, "news_feed_search_news", map[string]struct{}{}))
-	assert.Contains(t, out.String(), `"status": "success"`)
-	assert.Contains(t, out.String(), `"tool_name": "news_feed_search_news"`)
-	assert.Contains(t, out.String(), `"is_error": false`)
-	assert.Contains(t, out.String(), `"data_source": "content"`)
-	assert.Contains(t, out.String(), `"data":`)
+	assert.NotContains(t, out.String(), "tool_name")
+	assert.NotContains(t, out.String(), "data_source")
+	assert.Contains(t, out.String(), `"ok": true`)
 	assert.Empty(t, errOut.String())
 }
 

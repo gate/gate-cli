@@ -30,6 +30,10 @@ func init() {
 
 func runMigrate(cmd *cobra.Command, args []string) error {
 	p := cmdutil.GetPrinter(cmd)
+	if p.IsTable() {
+		p.PrintError(output.UnsupportedTableFormatError())
+		return exitcode.New(30, errors.New("unsupported format"))
+	}
 	dryRun, _ := cmd.Flags().GetBool("dry-run")
 	apply, _ := cmd.Flags().GetBool("apply")
 	yes, _ := cmd.Flags().GetBool("yes")

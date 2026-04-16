@@ -8,6 +8,7 @@ import (
 	"github.com/gate/gate-cli/internal/cmdutil"
 	"github.com/gate/gate-cli/internal/exitcode"
 	"github.com/gate/gate-cli/internal/migration"
+	"github.com/gate/gate-cli/internal/output"
 	"github.com/gate/gate-cli/internal/version"
 )
 
@@ -26,6 +27,10 @@ func init() {
 
 func runPreflight(cmd *cobra.Command, args []string) error {
 	p := cmdutil.GetPrinter(cmd)
+	if p.IsTable() {
+		p.PrintError(output.UnsupportedTableFormatError())
+		return exitcode.New(30, errors.New("unsupported format"))
+	}
 	fallbackEnabled, _ := cmd.Flags().GetBool("fallback-enabled")
 	result := migration.BuildPreflight(migration.PreflightOptions{
 		FallbackEnabled: fallbackEnabled,

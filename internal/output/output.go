@@ -16,7 +16,7 @@ type Format string
 
 const (
 	FormatPretty Format = "pretty"
-	FormatTable  Format = "table" // legacy alias of pretty
+	FormatTable  Format = "table"
 	FormatJSON   Format = "json"
 )
 
@@ -26,11 +26,21 @@ func ParseFormat(s string) Format {
 	case "json":
 		return FormatJSON
 	case "table":
-		return FormatPretty
+		return FormatTable
 	case "pretty":
 		return FormatPretty
 	default:
 		return FormatPretty
+	}
+}
+
+// UnsupportedTableFormatError is returned when --format table is used on a command
+// whose result is not tabular per product output rules (PRD §3.7).
+func UnsupportedTableFormatError() *GateError {
+	return &GateError{
+		Status:  400,
+		Label:   "UNSUPPORTED_FORMAT",
+		Message: "this command does not support --format table; use --format pretty or --format json",
 	}
 }
 
@@ -75,6 +85,16 @@ func (p *Printer) IsJSON() bool {
 	return p.format == FormatJSON
 }
 
+// IsTable returns true if the printer is in table layout mode (--format table).
+func (p *Printer) IsTable() bool {
+	return p.format == FormatTable
+}
+
+// Format returns the active output format.
+func (p *Printer) Format() Format {
+	return p.format
+}
+
 // Print serialises data as indented JSON to stdout.
 func (p *Printer) Print(data interface{}) error {
 	b, err := json.MarshalIndent(data, "", "  ")
@@ -82,6 +102,22 @@ func (p *Printer) Print(data interface{}) error {
 		return err
 	}
 	_, err = fmt.Fprintln(p.out, string(b))
+	return err
+}
+
+// WritePretty writes human-oriented text to stdout (for --format pretty or --format table).
+// Do not use in JSON mode; machine-readable output must use Print.
+func (p *Printer) WritePretty(s string) error {
+	if p.format == FormatJSON {
+		return fmt.Errorf("output: WritePretty must not be used in JSON mode")
+	}
+	_, err := io.WriteString(p.out, s)
+	if err != nil {
+		return err
+	}
+	if len(s) == 0 || s[len(s)-1] != '\n' {
+		_, err = p.out.Write([]byte{'\n'})
+	}
 	return err
 }
 

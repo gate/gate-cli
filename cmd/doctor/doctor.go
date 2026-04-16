@@ -28,6 +28,10 @@ func init() {
 
 func runDoctor(cmd *cobra.Command, args []string) error {
 	p := cmdutil.GetPrinter(cmd)
+	if p.IsTable() {
+		p.PrintError(output.UnsupportedTableFormatError())
+		return exitcode.New(30, errors.New("unsupported format"))
+	}
 	checkRaw, _ := cmd.Flags().GetString("check")
 	strict, _ := cmd.Flags().GetBool("strict")
 	profile, _ := cmd.Root().PersistentFlags().GetString("profile")
