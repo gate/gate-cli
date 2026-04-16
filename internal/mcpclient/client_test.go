@@ -18,6 +18,9 @@ import (
 func TestListToolsInitializeThenList(t *testing.T) {
 	var methods []string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "gate-cli", r.Header.Get("X-Gate-Cli-Name"))
+		assert.Equal(t, "data-mcp", r.Header.Get("rule"))
+
 		var req map[string]interface{}
 		require.NoError(t, json.NewDecoder(r.Body).Decode(&req))
 		method := req["method"].(string)
@@ -40,7 +43,7 @@ func TestListToolsInitializeThenList(t *testing.T) {
 		BaseURL:      srv.URL,
 		ExtraHeaders: map[string]string{"rule": "data-mcp"},
 		Timeout:      3 * time.Second,
-	})
+	}, WithDefaultGateCliNameHeader())
 
 	tools, resp, err := c.ListTools(context.Background())
 	require.NoError(t, err)
@@ -185,4 +188,103 @@ func TestVerboseTransportDiagUsesVerboseTag(t *testing.T) {
 	c.logDebug("tools/call", "7", 5*time.Millisecond, &http.Response{StatusCode: 200})
 	assert.Contains(t, errOut.String(), "[verbose]")
 	assert.NotContains(t, errOut.String(), "[debug]")
+}
+
+func TestCallToolTransportDiagIncludesMergedArguments(t *testing.T) {
+	var errOut strings.Builder
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req map[string]interface{}
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&req))
+		method := req["method"].(string)
+		if method == "initialize" {
+			w.Header().Set("MCP-Session-Id", "sess-1")
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"1","result":{"ok":true}}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"2","result":{"content":[{"type":"text","text":"{\"ok\":true}"}]}}`))
+	}))
+	defer srv.Close()
+
+	c := New(&toolconfig.ResolvedEndpoint{
+		Backend: "news",
+		BaseURL: srv.URL,
+		Timeout: 3 * time.Second,
+	}, WithTransportDiag(true, "[verbose]"))
+	c.errOut = &errOut
+
+	_, _, err := c.CallTool(context.Background(), "news_feed_search_news", map[string]interface{}{"limit": int64(10)})
+	require.NoError(t, err)
+	log := errOut.String()
+	assert.Contains(t, log, "rpc_method=tools/call")
+	assert.Contains(t, log, "tool_name=news_feed_search_news")
+	assert.Contains(t, log, "arguments={\"limit\":10}")
+}
+
+func TestTransportDiagLogsInitializeFailure(t *testing.T) {
+	var errOut strings.Builder
+	c := New(&toolconfig.ResolvedEndpoint{
+		Backend: "news",
+		BaseURL: "http://127.0.0.1:1",
+		Timeout: 50 * time.Millisecond,
+	}, WithTransportDiag(true, "[verbose]"))
+	c.errOut = &errOut
+
+	_, _, err := c.ListTools(context.Background())
+	require.Error(t, err)
+	log := errOut.String()
+	assert.Contains(t, log, "[verbose]")
+	assert.Contains(t, log, "rpc_method=initialize")
+	assert.Contains(t, log, "transport_error=")
+}
+
+func TestExtraHeadersOverrideXGateCliName(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "override-value", r.Header.Get("X-Gate-Cli-Name"))
+
+		var req map[string]interface{}
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&req))
+		method := req["method"].(string)
+		if method == "initialize" {
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"1","result":{"ok":true}}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"2","result":{"tools":[]}}`))
+	}))
+	defer srv.Close()
+
+	c := New(&toolconfig.ResolvedEndpoint{
+		Backend: "news",
+		BaseURL: srv.URL,
+		ExtraHeaders: map[string]string{
+			"X-Gate-Cli-Name": "override-value",
+		},
+		Timeout: 3 * time.Second,
+	}, WithDefaultGateCliNameHeader())
+	_, _, err := c.ListTools(context.Background())
+	require.NoError(t, err)
+}
+
+func TestDefaultGateCliNameHeaderOmittedWithoutOption(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Empty(t, strings.TrimSpace(r.Header.Get("X-Gate-Cli-Name")))
+
+		var req map[string]interface{}
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&req))
+		method := req["method"].(string)
+		if method == "initialize" {
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"1","result":{"ok":true}}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"2","result":{"tools":[]}}`))
+	}))
+	defer srv.Close()
+
+	c := New(&toolconfig.ResolvedEndpoint{
+		Backend:      "news",
+		BaseURL:      srv.URL,
+		ExtraHeaders: map[string]string{},
+		Timeout:      3 * time.Second,
+	})
+	_, _, err := c.ListTools(context.Background())
+	require.NoError(t, err)
 }

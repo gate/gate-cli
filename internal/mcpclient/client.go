@@ -20,6 +20,11 @@ import (
 
 const sessionHeader = "MCP-Session-Id"
 
+// gateCLIProductHeader aligns MCP HTTP requests with REST client defaults
+// (internal/client): identifies the caller as gate-cli for analytics / routing.
+const gateCLIProductHeader = "X-Gate-Cli-Name"
+const gateCLIProductValue = "gate-cli"
+
 // Tool is a simplified MCP tool metadata representation.
 type Tool struct {
 	Name        string      `json:"name"`
@@ -50,6 +55,15 @@ func WithTransportDiag(enabled bool, tag string) Option {
 		} else {
 			c.transportDiagTag = "[debug]"
 		}
+	}
+}
+
+// WithDefaultGateCliNameHeader enables the same default product header as REST
+// (X-Gate-Cli-Name: gate-cli) when it is not already set, including via
+// GATE_INTEL_EXTRA_HEADERS. Used by gate-cli info/news only.
+func WithDefaultGateCliNameHeader() Option {
+	return func(c *Client) {
+		c.injectDefaultGateCliName = true
 	}
 }
 
@@ -96,14 +110,15 @@ type CallResult struct {
 
 // Client calls MCP JSON-RPC over HTTP for intel features.
 type Client struct {
-	backend          string
-	baseURL          string
-	bearerToken      string
-	extraHeaders     map[string]string
-	httpClient       *http.Client
-	transportDiag    bool
-	transportDiagTag string
-	errOut           io.Writer
+	backend                  string
+	baseURL                  string
+	bearerToken              string
+	extraHeaders             map[string]string
+	httpClient               *http.Client
+	transportDiag            bool
+	transportDiagTag         string
+	injectDefaultGateCliName bool
+	errOut                   io.Writer
 
 	sessionID string
 	idSeq     uint64
@@ -205,6 +220,7 @@ func (c *Client) CallTool(ctx context.Context, name string, arguments map[string
 		Name:      name,
 		Arguments: arguments,
 	}
+	c.logCallArguments(name, arguments)
 	respPayload, httpResp, reqID, err := c.callWithRetry(ctx, "tools/call", params, false)
 	if err != nil {
 		var protoErr *Error
@@ -254,6 +270,26 @@ func (c *Client) CallTool(ctx context.Context, name string, arguments map[string
 	return out, httpResp, nil
 }
 
+func (c *Client) logCallArguments(toolName string, arguments map[string]interface{}) {
+	if !c.transportDiag {
+		return
+	}
+	tag := c.transportDiagTag
+	if tag == "" {
+		tag = "[debug]"
+	}
+	args := "{}"
+	if arguments != nil {
+		if b, err := json.Marshal(arguments); err == nil {
+			args = string(b)
+		} else {
+			args = `{"_error":"failed to marshal arguments"}`
+		}
+	}
+	_, _ = fmt.Fprintf(c.errOut, "%s backend=%s rpc_method=tools/call tool_name=%s arguments=%s\n",
+		tag, c.backend, toolName, args)
+}
+
 func (c *Client) ensureInitialized(ctx context.Context) error {
 	c.mu.Lock()
 	sid := c.sessionID
@@ -300,11 +336,13 @@ func (c *Client) call(ctx context.Context, method string, params interface{}) (*
 
 	body, err := json.Marshal(payload)
 	if err != nil {
+		c.logTransportFailure(method, reqID, 0, err)
 		return nil, nil, reqID, err
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL, bytes.NewReader(body))
 	if err != nil {
+		c.logTransportFailure(method, reqID, 0, err)
 		return nil, nil, reqID, err
 	}
 	c.applyHeaders(req)
@@ -312,12 +350,14 @@ func (c *Client) call(ctx context.Context, method string, params interface{}) (*
 	start := time.Now()
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
+		c.logTransportFailure(method, reqID, time.Since(start), err)
 		return nil, nil, reqID, &Error{Kind: ErrorKindTransport, Err: err, RequestID: reqID}
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	respBody, readErr := io.ReadAll(resp.Body)
 	if readErr != nil {
+		c.logTransportFailure(method, reqID, time.Since(start), readErr)
 		return nil, resp, reqID, &Error{Kind: ErrorKindTransport, Err: readErr, RequestID: reqID}
 	}
 
@@ -329,9 +369,11 @@ func (c *Client) call(ctx context.Context, method string, params interface{}) (*
 
 	var parsed rpcResponse
 	if err := json.Unmarshal(respBody, &parsed); err != nil {
+		c.logTransportFailure(method, reqID, time.Since(start), fmt.Errorf("invalid json-rpc response: %w", err))
 		return nil, resp, reqID, &Error{Kind: ErrorKindTransport, Err: fmt.Errorf("invalid json-rpc response: %w", err), RequestID: reqID}
 	}
 	if parsed.Error != nil {
+		c.logTransportFailure(method, reqID, time.Since(start), fmt.Errorf("json-rpc error code=%d message=%s", parsed.Error.Code, parsed.Error.Message))
 		return nil, resp, reqID, &Error{
 			Kind:        ErrorKindProtocol,
 			Err:         fmt.Errorf(parsed.Error.Message),
@@ -359,6 +401,9 @@ func (c *Client) applyHeaders(req *http.Request) {
 	if sid != "" {
 		req.Header.Set(sessionHeader, sid)
 	}
+	if c.injectDefaultGateCliName && strings.TrimSpace(req.Header.Get(gateCLIProductHeader)) == "" {
+		req.Header.Set(gateCLIProductHeader, gateCLIProductValue)
+	}
 }
 
 func (c *Client) logDebug(method, requestID string, elapsed time.Duration, resp *http.Response) {
@@ -380,6 +425,21 @@ func (c *Client) logDebug(method, requestID string, elapsed time.Duration, resp 
 	c.mu.Unlock()
 	_, _ = fmt.Fprintf(c.errOut, "%s backend=%s rpc_method=%s request_id=%s status=%d elapsed_ms=%d trace_id=%s session_set=%t\n",
 		tag, c.backend, method, requestID, status, elapsed.Milliseconds(), traceID, sessionSet)
+}
+
+func (c *Client) logTransportFailure(method, requestID string, elapsed time.Duration, err error) {
+	if !c.transportDiag {
+		return
+	}
+	tag := c.transportDiagTag
+	if tag == "" {
+		tag = "[debug]"
+	}
+	c.mu.Lock()
+	sessionSet := c.sessionID != ""
+	c.mu.Unlock()
+	_, _ = fmt.Fprintf(c.errOut, "%s backend=%s rpc_method=%s request_id=%s transport_error=%q elapsed_ms=%d session_set=%t\n",
+		tag, c.backend, method, requestID, err.Error(), elapsed.Milliseconds(), sessionSet)
 }
 
 func (c *Client) resetSession() {

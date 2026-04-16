@@ -24,7 +24,10 @@ var newNewsService = func(cmd *cobra.Command) (newsService, error) {
 		return nil, err
 	}
 	diag, tag := cmdutil.IntelMCPTransportDiag(cmd)
-	client := mcpclient.New(endpoint, mcpclient.WithTransportDiag(diag, tag))
+	client := mcpclient.New(endpoint,
+		mcpclient.WithTransportDiag(diag, tag),
+		mcpclient.WithDefaultGateCliNameHeader(),
+	)
 	return intelfacade.NewNewsService(client), nil
 }
 
