@@ -22,7 +22,7 @@ func TestFailAfterPrintErrorReturnsExitCode1(t *testing.T) {
 	var coded *exitcode.Error
 	require.True(t, errors.As(err, &coded))
 	assert.Equal(t, 1, coded.Code)
-	assert.Contains(t, errOut.String(), `"label": "INTEL_RESULT_ERROR"`)
+	assert.Contains(t, errOut.String(), `"label":"INTEL_RESULT_ERROR"`)
 	assert.Empty(t, out.String())
 }
 

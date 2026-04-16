@@ -24,7 +24,7 @@ func TestRenderCallResult_JSONMode(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotContains(t, out.String(), "tool_name")
 	assert.NotContains(t, out.String(), "data_source")
-	assert.Contains(t, out.String(), `"ok": true`)
+	assert.Contains(t, out.String(), `"ok":true`)
 }
 
 func TestRenderCallResult_PrettyModeUsesSegmentedBusinessOutput(t *testing.T) {

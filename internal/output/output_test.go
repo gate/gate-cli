@@ -35,6 +35,10 @@ func TestJSONOutput(t *testing.T) {
 	err := p.Print(data)
 	require.NoError(t, err)
 
+	// Compact JSON: no interior newlines; Fprintln adds a single trailing newline.
+	s := strings.TrimSpace(buf.String())
+	assert.NotContains(t, s, "\n")
+
 	var result map[string]string
 	err = json.Unmarshal(buf.Bytes(), &result)
 	require.NoError(t, err)

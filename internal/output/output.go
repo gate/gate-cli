@@ -95,9 +95,17 @@ func (p *Printer) Format() Format {
 	return p.format
 }
 
-// Print serialises data as indented JSON to stdout.
+// Print serialises data to stdout as JSON.
+// JSON mode uses compact encoding (single line, plus trailing newline) for piping and jq.
+// Pretty/table mode uses indented JSON for readability.
 func (p *Printer) Print(data interface{}) error {
-	b, err := json.MarshalIndent(data, "", "  ")
+	var b []byte
+	var err error
+	if p.format == FormatJSON {
+		b, err = json.Marshal(data)
+	} else {
+		b, err = json.MarshalIndent(data, "", "  ")
+	}
 	if err != nil {
 		return err
 	}
@@ -164,7 +172,7 @@ func (p *Printer) Table(headers []string, rows [][]string) error {
 func (p *Printer) PrintError(gateErr *GateError) {
 	if p.format == FormatJSON {
 		out := map[string]interface{}{"error": gateErr}
-		b, _ := json.MarshalIndent(out, "", "  ")
+		b, _ := json.Marshal(out)
 		_, _ = fmt.Fprintln(p.errOut, string(b))
 		return
 	}

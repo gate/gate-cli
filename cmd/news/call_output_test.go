@@ -55,7 +55,7 @@ func TestRunNewsCall_JSONEnvelope(t *testing.T) {
 	require.NoError(t, runNewsCallByName(cmd, "news_feed_search_news", map[string]struct{}{}))
 	assert.NotContains(t, out.String(), "tool_name")
 	assert.NotContains(t, out.String(), "data_source")
-	assert.Contains(t, out.String(), `"ok": true`)
+	assert.Contains(t, out.String(), `"ok":true`)
 	assert.Empty(t, errOut.String())
 }
 
@@ -87,8 +87,8 @@ func TestRunNewsCall_IsErrorPrintsStderrOnly(t *testing.T) {
 	assert.True(t, errors.Is(err, intelcmd.ErrSilenced))
 	assert.Empty(t, out.String())
 	assert.Contains(t, errOut.String(), `"error":`)
-	assert.Contains(t, errOut.String(), `"label": "INTEL_RESULT_ERROR"`)
-	assert.Contains(t, errOut.String(), `"tool_name": "news_feed_search_news"`)
+	assert.Contains(t, errOut.String(), `"label":"INTEL_RESULT_ERROR"`)
+	assert.Contains(t, errOut.String(), `"tool_name":"news_feed_search_news"`)
 }
 
 func TestRunNewsCall_IsErrorUnaffectedByMaxOutputBytes(t *testing.T) {
@@ -122,7 +122,7 @@ func TestRunNewsCall_IsErrorUnaffectedByMaxOutputBytes(t *testing.T) {
 	assert.Equal(t, 1, coded.Code)
 	assert.Empty(t, out.String())
 	assert.Contains(t, errOut.String(), `"error":`)
-	assert.Contains(t, errOut.String(), `"label": "INTEL_RESULT_ERROR"`)
+	assert.Contains(t, errOut.String(), `"label":"INTEL_RESULT_ERROR"`)
 	assert.NotContains(t, errOut.String(), `"truncated"`)
 }
 
@@ -180,6 +180,6 @@ func TestRunNewsCall_IsErrorIncludesTraceIDJSON(t *testing.T) {
 
 	err := runNewsCallByName(cmd, "news_feed_search_news", map[string]struct{}{})
 	require.Error(t, err)
-	assert.Contains(t, errOut.String(), `"trace_id": "news-trace-test-1"`)
+	assert.Contains(t, errOut.String(), `"trace_id":"news-trace-test-1"`)
 	assert.True(t, strings.Contains(errOut.String(), "INTEL_RESULT_ERROR"))
 }
