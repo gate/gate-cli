@@ -2,133 +2,239 @@ package intelfacade
 
 // InfoBaselineInputSchemas are static JSON-Schema-shaped objects: the stable source for CLI flat flags.
 // MCP tools/list may add additional flags (non-colliding) on top; --params / --args-json remain JSON fallback.
-// Align with specs/qc/info-news-command-checklist.md §4.2 where applicable.
+// Align with specs/mcp/info-mcp-tools-inputs-logic.json.
 var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 	"info_coin_get_coin_info": infoObj(map[string]interface{}{
-		"query":      infoStr("Coin or text query"),
-		"query_type": infoStr("e.g. auto"),
-		"size":       infoInt("Max rows"),
-		"fields":     infoArrStr("Restrict fields returned"),
+		"query":      infoStr("query"),
+		"query_type": infoStr("query_type"),
+		"chain":      infoStr("chain"),
+		"scope":      infoStr("scope"),
+		"size":       infoInt("size"),
+		"fields":     infoArrStr("fields"),
 	}, "query"),
 	"info_coin_search_coins": infoObj(map[string]interface{}{
-		"query": infoStr("Search query"),
-		"limit": infoInt("Result limit"),
-	}, "query"),
+		"category":       infoStr("category"),
+		"chain":          infoStr("chain"),
+		"market_cap_min": infoNum("market_cap_min"),
+		"market_cap_max": infoNum("market_cap_max"),
+		"asset_type":     infoStr("asset_type"),
+		"sort_by":        infoStr("sort_by"),
+		"limit":          infoInt("limit"),
+		"offset":         infoInt("offset"),
+	}),
 	"info_coin_get_coin_rankings": infoObj(map[string]interface{}{
-		"sort_by": infoStr("Sort key e.g. market_cap"),
-		"limit":   infoInt("Result limit"),
-	}, "sort_by"),
+		"ranking_type":    infoStr("ranking_type"),
+		"time_range":      infoStr("time_range"),
+		"limit":           infoInt("limit"),
+		"listing_query":   infoStr("listing_query"),
+		"listing_from":    infoInt("listing_from"),
+		"listing_tickers": infoStr("listing_tickers"),
+	}, "ranking_type"),
+	"info_markettrend_get_kline": infoObj(map[string]interface{}{
+		"symbol":          infoStr("symbol"),
+		"timeframe":       infoStr("timeframe"),
+		"period":          infoStr("period"),
+		"size":            infoInt("size"),
+		"limit":           infoInt("limit"),
+		"start_time":      infoStr("start_time"),
+		"end_time":        infoStr("end_time"),
+		"with_indicators": infoBool("with_indicators"),
+	}, "symbol", "timeframe"),
+	"info_markettrend_get_indicator_history": infoObj(map[string]interface{}{
+		"symbol":     infoStr("symbol"),
+		"indicators": infoArrStr("indicators"),
+		"timeframe":  infoStr("timeframe"),
+		"start_time": infoStr("start_time"),
+		"end_time":   infoStr("end_time"),
+		"limit":      infoInt("limit"),
+	}, "symbol", "indicators", "timeframe"),
+	"info_markettrend_get_technical_analysis": infoObj(map[string]interface{}{
+		"symbol":     infoStr("symbol"),
+		"period":     infoStr("period"),
+		"start_time": infoStr("start_time"),
+		"end_time":   infoStr("end_time"),
+	}, "symbol"),
 	"info_marketsnapshot_get_market_snapshot": infoObj(map[string]interface{}{
-		"symbol": infoStr("Pair symbol e.g. BTC_USDT"),
+		"symbol":              infoStr("symbol"),
+		"timeframe":           infoStr("timeframe"),
+		"indicator_timeframe": infoStr("indicator_timeframe"),
+		"source":              infoStr("source"),
+		"quote":               infoStr("quote"),
+		"scope":               infoStr("scope"),
 	}, "symbol"),
 	"info_marketsnapshot_batch_market_snapshot": infoObj(map[string]interface{}{
-		"symbols": infoStr("Comma-separated symbols"),
+		"symbols":   infoArrStr("symbols"),
+		"timeframe": infoStr("timeframe"),
+		"source":    infoStr("source"),
+		"quote":     infoStr("quote"),
+		"scope":     infoStr("scope"),
 	}, "symbols"),
 	"info_marketsnapshot_get_market_overview": infoObj(map[string]interface{}{}),
-	"info_markettrend_get_kline": infoObj(map[string]interface{}{
-		"symbol":   infoStr("Pair symbol"),
-		"interval": infoStr("Candle interval e.g. 1h"),
-		"limit":    infoInt("Candle count"),
-	}, "symbol"),
-	"info_markettrend_get_indicator_history": infoObj(map[string]interface{}{
-		"symbol":    infoStr("Pair symbol"),
-		"indicator": infoStr("Indicator id e.g. rsi"),
-		"limit":     infoInt("Point count"),
-	}, "symbol"),
-	"info_markettrend_get_technical_analysis": infoObj(map[string]interface{}{
-		"symbol": infoStr("Pair symbol"),
-	}, "symbol"),
 	"info_onchain_get_address_info": infoObj(map[string]interface{}{
-		"address": infoStr("EVM address"),
-		"chain":   infoStr("Chain id e.g. eth"),
+		"address":              infoStr("address"),
+		"chain":                infoStr("chain"),
+		"scope":                infoStr("scope"),
+		"min_value_usd":        infoNum("min_value_usd"),
+		"include_upstream_raw": infoBool("include_upstream_raw"),
+		"upstream_raw_mode":    infoStr("upstream_raw_mode"),
 	}, "address"),
 	"info_onchain_get_address_transactions": infoObj(map[string]interface{}{
-		"address": infoStr("EVM address"),
-		"chain":   infoStr("Chain id"),
-		"limit":   infoInt("Tx count"),
+		"address":              infoStr("address"),
+		"chain":                infoStr("chain"),
+		"min_value_usd":        infoNum("min_value_usd"),
+		"tx_type":              infoStr("tx_type"),
+		"time_range":           infoStr("time_range"),
+		"start_time":           infoInt("start_time"),
+		"end_time":             infoInt("end_time"),
+		"limit":                infoInt("limit"),
+		"from_address":         infoStr("from_address"),
+		"to_address":           infoStr("to_address"),
+		"nonzero_value":        infoBool("nonzero_value"),
+		"include_upstream_raw": infoBool("include_upstream_raw"),
+		"upstream_raw_mode":    infoStr("upstream_raw_mode"),
 	}, "address"),
 	"info_onchain_get_transaction": infoObj(map[string]interface{}{
-		"tx_hash": infoStr("Transaction hash"),
-		"chain":   infoStr("Chain id"),
+		"tx_hash":              infoStr("tx_hash"),
+		"chain":                infoStr("chain"),
+		"include_upstream_raw": infoBool("include_upstream_raw"),
+		"upstream_raw_mode":    infoStr("upstream_raw_mode"),
 	}, "tx_hash"),
 	"info_onchain_get_token_onchain": infoObj(map[string]interface{}{
-		"symbol": infoStr("Token symbol"),
-		"chain":  infoStr("Chain id"),
-	}, "symbol"),
+		"token":                infoStr("token"),
+		"chain":                infoStr("chain"),
+		"scope":                infoStr("scope"),
+		"include_upstream_raw": infoBool("include_upstream_raw"),
+		"upstream_raw_mode":    infoStr("upstream_raw_mode"),
+	}, "token"),
+	"info_compliance_check_token_security": infoObj(map[string]interface{}{
+		"token":   infoStr("token"),
+		"address": infoStr("address"),
+		"chain":   infoStr("chain"),
+		"scope":   infoStr("scope"),
+		"lang":    infoStr("lang"),
+	}, "chain"),
 	"info_platformmetrics_get_platform_info": infoObj(map[string]interface{}{
-		"platform": infoStr("Platform id e.g. uniswap"),
-	}, "platform"),
+		"platform_name": infoStr("platform_name"),
+		"scope":         infoStr("scope"),
+	}, "platform_name"),
 	"info_platformmetrics_search_platforms": infoObj(map[string]interface{}{
-		"query": infoStr("Search query"),
-		"limit": infoInt("Result limit"),
-	}, "query"),
+		"platform_type": infoStr("platform_type"),
+		"chain":         infoStr("chain"),
+		"sort_by":       infoStr("sort_by"),
+		"limit":         infoInt("limit"),
+	}),
 	"info_platformmetrics_get_defi_overview": infoObj(map[string]interface{}{
-		"platform": infoStr("Platform id"),
-	}, "platform"),
+		"category": infoStr("category"),
+	}),
 	"info_platformmetrics_get_stablecoin_info": infoObj(map[string]interface{}{
-		"symbol": infoStr("Stable symbol e.g. USDT"),
-	}, "symbol"),
+		"symbol": infoStr("symbol"),
+		"chain":  infoStr("chain"),
+		"limit":  infoInt("limit"),
+	}),
 	"info_platformmetrics_get_bridge_metrics": infoObj(map[string]interface{}{
-		"bridge": infoStr("Bridge id e.g. wormhole"),
-	}, "bridge"),
+		"bridge_name": infoStr("bridge_name"),
+		"chain":       infoStr("chain"),
+		"sort_by":     infoStr("sort_by"),
+		"limit":       infoInt("limit"),
+	}),
 	"info_platformmetrics_get_yield_pools": infoObj(map[string]interface{}{
-		"platform": infoStr("Platform id"),
-		"asset":    infoStr("Asset symbol"),
-		"limit":    infoInt("Pool count"),
-	}, "platform"),
+		"project":     infoStr("project"),
+		"chain":       infoStr("chain"),
+		"symbol":      infoStr("symbol"),
+		"pool_type":   infoStr("pool_type"),
+		"sort_by":     infoStr("sort_by"),
+		"limit":       infoInt("limit"),
+		"min_tvl_usd": infoNum("min_tvl_usd"),
+	}),
 	"info_platformmetrics_get_platform_history": infoObj(map[string]interface{}{
-		"platform": infoStr("Platform id"),
-	}, "platform"),
+		"platform_name": infoStr("platform_name"),
+		"metrics":       infoArrStr("metrics"),
+		"start_date":    infoStr("start_date"),
+		"end_date":      infoStr("end_date"),
+	}, "platform_name"),
 	"info_platformmetrics_get_exchange_reserves": infoObj(map[string]interface{}{
-		"exchange": infoStr("Exchange id e.g. binance"),
-	}, "exchange"),
+		"exchange": infoStr("exchange"),
+		"asset":    infoStr("asset"),
+		"period":   infoStr("period"),
+	}),
 	"info_platformmetrics_get_liquidation_heatmap": infoObj(map[string]interface{}{
-		"symbol": infoStr("Contract or pair symbol"),
-	}, "symbol"),
-	"info_marketdetail_get_orderbook": infoObj(map[string]interface{}{
-		"symbol": infoStr("Pair symbol"),
-	}, "symbol"),
-	"info_marketdetail_get_recent_trades": infoObj(map[string]interface{}{
-		"symbol": infoStr("Pair symbol"),
-		"limit":  infoInt("Trade count"),
-	}, "symbol"),
-	"info_marketdetail_get_kline": infoObj(map[string]interface{}{
-		"symbol":   infoStr("Pair symbol"),
-		"interval": infoStr("Interval e.g. 1h"),
-		"limit":    infoInt("Candle count"),
+		"symbol":   infoStr("symbol"),
+		"exchange": infoStr("exchange"),
+		"range":    infoStr("range"),
 	}, "symbol"),
 	"info_macro_get_macro_indicator": infoObj(map[string]interface{}{
-		"indicator": infoStr("Macro indicator id e.g. cpi"),
+		"mode":         infoStr("mode"),
+		"indicator":    infoStr("indicator"),
+		"country":      infoStr("country"),
+		"country_code": infoStr("country_code"),
+		"start_time":   infoStr("start_time"),
+		"end_time":     infoStr("end_time"),
+		"start_date":   infoStr("start_date"),
+		"end_date":     infoStr("end_date"),
+		"size":         infoInt("size"),
 	}, "indicator"),
 	"info_macro_get_economic_calendar": infoObj(map[string]interface{}{
-		"region": infoStr("Region code e.g. US"),
-	}, "region"),
-	"info_macro_get_macro_summary": infoObj(map[string]interface{}{
-		"region": infoStr("Region code e.g. US"),
-	}, "region"),
+		"start_date": infoStr("start_date"),
+		"end_date":   infoStr("end_date"),
+		"event_type": infoStr("event_type"),
+		"importance": infoStr("importance"),
+		"size":       infoInt("size"),
+	}),
+	"info_macro_get_macro_summary": infoObj(map[string]interface{}{}),
+	"info_marketdetail_get_orderbook": infoObj(map[string]interface{}{
+		"symbol":      infoStr("symbol"),
+		"market_type": infoStr("market_type"),
+		"depth":       infoInt("depth"),
+		"settle":      infoStr("settle"),
+		"extra":       infoObjAny("extra"),
+	}, "symbol"),
+	"info_marketdetail_get_recent_trades": infoObj(map[string]interface{}{
+		"symbol":      infoStr("symbol"),
+		"market_type": infoStr("market_type"),
+		"limit":       infoInt("limit"),
+		"settle":      infoStr("settle"),
+		"extra":       infoObjAny("extra"),
+	}, "symbol"),
+	"info_marketdetail_get_kline": infoObj(map[string]interface{}{
+		"symbol":      infoStr("symbol"),
+		"market_type": infoStr("market_type"),
+		"timeframe":   infoStr("timeframe"),
+		"start_time":  infoInt("start_time"),
+		"end_time":    infoInt("end_time"),
+		"limit":       infoInt("limit"),
+		"settle":      infoStr("settle"),
+		"extra":       infoObjAny("extra"),
+	}, "symbol", "timeframe"),
 	"info_onchain_get_smart_money": infoObj(map[string]interface{}{
-		"symbol": infoStr("Token symbol"),
-	}, "symbol"),
+		"query":   infoStr("query"),
+		"symbol":  infoStr("symbol"),
+		"limit":   infoInt("limit"),
+		"address": infoStr("address"),
+	}),
 	"info_onchain_get_entity_profile": infoObj(map[string]interface{}{
-		"query": infoStr("Entity search text"),
-	}, "query"),
+		"query":   infoStr("query"),
+		"symbol":  infoStr("symbol"),
+		"limit":   infoInt("limit"),
+		"address": infoStr("address"),
+	}),
 	"info_onchain_trace_fund_flow": infoObj(map[string]interface{}{
-		"address": infoStr("Seed address"),
-		"chain":   infoStr("Chain id"),
-		"depth":   infoInt("Hop depth"),
-	}, "address"),
-	"info_compliance_check_token_security": infoObj(map[string]interface{}{
-		"symbol": infoStr("Token symbol"),
-		"chain":  infoStr("Chain id"),
-	}, "symbol"),
+		"query":   infoStr("query"),
+		"symbol":  infoStr("symbol"),
+		"limit":   infoInt("limit"),
+		"address": infoStr("address"),
+	}),
 	"info_compliance_check_address_risk": infoObj(map[string]interface{}{
-		"address": infoStr("Address to check"),
-		"chain":   infoStr("Chain id"),
-	}, "address"),
+		"query":   infoStr("query"),
+		"symbol":  infoStr("symbol"),
+		"limit":   infoInt("limit"),
+		"address": infoStr("address"),
+	}),
 	"info_compliance_search_regulatory_updates": infoObj(map[string]interface{}{
-		"query": infoStr("Search query"),
-		"limit": infoInt("Result limit"),
-	}, "query"),
+		"query":   infoStr("query"),
+		"symbol":  infoStr("symbol"),
+		"limit":   infoInt("limit"),
+		"address": infoStr("address"),
+	}),
 }
 
 func infoStr(desc string) map[string]interface{} {
@@ -139,12 +245,24 @@ func infoInt(desc string) map[string]interface{} {
 	return map[string]interface{}{"type": "integer", "description": desc}
 }
 
+func infoNum(desc string) map[string]interface{} {
+	return map[string]interface{}{"type": "number", "description": desc}
+}
+
+func infoBool(desc string) map[string]interface{} {
+	return map[string]interface{}{"type": "boolean", "description": desc}
+}
+
 func infoArrStr(desc string) map[string]interface{} {
 	return map[string]interface{}{
 		"type":        "array",
 		"description": desc,
 		"items":       map[string]interface{}{"type": "string"},
 	}
+}
+
+func infoObjAny(desc string) map[string]interface{} {
+	return map[string]interface{}{"type": "object", "description": desc}
 }
 
 func infoObj(props map[string]interface{}, required ...string) map[string]interface{} {

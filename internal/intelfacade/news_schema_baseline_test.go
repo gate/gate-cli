@@ -2,23 +2,37 @@ package intelfacade
 
 import "testing"
 
-func TestNewsBaselineInputSchema_search_news(t *testing.T) {
+func TestNewsBaselineInputSchemaCoverage(t *testing.T) {
 	t.Parallel()
-	m := NewsBaselineInputSchema("news_feed_search_news")
-	if m == nil {
-		t.Fatal("nil schema")
+	if len(NewsBaselineInputSchemas) != len(NewsToolBaseline) {
+		t.Fatalf("news baseline size mismatch: schemas=%d inventory=%d", len(NewsBaselineInputSchemas), len(NewsToolBaseline))
 	}
-	props, ok := m["properties"].(map[string]interface{})
-	if !ok {
-		t.Fatal("missing properties")
-	}
-	for _, k := range []string{"query", "coin", "limit", "sort_by"} {
-		if _, ok := props[k]; !ok {
-			t.Fatalf("missing property %q", k)
+	for _, tool := range NewsToolBaseline {
+		schema := NewsBaselineInputSchema(tool)
+		if schema == nil {
+			t.Fatalf("missing baseline schema for %s", tool)
+		}
+		if _, ok := schema["properties"].(map[string]interface{}); !ok {
+			t.Fatalf("missing properties for %s", tool)
 		}
 	}
-	req, _ := m["required"].([]interface{})
-	if len(req) != 1 || req[0] != "query" {
-		t.Fatalf("unexpected required: %#v", req)
+}
+
+func TestNewsBaselineInputSchemaCriticalFields(t *testing.T) {
+	t.Parallel()
+	cases := map[string][]string{
+		"news_feed_search_news":                {"query", "coin", "platform", "platform_type", "start_time", "end_time", "similarity_score", "top_total_score"},
+		"news_feed_get_exchange_announcements": {"announcement_type", "coin", "platform", "from", "to"},
+		"news_events_get_latest_events":        {"event_type", "cursor", "start_time", "end_time"},
+		"news_feed_search_x":                   {"allowed_handles", "excluded_handles", "enable_image_understanding", "enable_video_understanding", "platform_type"},
+	}
+	for tool, fields := range cases {
+		schema := NewsBaselineInputSchema(tool)
+		props := schema["properties"].(map[string]interface{})
+		for _, f := range fields {
+			if _, ok := props[f]; !ok {
+				t.Fatalf("%s missing critical field %q", tool, f)
+			}
+		}
 	}
 }

@@ -59,7 +59,21 @@ func TestNewsSearchNewsHasStaticFlatFlagsWhenLoaderEmpty(t *testing.T) {
 	if err != nil || leafCmd == nil {
 		t.Fatalf("find search-news: %v", err)
 	}
-	for _, name := range []string{"query", "coin", "limit", "sort-by"} {
+	for _, name := range []string{
+		"query",
+		"coin",
+		"platform",
+		"platform-type",
+		"lang",
+		"time-range",
+		"start-time",
+		"end-time",
+		"sort-by",
+		"top-total-score",
+		"limit",
+		"page",
+		"similarity-score",
+	} {
 		if leafCmd.Flags().Lookup(name) == nil {
 			t.Fatalf("missing --%s on search-news", name)
 		}

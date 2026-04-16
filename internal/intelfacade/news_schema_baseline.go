@@ -4,47 +4,87 @@ package intelfacade
 // MCP tools/list may register additional non-colliding flags afterward; --params / --args-json are JSON fallback.
 // Server-side tools/call validation remains authoritative at runtime.
 //
-// Keys and types follow specs/cli/mcp-wire-appendix.md and QC examples; extend when upstream adds fields.
+// Keys and types follow specs/mcp/news-tools-args-and-logic.json; extend when upstream adds fields.
 var NewsBaselineInputSchemas = map[string]map[string]interface{}{
 	"news_feed_search_news": newsObj(map[string]interface{}{
-		"query":   newsStr("Search query"),
-		"coin":    newsStr("Optional coin filter"),
-		"limit":   newsInt("Result limit"),
-		"sort_by": newsStr("Sort: time | importance | sentiment"),
-	}, "query"),
-	"news_feed_search_ugc": newsObj(map[string]interface{}{
-		"query":    newsStr("Search query"),
-		"coin":     newsStr("Coin filter"),
-		"platform": newsStr("Platform filter"),
-		"limit":    newsInt("Result limit"),
-	}, "query"),
-	"news_feed_search_x": newsObj(map[string]interface{}{
-		"query": newsStr("Search query"),
-		"days":  newsInt("Lookback days"),
-		"limit": newsInt("Result limit"),
-	}, "query"),
-	"news_feed_web_search": newsObj(map[string]interface{}{
-		"query": newsStr("Search query"),
-		"coin":  newsStr("Coin context"),
-		"limit": newsInt("Result limit"),
-	}, "query"),
-	"news_feed_get_social_sentiment": newsObj(map[string]interface{}{
-		"post_id":    newsStr("Post identifier (upstream may require this)"),
-		"coin":       newsStr("Coin symbol"),
-		"time_range": newsStr("Time window e.g. 24h"),
-		"limit":      newsInt("Result limit"),
+		"query":            newsStr("query"),
+		"coin":             newsStr("coin"),
+		"platform":         newsStr("platform"),
+		"platform_type":    newsStr("platform_type"),
+		"lang":             newsStr("lang"),
+		"time_range":       newsStr("time_range"),
+		"start_time":       newsStr("start_time"),
+		"end_time":         newsStr("end_time"),
+		"sort_by":          newsStr("sort_by"),
+		"top_total_score":  newsNum("top_total_score"),
+		"limit":            newsInt("limit"),
+		"page":             newsInt("page"),
+		"similarity_score": newsStr("similarity_score"),
 	}),
+	"news_feed_search_ugc": newsObj(map[string]interface{}{
+		"query":        newsStr("query"),
+		"coin":         newsStr("coin"),
+		"platform":     newsStr("platform"),
+		"domain":       newsStr("domain"),
+		"channel":      newsStr("channel"),
+		"quality_tier": newsStr("quality_tier"),
+		"time_range":   newsStr("time_range"),
+		"sort_by":      newsStr("sort_by"),
+		"limit":        newsInt("limit"),
+	}),
+	"news_feed_search_x": newsObj(map[string]interface{}{
+		"query":                      newsStr("query"),
+		"days":                       newsInt("days"),
+		"allowed_handles":            newsArrStr("allowed_handles"),
+		"excluded_handles":           newsArrStr("excluded_handles"),
+		"model":                      newsStr("model"),
+		"enable_image_understanding": newsBool("enable_image_understanding"),
+		"enable_video_understanding": newsBool("enable_video_understanding"),
+		"coin":                       newsStr("coin"),
+		"platform":                   newsStr("platform"),
+		"platform_type":              newsStr("platform_type"),
+		"lang":                       newsStr("lang"),
+		"start_time":                 newsStr("start_time"),
+		"end_time":                   newsStr("end_time"),
+		"sort_by":                    newsStr("sort_by"),
+		"top_total_score":            newsNum("top_total_score"),
+		"limit":                      newsInt("limit"),
+		"page":                       newsInt("page"),
+		"similarity_score":           newsStr("similarity_score"),
+	}),
+	"news_feed_web_search": newsObj(map[string]interface{}{
+		"query":      newsStr("query"),
+		"coin":       newsStr("coin"),
+		"mode":       newsStr("mode"),
+		"time_range": newsStr("time_range"),
+		"lang":       newsStr("lang"),
+		"limit":      newsInt("limit"),
+	}, "query"),
 	"news_feed_get_exchange_announcements": newsObj(map[string]interface{}{
-		"exchange": newsStr("Exchange id e.g. gate"),
-		"limit":    newsInt("Result limit"),
-	}, "exchange"),
+		"exchange":          newsStr("exchange"),
+		"platform":          newsStr("platform"),
+		"query":             newsStr("query"),
+		"coin":              newsStr("coin"),
+		"announcement_type": newsStr("announcement_type"),
+		"limit":             newsInt("limit"),
+		"from":              newsInt("from"),
+		"to":                newsInt("to"),
+	}),
+	"news_feed_get_social_sentiment": newsObj(map[string]interface{}{
+		"coin":       newsStr("coin"),
+		"time_range": newsStr("time_range"),
+	}),
 	"news_events_get_latest_events": newsObj(map[string]interface{}{
-		"coin":       newsStr("Coin symbol"),
-		"time_range": newsStr("Time window e.g. 24h"),
-		"limit":      newsInt("Result limit"),
-	}, "coin"),
+		"event_type": newsStr("event_type"),
+		"coin":       newsStr("coin"),
+		"time_range": newsStr("time_range"),
+		"start_time": newsStr("start_time"),
+		"end_time":   newsStr("end_time"),
+		"cursor":     newsStr("cursor"),
+		"limit":      newsInt("limit"),
+	}),
 	"news_events_get_event_detail": newsObj(map[string]interface{}{
-		"event_id": newsStr("Opaque event id from get_latest_events"),
+		"event_id": newsStr("event_id"),
 	}, "event_id"),
 }
 
@@ -54,6 +94,26 @@ func newsStr(desc string) map[string]interface{} {
 
 func newsInt(desc string) map[string]interface{} {
 	return map[string]interface{}{"type": "integer", "description": desc}
+}
+
+func newsNum(desc string) map[string]interface{} {
+	return map[string]interface{}{"type": "number", "description": desc}
+}
+
+func newsBool(desc string) map[string]interface{} {
+	return map[string]interface{}{"type": "boolean", "description": desc}
+}
+
+func newsArrStr(desc string) map[string]interface{} {
+	return map[string]interface{}{
+		"type":        "array",
+		"description": desc,
+		"items":       map[string]interface{}{"type": "string"},
+	}
+}
+
+func newsObjAny(desc string) map[string]interface{} {
+	return map[string]interface{}{"type": "object", "description": desc}
 }
 
 func newsObj(props map[string]interface{}, required ...string) map[string]interface{} {
