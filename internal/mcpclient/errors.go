@@ -62,9 +62,10 @@ func ParseError(err error, httpResp *http.Response, method, url, toolName string
 		out.RequestID = mcpErr.RequestID
 		out.ToolName = mcpErr.ToolName
 		out.JSONRPCCode = mcpErr.JSONRPCCode
-		if mcpErr.Kind == ErrorKindTransport {
+		switch mcpErr.Kind {
+		case ErrorKindTransport:
 			out.Label = "INTEL_TRANSPORT_ERROR"
-		} else if mcpErr.Kind == ErrorKindProtocol {
+		case ErrorKindProtocol:
 			out.Label = "INTEL_PROTOCOL_ERROR"
 		}
 	}

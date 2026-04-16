@@ -198,20 +198,20 @@ func ParseCheckList(raw string) map[string]struct{} {
 func normalizeChecks(in map[string]struct{}) map[string]struct{} {
 	if len(in) == 0 {
 		return map[string]struct{}{
-			"cli.binary":     {},
-			"cli.version":    {},
-			"cli.config":     {},
+			"cli.binary":       {},
+			"cli.version":      {},
+			"cli.config":       {},
 			"cli.connectivity": {},
-			"legacy_mcp":     {},
+			"legacy_mcp":       {},
 		}
 	}
 	if _, ok := in["all"]; ok {
 		return map[string]struct{}{
-			"cli.binary":     {},
-			"cli.version":    {},
-			"cli.config":     {},
+			"cli.binary":       {},
+			"cli.version":      {},
+			"cli.config":       {},
 			"cli.connectivity": {},
-			"legacy_mcp":     {},
+			"legacy_mcp":       {},
 		}
 	}
 	out := map[string]struct{}{}

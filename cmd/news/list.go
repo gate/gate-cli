@@ -3,8 +3,8 @@ package news
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/gate/gate-cli/internal/intelcmd"
 	"github.com/gate/gate-cli/internal/intelfacade"
-	"github.com/gate/gate-cli/internal/mcpclient"
 )
 
 var listCmd = &cobra.Command{
@@ -21,14 +21,12 @@ func runNewsList(cmd *cobra.Command, args []string) error {
 	p := getPrinter(cmd)
 	svc, err := newNewsService(cmd)
 	if err != nil {
-		p.PrintError(mcpclient.ParseError(err, nil, "POST", "news/list", ""))
-		return nil
+		return intelcmd.FailIntelClientInit(p, err, "news", "list", "")
 	}
 
 	items, httpResp, err := svc.ListTools(cmd.Context())
 	if err != nil {
-		p.PrintError(mcpclient.ParseError(err, httpResp, "POST", "news/list", ""))
-		return nil
+		return intelcmd.FailListTransport(p, err, httpResp, "news")
 	}
 
 	if p.IsJSON() {

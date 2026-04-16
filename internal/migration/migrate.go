@@ -20,17 +20,17 @@ type MigrateProviderResult struct {
 }
 
 type MigrateReport struct {
-	Mode                string                 `json:"mode"`
-	Status              string                 `json:"status"`
+	Mode                string                  `json:"mode"`
+	Status              string                  `json:"status"`
 	Providers           []MigrateProviderResult `json:"providers"`
-	RecommendedNextStep string                 `json:"recommended_next_step"`
+	RecommendedNextStep string                  `json:"recommended_next_step"`
 }
 
 type MigrateOptions struct {
-	Apply      bool
+	Apply       bool
 	ProviderIDs []string
-	BackupDir  string
-	Scanner    *Scanner
+	BackupDir   string
+	Scanner     *Scanner
 }
 
 func RunMigrate(opts MigrateOptions) (MigrateReport, error) {

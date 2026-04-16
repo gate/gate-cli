@@ -27,7 +27,7 @@ func makeNewsAliasCommand(use, toolName string) *cobra.Command {
 		Long:  "Calls " + toolName + ". Flat flags come from a static baseline plus any extra fields from the intel backend; use --params/--args-json/--args-file as JSON fallback.",
 		Example: "  gate-cli news " + group + " " + use + " --format json\n" +
 			"  gate-cli news " + group + " " + use + " --params '{\"key\":\"value\"}'",
-		Args:  cobra.NoArgs,
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runNewsCallByName(cmd, toolName, map[string]struct{}{
 				"params":    {},

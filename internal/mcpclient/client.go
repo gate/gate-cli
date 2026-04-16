@@ -314,7 +314,7 @@ func (c *Client) call(ctx context.Context, method string, params interface{}) (*
 	if err != nil {
 		return nil, nil, reqID, &Error{Kind: ErrorKindTransport, Err: err, RequestID: reqID}
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	respBody, readErr := io.ReadAll(resp.Body)
 	if readErr != nil {
@@ -378,7 +378,7 @@ func (c *Client) logDebug(method, requestID string, elapsed time.Duration, resp 
 	c.mu.Lock()
 	sessionSet := c.sessionID != ""
 	c.mu.Unlock()
-	fmt.Fprintf(c.errOut, "%s backend=%s rpc_method=%s request_id=%s status=%d elapsed_ms=%d trace_id=%s session_set=%t\n",
+	_, _ = fmt.Fprintf(c.errOut, "%s backend=%s rpc_method=%s request_id=%s status=%d elapsed_ms=%d trace_id=%s session_set=%t\n",
 		tag, c.backend, method, requestID, status, elapsed.Milliseconds(), traceID, sessionSet)
 }
 

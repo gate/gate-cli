@@ -4,7 +4,7 @@ import "testing"
 
 func TestBuildDoctorReport(t *testing.T) {
 	report := BuildDoctorReport(DoctorOptions{
-		Checks: ParseCheckList("connectivity"),
+		Checks:  ParseCheckList("connectivity"),
 		InfoURL: "http://example.test/info",
 		Installed: func(s string) bool {
 			return true
@@ -35,11 +35,11 @@ func TestDoctorStrictWarnBecomesFail(t *testing.T) {
 
 func TestDoctorConnectivityIsBlocking(t *testing.T) {
 	report := BuildDoctorReport(DoctorOptions{
-		Checks: ParseCheckList("connectivity"),
-		InfoURL: "",
-		NewsURL: "",
+		Checks:    ParseCheckList("connectivity"),
+		InfoURL:   "",
+		NewsURL:   "",
 		Installed: func(string) bool { return true },
-		Scanner: NewScannerWithHome(t.TempDir()),
+		Scanner:   NewScannerWithHome(t.TempDir()),
 	})
 	if len(report.Checks) != 1 {
 		t.Fatalf("expected 1 check")

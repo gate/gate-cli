@@ -3,8 +3,8 @@ package info
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/gate/gate-cli/internal/intelcmd"
 	"github.com/gate/gate-cli/internal/intelfacade"
-	"github.com/gate/gate-cli/internal/mcpclient"
 )
 
 var listCmd = &cobra.Command{
@@ -21,14 +21,12 @@ func runInfoList(cmd *cobra.Command, args []string) error {
 	p := getPrinter(cmd)
 	svc, err := newInfoService(cmd)
 	if err != nil {
-		p.PrintError(mcpclient.ParseError(err, nil, "POST", "info/list", ""))
-		return nil
+		return intelcmd.FailIntelClientInit(p, err, "info", "list", "")
 	}
 
 	items, httpResp, err := svc.ListTools(cmd.Context())
 	if err != nil {
-		p.PrintError(mcpclient.ParseError(err, httpResp, "POST", "info/list", ""))
-		return nil
+		return intelcmd.FailListTransport(p, err, httpResp, "info")
 	}
 
 	if p.IsJSON() {

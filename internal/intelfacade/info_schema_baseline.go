@@ -5,10 +5,10 @@ package intelfacade
 // Align with specs/qc/info-news-command-checklist.md §4.2 where applicable.
 var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 	"info_coin_get_coin_info": infoObj(map[string]interface{}{
-		"query":       infoStr("Coin or text query"),
-		"query_type":  infoStr("e.g. auto"),
-		"size":        infoInt("Max rows"),
-		"fields":      infoArrStr("Restrict fields returned"),
+		"query":      infoStr("Coin or text query"),
+		"query_type": infoStr("e.g. auto"),
+		"size":       infoInt("Max rows"),
+		"fields":     infoArrStr("Restrict fields returned"),
 	}, "query"),
 	"info_coin_search_coins": infoObj(map[string]interface{}{
 		"query": infoStr("Search query"),

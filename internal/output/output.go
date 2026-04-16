@@ -53,14 +53,14 @@ type RequestInfo struct {
 
 // GateError is a unified error representation for all Gate API errors.
 type GateError struct {
-	Status       int          `json:"status"`
-	Label        string       `json:"label,omitempty"`
-	Message      string       `json:"message"`
-	TraceID      string       `json:"trace_id,omitempty"`
-	RequestID    string       `json:"request_id,omitempty"`
-	ToolName     string       `json:"tool_name,omitempty"`
-	JSONRPCCode  *int         `json:"jsonrpc_code,omitempty"`
-	Request      *RequestInfo `json:"request,omitempty"`
+	Status      int          `json:"status"`
+	Label       string       `json:"label,omitempty"`
+	Message     string       `json:"message"`
+	TraceID     string       `json:"trace_id,omitempty"`
+	RequestID   string       `json:"request_id,omitempty"`
+	ToolName    string       `json:"tool_name,omitempty"`
+	JSONRPCCode *int         `json:"jsonrpc_code,omitempty"`
+	Request     *RequestInfo `json:"request,omitempty"`
 }
 
 // Printer writes structured output to stdout and errors to stderr.
@@ -165,7 +165,7 @@ func (p *Printer) PrintError(gateErr *GateError) {
 	if p.format == FormatJSON {
 		out := map[string]interface{}{"error": gateErr}
 		b, _ := json.MarshalIndent(out, "", "  ")
-		fmt.Fprintln(p.errOut, string(b))
+		_, _ = fmt.Fprintln(p.errOut, string(b))
 		return
 	}
 
@@ -173,20 +173,20 @@ func (p *Printer) PrintError(gateErr *GateError) {
 	if label == "" {
 		label = http.StatusText(gateErr.Status)
 	}
-	fmt.Fprintf(p.errOut, "Error [%d %s]: %s\n", gateErr.Status, label, gateErr.Message)
+	_, _ = fmt.Fprintf(p.errOut, "Error [%d %s]: %s\n", gateErr.Status, label, gateErr.Message)
 	if gateErr.TraceID != "" {
-		fmt.Fprintf(p.errOut, "Trace ID: %s\n", gateErr.TraceID)
+		_, _ = fmt.Fprintf(p.errOut, "Trace ID: %s\n", gateErr.TraceID)
 	}
 	if gateErr.RequestID != "" {
-		fmt.Fprintf(p.errOut, "Request ID: %s\n", gateErr.RequestID)
+		_, _ = fmt.Fprintf(p.errOut, "Request ID: %s\n", gateErr.RequestID)
 	}
 	if gateErr.ToolName != "" {
-		fmt.Fprintf(p.errOut, "Tool: %s\n", gateErr.ToolName)
+		_, _ = fmt.Fprintf(p.errOut, "Tool: %s\n", gateErr.ToolName)
 	}
 	if gateErr.JSONRPCCode != nil {
-		fmt.Fprintf(p.errOut, "JSON-RPC Code: %d\n", *gateErr.JSONRPCCode)
+		_, _ = fmt.Fprintf(p.errOut, "JSON-RPC Code: %d\n", *gateErr.JSONRPCCode)
 	}
 	if gateErr.Request != nil {
-		fmt.Fprintf(p.errOut, "Request: %s %s\n", gateErr.Request.Method, gateErr.Request.URL)
+		_, _ = fmt.Fprintf(p.errOut, "Request: %s %s\n", gateErr.Request.Method, gateErr.Request.URL)
 	}
 }

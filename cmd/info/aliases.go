@@ -27,7 +27,7 @@ func makeInfoAliasCommand(use, toolName string) *cobra.Command {
 		Long:  "Calls " + toolName + ". Flat flags come from a static baseline plus any extra fields from the intel backend; use --params/--args-json/--args-file as JSON fallback.",
 		Example: "  gate-cli info " + group + " " + use + " --format json\n" +
 			"  gate-cli info " + group + " " + use + " --params '{\"key\":\"value\"}'",
-		Args:  cobra.NoArgs,
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runInfoCallByName(cmd, toolName, map[string]struct{}{
 				"params":    {},
@@ -153,9 +153,9 @@ func mergeInfoBaselineInto(out map[string]toolschema.ToolSummary) {
 }
 
 var infoBusinessAliases = map[string][]string{
-	"info_coin_get_coin_info":                  {"coin-info"},
-	"info_marketsnapshot_get_market_overview":  {"overview", "market-overview"},
-	"info_markettrend_get_technical_analysis":  {"ta", "trend-analysis"},
-	"info_compliance_check_token_security":     {"token-risk"},
-	"info_compliance_check_address_risk":       {"address-risk"},
+	"info_coin_get_coin_info":                 {"coin-info"},
+	"info_marketsnapshot_get_market_overview": {"overview", "market-overview"},
+	"info_markettrend_get_technical_analysis": {"ta", "trend-analysis"},
+	"info_compliance_check_token_security":    {"token-risk"},
+	"info_compliance_check_address_risk":      {"address-risk"},
 }

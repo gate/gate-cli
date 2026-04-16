@@ -1,17 +1,11 @@
 package info
 
 import (
-	"fmt"
 	"os"
-	"regexp"
-	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/gate/gate-cli/internal/mcpclient"
-	"github.com/gate/gate-cli/internal/output"
-	"github.com/gate/gate-cli/internal/toolargs"
-	"github.com/gate/gate-cli/internal/toolrender"
+	"github.com/gate/gate-cli/internal/intelcmd"
 	"github.com/gate/gate-cli/internal/toolschema"
 )
 
@@ -31,22 +25,7 @@ func init() {
 	_ = invokeCmd.MarkFlagRequired("name")
 	toolschema.AttachInvokeFlagsFromArgv(invokeCmd, os.Args, "info", loadInfoToolSchemas())
 	Cmd.AddCommand(invokeCmd)
-	wrapInvokeHelpWithoutAliases(invokeCmd)
-}
-
-var cobraAliasesSectionRx = regexp.MustCompile(`(?m)^Aliases:\s*\r?\n(?:[ \t]+.*\r?\n)+`)
-
-func wrapInvokeHelpWithoutAliases(cmd *cobra.Command) {
-	inner := cmd.HelpFunc()
-	cmd.SetHelpFunc(func(c *cobra.Command, args []string) {
-		dest := c.OutOrStdout()
-		var buf strings.Builder
-		c.SetOut(&buf)
-		inner(c, args)
-		c.SetOut(dest)
-		out := cobraAliasesSectionRx.ReplaceAllString(buf.String(), "")
-		_, _ = fmt.Fprint(dest, out)
-	})
+	intelcmd.WrapInvokeHelpStripAliasesSection(invokeCmd)
 }
 
 func runInfoInvoke(cmd *cobra.Command, args []string) error {
@@ -61,54 +40,10 @@ func runInfoInvoke(cmd *cobra.Command, args []string) error {
 
 func runInfoCallByName(cmd *cobra.Command, name string, reserved map[string]struct{}) error {
 	p := getPrinter(cmd)
-	if p.IsTable() {
-		p.PrintError(output.UnsupportedTableFormatError())
-		return nil
-	}
 	maxOutputBytes, _ := cmd.Root().PersistentFlags().GetInt64("max-output-bytes")
 	svc, err := newInfoService(cmd)
 	if err != nil {
-		p.PrintError(mcpclient.ParseError(err, nil, "POST", "info/invoke", name))
-		return nil
+		return intelcmd.FailIntelClientInit(p, err, "info", "invoke", name)
 	}
-
-	arguments, err := toolargs.MergeFromCommand(cmd, toolargs.MergeOptions{ReservedFlags: reserved})
-	if err != nil {
-		p.PrintError(&output.GateError{
-			Status:  400,
-			Label:   "INVALID_ARGUMENTS",
-			Message: err.Error(),
-		})
-		return nil
-	}
-	arguments = toolargs.NormalizeForTool(name, arguments)
-	if tool, _, derr := svc.DescribeTool(cmd.Context(), name); derr == nil && tool != nil {
-		if missing := toolschema.MissingRequiredArguments(arguments, tool.InputSchema); len(missing) > 0 {
-			p.PrintError(&output.GateError{
-				Status:  400,
-				Label:   "INVALID_ARGUMENTS",
-				Message: "missing required fields: " + strings.Join(missing, ", "),
-			})
-			return nil
-		}
-	}
-
-	result, httpResp, err := svc.CallTool(cmd.Context(), name, arguments)
-	if err != nil {
-		p.PrintError(mcpclient.ParseError(err, httpResp, "POST", "info/invoke", name))
-		return nil
-	}
-	if result.IsError {
-		p.PrintError(&output.GateError{
-			Status:   502,
-			Label:    "INTEL_RESULT_ERROR",
-			Message:  "tool returned isError=true",
-			ToolName: name,
-		})
-		return nil
-	}
-	if err := toolrender.RenderCallResult(p, name, result, maxOutputBytes); err != nil {
-		return err
-	}
-	return nil
+	return intelcmd.RunToolCall(cmd, p, svc, name, reserved, "info", maxOutputBytes)
 }

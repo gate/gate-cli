@@ -40,8 +40,8 @@ func TestBuildPreflightInstallHintTemplate(t *testing.T) {
 	res := BuildPreflight(PreflightOptions{
 		FallbackEnabled: false,
 		Scanner:         NewScannerWithHome(t.TempDir()),
-		Installed: func(string) bool { return false },
-		Version: "0.3.0",
+		Installed:       func(string) bool { return false },
+		Version:         "0.3.0",
 	})
 	if res.ActionCode != "SHOW_INSTALL_HINT" {
 		t.Fatalf("expected SHOW_INSTALL_HINT")

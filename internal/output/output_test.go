@@ -75,12 +75,12 @@ func TestErrorJSONGateStandard(t *testing.T) {
 	p := output.NewWithStderr(&stdout, &stderr, output.FormatJSON)
 
 	gateErr := &output.GateError{
-		Status:       400,
-		Label:        "INVALID_PARAM_VALUE",
-		Message:      "Invalid currency pair",
-		TraceID:      "abc123",
-		RequestID:    "req-1",
-		ToolName:     "news_feed_search_news",
+		Status:    400,
+		Label:     "INVALID_PARAM_VALUE",
+		Message:   "Invalid currency pair",
+		TraceID:   "abc123",
+		RequestID: "req-1",
+		ToolName:  "news_feed_search_news",
 		Request: &output.RequestInfo{
 			Method: "POST",
 			URL:    "https://api.gateio.ws/api/v4/spot/orders",

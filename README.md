@@ -159,6 +159,3 @@ gate-cli spot market ticker --pair BTC_USDT --format json | jq '.last'
 | `--api-secret` | — | API secret (overrides env and config file) |
 | `--verbose` | `false` | Print Intel MCP transport lines to stderr (`info` / `news`), prefixed `[verbose]`; stdout JSON unchanged |
 | `--debug` | `false` | Print HTTP debug for Gate API clients; with Intel commands, MCP transport lines use `[debug]` (wins if both flags are set) |
-
-
-go build -o gate-cli .

@@ -29,7 +29,7 @@ func TestDescribePrettyText_ParametersFromJSONSchema(t *testing.T) {
 		InputSchema: map[string]interface{}{
 			"type": "object",
 			"properties": map[string]interface{}{
-				"coin": map[string]interface{}{"type": "string"},
+				"coin":  map[string]interface{}{"type": "string"},
 				"limit": map[string]interface{}{"type": "integer"},
 			},
 			"required": []interface{}{"coin"},

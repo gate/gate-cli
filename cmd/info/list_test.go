@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/gate/gate-cli/internal/exitcode"
 	"github.com/gate/gate-cli/internal/intelfacade"
 	"github.com/gate/gate-cli/internal/mcpclient"
 	"github.com/gate/gate-cli/internal/output"
@@ -92,7 +93,10 @@ func TestRunInfoListErrorGoesStderr(t *testing.T) {
 	}
 
 	err := runInfoList(cmd, nil)
-	require.NoError(t, err)
+	require.Error(t, err)
+	var coded *exitcode.Error
+	require.True(t, errors.As(err, &coded))
+	assert.Equal(t, 1, coded.Code)
 	assert.Empty(t, out.String())
 	assert.Contains(t, errOut.String(), `"error"`)
 	assert.Contains(t, errOut.String(), "list failed")
