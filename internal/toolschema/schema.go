@@ -208,9 +208,6 @@ func ApplyInputSchemaFlags(cmd *cobra.Command, schemaAny interface{}) {
 			def, _ := spec["default"].(string)
 			cmd.Flags().String(flagName, def, desc)
 		}
-		if required {
-			_ = cmd.MarkFlagRequired(flagName)
-		}
 	}
 }
 

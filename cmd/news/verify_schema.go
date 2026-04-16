@@ -24,7 +24,6 @@ var verifySchemaCmd = &cobra.Command{
 func init() {
 	verifySchemaCmd.Flags().Bool("strict", false, "Treat schema warnings as command error")
 	Cmd.AddCommand(verifySchemaCmd)
-	intelcmd.SilenceCommandTree(Cmd)
 }
 
 func runNewsVerifySchema(cmd *cobra.Command, args []string) error {

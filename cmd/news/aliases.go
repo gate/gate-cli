@@ -67,11 +67,11 @@ func buildNewsAliases() {
 		if aliases, ok := newsBusinessAliases[tool]; ok {
 			alias.Aliases = aliases
 		}
-		if b := intelfacade.NewsBaselineInputSchema(tool); b != nil {
-			toolschema.ApplyInputSchemaFlags(alias, b)
-		}
 		if schema, ok := schemas[tool]; ok && !toolschema.IsEmptyInputSchema(schema.InputSchema) {
 			toolschema.ApplyInputSchemaFlags(alias, schema.InputSchema)
+		}
+		if b := intelfacade.NewsBaselineInputSchema(tool); b != nil {
+			toolschema.ApplyInputSchemaFlags(alias, b)
 		}
 		group.AddCommand(alias)
 	}
