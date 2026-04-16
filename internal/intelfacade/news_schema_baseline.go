@@ -43,7 +43,8 @@ var NewsBaselineInputSchemas = map[string]map[string]interface{}{
 		"coin":                       newsStr("coin"),
 		"platform":                   newsStr("platform"),
 		"platform_type":              newsStr("platform_type"),
-		"lang":                       newsStr("lang"),
+		"lang":                       newsLangDefaultZh("lang"),
+		"time_range":                 newsTimeRange24h("time_range"),
 		"start_time":                 newsStr("start_time"),
 		"end_time":                   newsStr("end_time"),
 		"sort_by":                    newsStr("sort_by"),
@@ -57,7 +58,7 @@ var NewsBaselineInputSchemas = map[string]map[string]interface{}{
 		"coin":       newsStr("coin"),
 		"mode":       newsStr("mode"),
 		"time_range": newsStr("time_range"),
-		"lang":       newsStr("lang"),
+		"lang":       newsLangDefaultZh("lang"),
 		"limit":      newsInt("limit"),
 	}, "query"),
 	"news_feed_get_exchange_announcements": newsObj(map[string]interface{}{
@@ -102,6 +103,24 @@ func newsNum(desc string) map[string]interface{} {
 
 func newsBool(desc string) map[string]interface{} {
 	return map[string]interface{}{"type": "boolean", "description": desc}
+}
+
+func newsTimeRange24h(desc string) map[string]interface{} {
+	return map[string]interface{}{
+		"type":        "string",
+		"description": desc,
+		"enum":        []interface{}{"1h", "24h", "7d"},
+		"default":     "24h",
+	}
+}
+
+func newsLangDefaultZh(desc string) map[string]interface{} {
+	return map[string]interface{}{
+		"type":        "string",
+		"description": desc,
+		"enum":        []interface{}{"zh", "en", "auto"},
+		"default":     "zh",
+	}
 }
 
 func newsArrStr(desc string) map[string]interface{} {
