@@ -67,11 +67,13 @@ func buildInfoAliases() {
 		if aliases, ok := infoBusinessAliases[tool]; ok {
 			alias.Aliases = aliases
 		}
-		if schema, ok := schemas[tool]; ok && !toolschema.IsEmptyInputSchema(schema.InputSchema) {
-			toolschema.ApplyInputSchemaFlags(alias, schema.InputSchema)
-		}
+		// Baseline first so committed JSON-schema shapes win for flag wiring (e.g. flexBool, StringArray);
+		// cached MCP schema only adds non-colliding properties.
 		if b := intelfacade.InfoBaselineInputSchema(tool); b != nil {
 			toolschema.ApplyInputSchemaFlags(alias, b)
+		}
+		if schema, ok := schemas[tool]; ok && !toolschema.IsEmptyInputSchema(schema.InputSchema) {
+			toolschema.ApplyInputSchemaFlags(alias, schema.InputSchema)
 		}
 		if tool == "info_coin_get_coin_info" && alias.Flags().Lookup("symbol") == nil {
 			alias.Flags().String("symbol", "", "Coin symbol alias to query")

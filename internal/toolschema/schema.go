@@ -189,7 +189,12 @@ func ApplyInputSchemaFlags(cmd *cobra.Command, schemaAny interface{}) {
 		switch schemaType(spec) {
 		case "boolean":
 			def, _ := spec["default"].(bool)
-			cmd.Flags().Bool(flagName, def, desc)
+			fb := newFlexBool(def)
+			cmd.Flags().Var(fb, flagName, desc)
+			// Do not set NoOptDefVal: pflag treats it as "optional value" and will
+			// never consume the next argv token, so "--flag true" leaves "true" as
+			// a positional (Cobra reports unknown subcommand). Use "--flag=true" or
+			// "--flag true" with flexBool (non-native bool) instead.
 		case "integer":
 			def := 0
 			if v, ok := spec["default"].(float64); ok {
@@ -203,7 +208,8 @@ func ApplyInputSchemaFlags(cmd *cobra.Command, schemaAny interface{}) {
 			}
 			cmd.Flags().Float64(flagName, def, desc)
 		case "array":
-			cmd.Flags().StringSlice(flagName, nil, desc)
+			// StringArray accepts a single JSON array token (e.g. '["rsi"]'); StringSlice uses CSV and breaks on JSON.
+			cmd.Flags().StringArray(flagName, nil, desc)
 		default:
 			def, _ := spec["default"].(string)
 			cmd.Flags().String(flagName, def, desc)

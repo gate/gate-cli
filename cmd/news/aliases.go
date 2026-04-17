@@ -67,11 +67,12 @@ func buildNewsAliases() {
 		if aliases, ok := newsBusinessAliases[tool]; ok {
 			alias.Aliases = aliases
 		}
-		if schema, ok := schemas[tool]; ok && !toolschema.IsEmptyInputSchema(schema.InputSchema) {
-			toolschema.ApplyInputSchemaFlags(alias, schema.InputSchema)
-		}
+		// Baseline first so committed JSON-schema shapes win for flag wiring; cache adds extras only.
 		if b := intelfacade.NewsBaselineInputSchema(tool); b != nil {
 			toolschema.ApplyInputSchemaFlags(alias, b)
+		}
+		if schema, ok := schemas[tool]; ok && !toolschema.IsEmptyInputSchema(schema.InputSchema) {
+			toolschema.ApplyInputSchemaFlags(alias, schema.InputSchema)
 		}
 		group.AddCommand(alias)
 	}
