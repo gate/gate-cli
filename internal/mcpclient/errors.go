@@ -2,6 +2,7 @@ package mcpclient
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
@@ -64,7 +65,11 @@ func ParseError(err error, httpResp *http.Response, method, url, toolName string
 		out.JSONRPCCode = mcpErr.JSONRPCCode
 		switch mcpErr.Kind {
 		case ErrorKindTransport:
-			out.Label = "INTEL_TRANSPORT_ERROR"
+			if strings.Contains(strings.ToLower(mcpErr.Error()), "response body exceeded") {
+				out.Label = "INTEL_RESPONSE_TOO_LARGE"
+			} else {
+				out.Label = "INTEL_TRANSPORT_ERROR"
+			}
 		case ErrorKindProtocol:
 			out.Label = "INTEL_PROTOCOL_ERROR"
 		}
@@ -86,5 +91,8 @@ func sanitizeUserErrorMessage(err error) string {
 	msg = strings.ReplaceAll(msg, "/mcp", "")
 	msg = strings.ReplaceAll(msg, "MCP", "intel")
 	msg = strings.ReplaceAll(msg, "mcp", "intel")
+	if strings.Contains(strings.ToLower(msg), "response body exceeded") {
+		return fmt.Sprintf("%s; try --max-output-bytes for CLI output control or configure GATE_INTEL_MAX_RESPONSE_BYTES for transport limit", msg)
+	}
 	return msg
 }

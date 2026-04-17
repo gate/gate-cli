@@ -63,3 +63,13 @@ func TestSilenceCommandTreeSetsFlagsOnChildren(t *testing.T) {
 	assert.True(t, grand.SilenceErrors)
 	assert.True(t, grand.SilenceUsage)
 }
+
+func TestBuildGroupedAliasesNilMakeAliasReturnsEmpty(t *testing.T) {
+	out := BuildGroupedAliases(AliasBuildOptions{
+		BackendPrefix: "info",
+		BackendTitle:  "Info",
+		ToolBaseline:  []string{"info_coin_get_coin_info"},
+		MakeAlias:     nil,
+	})
+	assert.Nil(t, out)
+}

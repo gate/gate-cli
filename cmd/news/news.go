@@ -9,5 +9,6 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	// Deprecated: schema refresh is controlled via GATE_INTEL_REFRESH_SCHEMA.
+	// Schema refresh is env-only (no --refresh-schema flag): set GATE_INTEL_REFRESH_SCHEMA=1.
+	// See repository README (Intel migration notes) and specs/cli/cli-first-mcp-technical-implementation-plan.md.
 }

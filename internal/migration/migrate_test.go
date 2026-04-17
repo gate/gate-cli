@@ -3,7 +3,6 @@ package migration
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
@@ -77,8 +76,8 @@ func TestRunMigrateApplyJSONStaysManualPatch(t *testing.T) {
 	if len(report.Providers) == 0 {
 		t.Fatalf("expected provider result")
 	}
-	if report.Providers[0].Action != "comment" {
-		t.Fatalf("expected auto change for json, got %s", report.Providers[0].Action)
+	if report.Providers[0].Action != "manual_patch" {
+		t.Fatalf("expected manual patch for json, got %s", report.Providers[0].Action)
 	}
 }
 
@@ -104,14 +103,11 @@ func TestRemoveGateMarkersJSONRemovesLegacyEntries(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !changed {
-		t.Fatal("expected json marker removal change")
+	if changed {
+		t.Fatal("expected json to stay in manual patch mode")
 	}
-	if strings.Contains(updated, "gate-info") {
-		t.Fatal("expected gate-info removed from json")
-	}
-	if !strings.Contains(updated, "other") {
-		t.Fatal("expected non-marker entries preserved")
+	if updated != "" {
+		t.Fatalf("expected empty updated content in manual patch mode, got %q", updated)
 	}
 }
 
@@ -132,14 +128,11 @@ command = "y"
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !changed {
-		t.Fatal("expected toml marker removal change")
+	if changed {
+		t.Fatal("expected toml to stay in manual patch mode")
 	}
-	if strings.Contains(updated, "gate-info") {
-		t.Fatal("expected gate-info removed from toml")
-	}
-	if !strings.Contains(updated, "other") {
-		t.Fatal("expected non-marker entries preserved")
+	if updated != "" {
+		t.Fatalf("expected empty updated content in manual patch mode, got %q", updated)
 	}
 }
 
@@ -168,5 +161,32 @@ func TestRunMigrateApplyUnknownFormatKeepsManualPatch(t *testing.T) {
 	// Unknown/non-structural formats should remain manual patch when changed=false.
 	if report.Providers[0].Action != "manual_patch" && report.Providers[0].Status == "warn" {
 		t.Fatalf("expected manual_patch for non-structural format, got %s", report.Providers[0].Action)
+	}
+}
+
+func TestAtomicWritePreservePermPreservesModeAndContent(t *testing.T) {
+	home := t.TempDir()
+	target := filepath.Join(home, "config.json")
+	if err := os.WriteFile(target, []byte(`{"a":1}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := atomicWritePreservePerm(target, []byte(`{"b":2}`)); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := os.ReadFile(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != `{"b":2}` {
+		t.Fatalf("unexpected content: %s", string(got))
+	}
+	info, err := os.Stat(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Mode().Perm() != 0o600 {
+		t.Fatalf("expected 0600, got %o", info.Mode().Perm())
 	}
 }

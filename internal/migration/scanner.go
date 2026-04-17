@@ -64,6 +64,7 @@ func (s *Scanner) Scan(providerIDs []string) []ProviderScan {
 		targets[v] = struct{}{}
 	}
 
+	orderedProviders := []string{"codex", "cursor", "claude_desktop"}
 	providers := map[string][]string{
 		"codex": {
 			filepath.Join(s.home, ".codex", "config.toml"),
@@ -78,15 +79,19 @@ func (s *Scanner) Scan(providerIDs []string) []ProviderScan {
 		},
 	}
 	if len(targets) == 0 {
-		all := make([]ProviderScan, 0, len(providers))
-		for id, paths := range providers {
+		all := make([]ProviderScan, 0, len(orderedProviders))
+		for _, id := range orderedProviders {
+			paths := providers[id]
 			all = append(all, s.scanProvider(id, paths))
 		}
 		return all
 	}
 
 	out := make([]ProviderScan, 0, len(targets))
-	for id := range targets {
+	for _, id := range orderedProviders {
+		if _, selected := targets[id]; !selected {
+			continue
+		}
 		paths, ok := providers[id]
 		if !ok {
 			continue
@@ -102,31 +107,32 @@ func (s *Scanner) scanProvider(providerID string, paths []string) ProviderScan {
 		FilesChecked: paths,
 		Entries:      make([]Entry, 0),
 	}
+	pathErrors := make([]string, 0)
 	for _, p := range paths {
 		info, err := os.Lstat(p)
 		if err != nil {
 			if !os.IsNotExist(err) {
-				result.Error = err.Error()
+				pathErrors = append(pathErrors, err.Error())
 			}
 			continue
 		}
 		if info.Mode()&os.ModeSymlink != 0 {
-			result.Error = fmt.Sprintf("refuse symlink config: %s", p)
+			pathErrors = append(pathErrors, fmt.Sprintf("refuse symlink config: %s", p))
 			continue
 		}
 		if info.Size() > 1<<20 {
-			result.Error = fmt.Sprintf("config too large (>1MiB): %s", p)
+			pathErrors = append(pathErrors, fmt.Sprintf("config too large (>1MiB): %s", p))
 			continue
 		}
 		f, err := os.Open(p)
 		if err != nil {
-			result.Error = err.Error()
+			pathErrors = append(pathErrors, err.Error())
 			continue
 		}
 		data, err := io.ReadAll(io.LimitReader(f, 1<<20))
 		_ = f.Close()
 		if err != nil {
-			result.Error = err.Error()
+			pathErrors = append(pathErrors, err.Error())
 			continue
 		}
 		content := strings.ToLower(string(data))
@@ -141,6 +147,9 @@ func (s *Scanner) scanProvider(providerID string, paths []string) ProviderScan {
 		}
 	}
 	result.EntriesFound = len(result.Entries)
+	if result.EntriesFound == 0 && len(pathErrors) > 0 {
+		result.Error = strings.Join(pathErrors, "; ")
+	}
 	return result
 }
 

@@ -18,6 +18,9 @@ func RenderCallResult(p *output.Printer, toolName string, result *mcpclient.Call
 		return fmt.Errorf("nil tools/call result")
 	}
 	envelope := BuildCLIEnvelope(toolName, result)
+	if !p.IsJSON() && maxBytes <= 0 {
+		return writePrettyToolResult(p, envelope, nil)
+	}
 	dataJSON, err := json.Marshal(envelope["data"])
 	if err != nil {
 		return err
@@ -32,11 +35,14 @@ func RenderCallResult(p *output.Printer, toolName string, result *mcpclient.Call
 func writePrettyToolResult(p *output.Printer, envelope map[string]interface{}, compactJSON []byte) error {
 	if data, ok := envelope["data"].(map[string]interface{}); ok {
 		if t, ok := data["truncated"].(bool); ok && t {
-			var err error
-			compactJSON, err = json.Marshal(data)
-			if err != nil {
-				return err
-			}
+			compactJSON = nil
+		}
+	}
+	if len(compactJSON) == 0 {
+		var err error
+		compactJSON, err = json.Marshal(envelope["data"])
+		if err != nil {
+			return err
 		}
 	}
 	var pretty bytes.Buffer

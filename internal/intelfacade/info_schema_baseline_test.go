@@ -1,6 +1,9 @@
 package intelfacade
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 func TestInfoBaselineInputSchemaCoverage(t *testing.T) {
 	t.Parallel()
@@ -46,5 +49,39 @@ func TestInfoBaselineInputSchemaCriticalFields(t *testing.T) {
 	symbols := props["symbols"].(map[string]interface{})
 	if typ, _ := symbols["type"].(string); typ != "array" {
 		t.Fatalf("symbols type mismatch: want array got %q", typ)
+	}
+}
+
+func TestInfoBaselineInputSchemaDeepCopyIsolation(t *testing.T) {
+	t.Parallel()
+
+	a := InfoBaselineInputSchema("info_coin_get_coin_info")
+	b := InfoBaselineInputSchema("info_markettrend_get_indicator_history")
+	if a == nil || b == nil {
+		t.Fatalf("expected non-nil schemas")
+	}
+
+	aProps := a["properties"].(map[string]interface{})
+	bProps := b["properties"].(map[string]interface{})
+
+	aFields := aProps["fields"].(map[string]interface{})
+	bIndicators := bProps["indicators"].(map[string]interface{})
+
+	aItems := aFields["items"].(map[string]interface{})
+	bItems := bIndicators["items"].(map[string]interface{})
+
+	if reflect.ValueOf(aItems).Pointer() == reflect.ValueOf(bItems).Pointer() {
+		t.Fatalf("expected distinct nested items maps across tools")
+	}
+
+	origType, _ := bItems["type"].(string)
+	bItems["type"] = "integer"
+
+	fresh := InfoBaselineInputSchema("info_markettrend_get_indicator_history")
+	freshProps := fresh["properties"].(map[string]interface{})
+	freshIndicators := freshProps["indicators"].(map[string]interface{})
+	freshItems := freshIndicators["items"].(map[string]interface{})
+	if typ, _ := freshItems["type"].(string); typ != origType {
+		t.Fatalf("mutating a returned copy leaked into subsequent baseline reads: got %q want %q", typ, origType)
 	}
 }

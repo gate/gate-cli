@@ -7,11 +7,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"maps"
 	"net"
 	"net/http"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -22,10 +22,13 @@ import (
 )
 
 const sessionHeader = "MCP-Session-Id"
-const maxResponseBytes = 16 << 20 // 16 MiB
+const defaultMaxResponseBytes = 16 << 20 // 16 MiB
+
+// errIntelHTTPBodyTooLarge is wrapped into size-limit errors so callers can use errors.Is (CR-1013).
+var errIntelHTTPBodyTooLarge = errors.New("intel HTTP response body exceeded configured read limit")
 
 var (
-	sessionIDPattern = regexp.MustCompile(`^[A-Za-z0-9._:-]{1,256}$`)
+	sessionIDPattern = regexp.MustCompile(`^[\x21-\x7E]{1,1000}$`)
 	sensitiveArgKeys = map[string]struct{}{
 		"authorization": {},
 		"secret":        {},
@@ -35,6 +38,8 @@ var (
 		"passphrase":    {},
 	}
 )
+
+const redactMaxDepth = 16
 
 // gateCLIProductHeader aligns MCP HTTP requests with REST client defaults
 // (internal/client): identifies the caller as gate-cli for analytics / routing.
@@ -138,16 +143,28 @@ type Client struct {
 	sessionID string
 	idSeq     uint64
 
+	maxResponseBytes int64
+
 	mu             sync.Mutex
+	listCacheValid bool
 	listCache      []Tool
 	listCacheUntil time.Time
 	initializing   bool
 	initErr        error
 	initWait       chan struct{}
+
+	listCacheTTLFull  time.Duration
+	listCacheTTLEmpty time.Duration
 }
 
 // New constructs an MCP client from resolved endpoint.
 func New(endpoint *toolconfig.ResolvedEndpoint, opts ...Option) *Client {
+	maxBytes := int64(defaultMaxResponseBytes)
+	if v := strings.TrimSpace(os.Getenv("GATE_INTEL_MAX_RESPONSE_BYTES")); v != "" {
+		if n, err := strconv.ParseInt(v, 10, 64); err == nil && n > 0 {
+			maxBytes = n
+		}
+	}
 	c := &Client{
 		backend:      endpoint.Backend,
 		baseURL:      endpoint.BaseURL,
@@ -166,22 +183,34 @@ func New(endpoint *toolconfig.ResolvedEndpoint, opts ...Option) *Client {
 				ExpectContinueTimeout: 1 * time.Second,
 			},
 		},
-		errOut:       os.Stderr,
+		errOut:           os.Stderr,
+		maxResponseBytes: maxBytes,
 	}
+	c.listCacheTTLFull = 30 * time.Second
+	c.listCacheTTLEmpty = 2 * time.Second
 	for _, opt := range opts {
 		opt(c)
 	}
 	return c
 }
 
+func (c *Client) readLimit() int64 {
+	if c == nil || c.maxResponseBytes <= 0 {
+		return defaultMaxResponseBytes
+	}
+	return c.maxResponseBytes
+}
+
 // ListTools requests tools/list and returns available tools.
 func (c *Client) ListTools(ctx context.Context) ([]Tool, *http.Response, error) {
 	c.mu.Lock()
-	if len(c.listCache) > 0 && time.Now().Before(c.listCacheUntil) {
+	if c.listCacheValid && time.Now().Before(c.listCacheUntil) {
 		tools := append([]Tool(nil), c.listCache...)
 		c.mu.Unlock()
 		return tools, nil, nil
 	}
+	fallbackTools := append([]Tool(nil), c.listCache...)
+	fallbackValid := c.listCacheValid
 	c.mu.Unlock()
 
 	if err := c.ensureInitialized(ctx); err != nil {
@@ -191,7 +220,28 @@ func (c *Client) ListTools(ctx context.Context) ([]Tool, *http.Response, error) 
 	params := map[string]interface{}{}
 	respPayload, httpResp, reqID, err := c.callWithRetry(ctx, "tools/list", params, true)
 	if err != nil {
-		c.invalidateListCache()
+		if shouldInvalidateListCacheOnListError(err) {
+			c.invalidateListCache()
+		}
+		if fallbackValid && len(fallbackTools) > 0 && shouldFallbackListToolsOnListError(err) {
+			// Extend TTL for the last good snapshot to avoid immediate retry storms after a transient failure.
+			c.mu.Lock()
+			c.listCacheValid = true
+			c.listCache = append([]Tool(nil), fallbackTools...)
+			ttl := c.listCacheTTLFull
+			if len(fallbackTools) == 0 {
+				ttl = c.listCacheTTLEmpty
+			}
+			if ttl <= 0 {
+				ttl = 30 * time.Second
+				if len(fallbackTools) == 0 {
+					ttl = 2 * time.Second
+				}
+			}
+			c.listCacheUntil = time.Now().Add(ttl)
+			c.mu.Unlock()
+			return append([]Tool(nil), fallbackTools...), httpResp, nil
+		}
 		var protoErr *Error
 		if errors.As(err, &protoErr) {
 			protoErr.RequestID = reqID
@@ -213,13 +263,62 @@ func (c *Client) ListTools(ctx context.Context) ([]Tool, *http.Response, error) 
 			RequestID: reqID,
 		}
 	}
+	if parsed.Tools == nil {
+		c.invalidateListCache()
+		return nil, httpResp, &Error{
+			Kind:      ErrorKindProtocol,
+			Err:       fmt.Errorf("invalid tools/list result: missing tools field"),
+			RequestID: reqID,
+		}
+	}
 
 	c.mu.Lock()
+	c.listCacheValid = true
 	c.listCache = append([]Tool(nil), parsed.Tools...)
-	c.listCacheUntil = time.Now().Add(30 * time.Second)
+	ttl := c.listCacheTTLFull
+	if len(parsed.Tools) == 0 {
+		ttl = c.listCacheTTLEmpty
+	}
+	if ttl <= 0 {
+		ttl = 30 * time.Second
+		if len(parsed.Tools) == 0 {
+			ttl = 2 * time.Second
+		}
+	}
+	c.listCacheUntil = time.Now().Add(ttl)
 	c.mu.Unlock()
 
 	return parsed.Tools, httpResp, nil
+}
+
+func shouldInvalidateListCacheOnListError(err error) bool {
+	var mcpErr *Error
+	if !errors.As(err, &mcpErr) {
+		return false
+	}
+	switch mcpErr.Kind {
+	case ErrorKindProtocol:
+		// JSON-RPC application errors should not wipe a previously good tools/list cache.
+		if mcpErr.JSONRPCCode != nil {
+			return false
+		}
+		return true
+	case ErrorKindTransport:
+		// Only invalidate cache when the tools/list response shape is unusable.
+		msg := strings.ToLower(mcpErr.Error())
+		return strings.Contains(msg, "invalid json-rpc response") ||
+			strings.Contains(msg, "invalid tools/list result")
+	default:
+		return false
+	}
+}
+
+func shouldFallbackListToolsOnListError(err error) bool {
+	var mcpErr *Error
+	if !errors.As(err, &mcpErr) {
+		return false
+	}
+	return mcpErr.Kind == ErrorKindProtocol && mcpErr.JSONRPCCode != nil
 }
 
 // DescribeTool returns one tool schema/description by name.
@@ -279,19 +378,18 @@ func (c *Client) CallTool(ctx context.Context, name string, arguments map[string
 		}
 	}
 
-	rawCloned := cloneMapAny(raw)
-	out := &CallResult{Raw: rawCloned}
-	if v, ok := rawCloned["isError"].(bool); ok {
+	out := &CallResult{Raw: raw}
+	if v, ok := raw["isError"].(bool); ok {
 		out.IsError = v
 	}
-	if sc, ok := rawCloned["structuredContent"].(map[string]interface{}); ok {
-		out.StructuredContent = cloneMapAny(sc)
+	if sc, ok := raw["structuredContent"].(map[string]interface{}); ok {
+		out.StructuredContent = sc
 	}
-	if meta, ok := rawCloned["_meta"].(map[string]interface{}); ok {
-		out.Meta = cloneMapAny(meta)
+	if meta, ok := raw["_meta"].(map[string]interface{}); ok {
+		out.Meta = meta
 	}
-	if contentAny, ok := rawCloned["content"].([]interface{}); ok {
-		out.ContentRaw = cloneSliceAny(contentAny)
+	if contentAny, ok := raw["content"].([]interface{}); ok {
+		out.ContentRaw = contentAny
 	}
 	return out, httpResp, nil
 }
@@ -316,7 +414,7 @@ func (c *Client) logCallArguments(toolName string, arguments map[string]interfac
 		tag, c.backend, toolName, args)
 }
 
-func (c *Client) ensureInitialized(ctx context.Context) error {
+func (c *Client) ensureInitialized(ctx context.Context) (err error) {
 	c.mu.Lock()
 	sid := c.sessionID
 	if sid != "" {
@@ -326,7 +424,9 @@ func (c *Client) ensureInitialized(ctx context.Context) error {
 	if c.initializing {
 		waitCh := c.initWait
 		c.mu.Unlock()
-		<-waitCh
+		if waitCh != nil {
+			<-waitCh
+		}
 		c.mu.Lock()
 		defer c.mu.Unlock()
 		if c.sessionID != "" {
@@ -335,9 +435,21 @@ func (c *Client) ensureInitialized(ctx context.Context) error {
 		return c.initErr
 	}
 	c.initializing = true
+	c.initErr = nil
 	c.initWait = make(chan struct{})
 	waitCh := c.initWait
 	c.mu.Unlock()
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("initialize panic: %v", r)
+		}
+		c.mu.Lock()
+		c.initializing = false
+		c.initErr = err
+		c.initWait = nil
+		close(waitCh)
+		c.mu.Unlock()
+	}()
 
 	params := map[string]interface{}{
 		"protocolVersion": "2024-11-05",
@@ -347,13 +459,7 @@ func (c *Client) ensureInitialized(ctx context.Context) error {
 		},
 		"capabilities": map[string]interface{}{},
 	}
-	_, _, _, err := c.call(ctx, "initialize", params)
-
-	c.mu.Lock()
-	c.initializing = false
-	c.initErr = err
-	close(waitCh)
-	c.mu.Unlock()
+	_, _, _, err = c.call(ctx, "initialize", params)
 	return err
 }
 
@@ -370,7 +476,11 @@ func (c *Client) callWithRetry(ctx context.Context, method string, params interf
 	if initErr := c.ensureInitialized(ctx); initErr != nil {
 		return resp, httpResp, reqID, errors.Join(err, initErr)
 	}
-	return c.call(ctx, method, params)
+	retryResp, retryHTTPResp, retryReqID, retryErr := c.call(ctx, method, params)
+	if retryErr != nil {
+		return retryResp, retryHTTPResp, retryReqID, errors.Join(err, retryErr)
+	}
+	return retryResp, retryHTTPResp, retryReqID, nil
 }
 
 func (c *Client) call(ctx context.Context, method string, params interface{}) (*rpcResponse, *http.Response, string, error) {
@@ -406,13 +516,15 @@ func (c *Client) call(ctx context.Context, method string, params interface{}) (*
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	respBody, readErr := io.ReadAll(io.LimitReader(resp.Body, maxResponseBytes+1))
+	limit := c.readLimit()
+	// limit+1 lets us detect "over limit" without reading unbounded data (one byte past the cap).
+	respBody, readErr := io.ReadAll(io.LimitReader(resp.Body, limit+1))
 	if readErr != nil {
 		c.logTransportFailure(method, reqID, time.Since(start), readErr)
 		return nil, resp, reqID, &Error{Kind: ErrorKindTransport, Err: readErr, RequestID: reqID}
 	}
-	if len(respBody) > maxResponseBytes {
-		tooLargeErr := fmt.Errorf("response body exceeded %d bytes", maxResponseBytes)
+	if int64(len(respBody)) > limit {
+		tooLargeErr := fmt.Errorf("response body exceeded %d bytes: %w", limit, errIntelHTTPBodyTooLarge)
 		c.logTransportFailure(method, reqID, time.Since(start), tooLargeErr)
 		return nil, resp, reqID, &Error{Kind: ErrorKindTransport, Err: tooLargeErr, RequestID: reqID}
 	}
@@ -456,6 +568,7 @@ func (c *Client) applyHeaders(req *http.Request) {
 	if c.bearerToken != "" {
 		req.Header.Set("Authorization", "Bearer "+c.bearerToken)
 	}
+	req.Header.Del(sessionHeader)
 	c.mu.Lock()
 	sid := c.sessionID
 	c.mu.Unlock()
@@ -506,12 +619,20 @@ func (c *Client) logTransportFailure(method, requestID string, elapsed time.Dura
 func (c *Client) resetSession() {
 	c.mu.Lock()
 	c.sessionID = ""
+	if !c.initializing {
+		c.initErr = nil
+		c.initWait = nil
+	}
 	c.mu.Unlock()
 }
 
+// invalidateListCache drops the cached tools/list snapshot. Callers must not hold c.mu
+// when invoking it (sync.Mutex is not re-entrant); ListTools holds the lock only around
+// cache reads/writes and calls this helper on error paths without nesting.
 func (c *Client) invalidateListCache() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	c.listCacheValid = false
 	c.listCache = nil
 	c.listCacheUntil = time.Time{}
 }
@@ -520,53 +641,76 @@ func redactSensitive(input map[string]interface{}) map[string]interface{} {
 	if len(input) == 0 {
 		return map[string]interface{}{}
 	}
+	return redactSensitiveMap(input, 0)
+}
+
+func redactSensitiveMap(input map[string]interface{}, depth int) map[string]interface{} {
+	if len(input) == 0 {
+		return map[string]interface{}{}
+	}
+	if depth >= redactMaxDepth {
+		return map[string]interface{}{"_redaction_depth_exceeded": true}
+	}
 	out := make(map[string]interface{}, len(input))
-	maps.Copy(out, input)
-	for k, v := range out {
-		lk := strings.ToLower(strings.TrimSpace(k))
-		for sk := range sensitiveArgKeys {
-			if strings.Contains(lk, sk) {
-				out[k] = "***REDACTED***"
-				break
-			}
+	for k, v := range input {
+		if isSensitiveKey(k) {
+			out[k] = "***REDACTED***"
+			continue
 		}
-		if nested, ok := v.(map[string]interface{}); ok {
-			out[k] = redactSensitive(nested)
-		}
+		out[k] = redactSensitiveValue(v, depth+1)
 	}
 	return out
 }
 
-func cloneAny(v interface{}) interface{} {
+func redactSensitiveSlice(input []interface{}, depth int) []interface{} {
+	if input == nil {
+		return nil
+	}
+	if depth >= redactMaxDepth {
+		return []interface{}{"***REDACTED_DEPTH_EXCEEDED***"}
+	}
+	out := make([]interface{}, len(input))
+	for i, v := range input {
+		out[i] = redactSensitiveValue(v, depth+1)
+	}
+	return out
+}
+
+func redactSensitiveValue(v interface{}, depth int) interface{} {
 	switch x := v.(type) {
 	case map[string]interface{}:
-		return cloneMapAny(x)
+		return redactSensitiveMap(x, depth)
 	case []interface{}:
-		return cloneSliceAny(x)
+		return redactSensitiveSlice(x, depth)
 	default:
 		return x
 	}
 }
 
-func cloneMapAny(in map[string]interface{}) map[string]interface{} {
-	if in == nil {
-		return nil
+func isSensitiveKey(key string) bool {
+	lk := strings.ToLower(strings.TrimSpace(key))
+	if _, ok := sensitiveArgKeys[lk]; ok {
+		return true
 	}
-	out := make(map[string]interface{}, len(in))
-	for k, v := range in {
-		out[k] = cloneAny(v)
+	if strings.HasSuffix(lk, "token") || strings.HasSuffix(lk, "key") {
+		return true
 	}
-	return out
+	parts := strings.FieldsFunc(lk, func(r rune) bool {
+		return !(r >= 'a' && r <= 'z') && !(r >= '0' && r <= '9')
+	})
+	if len(parts) == 0 {
+		return false
+	}
+	// Strictly match key/token as terminal term to avoid over-redaction
+	// for fields like token_count while still covering api-token/api_token.
+	last := parts[len(parts)-1]
+	if last == "key" || last == "token" {
+		return true
+	}
+	for _, p := range parts {
+		if p == "authorization" || p == "secret" || p == "signature" || p == "passphrase" {
+			return true
+		}
+	}
+	return false
 }
-
-func cloneSliceAny(in []interface{}) []interface{} {
-	if in == nil {
-		return nil
-	}
-	out := make([]interface{}, len(in))
-	for i, v := range in {
-		out[i] = cloneAny(v)
-	}
-	return out
-}
-

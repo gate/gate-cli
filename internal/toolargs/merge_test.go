@@ -1,6 +1,8 @@
 package toolargs
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/gate/gate-cli/internal/toolschema"
@@ -91,4 +93,36 @@ func TestMergeFromCommand_BooleanSpaceSeparatedTrue(t *testing.T) {
 	}})
 	require.NoError(t, err)
 	assert.Equal(t, true, got["with_indicators"])
+}
+
+func TestMergeFromCommand_StringArrayExplicitEmptyPreserved(t *testing.T) {
+	cmd := &cobra.Command{Use: "call"}
+	cmd.Flags().String("params", "", "")
+	cmd.Flags().String("args-json", "", "")
+	cmd.Flags().String("args-file", "", "")
+	cmd.Flags().StringArray("symbols", nil, "")
+	require.NoError(t, cmd.Flags().Set("symbols", ""))
+
+	got, err := MergeFromCommand(cmd, MergeOptions{ReservedFlags: map[string]struct{}{
+		"params": {}, "args-json": {}, "args-file": {},
+	}})
+	require.NoError(t, err)
+	assert.Equal(t, []string{}, got["symbols"])
+}
+
+func TestMergeFromCommand_ArgsFileExpandsHome(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	path := filepath.Join(home, "args.json")
+	require.NoError(t, os.WriteFile(path, []byte(`{"query":"BTC"}`), 0o600))
+
+	cmd := &cobra.Command{Use: "call"}
+	cmd.Flags().String("params", "", "")
+	cmd.Flags().String("args-json", "", "")
+	cmd.Flags().String("args-file", "", "")
+	require.NoError(t, cmd.Flags().Set("args-file", "~/args.json"))
+
+	got, err := MergeFromCommand(cmd, MergeOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, "BTC", got["query"])
 }

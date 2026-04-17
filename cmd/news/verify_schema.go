@@ -1,8 +1,6 @@
 package news
 
 import (
-	"strconv"
-
 	"github.com/spf13/cobra"
 
 	"github.com/gate/gate-cli/internal/intelcmd"
@@ -54,5 +52,3 @@ func runNewsVerifySchema(cmd *cobra.Command, args []string) error {
 	}
 	return nil
 }
-
-func itoa(v int) string { return strconv.Itoa(v) }

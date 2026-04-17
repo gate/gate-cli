@@ -18,9 +18,15 @@ const defaultHTTPTimeout = 60 * time.Second
 var (
 	headerNamePattern = regexp.MustCompile(`^[A-Za-z0-9-]+$`)
 	deniedHeaders     = map[string]struct{}{
-		"authorization": {},
-		"host":          {},
-		"content-length": {},
+		"authorization":       {},
+		"host":                {},
+		"content-length":      {},
+		"mcp-session-id":      {},
+		"cookie":              {},
+		"cookie2":             {},
+		"set-cookie":          {},
+		"proxy-authorization": {},
+		"forwarded":           {},
 	}
 )
 
@@ -47,7 +53,7 @@ func Resolve(opts ResolveOptions) (*ResolvedEndpoint, error) {
 		return nil, fmt.Errorf("intel backend is required")
 	}
 	if backend != "news" && backend != "info" {
-		return nil, fmt.Errorf("intel endpoint URL is required for %s command", backend)
+		return nil, fmt.Errorf("unsupported intel backend %q: only info and news are supported", backend)
 	}
 
 	file := opts.IntelFile
@@ -113,18 +119,25 @@ func resolveExtraHeaders(envRaw string, fileHeaders map[string]string) (map[stri
 	if strings.TrimSpace(envRaw) != "" {
 		return parseExtraHeaders(envRaw)
 	}
-	return cloneStringMap(fileHeaders), nil
+	return validateFileExtraHeaders(fileHeaders)
 }
 
-func cloneStringMap(m map[string]string) map[string]string {
+func validateFileExtraHeaders(m map[string]string) (map[string]string, error) {
 	if len(m) == 0 {
-		return map[string]string{}
+		return map[string]string{}, nil
 	}
 	out := make(map[string]string, len(m))
 	for k, v := range m {
-		out[k] = v
+		key := strings.TrimSpace(k)
+		if key == "" {
+			continue
+		}
+		if err := validateIntelExtraHeaderKV(key, v, "intel.extra_headers"); err != nil {
+			return nil, err
+		}
+		out[key] = v
 	}
-	return out
+	return out, nil
 }
 
 func resolveHTTPTimeout(envRaw, fileRaw string) (time.Duration, error) {
@@ -168,20 +181,33 @@ func parseExtraHeaders(raw string) (map[string]string, error) {
 		if key == "" {
 			continue
 		}
-		if !headerNamePattern.MatchString(key) {
-			return nil, fmt.Errorf("invalid GATE_INTEL_EXTRA_HEADERS key: %q", key)
-		}
-		lk := strings.ToLower(key)
-		if _, denied := deniedHeaders[lk]; denied {
-			return nil, fmt.Errorf("GATE_INTEL_EXTRA_HEADERS key is not allowed: %q", key)
-		}
 		val := fmt.Sprint(v)
-		if strings.ContainsAny(val, "\r\n") {
-			return nil, fmt.Errorf("invalid GATE_INTEL_EXTRA_HEADERS value for %q", key)
+		if err := validateIntelExtraHeaderKV(key, val, "GATE_INTEL_EXTRA_HEADERS"); err != nil {
+			return nil, err
 		}
 		out[key] = val
 	}
 	return out, nil
+}
+
+func validateIntelExtraHeaderKV(key, val, field string) error {
+	if !headerNamePattern.MatchString(key) {
+		return fmt.Errorf("invalid %s key: %q", field, key)
+	}
+	if isDeniedExtraHeader(strings.ToLower(key)) {
+		return fmt.Errorf("%s key is not allowed: %q", field, key)
+	}
+	if strings.ContainsAny(val, "\r\n") {
+		return fmt.Errorf("invalid %s value for %q", field, key)
+	}
+	return nil
+}
+
+func isDeniedExtraHeader(lowerKey string) bool {
+	if _, denied := deniedHeaders[lowerKey]; denied {
+		return true
+	}
+	return strings.HasPrefix(lowerKey, "x-forwarded-")
 }
 
 func validateBaseURL(raw string) error {
@@ -192,6 +218,9 @@ func validateBaseURL(raw string) error {
 	if u.Host == "" {
 		return fmt.Errorf("invalid intel endpoint url: missing host")
 	}
+	if strings.ContainsAny(u.Path, "\r\n\x00") || strings.ContainsAny(u.RawQuery, "\r\n\x00") {
+		return fmt.Errorf("invalid intel endpoint url: path or query contains control characters")
+	}
 	scheme := strings.ToLower(u.Scheme)
 	if scheme == "https" {
 		return nil
@@ -201,4 +230,3 @@ func validateBaseURL(raw string) error {
 	}
 	return fmt.Errorf("invalid intel endpoint url: scheme must be https (or localhost http)")
 }
-

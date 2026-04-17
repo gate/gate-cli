@@ -1,15 +1,13 @@
 package migration
 
 import (
-	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"time"
-
-	tomlv2 "github.com/pelletier/go-toml/v2"
 )
 
 type MigrateProviderResult struct {
@@ -155,13 +153,25 @@ func pickExisting(paths []string) string {
 }
 
 func backupFile(src, backupDir string) (string, error) {
-	data, err := os.ReadFile(src)
+	f, err := os.Open(src)
 	if err != nil {
 		return "", err
 	}
-	info, err := os.Stat(src)
+	defer func() { _ = f.Close() }()
+	info, err := f.Stat()
 	if err != nil {
 		return "", err
+	}
+	if !info.Mode().IsRegular() {
+		return "", fmt.Errorf("backup source is not a regular file: %s", src)
+	}
+	const maxBackup = 1 << 20
+	data, err := io.ReadAll(io.LimitReader(f, maxBackup+1))
+	if err != nil {
+		return "", err
+	}
+	if len(data) > maxBackup {
+		return "", fmt.Errorf("source file exceeds %d bytes: %s", maxBackup, src)
 	}
 	name := filepath.Base(src) + "." + time.Now().Format("20060102-150405") + ".bak"
 	dst := filepath.Join(backupDir, name)
@@ -180,68 +190,23 @@ func removeGateMarkers(path string) (string, bool, error) {
 }
 
 func removeGateMarkersJSON(path string) (string, bool, error) {
-	data, err := os.ReadFile(path)
+	// Keep JSON in manual patch mode to avoid rewriting user formatting
+	// (indentation/key-order/newline style).
+	_, err := os.ReadFile(path)
 	if err != nil {
 		return "", false, err
 	}
-	var decoded interface{}
-	if err := json.Unmarshal(data, &decoded); err != nil {
-		return "", false, err
-	}
-	changed := pruneGateMarkers(decoded)
-	if !changed {
-		return "", false, nil
-	}
-	out, err := json.MarshalIndent(decoded, "", "  ")
-	if err != nil {
-		return "", false, err
-	}
-	return string(out), true, nil
-}
-
-func pruneGateMarkers(v interface{}) bool {
-	changed := false
-	switch x := v.(type) {
-	case map[string]interface{}:
-		for _, marker := range gateMarkers {
-			if _, ok := x[marker]; ok {
-				delete(x, marker)
-				changed = true
-			}
-		}
-		for _, vv := range x {
-			if pruneGateMarkers(vv) {
-				changed = true
-			}
-		}
-	case []interface{}:
-		for _, vv := range x {
-			if pruneGateMarkers(vv) {
-				changed = true
-			}
-		}
-	}
-	return changed
+	return "", false, nil
 }
 
 func removeGateMarkersTOML(path string) (string, bool, error) {
-	data, err := os.ReadFile(path)
+	// Keep TOML in manual patch mode: structural unmarshal/marshal drops comments
+	// and key order, which is too destructive for user-managed config.
+	_, err := os.ReadFile(path)
 	if err != nil {
 		return "", false, err
 	}
-	var decoded map[string]interface{}
-	if err := tomlv2.Unmarshal(data, &decoded); err != nil {
-		return "", false, err
-	}
-	changed := pruneGateMarkers(decoded)
-	if !changed {
-		return "", false, nil
-	}
-	out, err := tomlv2.Marshal(decoded)
-	if err != nil {
-		return "", false, err
-	}
-	return string(out), true, nil
+	return "", false, nil
 }
 
 func MigrateExitCode(report MigrateReport) int {
@@ -260,11 +225,46 @@ func atomicWritePreservePerm(path string, data []byte) error {
 	if err != nil {
 		return err
 	}
-	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, data, info.Mode().Perm()); err != nil {
+
+	dir := filepath.Dir(path)
+	f, err := os.CreateTemp(dir, filepath.Base(path)+".tmp-*")
+	if err != nil {
 		return err
 	}
-	return os.Rename(tmp, path)
+	tmp := f.Name()
+	cleanup := true
+	defer func() {
+		if cleanup {
+			_ = os.Remove(tmp)
+		}
+	}()
+
+	if err := f.Chmod(info.Mode().Perm()); err != nil {
+		_ = f.Close()
+		return err
+	}
+	if _, err := f.Write(data); err != nil {
+		_ = f.Close()
+		return err
+	}
+	if err := f.Sync(); err != nil {
+		_ = f.Close()
+		return err
+	}
+	if err := f.Close(); err != nil {
+		return err
+	}
+	if err := os.Rename(tmp, path); err != nil {
+		return err
+	}
+	cleanup = false
+
+	// Best-effort directory sync to reduce rename durability risk.
+	if d, err := os.Open(dir); err == nil {
+		_ = d.Sync()
+		_ = d.Close()
+	}
+	return nil
 }
 
 func ParseProviders(raw string) []string {

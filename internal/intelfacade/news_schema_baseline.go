@@ -133,10 +133,6 @@ func newsArrStr(desc string) map[string]interface{} {
 	}
 }
 
-func newsObjAny(desc string) map[string]interface{} {
-	return map[string]interface{}{"type": "object", "description": desc}
-}
-
 func newsObj(props map[string]interface{}, required ...string) map[string]interface{} {
 	out := map[string]interface{}{
 		"type":       "object",
@@ -152,26 +148,14 @@ func newsObj(props map[string]interface{}, required ...string) map[string]interf
 	return out
 }
 
-// NewsBaselineInputSchema returns a shallow copy of the baseline schema for toolName, or nil.
+// NewsBaselineInputSchema returns a deep copy of the baseline schema for toolName, or nil.
 func NewsBaselineInputSchema(toolName string) map[string]interface{} {
 	newsBaselineOnce.Do(initNewsBaselineFrozen)
 	raw, ok := newsBaselineFrozen[toolName]
 	if !ok || len(raw) == 0 {
 		return nil
 	}
-	// shallow copy so callers cannot mutate package globals
-	out := make(map[string]interface{}, len(raw))
-	for k, v := range raw {
-		out[k] = v
-	}
-	if props, ok := raw["properties"].(map[string]interface{}); ok {
-		pc := make(map[string]interface{}, len(props))
-		for pk, pv := range props {
-			pc[pk] = pv
-		}
-		out["properties"] = pc
-	}
-	return out
+	return deepCloneSchemaMap(raw)
 }
 
 var (
@@ -182,17 +166,6 @@ var (
 func initNewsBaselineFrozen() {
 	newsBaselineFrozen = make(map[string]map[string]interface{}, len(NewsBaselineInputSchemas))
 	for k, v := range NewsBaselineInputSchemas {
-		copied := make(map[string]interface{}, len(v))
-		for vk, vv := range v {
-			copied[vk] = vv
-		}
-		if props, ok := v["properties"].(map[string]interface{}); ok {
-			propsCopied := make(map[string]interface{}, len(props))
-			for pk, pv := range props {
-				propsCopied[pk] = pv
-			}
-			copied["properties"] = propsCopied
-		}
-		newsBaselineFrozen[k] = copied
+		newsBaselineFrozen[k] = deepCloneSchemaMap(v)
 	}
 }

@@ -72,7 +72,11 @@ func parseBaseJSON(cmd *cobra.Command) (map[string]interface{}, error) {
 	case strings.TrimSpace(argsJSON) != "":
 		return parseJSONObject(argsJSON)
 	case strings.TrimSpace(argsFile) != "":
-		clean := filepath.Clean(argsFile)
+		clean, err := expandUserPath(argsFile)
+		if err != nil {
+			return nil, err
+		}
+		clean = filepath.Clean(clean)
 		f, err := os.Open(clean)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read args file: %w", err)
@@ -100,6 +104,25 @@ func parseJSONObject(raw string) (map[string]interface{}, error) {
 		out = map[string]interface{}{}
 	}
 	return out, nil
+}
+
+func expandUserPath(raw string) (string, error) {
+	path := strings.TrimSpace(raw)
+	if path == "~" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", fmt.Errorf("failed to resolve home directory: %w", err)
+		}
+		return home, nil
+	}
+	if strings.HasPrefix(path, "~/") {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", fmt.Errorf("failed to resolve home directory: %w", err)
+		}
+		return filepath.Join(home, strings.TrimPrefix(path, "~/")), nil
+	}
+	return path, nil
 }
 
 // normalizeFlagStringList expands JSON-array tokens, comma-separated values, and repeated flags
@@ -189,7 +212,7 @@ func readFlagArgument(cmd *cobra.Command, f *pflag.Flag) (interface{}, bool) {
 		}
 		norm := normalizeFlagStringList(v)
 		if norm == nil {
-			return nil, false
+			return []string{}, true
 		}
 		return norm, true
 	default:
@@ -204,13 +227,13 @@ func parseFlagValue(flagType, value string) (interface{}, bool) {
 		if err == nil {
 			return v, true
 		}
-		return nil, false
+		return value, true
 	case "int", "int64":
 		v, err := strconv.ParseInt(value, 10, 64)
 		if err == nil {
 			return v, true
 		}
-		return nil, false
+		return value, true
 	case "stringSlice":
 		if value == "" {
 			return []string{}, true
