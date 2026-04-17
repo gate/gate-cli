@@ -72,6 +72,14 @@ func RunToolCall(cmd *cobra.Command, p *output.Printer, svc ToolCaller, name str
 	if err != nil {
 		return FailAfterPrintError(p, mcpclient.ParseError(err, httpResp, "POST", invokePath(backend), name))
 	}
+	if result == nil {
+		return FailAfterPrintError(p, &output.GateError{
+			Status:   502,
+			Label:    "INTEL_PROTOCOL_ERROR",
+			Message:  "tool returned empty response",
+			ToolName: name,
+		})
+	}
 	if result.IsError {
 		return FailAfterPrintError(p, GateErrorForIntelToolIsError(name, httpResp))
 	}

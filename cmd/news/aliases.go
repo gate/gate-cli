@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/gate/gate-cli/internal/intelcmd"
 	"github.com/gate/gate-cli/internal/intelfacade"
 	"github.com/gate/gate-cli/internal/toolschema"
 )
@@ -48,83 +49,32 @@ var newsSchemaLoader = loadNewsToolSchemas
 
 func buildNewsAliases() {
 	schemas := newsSchemaLoader()
-	groups := map[string]*cobra.Command{}
-	orderedGroupNames := []string{}
-	for _, tool := range intelfacade.NewsToolBaseline {
-		parts := strings.Split(tool, "_")
-		if len(parts) < 3 || parts[0] != "news" {
-			continue
-		}
-		groupName := parts[1]
-		toolUse := strings.Join(parts[2:], "-")
-		group, ok := groups[groupName]
-		if !ok {
-			group = &cobra.Command{Use: groupName, Short: "News " + groupName + " shortcuts"}
-			groups[groupName] = group
-			orderedGroupNames = append(orderedGroupNames, groupName)
-		}
-		alias := makeNewsAliasCommand(toolUse, tool)
-		if aliases, ok := newsBusinessAliases[tool]; ok {
-			alias.Aliases = aliases
-		}
-		// Baseline first so committed JSON-schema shapes win for flag wiring; cache adds extras only.
-		if b := intelfacade.NewsBaselineInputSchema(tool); b != nil {
-			toolschema.ApplyInputSchemaFlags(alias, b)
-		}
-		if schema, ok := schemas[tool]; ok && !toolschema.IsEmptyInputSchema(schema.InputSchema) {
-			toolschema.ApplyInputSchemaFlags(alias, schema.InputSchema)
-		}
-		group.AddCommand(alias)
-	}
-	for _, name := range orderedGroupNames {
-		Cmd.AddCommand(groups[name])
+	groups := intelcmd.BuildGroupedAliases(intelcmd.AliasBuildOptions{
+		BackendPrefix:   "news",
+		BackendTitle:    "News",
+		ToolBaseline:    intelfacade.NewsToolBaseline,
+		SchemaSummaries: schemas,
+		BusinessAliases: newsBusinessAliases,
+		MakeAlias:       makeNewsAliasCommand,
+		ApplyBaseline: func(toolName string, cmd *cobra.Command) {
+			if b := intelfacade.NewsBaselineInputSchema(toolName); b != nil {
+				toolschema.ApplyInputSchemaFlags(cmd, b)
+			}
+		},
+	})
+	for _, group := range groups {
+		Cmd.AddCommand(group)
 	}
 }
 
 func loadNewsToolSchemas() map[string]toolschema.ToolSummary {
 	out := map[string]toolschema.ToolSummary{}
 	defer mergeNewsBaselineInto(out)
-
-	if !toolschema.IsBackendInvoked("news") {
-		if cached, _, err := toolschema.LoadCache("news"); err == nil {
-			for _, t := range cached {
-				out[t.Name] = t
-			}
-		}
-		return out
-	}
-	forceRefresh := toolschema.ForceRefreshEnabled()
-	if !forceRefresh {
-		if cached, fresh, err := toolschema.LoadCache("news"); err == nil {
-			for _, t := range cached {
-				out[t.Name] = t
-			}
-			if fresh {
-				return out
-			}
+	if cached, _, err := toolschema.LoadCache("news"); err == nil {
+		for _, t := range cached {
+			out[t.Name] = t
 		}
 	}
-	tmp := &cobra.Command{}
-	svc, err := newNewsService(tmp)
-	if err != nil {
-		return out
-	}
-	tools, _, err := svc.ListTools(tmp.Context())
-	if err != nil || len(tools) == 0 {
-		return out
-	}
-	payload := make([]toolschema.ToolSummary, 0, len(tools))
-	for _, t := range tools {
-		item := toolschema.ToolSummary{
-			Name:           t.Name,
-			Description:    t.Description,
-			HasInputSchema: t.HasInputSchema,
-			InputSchema:    t.InputSchema,
-		}
-		payload = append(payload, item)
-		out[t.Name] = item
-	}
-	_ = toolschema.SaveCache("news", payload)
 	return out
 }
 

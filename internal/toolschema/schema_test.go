@@ -57,17 +57,6 @@ func TestForceRefreshEnabledFromEnv(t *testing.T) {
 	}
 }
 
-func TestForceRefreshEnabledFromArgs(t *testing.T) {
-	t.Setenv(forceRefreshEnv, "")
-	oldArgs := os.Args
-	os.Args = []string{"gate-cli", "info", "--refresh-schema"}
-	t.Cleanup(func() { os.Args = oldArgs })
-
-	if !ForceRefreshEnabled() {
-		t.Fatal("expected force refresh enabled from args")
-	}
-}
-
 func TestIsBackendInvoked(t *testing.T) {
 	oldArgs := os.Args
 	os.Args = []string{"gate-cli", "info", "list"}

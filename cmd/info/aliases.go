@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/gate/gate-cli/internal/intelcmd"
 	"github.com/gate/gate-cli/internal/intelfacade"
 	"github.com/gate/gate-cli/internal/toolschema"
 )
@@ -48,86 +49,38 @@ var infoSchemaLoader = loadInfoToolSchemas
 
 func buildInfoAliases() {
 	schemas := infoSchemaLoader()
-	groups := map[string]*cobra.Command{}
-	orderedGroupNames := []string{}
-	for _, tool := range intelfacade.InfoToolBaseline {
-		parts := strings.Split(tool, "_")
-		if len(parts) < 3 || parts[0] != "info" {
-			continue
-		}
-		groupName := parts[1]
-		toolUse := strings.Join(parts[2:], "-")
-		group, ok := groups[groupName]
-		if !ok {
-			group = &cobra.Command{Use: groupName, Short: "Info " + groupName + " shortcuts"}
-			groups[groupName] = group
-			orderedGroupNames = append(orderedGroupNames, groupName)
-		}
-		alias := makeInfoAliasCommand(toolUse, tool)
-		if aliases, ok := infoBusinessAliases[tool]; ok {
-			alias.Aliases = aliases
-		}
-		// Baseline first so committed JSON-schema shapes win for flag wiring (e.g. flexBool, StringArray);
-		// cached MCP schema only adds non-colliding properties.
-		if b := intelfacade.InfoBaselineInputSchema(tool); b != nil {
-			toolschema.ApplyInputSchemaFlags(alias, b)
-		}
-		if schema, ok := schemas[tool]; ok && !toolschema.IsEmptyInputSchema(schema.InputSchema) {
-			toolschema.ApplyInputSchemaFlags(alias, schema.InputSchema)
-		}
-		if tool == "info_coin_get_coin_info" && alias.Flags().Lookup("symbol") == nil {
-			alias.Flags().String("symbol", "", "Coin symbol alias to query")
-		}
-		group.AddCommand(alias)
-	}
-	for _, name := range orderedGroupNames {
-		Cmd.AddCommand(groups[name])
+	groups := intelcmd.BuildGroupedAliases(intelcmd.AliasBuildOptions{
+		BackendPrefix:   "info",
+		BackendTitle:    "Info",
+		ToolBaseline:    intelfacade.InfoToolBaseline,
+		SchemaSummaries: schemas,
+		BusinessAliases: infoBusinessAliases,
+		MakeAlias:       makeInfoAliasCommand,
+		ApplyBaseline: func(toolName string, cmd *cobra.Command) {
+			// Baseline first so committed JSON-schema shapes win for flag wiring.
+			if b := intelfacade.InfoBaselineInputSchema(toolName); b != nil {
+				toolschema.ApplyInputSchemaFlags(cmd, b)
+			}
+		},
+		AfterAliasBuilt: func(toolName string, cmd *cobra.Command) {
+			if toolName == "info_coin_get_coin_info" && cmd.Flags().Lookup("symbol") == nil {
+				cmd.Flags().String("symbol", "", "Coin symbol alias to query")
+			}
+		},
+	})
+	for _, group := range groups {
+		Cmd.AddCommand(group)
 	}
 }
 
 func loadInfoToolSchemas() map[string]toolschema.ToolSummary {
 	out := map[string]toolschema.ToolSummary{}
 	defer mergeInfoBaselineInto(out)
-	if !toolschema.IsBackendInvoked("info") {
-		if cached, _, err := toolschema.LoadCache("info"); err == nil {
-			for _, t := range cached {
-				out[t.Name] = t
-			}
-		}
-		return out
-	}
-	forceRefresh := toolschema.ForceRefreshEnabled()
-	if !forceRefresh {
-		if cached, fresh, err := toolschema.LoadCache("info"); err == nil {
-			for _, t := range cached {
-				out[t.Name] = t
-			}
-			if fresh {
-				return out
-			}
+	if cached, _, err := toolschema.LoadCache("info"); err == nil {
+		for _, t := range cached {
+			out[t.Name] = t
 		}
 	}
-	tmp := &cobra.Command{}
-	svc, err := newInfoService(tmp)
-	if err != nil {
-		return out
-	}
-	tools, _, err := svc.ListTools(tmp.Context())
-	if err != nil || len(tools) == 0 {
-		return out
-	}
-	payload := make([]toolschema.ToolSummary, 0, len(tools))
-	for _, t := range tools {
-		item := toolschema.ToolSummary{
-			Name:           t.Name,
-			Description:    t.Description,
-			HasInputSchema: t.HasInputSchema,
-			InputSchema:    t.InputSchema,
-		}
-		payload = append(payload, item)
-		out[t.Name] = item
-	}
-	_ = toolschema.SaveCache("info", payload)
 	return out
 }
 

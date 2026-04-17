@@ -3,7 +3,9 @@ package toolconfig
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -12,6 +14,15 @@ import (
 )
 
 const defaultHTTPTimeout = 60 * time.Second
+
+var (
+	headerNamePattern = regexp.MustCompile(`^[A-Za-z0-9-]+$`)
+	deniedHeaders     = map[string]struct{}{
+		"authorization": {},
+		"host":          {},
+		"content-length": {},
+	}
+)
 
 // ResolveOptions controls endpoint resolution for intel facade commands.
 type ResolveOptions struct {
@@ -35,6 +46,9 @@ func Resolve(opts ResolveOptions) (*ResolvedEndpoint, error) {
 	if backend == "" {
 		return nil, fmt.Errorf("intel backend is required")
 	}
+	if backend != "news" && backend != "info" {
+		return nil, fmt.Errorf("intel endpoint URL is required for %s command", backend)
+	}
 
 	file := opts.IntelFile
 	envKey := "GATE_INTEL_" + strings.ToUpper(backend) + "_MCP_URL"
@@ -53,9 +67,10 @@ func Resolve(opts ResolveOptions) (*ResolvedEndpoint, error) {
 			baseURL = config.DefaultIntelNewsMCPURL
 		case "info":
 			baseURL = config.DefaultIntelInfoMCPURL
-		default:
-			return nil, fmt.Errorf("intel endpoint URL is required for %s command", backend)
 		}
+	}
+	if err := validateBaseURL(baseURL); err != nil {
+		return nil, err
 	}
 
 	tokenKey := "GATE_INTEL_" + strings.ToUpper(backend) + "_BEARER_TOKEN"
@@ -153,8 +168,37 @@ func parseExtraHeaders(raw string) (map[string]string, error) {
 		if key == "" {
 			continue
 		}
-		out[key] = fmt.Sprint(v)
+		if !headerNamePattern.MatchString(key) {
+			return nil, fmt.Errorf("invalid GATE_INTEL_EXTRA_HEADERS key: %q", key)
+		}
+		lk := strings.ToLower(key)
+		if _, denied := deniedHeaders[lk]; denied {
+			return nil, fmt.Errorf("GATE_INTEL_EXTRA_HEADERS key is not allowed: %q", key)
+		}
+		val := fmt.Sprint(v)
+		if strings.ContainsAny(val, "\r\n") {
+			return nil, fmt.Errorf("invalid GATE_INTEL_EXTRA_HEADERS value for %q", key)
+		}
+		out[key] = val
 	}
 	return out, nil
+}
+
+func validateBaseURL(raw string) error {
+	u, err := url.Parse(strings.TrimSpace(raw))
+	if err != nil {
+		return fmt.Errorf("invalid intel endpoint url: %w", err)
+	}
+	if u.Host == "" {
+		return fmt.Errorf("invalid intel endpoint url: missing host")
+	}
+	scheme := strings.ToLower(u.Scheme)
+	if scheme == "https" {
+		return nil
+	}
+	if scheme == "http" && (u.Hostname() == "localhost" || u.Hostname() == "127.0.0.1") {
+		return nil
+	}
+	return fmt.Errorf("invalid intel endpoint url: scheme must be https (or localhost http)")
 }
 

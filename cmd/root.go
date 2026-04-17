@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -38,6 +39,7 @@ import (
 	"github.com/gate/gate-cli/cmd/welfare"
 	"github.com/gate/gate-cli/cmd/withdrawal"
 	"github.com/gate/gate-cli/internal/exitcode"
+	"github.com/gate/gate-cli/internal/intelcmd"
 	"github.com/gate/gate-cli/internal/version"
 )
 
@@ -48,7 +50,11 @@ var rootCmd = &cobra.Command{
 	Version: version.Version,
 }
 
+const formatDeprecationEnv = "GATE_CLI_SUPPRESS_FORMAT_NOTICE"
+
 func Execute() {
+	intelcmd.SilenceCommandTree(rootCmd)
+	emitFormatCompatNotice(rootCmd)
 	if err := rootCmd.Execute(); err != nil {
 		var codedErr *exitcode.Error
 		if errors.As(err, &codedErr) {
@@ -116,4 +122,18 @@ func defaultMaxOutputBytes() int64 {
 		return 0
 	}
 	return v
+}
+
+func emitFormatCompatNotice(root *cobra.Command) {
+	if root == nil {
+		return
+	}
+	if strings.TrimSpace(os.Getenv(formatDeprecationEnv)) != "" {
+		return
+	}
+	f := root.PersistentFlags().Lookup("format")
+	if f != nil && f.Changed {
+		return
+	}
+	_, _ = fmt.Fprintln(os.Stderr, "Notice: default --format is pretty. Set --format explicitly in scripts for stable output.")
 }

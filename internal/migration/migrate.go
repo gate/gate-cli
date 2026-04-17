@@ -1,12 +1,15 @@
 package migration
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"time"
+
+	tomlv2 "github.com/pelletier/go-toml/v2"
 )
 
 type MigrateProviderResult struct {
@@ -38,14 +41,18 @@ func RunMigrate(opts MigrateOptions) (MigrateReport, error) {
 		opts.Scanner = NewScanner()
 	}
 	if strings.TrimSpace(opts.BackupDir) == "" {
-		opts.BackupDir = filepath.Join(os.TempDir(), "gate-cli-migrate-backups")
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return MigrateReport{}, err
+		}
+		opts.BackupDir = filepath.Join(home, ".gate-cli", "migrate-backups")
 	}
 	mode := "dry_run"
 	if opts.Apply {
 		mode = "apply"
 	}
 
-	if err := os.MkdirAll(opts.BackupDir, 0o755); err != nil {
+	if err := os.MkdirAll(opts.BackupDir, 0o700); err != nil {
 		return MigrateReport{}, err
 	}
 
@@ -100,7 +107,7 @@ func RunMigrate(opts MigrateOptions) (MigrateReport, error) {
 				continue
 			}
 			if changed {
-				if err := os.WriteFile(target, []byte(updated), 0o644); err != nil {
+				if err := atomicWritePreservePerm(target, []byte(updated)); err != nil {
 					result.Status = "fail"
 					anyFail = true
 					result.ManualPatch = "failed to write modified file: " + err.Error()
@@ -110,7 +117,7 @@ func RunMigrate(opts MigrateOptions) (MigrateReport, error) {
 					result.ManualPatch = ""
 				}
 			} else {
-				// Keep JSON and other non-comment-safe formats in manual patch mode.
+				// No safe structural change was produced for this file; keep manual patch mode.
 				result.Action = "manual_patch"
 				result.Status = "warn"
 				result.ManualPatch = "auto-change not safe for this file format; apply manual patch"
@@ -152,33 +159,89 @@ func backupFile(src, backupDir string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	info, err := os.Stat(src)
+	if err != nil {
+		return "", err
+	}
 	name := filepath.Base(src) + "." + time.Now().Format("20060102-150405") + ".bak"
 	dst := filepath.Join(backupDir, name)
-	return dst, os.WriteFile(dst, data, 0o644)
+	return dst, os.WriteFile(dst, data, info.Mode().Perm())
 }
 
 func removeGateMarkers(path string) (string, bool, error) {
 	ext := strings.ToLower(filepath.Ext(path))
-	if ext == ".json" {
-		return "", false, nil
+	switch ext {
+	case ".json":
+		return removeGateMarkersJSON(path)
+	case ".toml":
+		return removeGateMarkersTOML(path)
 	}
+	return "", false, nil
+}
+
+func removeGateMarkersJSON(path string) (string, bool, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return "", false, err
 	}
-	lines := strings.Split(string(data), "\n")
+	var decoded interface{}
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		return "", false, err
+	}
+	changed := pruneGateMarkers(decoded)
+	if !changed {
+		return "", false, nil
+	}
+	out, err := json.MarshalIndent(decoded, "", "  ")
+	if err != nil {
+		return "", false, err
+	}
+	return string(out), true, nil
+}
+
+func pruneGateMarkers(v interface{}) bool {
 	changed := false
-	for i, line := range lines {
-		lc := strings.ToLower(line)
+	switch x := v.(type) {
+	case map[string]interface{}:
 		for _, marker := range gateMarkers {
-			if strings.Contains(lc, marker) && !strings.HasPrefix(strings.TrimSpace(line), "#") && !strings.HasPrefix(strings.TrimSpace(line), "//") {
-				lines[i] = "# " + line
+			if _, ok := x[marker]; ok {
+				delete(x, marker)
 				changed = true
-				break
+			}
+		}
+		for _, vv := range x {
+			if pruneGateMarkers(vv) {
+				changed = true
+			}
+		}
+	case []interface{}:
+		for _, vv := range x {
+			if pruneGateMarkers(vv) {
+				changed = true
 			}
 		}
 	}
-	return strings.Join(lines, "\n"), changed, nil
+	return changed
+}
+
+func removeGateMarkersTOML(path string) (string, bool, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "", false, err
+	}
+	var decoded map[string]interface{}
+	if err := tomlv2.Unmarshal(data, &decoded); err != nil {
+		return "", false, err
+	}
+	changed := pruneGateMarkers(decoded)
+	if !changed {
+		return "", false, nil
+	}
+	out, err := tomlv2.Marshal(decoded)
+	if err != nil {
+		return "", false, err
+	}
+	return string(out), true, nil
 }
 
 func MigrateExitCode(report MigrateReport) int {
@@ -190,6 +253,18 @@ func MigrateExitCode(report MigrateReport) int {
 	default:
 		return 20
 	}
+}
+
+func atomicWritePreservePerm(path string, data []byte) error {
+	info, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+	tmp := path + ".tmp"
+	if err := os.WriteFile(tmp, data, info.Mode().Perm()); err != nil {
+		return err
+	}
+	return os.Rename(tmp, path)
 }
 
 func ParseProviders(raw string) []string {

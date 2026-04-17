@@ -29,7 +29,7 @@ func runPreflight(cmd *cobra.Command, args []string) error {
 	p := cmdutil.GetPrinter(cmd)
 	if p.IsTable() {
 		p.PrintError(output.UnsupportedTableFormatError())
-		return exitcode.New(30, errors.New("unsupported format"))
+		return exitcode.New(exitcode.RenderOrInternal, errors.New("unsupported format"))
 	}
 	fallbackEnabled, _ := cmd.Flags().GetBool("fallback-enabled")
 	result := migration.BuildPreflight(migration.PreflightOptions{
@@ -37,10 +37,10 @@ func runPreflight(cmd *cobra.Command, args []string) error {
 		Version:         version.Version,
 	})
 	if err := p.Print(result); err != nil {
-		return exitcode.New(30, err)
+		return exitcode.New(exitcode.RenderOrInternal, err)
 	}
 	if result.Route == "BLOCK" {
-		return exitcode.New(20, errors.New("preflight blocked"))
+		return exitcode.New(exitcode.Failure, errors.New("preflight blocked"))
 	}
 	return nil
 }

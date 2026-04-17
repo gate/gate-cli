@@ -8,11 +8,15 @@ func NormalizeForTool(toolName string, arguments map[string]interface{}) map[str
 	if arguments == nil {
 		return map[string]interface{}{}
 	}
+	rules := aliasRules[toolName]
+	if len(rules) == 0 {
+		return arguments
+	}
 	out := make(map[string]interface{}, len(arguments))
 	for k, v := range arguments {
 		out[k] = v
 	}
-	for _, rule := range aliasRules[toolName] {
+	for _, rule := range rules {
 		if canonical, ok := out[rule.ToKey]; ok && !isEmptyValue(canonical) {
 			delete(out, rule.FromKey)
 			continue

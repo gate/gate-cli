@@ -3,13 +3,17 @@ package toolargs
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
+
+const maxArgsFileBytes = 1 << 20
 
 type MergeOptions struct {
 	ReservedFlags map[string]struct{}
@@ -68,9 +72,18 @@ func parseBaseJSON(cmd *cobra.Command) (map[string]interface{}, error) {
 	case strings.TrimSpace(argsJSON) != "":
 		return parseJSONObject(argsJSON)
 	case strings.TrimSpace(argsFile) != "":
-		raw, err := os.ReadFile(argsFile)
+		clean := filepath.Clean(argsFile)
+		f, err := os.Open(clean)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read args file: %w", err)
+		}
+		defer func() { _ = f.Close() }()
+		raw, err := io.ReadAll(io.LimitReader(f, maxArgsFileBytes+1))
+		if err != nil {
+			return nil, fmt.Errorf("failed to read args file: %w", err)
+		}
+		if len(raw) > maxArgsFileBytes {
+			return nil, fmt.Errorf("args file exceeds %d bytes", maxArgsFileBytes)
 		}
 		return parseJSONObject(string(raw))
 	default:
@@ -174,34 +187,40 @@ func readFlagArgument(cmd *cobra.Command, f *pflag.Flag) (interface{}, bool) {
 		if err != nil {
 			return nil, false
 		}
-		return normalizeFlagStringList(v), true
+		norm := normalizeFlagStringList(v)
+		if norm == nil {
+			return nil, false
+		}
+		return norm, true
 	default:
-		return parseFlagValue(f.Value.Type(), f.Value.String()), true
+		return parseFlagValue(f.Value.Type(), f.Value.String())
 	}
 }
 
-func parseFlagValue(flagType, value string) interface{} {
+func parseFlagValue(flagType, value string) (interface{}, bool) {
 	switch flagType {
 	case "bool":
 		v, err := strconv.ParseBool(value)
 		if err == nil {
-			return v
+			return v, true
 		}
+		return nil, false
 	case "int", "int64":
 		v, err := strconv.ParseInt(value, 10, 64)
 		if err == nil {
-			return v
+			return v, true
 		}
+		return nil, false
 	case "stringSlice":
 		if value == "" {
-			return []string{}
+			return []string{}, true
 		}
 		parts := strings.Split(value, ",")
 		out := make([]string, 0, len(parts))
 		for _, p := range parts {
 			out = append(out, strings.TrimSpace(p))
 		}
-		return out
+		return out, true
 	}
-	return value
+	return value, true
 }

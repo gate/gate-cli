@@ -33,11 +33,15 @@ type cachePayload struct {
 }
 
 func cachePath(backend string) (string, error) {
+	b := strings.ToLower(strings.TrimSpace(backend))
+	if b != "info" && b != "news" {
+		return "", fmt.Errorf("unsupported backend for schema cache: %q", backend)
+	}
 	base, err := os.UserCacheDir()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(base, "gate-cli", "intel", strings.ToLower(backend)+"-tools-schema.json"), nil
+	return filepath.Join(base, "gate-cli", "intel", b+"-tools-schema.json"), nil
 }
 
 func LoadCache(backend string) ([]ToolSummary, bool, error) {
@@ -68,11 +72,6 @@ func ForceRefreshEnabled() bool {
 	v := strings.TrimSpace(strings.ToLower(os.Getenv(forceRefreshEnv)))
 	if v == "1" || v == "true" || v == "yes" {
 		return true
-	}
-	for _, arg := range os.Args[1:] {
-		if arg == "--refresh-schema" {
-			return true
-		}
 	}
 	return false
 }

@@ -129,7 +129,6 @@ func TestCallTool(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, result)
 	assert.False(t, result.IsError)
-	require.Len(t, result.Content, 1)
 	require.Len(t, result.ContentRaw, 1)
 }
 
@@ -156,7 +155,6 @@ func TestCallToolPreservesRawContentItems(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, result)
 	require.Len(t, result.ContentRaw, 2)
-	require.Len(t, result.Content, 1)
 }
 
 func TestDebugLogDoesNotContainMCPWord(t *testing.T) {
@@ -218,6 +216,35 @@ func TestCallToolTransportDiagIncludesMergedArguments(t *testing.T) {
 	assert.Contains(t, log, "rpc_method=tools/call")
 	assert.Contains(t, log, "tool_name=news_feed_search_news")
 	assert.Contains(t, log, "arguments={\"limit\":10}")
+}
+
+func TestCallToolTransportDiagRedactsSensitiveArguments(t *testing.T) {
+	var errOut strings.Builder
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req map[string]interface{}
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&req))
+		method := req["method"].(string)
+		if method == "initialize" {
+			w.Header().Set("MCP-Session-Id", "sess-1")
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"1","result":{"ok":true}}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"2","result":{"content":[]}}`))
+	}))
+	defer srv.Close()
+
+	c := New(&toolconfig.ResolvedEndpoint{
+		Backend: "news",
+		BaseURL: srv.URL,
+		Timeout: 3 * time.Second,
+	}, WithTransportDiag(true, "[verbose]"))
+	c.errOut = &errOut
+
+	_, _, err := c.CallTool(context.Background(), "news_feed_search_news", map[string]interface{}{"apiToken": "secret-value"})
+	require.NoError(t, err)
+	log := errOut.String()
+	assert.NotContains(t, log, "secret-value")
+	assert.Contains(t, log, "***REDACTED***")
 }
 
 func TestTransportDiagLogsInitializeFailure(t *testing.T) {

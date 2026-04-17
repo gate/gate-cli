@@ -7,8 +7,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
+	"net"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -19,6 +22,19 @@ import (
 )
 
 const sessionHeader = "MCP-Session-Id"
+const maxResponseBytes = 16 << 20 // 16 MiB
+
+var (
+	sessionIDPattern = regexp.MustCompile(`^[A-Za-z0-9._:-]{1,256}$`)
+	sensitiveArgKeys = map[string]struct{}{
+		"authorization": {},
+		"secret":        {},
+		"token":         {},
+		"key":           {},
+		"signature":     {},
+		"passphrase":    {},
+	}
+)
 
 // gateCLIProductHeader aligns MCP HTTP requests with REST client defaults
 // (internal/client): identifies the caller as gate-cli for analytics / routing.
@@ -100,7 +116,6 @@ type ContentItem map[string]interface{}
 
 // CallResult is a simplified projection of tools/call result.
 type CallResult struct {
-	Content           []ContentItem          `json:"content"`
 	ContentRaw        []interface{}          `json:"content_raw,omitempty"`
 	IsError           bool                   `json:"isError,omitempty"`
 	StructuredContent map[string]interface{} `json:"structuredContent,omitempty"`
@@ -126,6 +141,9 @@ type Client struct {
 	mu             sync.Mutex
 	listCache      []Tool
 	listCacheUntil time.Time
+	initializing   bool
+	initErr        error
+	initWait       chan struct{}
 }
 
 // New constructs an MCP client from resolved endpoint.
@@ -135,7 +153,19 @@ func New(endpoint *toolconfig.ResolvedEndpoint, opts ...Option) *Client {
 		baseURL:      endpoint.BaseURL,
 		bearerToken:  endpoint.BearerToken,
 		extraHeaders: endpoint.ExtraHeaders,
-		httpClient:   &http.Client{Timeout: endpoint.Timeout},
+		httpClient: &http.Client{
+			Timeout: endpoint.Timeout,
+			Transport: &http.Transport{
+				Proxy:                 http.ProxyFromEnvironment,
+				DialContext:           (&net.Dialer{Timeout: 10 * time.Second, KeepAlive: 30 * time.Second}).DialContext,
+				ForceAttemptHTTP2:     true,
+				MaxIdleConns:          100,
+				IdleConnTimeout:       90 * time.Second,
+				TLSHandshakeTimeout:   10 * time.Second,
+				ResponseHeaderTimeout: 30 * time.Second,
+				ExpectContinueTimeout: 1 * time.Second,
+			},
+		},
 		errOut:       os.Stderr,
 	}
 	for _, opt := range opts {
@@ -161,6 +191,7 @@ func (c *Client) ListTools(ctx context.Context) ([]Tool, *http.Response, error) 
 	params := map[string]interface{}{}
 	respPayload, httpResp, reqID, err := c.callWithRetry(ctx, "tools/list", params, true)
 	if err != nil {
+		c.invalidateListCache()
 		var protoErr *Error
 		if errors.As(err, &protoErr) {
 			protoErr.RequestID = reqID
@@ -175,6 +206,7 @@ func (c *Client) ListTools(ctx context.Context) ([]Tool, *http.Response, error) 
 
 	var parsed listToolsResult
 	if err := json.Unmarshal(respPayload.Result, &parsed); err != nil {
+		c.invalidateListCache()
 		return nil, httpResp, &Error{
 			Kind:      ErrorKindTransport,
 			Err:       fmt.Errorf("invalid tools/list result: %w", err),
@@ -247,25 +279,19 @@ func (c *Client) CallTool(ctx context.Context, name string, arguments map[string
 		}
 	}
 
-	out := &CallResult{Raw: raw}
-	if v, ok := raw["isError"].(bool); ok {
+	rawCloned := cloneMapAny(raw)
+	out := &CallResult{Raw: rawCloned}
+	if v, ok := rawCloned["isError"].(bool); ok {
 		out.IsError = v
 	}
-	if sc, ok := raw["structuredContent"].(map[string]interface{}); ok {
-		out.StructuredContent = sc
+	if sc, ok := rawCloned["structuredContent"].(map[string]interface{}); ok {
+		out.StructuredContent = cloneMapAny(sc)
 	}
-	if meta, ok := raw["_meta"].(map[string]interface{}); ok {
-		out.Meta = meta
+	if meta, ok := rawCloned["_meta"].(map[string]interface{}); ok {
+		out.Meta = cloneMapAny(meta)
 	}
-	if contentAny, ok := raw["content"].([]interface{}); ok {
-		out.ContentRaw = append([]interface{}(nil), contentAny...)
-		items := make([]ContentItem, 0, len(contentAny))
-		for _, v := range contentAny {
-			if m, ok := v.(map[string]interface{}); ok {
-				items = append(items, m)
-			}
-		}
-		out.Content = items
+	if contentAny, ok := rawCloned["content"].([]interface{}); ok {
+		out.ContentRaw = cloneSliceAny(contentAny)
 	}
 	return out, httpResp, nil
 }
@@ -280,7 +306,7 @@ func (c *Client) logCallArguments(toolName string, arguments map[string]interfac
 	}
 	args := "{}"
 	if arguments != nil {
-		if b, err := json.Marshal(arguments); err == nil {
+		if b, err := json.Marshal(redactSensitive(arguments)); err == nil {
 			args = string(b)
 		} else {
 			args = `{"_error":"failed to marshal arguments"}`
@@ -293,10 +319,26 @@ func (c *Client) logCallArguments(toolName string, arguments map[string]interfac
 func (c *Client) ensureInitialized(ctx context.Context) error {
 	c.mu.Lock()
 	sid := c.sessionID
-	c.mu.Unlock()
 	if sid != "" {
+		c.mu.Unlock()
 		return nil
 	}
+	if c.initializing {
+		waitCh := c.initWait
+		c.mu.Unlock()
+		<-waitCh
+		c.mu.Lock()
+		defer c.mu.Unlock()
+		if c.sessionID != "" {
+			return nil
+		}
+		return c.initErr
+	}
+	c.initializing = true
+	c.initWait = make(chan struct{})
+	waitCh := c.initWait
+	c.mu.Unlock()
+
 	params := map[string]interface{}{
 		"protocolVersion": "2024-11-05",
 		"clientInfo": map[string]string{
@@ -306,6 +348,12 @@ func (c *Client) ensureInitialized(ctx context.Context) error {
 		"capabilities": map[string]interface{}{},
 	}
 	_, _, _, err := c.call(ctx, "initialize", params)
+
+	c.mu.Lock()
+	c.initializing = false
+	c.initErr = err
+	close(waitCh)
+	c.mu.Unlock()
 	return err
 }
 
@@ -320,7 +368,7 @@ func (c *Client) callWithRetry(ctx context.Context, method string, params interf
 	// Session may be invalid. Re-initialize once for idempotent calls.
 	c.resetSession()
 	if initErr := c.ensureInitialized(ctx); initErr != nil {
-		return resp, httpResp, reqID, err
+		return resp, httpResp, reqID, errors.Join(err, initErr)
 	}
 	return c.call(ctx, method, params)
 }
@@ -350,18 +398,31 @@ func (c *Client) call(ctx context.Context, method string, params interface{}) (*
 	start := time.Now()
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
+		if resp != nil && resp.Body != nil {
+			_ = resp.Body.Close()
+		}
 		c.logTransportFailure(method, reqID, time.Since(start), err)
-		return nil, nil, reqID, &Error{Kind: ErrorKindTransport, Err: err, RequestID: reqID}
+		return nil, resp, reqID, &Error{Kind: ErrorKindTransport, Err: err, RequestID: reqID}
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	respBody, readErr := io.ReadAll(resp.Body)
+	respBody, readErr := io.ReadAll(io.LimitReader(resp.Body, maxResponseBytes+1))
 	if readErr != nil {
 		c.logTransportFailure(method, reqID, time.Since(start), readErr)
 		return nil, resp, reqID, &Error{Kind: ErrorKindTransport, Err: readErr, RequestID: reqID}
 	}
+	if len(respBody) > maxResponseBytes {
+		tooLargeErr := fmt.Errorf("response body exceeded %d bytes", maxResponseBytes)
+		c.logTransportFailure(method, reqID, time.Since(start), tooLargeErr)
+		return nil, resp, reqID, &Error{Kind: ErrorKindTransport, Err: tooLargeErr, RequestID: reqID}
+	}
 
 	if sid := strings.TrimSpace(resp.Header.Get(sessionHeader)); sid != "" {
+		if !sessionIDPattern.MatchString(sid) {
+			invalidSessionErr := fmt.Errorf("invalid session id format")
+			c.logTransportFailure(method, reqID, time.Since(start), invalidSessionErr)
+			return nil, resp, reqID, &Error{Kind: ErrorKindProtocol, Err: invalidSessionErr, RequestID: reqID}
+		}
 		c.mu.Lock()
 		c.sessionID = sid
 		c.mu.Unlock()
@@ -376,7 +437,7 @@ func (c *Client) call(ctx context.Context, method string, params interface{}) (*
 		c.logTransportFailure(method, reqID, time.Since(start), fmt.Errorf("json-rpc error code=%d message=%s", parsed.Error.Code, parsed.Error.Message))
 		return nil, resp, reqID, &Error{
 			Kind:        ErrorKindProtocol,
-			Err:         fmt.Errorf(parsed.Error.Message),
+			Err:         errors.New(parsed.Error.Message),
 			RequestID:   reqID,
 			JSONRPCCode: &parsed.Error.Code,
 		}
@@ -389,11 +450,11 @@ func (c *Client) call(ctx context.Context, method string, params interface{}) (*
 func (c *Client) applyHeaders(req *http.Request) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json, text/event-stream")
-	if c.bearerToken != "" {
-		req.Header.Set("Authorization", "Bearer "+c.bearerToken)
-	}
 	for k, v := range c.extraHeaders {
 		req.Header.Set(k, v)
+	}
+	if c.bearerToken != "" {
+		req.Header.Set("Authorization", "Bearer "+c.bearerToken)
 	}
 	c.mu.Lock()
 	sid := c.sessionID
@@ -447,3 +508,65 @@ func (c *Client) resetSession() {
 	c.sessionID = ""
 	c.mu.Unlock()
 }
+
+func (c *Client) invalidateListCache() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.listCache = nil
+	c.listCacheUntil = time.Time{}
+}
+
+func redactSensitive(input map[string]interface{}) map[string]interface{} {
+	if len(input) == 0 {
+		return map[string]interface{}{}
+	}
+	out := make(map[string]interface{}, len(input))
+	maps.Copy(out, input)
+	for k, v := range out {
+		lk := strings.ToLower(strings.TrimSpace(k))
+		for sk := range sensitiveArgKeys {
+			if strings.Contains(lk, sk) {
+				out[k] = "***REDACTED***"
+				break
+			}
+		}
+		if nested, ok := v.(map[string]interface{}); ok {
+			out[k] = redactSensitive(nested)
+		}
+	}
+	return out
+}
+
+func cloneAny(v interface{}) interface{} {
+	switch x := v.(type) {
+	case map[string]interface{}:
+		return cloneMapAny(x)
+	case []interface{}:
+		return cloneSliceAny(x)
+	default:
+		return x
+	}
+}
+
+func cloneMapAny(in map[string]interface{}) map[string]interface{} {
+	if in == nil {
+		return nil
+	}
+	out := make(map[string]interface{}, len(in))
+	for k, v := range in {
+		out[k] = cloneAny(v)
+	}
+	return out
+}
+
+func cloneSliceAny(in []interface{}) []interface{} {
+	if in == nil {
+		return nil
+	}
+	out := make([]interface{}, len(in))
+	for i, v := range in {
+		out[i] = cloneAny(v)
+	}
+	return out
+}
+

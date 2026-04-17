@@ -1,6 +1,9 @@
 package migration
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -41,7 +44,8 @@ type Scanner struct {
 
 // NewScanner constructs a scanner using current HOME.
 func NewScanner() *Scanner {
-	return &Scanner{home: os.Getenv("HOME")}
+	home, _ := os.UserHomeDir()
+	return &Scanner{home: home}
 }
 
 // NewScannerWithHome is used by tests.
@@ -60,28 +64,34 @@ func (s *Scanner) Scan(providerIDs []string) []ProviderScan {
 		targets[v] = struct{}{}
 	}
 
-	all := []ProviderScan{
-		s.scanProvider("codex", []string{
+	providers := map[string][]string{
+		"codex": {
 			filepath.Join(s.home, ".codex", "config.toml"),
 			filepath.Join(s.home, ".config", "codex", "config.toml"),
-		}),
-		s.scanProvider("cursor", []string{
+		},
+		"cursor": {
 			filepath.Join(s.home, ".cursor", "mcp.json"),
 			filepath.Join(s.home, ".cursor", "config.json"),
-		}),
-		s.scanProvider("claude_desktop", []string{
+		},
+		"claude_desktop": {
 			filepath.Join(s.home, "Library", "Application Support", "Claude", "claude_desktop_config.json"),
-		}),
+		},
 	}
 	if len(targets) == 0 {
+		all := make([]ProviderScan, 0, len(providers))
+		for id, paths := range providers {
+			all = append(all, s.scanProvider(id, paths))
+		}
 		return all
 	}
 
-	out := make([]ProviderScan, 0, len(all))
-	for _, item := range all {
-		if _, ok := targets[item.ProviderID]; ok {
-			out = append(out, item)
+	out := make([]ProviderScan, 0, len(targets))
+	for id := range targets {
+		paths, ok := providers[id]
+		if !ok {
+			continue
 		}
+		out = append(out, s.scanProvider(id, paths))
 	}
 	return out
 }
@@ -93,13 +103,35 @@ func (s *Scanner) scanProvider(providerID string, paths []string) ProviderScan {
 		Entries:      make([]Entry, 0),
 	}
 	for _, p := range paths {
-		data, err := os.ReadFile(p)
+		info, err := os.Lstat(p)
 		if err != nil {
+			if !os.IsNotExist(err) {
+				result.Error = err.Error()
+			}
+			continue
+		}
+		if info.Mode()&os.ModeSymlink != 0 {
+			result.Error = fmt.Sprintf("refuse symlink config: %s", p)
+			continue
+		}
+		if info.Size() > 1<<20 {
+			result.Error = fmt.Sprintf("config too large (>1MiB): %s", p)
+			continue
+		}
+		f, err := os.Open(p)
+		if err != nil {
+			result.Error = err.Error()
+			continue
+		}
+		data, err := io.ReadAll(io.LimitReader(f, 1<<20))
+		_ = f.Close()
+		if err != nil {
+			result.Error = err.Error()
 			continue
 		}
 		content := strings.ToLower(string(data))
 		for _, marker := range gateMarkers {
-			if containsGateToken(content, marker) {
+			if containsGateToken(content, string(data), marker) {
 				result.Entries = append(result.Entries, Entry{
 					ServerName: marker,
 					FilePath:   p,
@@ -112,14 +144,52 @@ func (s *Scanner) scanProvider(providerID string, paths []string) ProviderScan {
 	return result
 }
 
-func containsGateToken(content, marker string) bool {
-	if strings.Contains(content, `"`+marker+`"`) {
+func containsGateToken(contentLower, raw, marker string) bool {
+	found, parsed := containsGateTokenStructuredJSON(raw, marker)
+	if found {
+		return true
+	}
+	if parsed {
+		return false
+	}
+	if strings.Contains(contentLower, `"`+marker+`"`) {
 		return true
 	}
 	for _, hint := range gateTokenHints {
-		if strings.Contains(content, hint) && strings.Contains(hint, marker) {
+		if strings.EqualFold(hint, marker) && strings.Contains(contentLower, hint) {
 			return true
 		}
+	}
+	return false
+}
+
+func containsGateTokenStructuredJSON(raw, marker string) (bool, bool) {
+	var decoded interface{}
+	if err := json.Unmarshal([]byte(raw), &decoded); err != nil {
+		return false, false
+	}
+	return visitJSONForMarker(decoded, marker), true
+}
+
+func visitJSONForMarker(v interface{}, marker string) bool {
+	switch x := v.(type) {
+	case map[string]interface{}:
+		for k, vv := range x {
+			if strings.EqualFold(strings.TrimSpace(k), marker) {
+				return true
+			}
+			if visitJSONForMarker(vv, marker) {
+				return true
+			}
+		}
+	case []interface{}:
+		for _, vv := range x {
+			if visitJSONForMarker(vv, marker) {
+				return true
+			}
+		}
+	case string:
+		return strings.EqualFold(strings.TrimSpace(x), marker)
 	}
 	return false
 }

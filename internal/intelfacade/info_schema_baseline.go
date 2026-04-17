@@ -1,5 +1,7 @@
 package intelfacade
 
+import "sync"
+
 // InfoBaselineInputSchemas are static JSON-Schema-shaped objects: the stable source for CLI flat flags.
 // MCP tools/list may add additional flags (non-colliding) on top; --params / --args-json remain JSON fallback.
 // Align with specs/mcp/info-mcp-tools-inputs-logic.json.
@@ -112,7 +114,7 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 		"chain":   infoStr("chain"),
 		"scope":   infoStr("scope"),
 		"lang":    infoStr("lang"),
-	}, "chain"),
+	}, "token", "chain"),
 	"info_platformmetrics_get_platform_info": infoObj(map[string]interface{}{
 		"platform_name": infoStr("platform_name"),
 		"scope":         infoStr("scope"),
@@ -282,7 +284,8 @@ func infoObj(props map[string]interface{}, required ...string) map[string]interf
 
 // InfoBaselineInputSchema returns a shallow copy of the baseline schema for toolName, or nil.
 func InfoBaselineInputSchema(toolName string) map[string]interface{} {
-	raw, ok := InfoBaselineInputSchemas[toolName]
+	infoBaselineOnce.Do(initInfoBaselineFrozen)
+	raw, ok := infoBaselineFrozen[toolName]
 	if !ok || len(raw) == 0 {
 		return nil
 	}
@@ -298,4 +301,27 @@ func InfoBaselineInputSchema(toolName string) map[string]interface{} {
 		out["properties"] = pc
 	}
 	return out
+}
+
+var (
+	infoBaselineOnce   sync.Once
+	infoBaselineFrozen map[string]map[string]interface{}
+)
+
+func initInfoBaselineFrozen() {
+	infoBaselineFrozen = make(map[string]map[string]interface{}, len(InfoBaselineInputSchemas))
+	for k, v := range InfoBaselineInputSchemas {
+		copied := make(map[string]interface{}, len(v))
+		for vk, vv := range v {
+			copied[vk] = vv
+		}
+		if props, ok := v["properties"].(map[string]interface{}); ok {
+			propsCopied := make(map[string]interface{}, len(props))
+			for pk, pv := range props {
+				propsCopied[pk] = pv
+			}
+			copied["properties"] = propsCopied
+		}
+		infoBaselineFrozen[k] = copied
+	}
 }

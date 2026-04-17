@@ -56,6 +56,15 @@ func TestResolveInvalidHeaders(t *testing.T) {
 	assert.Contains(t, err.Error(), "GATE_INTEL_EXTRA_HEADERS")
 }
 
+func TestResolveDeniedExtraHeader(t *testing.T) {
+	t.Setenv("GATE_INTEL_NEWS_MCP_URL", "https://example.com/mcp/news")
+	t.Setenv("GATE_INTEL_EXTRA_HEADERS", `{"Authorization":"x"}`)
+
+	_, err := Resolve(ResolveOptions{Backend: "news"})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "not allowed")
+}
+
 func TestResolveTimeoutSecondsFallback(t *testing.T) {
 	t.Setenv("GATE_INTEL_NEWS_MCP_URL", "https://example.com/mcp/news")
 	t.Setenv("GATE_INTEL_HTTP_TIMEOUT", "30")

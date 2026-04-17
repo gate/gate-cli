@@ -6,19 +6,27 @@ import "encoding/json"
 // maxBytes <= 0 means unlimited. JSON stdout for Intel tool calls is the data value only, so the
 // limit applies to serialised data, not wrapper fields.
 func ApplyOutputLimit(envelope map[string]interface{}, maxBytes int64) map[string]interface{} {
+	var measured []byte
+	if data := envelope["data"]; data != nil {
+		measured, _ = json.Marshal(data)
+	}
+	return ApplyOutputLimitWithData(envelope, maxBytes, measured)
+}
+
+// ApplyOutputLimitWithData applies output-size limit using caller-provided serialized data.
+// This avoids duplicate marshalling when callers already have a JSON payload.
+func ApplyOutputLimitWithData(envelope map[string]interface{}, maxBytes int64, dataJSON []byte) map[string]interface{} {
 	if maxBytes <= 0 {
 		return envelope
 	}
-	data := envelope["data"]
-	b, err := json.Marshal(data)
-	if err != nil || int64(len(b)) <= maxBytes {
+	if len(dataJSON) == 0 || int64(len(dataJSON)) <= maxBytes {
 		return envelope
 	}
 
 	out := cloneMap(envelope)
 	meta := map[string]interface{}{
 		"truncated":           true,
-		"original_size_bytes": len(b),
+		"original_size_bytes": len(dataJSON),
 		"max_output_bytes":    maxBytes,
 	}
 	if existing, ok := out["meta"].(map[string]interface{}); ok {

@@ -17,8 +17,8 @@ func TestRenderCallResult_JSONMode(t *testing.T) {
 	p := output.NewWithStderr(&out, &errOut, output.FormatJSON)
 
 	err := RenderCallResult(p, "news_feed_search_news", &mcpclient.CallResult{
-		Content: []mcpclient.ContentItem{
-			{"type": "text", "text": `{"ok":true}`},
+		ContentRaw: []interface{}{
+			map[string]interface{}{"type": "text", "text": `{"ok":true}`},
 		},
 	}, 0)
 	require.NoError(t, err)
@@ -48,9 +48,9 @@ func TestRenderCallResult_PrettyModeNotesSectionForParseWarnings(t *testing.T) {
 	p := output.NewWithStderr(&out, &errOut, output.FormatPretty)
 
 	err := RenderCallResult(p, "tool", &mcpclient.CallResult{
-		Content: []mcpclient.ContentItem{
-			{"type": "text", "text": `{"a":1}`},
-			{"type": "text", "text": "plain"},
+		ContentRaw: []interface{}{
+			map[string]interface{}{"type": "text", "text": `{"a":1}`},
+			map[string]interface{}{"type": "text", "text": "plain"},
 		},
 	}, 0)
 	require.NoError(t, err)

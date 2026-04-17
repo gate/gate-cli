@@ -159,3 +159,9 @@ gate-cli spot market ticker --pair BTC_USDT --format json | jq '.last'
 | `--api-secret` | — | API secret (overrides env and config file) |
 | `--verbose` | `false` | Print Intel MCP transport lines to stderr (`info` / `news`), prefixed `[verbose]`; stdout JSON unchanged |
 | `--debug` | `false` | Print HTTP debug for Gate API clients; with Intel commands, MCP transport lines use `[debug]` (wins if both flags are set) |
+
+## Intel Migration Notes
+
+- `migrate --apply` now writes target files atomically and preserves original file permissions.
+- Default migrate backups are stored under `~/.gate-cli/migrate-backups` instead of a shared temp directory.
+- `GATE_INTEL_EXTRA_HEADERS` rejects sensitive/unsafe header names (`Authorization`, `Host`, `Content-Length`) and CRLF-containing values.

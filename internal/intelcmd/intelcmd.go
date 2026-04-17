@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/gate/gate-cli/internal/exitcode"
+	"github.com/gate/gate-cli/internal/intelfacade"
 	"github.com/gate/gate-cli/internal/output"
 )
 
@@ -36,4 +37,23 @@ func FailLeafUnsupportedTable(p *output.Printer, backend string) error {
 		Message: base.Message + " For a tabular tool index use `gate-cli " + backend +
 			" list --format table`. Use `--format pretty` or `--format json` for tool results and `describe` output.",
 	})
+}
+
+// RenderToolList prints list output in json/table/pretty formats with shared behavior for info/news.
+func RenderToolList(p *output.Printer, items []intelfacade.ToolSummary) error {
+	if p.IsJSON() {
+		return p.Print(items)
+	}
+	if p.IsTable() {
+		rows := make([][]string, 0, len(items))
+		for _, item := range items {
+			params := "no"
+			if item.HasInputSchema {
+				params = "yes"
+			}
+			rows = append(rows, []string{item.Name, item.Description, params})
+		}
+		return p.Table([]string{"Name", "Description", "Accepts parameters"}, rows)
+	}
+	return p.WritePretty(intelfacade.ListCapabilitiesPrettyText(items))
 }

@@ -9,5 +9,5 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	Cmd.PersistentFlags().Bool("refresh-schema", false, "Force refresh tool schema from intel backend before building help flags")
+	// Deprecated: schema refresh is controlled via GATE_INTEL_REFRESH_SCHEMA.
 }

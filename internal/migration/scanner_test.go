@@ -3,6 +3,7 @@ package migration
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -23,5 +24,19 @@ func TestScannerDetectsGateMarkers(t *testing.T) {
 	}
 	if items[0].EntriesFound == 0 {
 		t.Fatalf("expected entries found")
+	}
+}
+
+func TestContainsGateTokenStructuredJSONExactMatch(t *testing.T) {
+	raw := `{"mcpServers":{"gate-info":{"command":"x"}}}`
+	if !containsGateToken(strings.ToLower(raw), raw, "gate-info") {
+		t.Fatalf("expected structured JSON exact match")
+	}
+}
+
+func TestContainsGateTokenStructuredJSONAvoidsURLFalsePositive(t *testing.T) {
+	raw := `{"url":"https://example.com/gate-info"}`
+	if containsGateToken(strings.ToLower(raw), raw, "gate-info") {
+		t.Fatalf("did not expect URL-only match")
 	}
 }

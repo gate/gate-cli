@@ -1,6 +1,12 @@
 package cmd
 
-import "testing"
+import (
+	"bytes"
+	"os"
+	"testing"
+
+	"github.com/spf13/cobra"
+)
 
 func TestDefaultMaxOutputBytes(t *testing.T) {
 	t.Run("empty env uses zero", func(t *testing.T) {
@@ -23,4 +29,22 @@ func TestDefaultMaxOutputBytes(t *testing.T) {
 			t.Fatalf("expected 0, got %d", got)
 		}
 	})
+}
+
+func TestEmitFormatCompatNotice(t *testing.T) {
+	oldStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+	defer func() { os.Stderr = oldStderr }()
+
+	root := &cobra.Command{Use: "gate-cli"}
+	root.PersistentFlags().String("format", "pretty", "")
+	emitFormatCompatNotice(root)
+	_ = w.Close()
+
+	var buf bytes.Buffer
+	_, _ = buf.ReadFrom(r)
+	if buf.Len() == 0 {
+		t.Fatal("expected format compatibility notice")
+	}
 }

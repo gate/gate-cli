@@ -1,5 +1,7 @@
 package intelfacade
 
+import "sync"
+
 // NewsBaselineInputSchemas are the stable, static JSON-Schema-shaped contract for CLI flat flags (primary).
 // MCP tools/list may register additional non-colliding flags afterward; --params / --args-json are JSON fallback.
 // Server-side tools/call validation remains authoritative at runtime.
@@ -152,7 +154,8 @@ func newsObj(props map[string]interface{}, required ...string) map[string]interf
 
 // NewsBaselineInputSchema returns a shallow copy of the baseline schema for toolName, or nil.
 func NewsBaselineInputSchema(toolName string) map[string]interface{} {
-	raw, ok := NewsBaselineInputSchemas[toolName]
+	newsBaselineOnce.Do(initNewsBaselineFrozen)
+	raw, ok := newsBaselineFrozen[toolName]
 	if !ok || len(raw) == 0 {
 		return nil
 	}
@@ -169,4 +172,27 @@ func NewsBaselineInputSchema(toolName string) map[string]interface{} {
 		out["properties"] = pc
 	}
 	return out
+}
+
+var (
+	newsBaselineOnce   sync.Once
+	newsBaselineFrozen map[string]map[string]interface{}
+)
+
+func initNewsBaselineFrozen() {
+	newsBaselineFrozen = make(map[string]map[string]interface{}, len(NewsBaselineInputSchemas))
+	for k, v := range NewsBaselineInputSchemas {
+		copied := make(map[string]interface{}, len(v))
+		for vk, vv := range v {
+			copied[vk] = vv
+		}
+		if props, ok := v["properties"].(map[string]interface{}); ok {
+			propsCopied := make(map[string]interface{}, len(props))
+			for pk, pv := range props {
+				propsCopied[pk] = pv
+			}
+			copied["properties"] = propsCopied
+		}
+		newsBaselineFrozen[k] = copied
+	}
 }

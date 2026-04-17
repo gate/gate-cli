@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/gate/gate-cli/internal/intelcmd"
-	"github.com/gate/gate-cli/internal/intelfacade"
 )
 
 var listCmd = &cobra.Command{
@@ -29,21 +28,5 @@ func runNewsList(cmd *cobra.Command, args []string) error {
 		return intelcmd.FailListTransport(p, err, httpResp, "news")
 	}
 
-	if p.IsJSON() {
-		return p.Print(items)
-	}
-
-	if p.IsTable() {
-		rows := make([][]string, 0, len(items))
-		for _, item := range items {
-			params := "no"
-			if item.HasInputSchema {
-				params = "yes"
-			}
-			rows = append(rows, []string{item.Name, item.Description, params})
-		}
-		return p.Table([]string{"Name", "Description", "Accepts parameters"}, rows)
-	}
-
-	return p.WritePretty(intelfacade.ListCapabilitiesPrettyText(items))
+	return intelcmd.RenderToolList(p, items)
 }

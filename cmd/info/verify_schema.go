@@ -42,27 +42,8 @@ func runInfoVerifySchema(cmd *cobra.Command, args []string) error {
 	strict, _ := cmd.Flags().GetBool("strict")
 	report.StrictMode = strict
 	report.StrictFailed = strict && report.WarningCount > 0
-	if p.IsJSON() {
-		if err := p.Print(report); err != nil {
-			return err
-		}
-	} else {
-		if err := p.Table(
-			[]string{"Backend", "Status", "ToolCount", "CacheFresh", "WarningCount"},
-			[][]string{{report.Backend, report.Status, itoa(report.ToolCount), boolString(report.CacheFresh), itoa(report.WarningCount)}},
-		); err != nil {
-			return err
-		}
-		rows := make([][]string, 0, len(report.Warnings))
-		for _, w := range report.Warnings {
-			rows = append(rows, []string{w.Tool, w.Field, w.Code, w.Message})
-		}
-		if len(rows) == 0 {
-			rows = append(rows, []string{"-", "-", "ok", "no schema warnings"})
-		}
-		if err := p.Table([]string{"Tool", "Field", "Code", "Message"}, rows); err != nil {
-			return err
-		}
+	if err := p.Print(report); err != nil {
+		return err
 	}
 	if strict && report.WarningCount > 0 {
 		return intelcmd.FailAfterPrintError(p, &output.GateError{
@@ -74,13 +55,4 @@ func runInfoVerifySchema(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func itoa(v int) string {
-	return strconv.Itoa(v)
-}
-
-func boolString(v bool) string {
-	if v {
-		return "yes"
-	}
-	return "no"
-}
+func itoa(v int) string { return strconv.Itoa(v) }
