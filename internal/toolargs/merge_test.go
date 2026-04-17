@@ -126,3 +126,44 @@ func TestMergeFromCommand_ArgsFileExpandsHome(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "BTC", got["query"])
 }
+
+func TestMergeFromCommand_ArgsFileRelativeUnderCwd(t *testing.T) {
+	dir := t.TempDir()
+	oldwd, err := os.Getwd()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = os.Chdir(oldwd) })
+	require.NoError(t, os.Chdir(dir))
+	sub := filepath.Join(dir, "sub", "a.json")
+	require.NoError(t, os.MkdirAll(filepath.Dir(sub), 0o755))
+	require.NoError(t, os.WriteFile(sub, []byte(`{"k":2}`), 0o600))
+
+	cmd := &cobra.Command{Use: "call"}
+	cmd.Flags().String("params", "", "")
+	cmd.Flags().String("args-json", "", "")
+	cmd.Flags().String("args-file", "", "")
+	require.NoError(t, cmd.Flags().Set("args-file", filepath.Join("sub", "a.json")))
+
+	got, err := MergeFromCommand(cmd, MergeOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, float64(2), got["k"])
+}
+
+func TestMergeFromCommand_ArgsFileRejectsParentEscape(t *testing.T) {
+	dir := t.TempDir()
+	parent := filepath.Dir(dir)
+	evil := filepath.Join(parent, "evil-args.json")
+	require.NoError(t, os.WriteFile(evil, []byte(`{"bad":true}`), 0o600))
+	oldwd, err := os.Getwd()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = os.Chdir(oldwd) })
+	require.NoError(t, os.Chdir(dir))
+
+	cmd := &cobra.Command{Use: "call"}
+	cmd.Flags().String("params", "", "")
+	cmd.Flags().String("args-json", "", "")
+	cmd.Flags().String("args-file", "", "")
+	require.NoError(t, cmd.Flags().Set("args-file", filepath.Join("..", filepath.Base(evil))))
+
+	_, mergeErr := MergeFromCommand(cmd, MergeOptions{})
+	require.Error(t, mergeErr)
+}

@@ -3,6 +3,7 @@ package mcpclient
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -471,6 +472,76 @@ func TestSessionIDPatternAllowsCommonTokenChars(t *testing.T) {
 	})
 	_, _, err := c.ListTools(context.Background())
 	require.NoError(t, err)
+}
+
+func TestShouldInvalidateListCacheOnListError(t *testing.T) {
+	code := -32000
+	cases := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{"nil mcp", errors.New("plain"), false},
+		{"transport timeout", &Error{Kind: ErrorKindTransport, Err: errors.New("i/o timeout")}, false},
+		{"transport invalid json-rpc", &Error{Kind: ErrorKindTransport, Err: errors.New("invalid json-rpc response: eof")}, true},
+		{"transport invalid tools list", &Error{Kind: ErrorKindTransport, Err: errors.New("invalid tools/list result: x")}, true},
+		{"protocol with jsonrpc code", &Error{Kind: ErrorKindProtocol, Err: errors.New("e"), JSONRPCCode: &code}, false},
+		{"protocol without jsonrpc code", &Error{Kind: ErrorKindProtocol, Err: errors.New("e"), JSONRPCCode: nil}, true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := shouldInvalidateListCacheOnListError(tc.err); got != tc.want {
+				t.Fatalf("shouldInvalidateListCacheOnListError(%v) = %v, want %v", tc.err, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestListToolsUnmarshalFailureAfterGoodListInvalidatesCache(t *testing.T) {
+	var toolListCalls atomic.Uint32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req map[string]interface{}
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&req))
+		method := req["method"].(string)
+		if method == "initialize" {
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"1","result":{"ok":true}}`))
+			return
+		}
+		n := toolListCalls.Add(1)
+		switch n {
+		case 1:
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"2","result":{"tools":[{"name":"t0"}]}}`))
+		case 2:
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"2","result":"not-an-object"}`))
+		default:
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"2","result":{"tools":[{"name":"t1"}]}}`))
+		}
+	}))
+	defer srv.Close()
+
+	c := New(&toolconfig.ResolvedEndpoint{
+		Backend: "news",
+		BaseURL: srv.URL,
+		Timeout: 3 * time.Second,
+	}, CacheTTLForTest(100*time.Millisecond, 100*time.Millisecond))
+
+	tools, _, err := c.ListTools(context.Background())
+	require.NoError(t, err)
+	require.Len(t, tools, 1)
+	assert.Equal(t, "t0", tools[0].Name)
+	assert.Equal(t, uint32(1), toolListCalls.Load())
+
+	time.Sleep(120 * time.Millisecond)
+	_, _, err = c.ListTools(context.Background())
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid tools/list result")
+
+	time.Sleep(120 * time.Millisecond)
+	tools, _, err = c.ListTools(context.Background())
+	require.NoError(t, err)
+	require.Len(t, tools, 1)
+	assert.Equal(t, "t1", tools[0].Name)
+	assert.Equal(t, uint32(3), toolListCalls.Load(), "expect fresh tools/list after bad result invalidated cache")
 }
 
 func TestListToolsMissingToolsFieldReturnsErrorAndNoCache(t *testing.T) {

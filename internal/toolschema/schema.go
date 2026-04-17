@@ -121,10 +121,18 @@ func SaveCache(backend string, tools []ToolSummary) error {
 		return err
 	}
 	tmp := p + ".tmp"
-	if err := os.WriteFile(tmp, raw, existingMode); err != nil {
+	// Always create the temp file with tight permissions; final mode comes from existing file or default 0o600 (CR-409).
+	if err := os.WriteFile(tmp, raw, 0o600); err != nil {
 		return err
 	}
-	return os.Rename(tmp, p)
+	if err := os.Rename(tmp, p); err != nil {
+		_ = os.Remove(tmp)
+		return err
+	}
+	if st, err := os.Stat(p); err == nil && st.Mode().Perm() != existingMode {
+		_ = os.Chmod(p, existingMode)
+	}
+	return nil
 }
 
 func sameToolSummaries(a, b []ToolSummary) bool {

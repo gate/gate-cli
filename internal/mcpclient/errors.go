@@ -82,6 +82,11 @@ func sanitizeUserErrorMessage(err error) string {
 	if err == nil {
 		return "intel request failed"
 	}
+	// Prefer stable sentinel over substring checks (CR-705 / CR-1013).
+	if errors.Is(err, errIntelHTTPBodyTooLarge) {
+		return "intel HTTP response exceeded the configured maximum read size (raise GATE_INTEL_MAX_RESPONSE_BYTES). " +
+			"--max-output-bytes only limits how much tool output is printed locally; it does not raise this transport read cap."
+	}
 	msg := strings.TrimSpace(err.Error())
 	if msg == "" {
 		return "intel request failed"
@@ -92,7 +97,7 @@ func sanitizeUserErrorMessage(err error) string {
 	msg = strings.ReplaceAll(msg, "MCP", "intel")
 	msg = strings.ReplaceAll(msg, "mcp", "intel")
 	if strings.Contains(strings.ToLower(msg), "response body exceeded") {
-		return fmt.Sprintf("%s; try --max-output-bytes for CLI output control or configure GATE_INTEL_MAX_RESPONSE_BYTES for transport limit", msg)
+		return fmt.Sprintf("%s; raise GATE_INTEL_MAX_RESPONSE_BYTES for the transport read cap (distinct from --max-output-bytes for printed output)", msg)
 	}
 	return msg
 }

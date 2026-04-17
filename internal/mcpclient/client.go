@@ -43,6 +43,8 @@ const redactMaxDepth = 16
 
 // gateCLIProductHeader aligns MCP HTTP requests with REST client defaults
 // (internal/client): identifies the caller as gate-cli for analytics / routing.
+// The value is a constant product string only (no user id, cwd, or command args).
+// Callers may override via GATE_INTEL_EXTRA_HEADERS before WithDefaultGateCliNameHeader runs.
 const gateCLIProductHeader = "X-Gate-Cli-Name"
 const gateCLIProductValue = "gate-cli"
 

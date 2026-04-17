@@ -15,6 +15,9 @@ import (
 
 const defaultHTTPTimeout = 60 * time.Second
 
+// minIntelBearerLen rejects obvious misconfiguration when bearer is non-empty (QC: trivial tokens).
+const minIntelBearerLen = 8
+
 var (
 	headerNamePattern = regexp.MustCompile(`^[A-Za-z0-9-]+$`)
 	deniedHeaders     = map[string]struct{}{
@@ -94,6 +97,10 @@ func Resolve(opts ResolveOptions) (*ResolvedEndpoint, error) {
 	}
 	if bearer == "" {
 		bearer = strings.TrimSpace(file.BearerToken)
+	}
+
+	if err := validateIntelBearerToken(bearer); err != nil {
+		return nil, err
 	}
 
 	extraHeaders, err := resolveExtraHeaders(os.Getenv("GATE_INTEL_EXTRA_HEADERS"), file.ExtraHeaders)
@@ -208,6 +215,16 @@ func isDeniedExtraHeader(lowerKey string) bool {
 		return true
 	}
 	return strings.HasPrefix(lowerKey, "x-forwarded-")
+}
+
+func validateIntelBearerToken(bearer string) error {
+	if bearer == "" {
+		return nil
+	}
+	if len(bearer) < minIntelBearerLen {
+		return fmt.Errorf("intel bearer token must be at least %d characters when set, or left empty", minIntelBearerLen)
+	}
+	return nil
 }
 
 func validateBaseURL(raw string) error {

@@ -72,11 +72,10 @@ func parseBaseJSON(cmd *cobra.Command) (map[string]interface{}, error) {
 	case strings.TrimSpace(argsJSON) != "":
 		return parseJSONObject(argsJSON)
 	case strings.TrimSpace(argsFile) != "":
-		clean, err := expandUserPath(argsFile)
+		clean, err := resolveArgsFilePath(argsFile)
 		if err != nil {
 			return nil, err
 		}
-		clean = filepath.Clean(clean)
 		f, err := os.Open(clean)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read args file: %w", err)
@@ -104,6 +103,32 @@ func parseJSONObject(raw string) (map[string]interface{}, error) {
 		out = map[string]interface{}{}
 	}
 	return out, nil
+}
+
+// resolveArgsFilePath expands ~, cleans the path, and rejects relative paths that lexically
+// escape the current working directory (CR-1012). Absolute paths are accepted as-is.
+func resolveArgsFilePath(raw string) (string, error) {
+	clean, err := expandUserPath(strings.TrimSpace(raw))
+	if err != nil {
+		return "", err
+	}
+	clean = filepath.Clean(clean)
+	if filepath.IsAbs(clean) {
+		return clean, nil
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("resolve args file: %w", err)
+	}
+	joined := filepath.Clean(filepath.Join(cwd, clean))
+	rel, err := filepath.Rel(cwd, joined)
+	if err != nil {
+		return "", fmt.Errorf("args file %q resolves outside working directory", raw)
+	}
+	if !filepath.IsLocal(rel) {
+		return "", fmt.Errorf("args file %q must stay within working directory (no .. escape)", raw)
+	}
+	return joined, nil
 }
 
 func expandUserPath(raw string) (string, error) {

@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -170,5 +171,5 @@ func emitFormatCompatNotice(root *cobra.Command) {
 	if !force && !isatty.IsTerminal(os.Stderr.Fd()) {
 		return
 	}
-	_, _ = fmt.Fprintln(os.Stderr, "Notice: default --format is pretty. Set --format explicitly in scripts for stable output.")
+	_, _ = io.WriteString(os.Stderr, "Notice: default --format is pretty. Set --format explicitly in scripts for stable output.\n")
 }
