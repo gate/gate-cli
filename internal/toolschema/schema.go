@@ -95,8 +95,18 @@ func SaveCache(backend string, tools []ToolSummary) error {
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(p), 0o700); err != nil {
 		return err
+	}
+	existingMode := os.FileMode(0o600)
+	if st, err := os.Stat(p); err == nil {
+		existingMode = st.Mode().Perm()
+	}
+	if prevRaw, err := os.ReadFile(p); err == nil {
+		var prev cachePayload
+		if json.Unmarshal(prevRaw, &prev) == nil && sameToolSummaries(prev.Tools, tools) {
+			return nil
+		}
 	}
 	payload := cachePayload{
 		Backend:   strings.ToLower(backend),
@@ -107,14 +117,26 @@ func SaveCache(backend string, tools []ToolSummary) error {
 	if err != nil {
 		return err
 	}
-	if prev, err := os.ReadFile(p); err == nil && string(prev) == string(raw) {
-		return nil
-	}
 	tmp := p + ".tmp"
-	if err := os.WriteFile(tmp, raw, 0o644); err != nil {
+	if err := os.WriteFile(tmp, raw, existingMode); err != nil {
 		return err
 	}
 	return os.Rename(tmp, p)
+}
+
+func sameToolSummaries(a, b []ToolSummary) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	left, err := json.Marshal(a)
+	if err != nil {
+		return false
+	}
+	right, err := json.Marshal(b)
+	if err != nil {
+		return false
+	}
+	return string(left) == string(right)
 }
 
 func getCacheTTL() (time.Duration, error) {
