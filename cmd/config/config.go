@@ -83,6 +83,10 @@ func runInit(cmd *cobra.Command, args []string) error {
 	fc := fileLayout{
 		DefaultProfile: profileName,
 		DefaultSettle:  "usdt",
+		Intel: config.IntelFile{
+			InfoMCPURL: config.DefaultIntelInfoMCPURL,
+			NewsMCPURL: config.DefaultIntelNewsMCPURL,
+		},
 		Profiles: map[string]profileEntry{
 			profileName: {APIKey: apiKey, APISecret: apiSecret},
 		},

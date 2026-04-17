@@ -8,6 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
+
+	"github.com/gate/gate-cli/internal/config"
 )
 
 // writeConfig writes a YAML config file under dir/.gate-cli/config.yaml and
@@ -101,6 +103,33 @@ func TestRunSet_DefaultFallsBackToDefaultWhenNoDefaultProfile(t *testing.T) {
 
 	fc := readConfig(t, home)
 	assert.Equal(t, "changedkey", fc.Profiles["default"].APIKey)
+}
+
+func TestRunInit_WritesDefaultIntelURLs(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	input, err := os.CreateTemp(t.TempDir(), "config-init-input-*.txt")
+	require.NoError(t, err)
+	_, err = input.WriteString("\n\n\n")
+	require.NoError(t, err)
+	_, err = input.Seek(0, 0)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = input.Close()
+	})
+
+	oldStdin := os.Stdin
+	os.Stdin = input
+	t.Cleanup(func() {
+		os.Stdin = oldStdin
+	})
+
+	require.NoError(t, runInit(initCmd, nil))
+
+	fc := readConfig(t, home)
+	assert.Equal(t, config.DefaultIntelInfoMCPURL, fc.Intel.InfoMCPURL)
+	assert.Equal(t, config.DefaultIntelNewsMCPURL, fc.Intel.NewsMCPURL)
 }
 
 // --- maskSecrets (P2-1) ---
