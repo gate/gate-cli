@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.1] - 2026-04-17
+
+### Changed
+- **README**: add `info` / `news` to the command table; document the `--max-output-bytes` global flag; refresh `--verbose` / `--debug` descriptions for Intel backend transport.
+- **README**: collapse stale "Intel MCP" / "Intel Migration Notes" sections into a concise "Intel (`info`, `news`)" pointer — behaviour, flags, and environment variables are now maintained in `gate-cli info -h` / `gate-cli news -h` and the `intel:` block of `config.yaml`.
+
 ## [0.5.0] - 2026-04-17
 
 ### Fixed
