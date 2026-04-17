@@ -40,7 +40,7 @@ func TestRunInfoCall_JSONEnvelope(t *testing.T) {
 
 	newInfoService = func(cmd *cobra.Command) (infoService, error) {
 		return &fakeInfoCallService{result: &mcpclient.CallResult{
-			Content: []mcpclient.ContentItem{{"type": "text", "text": `{"ok":true}`}},
+			ContentRaw: []interface{}{map[string]interface{}{"type": "text", "text": `{"ok":true}`}},
 		}}, nil
 	}
 

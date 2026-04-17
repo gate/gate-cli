@@ -6,19 +6,31 @@ import "encoding/json"
 // maxBytes <= 0 means unlimited. JSON stdout for Intel tool calls is the data value only, so the
 // limit applies to serialised data, not wrapper fields.
 func ApplyOutputLimit(envelope map[string]interface{}, maxBytes int64) map[string]interface{} {
-	if maxBytes <= 0 {
-		return envelope
+	var measured []byte
+	if data := envelope["data"]; data != nil {
+		measured, _ = json.Marshal(data)
 	}
-	data := envelope["data"]
-	b, err := json.Marshal(data)
-	if err != nil || int64(len(b)) <= maxBytes {
-		return envelope
+	out, _ := ApplyOutputLimitWithData(envelope, maxBytes, measured)
+	return out
+}
+
+// ApplyOutputLimitWithData applies output-size limit using caller-provided serialized data.
+// measureJSON must be json.Marshal(envelope["data"]) when non-empty so size checks match what
+// would be printed (CR-903). The second return is JSON bytes to render for "data": when
+// truncated it is the compact encoding of the replacement placeholder (CR-505: avoid an
+// extra Marshal in the pretty path).
+func ApplyOutputLimitWithData(envelope map[string]interface{}, maxBytes int64, dataJSON []byte) (map[string]interface{}, []byte) {
+	if maxBytes <= 0 {
+		return envelope, dataJSON
+	}
+	if len(dataJSON) == 0 || int64(len(dataJSON)) <= maxBytes {
+		return envelope, dataJSON
 	}
 
 	out := cloneMap(envelope)
 	meta := map[string]interface{}{
 		"truncated":           true,
-		"original_size_bytes": len(b),
+		"original_size_bytes": len(dataJSON),
 		"max_output_bytes":    maxBytes,
 	}
 	if existing, ok := out["meta"].(map[string]interface{}); ok {
@@ -27,11 +39,16 @@ func ApplyOutputLimit(envelope map[string]interface{}, maxBytes int64) map[strin
 		}
 	}
 	out["meta"] = meta
-	out["data"] = map[string]interface{}{
+	placeholder := map[string]interface{}{
 		"truncated": true,
 		"message":   "output exceeded max bytes; data omitted",
 	}
-	return out
+	out["data"] = placeholder
+	display, err := json.Marshal(placeholder)
+	if err != nil {
+		display = []byte(`{"truncated":true,"message":"output exceeded max bytes; data omitted"}`)
+	}
+	return out, display
 }
 
 func cloneMap(in map[string]interface{}) map[string]interface{} {

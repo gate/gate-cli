@@ -2,10 +2,13 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
 
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 
 	"github.com/gate/gate-cli/cmd/account"
@@ -38,6 +41,7 @@ import (
 	"github.com/gate/gate-cli/cmd/welfare"
 	"github.com/gate/gate-cli/cmd/withdrawal"
 	"github.com/gate/gate-cli/internal/exitcode"
+	"github.com/gate/gate-cli/internal/intelcmd"
 	"github.com/gate/gate-cli/internal/version"
 )
 
@@ -46,9 +50,23 @@ var rootCmd = &cobra.Command{
 	Short:   "Gate API command-line interface",
 	Long:    "gate-cli wraps the Gate API for easy use from the terminal and in scripts.",
 	Version: version.Version,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		emitFormatCompatNotice(cmd)
+		normalizeMaxOutputBytesFlag(cmd)
+	},
+}
+
+const (
+	formatDeprecationEnv = "GATE_CLI_SUPPRESS_FORMAT_NOTICE"
+	formatNoticeForceEnv = "GATE_CLI_FORMAT_NOTICE_FORCE" // non-empty: emit compat notice even when stderr is not a TTY (tests only)
+)
+
+func setupRootForExecute() {
+	intelcmd.SilenceCommandTree(rootCmd)
 }
 
 func Execute() {
+	setupRootForExecute()
 	if err := rootCmd.Execute(); err != nil {
 		var codedErr *exitcode.Error
 		if errors.As(err, &codedErr) {
@@ -113,7 +131,74 @@ func defaultMaxOutputBytes() int64 {
 	}
 	v, err := strconv.ParseInt(raw, 10, 64)
 	if err != nil || v < 0 {
+		_, _ = fmt.Fprintf(os.Stderr, "Warning: invalid GATE_MAX_OUTPUT_BYTES=%q; fallback to unlimited output\n", raw)
 		return 0
 	}
 	return v
+}
+
+// normalizeMaxOutputBytesFlag enforces a non-negative --max-output-bytes (CR-107).
+// Negative or unreadable values warn on stderr and clamp to 0 (unlimited), matching env validation behavior.
+func normalizeMaxOutputBytesFlag(cmd *cobra.Command) {
+	if cmd == nil {
+		return
+	}
+	cmd = cmd.Root()
+	if cmd.PersistentFlags().Lookup("max-output-bytes") == nil {
+		return
+	}
+	v, err := cmd.PersistentFlags().GetInt64("max-output-bytes")
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "Warning: invalid --max-output-bytes: %v; using unlimited (0)\n", err)
+		_ = cmd.PersistentFlags().Set("max-output-bytes", "0")
+		return
+	}
+	if v < 0 {
+		_, _ = fmt.Fprintf(os.Stderr, "Warning: negative --max-output-bytes (%d) is invalid; using unlimited (0)\n", v)
+		_ = cmd.PersistentFlags().Set("max-output-bytes", "0")
+	}
+}
+
+func suppressFormatCompatNoticeFor(cmd *cobra.Command) bool {
+	if cmd == nil {
+		return false
+	}
+	for x := cmd; x != nil; x = x.Parent() {
+		switch strings.ToLower(x.Name()) {
+		case "version", "help", "completion":
+			return true
+		}
+	}
+	r := cmd.Root()
+	if r != nil {
+		if f := r.PersistentFlags().Lookup("help"); f != nil && f.Changed {
+			return true
+		}
+	}
+	if f := cmd.Flags().Lookup("help"); f != nil && f.Changed {
+		return true
+	}
+	return false
+}
+
+func emitFormatCompatNotice(cmd *cobra.Command) {
+	if cmd == nil {
+		return
+	}
+	if suppressFormatCompatNoticeFor(cmd) {
+		return
+	}
+	root := cmd.Root()
+	if strings.TrimSpace(os.Getenv(formatDeprecationEnv)) != "" {
+		return
+	}
+	f := root.PersistentFlags().Lookup("format")
+	if f != nil && f.Changed {
+		return
+	}
+	force := strings.TrimSpace(os.Getenv(formatNoticeForceEnv)) != ""
+	if !force && !isatty.IsTerminal(os.Stderr.Fd()) {
+		return
+	}
+	_, _ = io.WriteString(os.Stderr, "Notice: default --format is pretty. Set --format explicitly in scripts for stable output.\n")
 }

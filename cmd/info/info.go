@@ -9,5 +9,7 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	Cmd.PersistentFlags().Bool("refresh-schema", false, "Force refresh tool schema from intel backend before building help flags")
+	// Schema refresh is env-only (no --refresh-schema flag): set GATE_INTEL_REFRESH_SCHEMA=1.
+	// See README.md (Intel), specs/intel-config-and-security.md, specs/open-items-and-dependencies.md,
+	// and specs/cli/cli-first-mcp-technical-implementation-plan.md.
 }

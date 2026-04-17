@@ -22,4 +22,5 @@ specs/
 scripts/
 .cursor/
 .tmp*
+.cache/*
 

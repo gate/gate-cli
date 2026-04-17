@@ -1,5 +1,7 @@
 package intelfacade
 
+import "sync"
+
 // InfoBaselineInputSchemas are static JSON-Schema-shaped objects: the stable source for CLI flat flags.
 // MCP tools/list may add additional flags (non-colliding) on top; --params / --args-json remain JSON fallback.
 // Align with specs/mcp/info-mcp-tools-inputs-logic.json.
@@ -11,6 +13,7 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 		"scope":      infoStr("scope"),
 		"size":       infoInt("size"),
 		"fields":     infoArrStr("fields"),
+		"symbol":     infoStr("Coin symbol alias to query"),
 	}, "query"),
 	"info_coin_search_coins": infoObj(map[string]interface{}{
 		"category":       infoStr("category"),
@@ -112,7 +115,7 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 		"chain":   infoStr("chain"),
 		"scope":   infoStr("scope"),
 		"lang":    infoStr("lang"),
-	}, "chain"),
+	}, "token", "chain"),
 	"info_platformmetrics_get_platform_info": infoObj(map[string]interface{}{
 		"platform_name": infoStr("platform_name"),
 		"scope":         infoStr("scope"),
@@ -280,22 +283,22 @@ func infoObj(props map[string]interface{}, required ...string) map[string]interf
 	return out
 }
 
-// InfoBaselineInputSchema returns a shallow copy of the baseline schema for toolName, or nil.
+// InfoBaselineInputSchema returns a deep copy of the baseline schema for toolName, or nil.
 func InfoBaselineInputSchema(toolName string) map[string]interface{} {
-	raw, ok := InfoBaselineInputSchemas[toolName]
+	infoBaselineOnce.Do(initInfoBaselineFrozen)
+	raw, ok := infoBaselineFrozen[toolName]
 	if !ok || len(raw) == 0 {
 		return nil
 	}
-	out := make(map[string]interface{}, len(raw))
-	for k, v := range raw {
-		out[k] = v
-	}
-	if props, ok := raw["properties"].(map[string]interface{}); ok {
-		pc := make(map[string]interface{}, len(props))
-		for pk, pv := range props {
-			pc[pk] = pv
-		}
-		out["properties"] = pc
-	}
-	return out
+	return deepCloneSchemaMap(raw)
+}
+
+var (
+	infoBaselineOnce   sync.Once
+	infoBaselineFrozen map[string]map[string]interface{}
+)
+
+func initInfoBaselineFrozen() {
+	infoBaselineFrozen = make(map[string]map[string]interface{}, len(InfoBaselineInputSchemas))
+	freezeToolBaseline(infoBaselineFrozen, InfoBaselineInputSchemas)
 }

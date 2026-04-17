@@ -1,5 +1,7 @@
 package intelfacade
 
+import "sync"
+
 // NewsBaselineInputSchemas are the stable, static JSON-Schema-shaped contract for CLI flat flags (primary).
 // MCP tools/list may register additional non-colliding flags afterward; --params / --args-json are JSON fallback.
 // Server-side tools/call validation remains authoritative at runtime.
@@ -131,10 +133,6 @@ func newsArrStr(desc string) map[string]interface{} {
 	}
 }
 
-func newsObjAny(desc string) map[string]interface{} {
-	return map[string]interface{}{"type": "object", "description": desc}
-}
-
 func newsObj(props map[string]interface{}, required ...string) map[string]interface{} {
 	out := map[string]interface{}{
 		"type":       "object",
@@ -150,23 +148,22 @@ func newsObj(props map[string]interface{}, required ...string) map[string]interf
 	return out
 }
 
-// NewsBaselineInputSchema returns a shallow copy of the baseline schema for toolName, or nil.
+// NewsBaselineInputSchema returns a deep copy of the baseline schema for toolName, or nil.
 func NewsBaselineInputSchema(toolName string) map[string]interface{} {
-	raw, ok := NewsBaselineInputSchemas[toolName]
+	newsBaselineOnce.Do(initNewsBaselineFrozen)
+	raw, ok := newsBaselineFrozen[toolName]
 	if !ok || len(raw) == 0 {
 		return nil
 	}
-	// shallow copy so callers cannot mutate package globals
-	out := make(map[string]interface{}, len(raw))
-	for k, v := range raw {
-		out[k] = v
-	}
-	if props, ok := raw["properties"].(map[string]interface{}); ok {
-		pc := make(map[string]interface{}, len(props))
-		for pk, pv := range props {
-			pc[pk] = pv
-		}
-		out["properties"] = pc
-	}
-	return out
+	return deepCloneSchemaMap(raw)
+}
+
+var (
+	newsBaselineOnce   sync.Once
+	newsBaselineFrozen map[string]map[string]interface{}
+)
+
+func initNewsBaselineFrozen() {
+	newsBaselineFrozen = make(map[string]map[string]interface{}, len(NewsBaselineInputSchemas))
+	freezeToolBaseline(newsBaselineFrozen, NewsBaselineInputSchemas)
 }

@@ -29,7 +29,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	p := cmdutil.GetPrinter(cmd)
 	if p.IsTable() {
 		p.PrintError(output.UnsupportedTableFormatError())
-		return exitcode.New(30, errors.New("unsupported format"))
+		return exitcode.New(exitcode.RenderOrInternal, errors.New("unsupported format"))
 	}
 	checkRaw, _ := cmd.Flags().GetString("check")
 	strict, _ := cmd.Flags().GetBool("strict")
@@ -38,7 +38,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	infoURL, newsURL, err := cmdutil.IntelMCPBaseURLs(cmd)
 	if err != nil {
 		p.PrintError(&output.GateError{Status: 500, Label: "CONFIG_ERROR", Message: err.Error()})
-		return exitcode.New(30, err)
+		return exitcode.New(exitcode.RenderOrInternal, err)
 	}
 
 	report := migration.BuildDoctorReport(migration.DoctorOptions{
@@ -49,30 +49,8 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 		NewsURL: newsURL,
 	})
 
-	if p.IsJSON() {
-		if err := p.Print(report); err != nil {
-			return exitcode.New(30, err)
-		}
-	} else {
-		if err := p.Table(
-			[]string{"Status", "CLIInstalled", "CLIVersion", "MinVersion", "LegacyMCPDetected"},
-			[][]string{{
-				report.Status,
-				boolString(report.Summary.CLIInstalled),
-				report.Summary.CLIVersion,
-				report.Summary.MinimumRequiredVersion,
-				boolString(report.Summary.LegacyMCPDetected),
-			}},
-		); err != nil {
-			return exitcode.New(30, err)
-		}
-		checkRows := make([][]string, 0, len(report.Checks))
-		for _, c := range report.Checks {
-			checkRows = append(checkRows, []string{c.ID, c.Status, boolString(c.Blocking), c.Message})
-		}
-		if err := p.Table([]string{"ID", "Status", "Blocking", "Message"}, checkRows); err != nil {
-			return exitcode.New(30, err)
-		}
+	if err := p.Print(report); err != nil {
+		return exitcode.New(exitcode.RenderOrInternal, err)
 	}
 
 	if report.Status == "fail" {
@@ -85,9 +63,3 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func boolString(v bool) string {
-	if v {
-		return "yes"
-	}
-	return "no"
-}

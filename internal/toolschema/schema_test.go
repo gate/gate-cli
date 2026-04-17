@@ -1,7 +1,9 @@
 package toolschema
 
 import (
+	"encoding/json"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -54,17 +56,6 @@ func TestForceRefreshEnabledFromEnv(t *testing.T) {
 	t.Setenv(forceRefreshEnv, "true")
 	if !ForceRefreshEnabled() {
 		t.Fatal("expected force refresh enabled from env")
-	}
-}
-
-func TestForceRefreshEnabledFromArgs(t *testing.T) {
-	t.Setenv(forceRefreshEnv, "")
-	oldArgs := os.Args
-	os.Args = []string{"gate-cli", "info", "--refresh-schema"}
-	t.Cleanup(func() { os.Args = oldArgs })
-
-	if !ForceRefreshEnabled() {
-		t.Fatal("expected force refresh enabled from args")
 	}
 }
 
@@ -183,4 +174,79 @@ func stringsContainsAll(in string, parts []string) bool {
 		}
 	}
 	return true
+}
+
+func TestSameToolSummaries(t *testing.T) {
+	t.Parallel()
+	base := []ToolSummary{{Name: "info_coin_get_coin_info", HasInputSchema: true}}
+	same := []ToolSummary{{Name: "info_coin_get_coin_info", HasInputSchema: true}}
+	diff := []ToolSummary{{Name: "info_coin_get_coin_info", HasInputSchema: false}}
+	if !sameToolSummaries(base, same) {
+		t.Fatal("expected equal summaries to match")
+	}
+	if sameToolSummaries(base, diff) {
+		t.Fatal("expected different summaries to not match")
+	}
+}
+
+func TestSaveCachePreservesExistingPermissions(t *testing.T) {
+	cacheDir := t.TempDir()
+	t.Setenv("HOME", cacheDir)
+	t.Setenv("XDG_CACHE_HOME", filepath.Join(cacheDir, ".cache"))
+
+	path, err := cachePath("info")
+	if err != nil {
+		t.Fatalf("cache path error: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+		t.Fatalf("mkdir cache dir: %v", err)
+	}
+	seed := cachePayload{
+		Backend:   "info",
+		UpdatedAt: time.Now().UTC(),
+		Tools:     []ToolSummary{{Name: "seed"}},
+	}
+	raw, _ := json.Marshal(seed)
+	if err := os.WriteFile(path, raw, 0o640); err != nil {
+		t.Fatalf("seed cache write failed: %v", err)
+	}
+	if err := SaveCache("info", []ToolSummary{{Name: "fresh", HasInputSchema: true}}); err != nil {
+		t.Fatalf("save cache failed: %v", err)
+	}
+	st, err := os.Stat(path)
+	if err != nil {
+		t.Fatalf("stat cache failed: %v", err)
+	}
+	if st.Mode().Perm() != 0o640 {
+		t.Fatalf("expected mode 0640, got %o", st.Mode().Perm())
+	}
+}
+
+func TestSaveCacheNoRewriteWhenToolsUnchanged(t *testing.T) {
+	cacheDir := t.TempDir()
+	t.Setenv("HOME", cacheDir)
+	t.Setenv("XDG_CACHE_HOME", filepath.Join(cacheDir, ".cache"))
+	tools := []ToolSummary{{Name: "info_coin_get_coin_info", HasInputSchema: true}}
+	if err := SaveCache("info", tools); err != nil {
+		t.Fatalf("initial save failed: %v", err)
+	}
+	path, err := cachePath("info")
+	if err != nil {
+		t.Fatalf("cache path error: %v", err)
+	}
+	first, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read first cache failed: %v", err)
+	}
+	time.Sleep(20 * time.Millisecond)
+	if err := SaveCache("info", tools); err != nil {
+		t.Fatalf("second save failed: %v", err)
+	}
+	second, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read second cache failed: %v", err)
+	}
+	if string(first) != string(second) {
+		t.Fatal("cache should not change when tools content is unchanged")
+	}
 }

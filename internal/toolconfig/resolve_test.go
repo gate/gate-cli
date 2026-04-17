@@ -44,7 +44,7 @@ func TestResolveNewsBuiltinDefaultURL(t *testing.T) {
 func TestResolveUnknownBackendMissingURL(t *testing.T) {
 	_, err := Resolve(ResolveOptions{Backend: "docs"})
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "intel endpoint URL is required")
+	assert.Contains(t, err.Error(), "unsupported intel backend")
 }
 
 func TestResolveInvalidHeaders(t *testing.T) {
@@ -54,6 +54,79 @@ func TestResolveInvalidHeaders(t *testing.T) {
 	_, err := Resolve(ResolveOptions{Backend: "news"})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "GATE_INTEL_EXTRA_HEADERS")
+}
+
+func TestResolveDeniedExtraHeader(t *testing.T) {
+	t.Setenv("GATE_INTEL_NEWS_MCP_URL", "https://example.com/mcp/news")
+	t.Setenv("GATE_INTEL_EXTRA_HEADERS", `{"Authorization":"x"}`)
+
+	_, err := Resolve(ResolveOptions{Backend: "news"})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "not allowed")
+}
+
+func TestResolveDeniedSessionHeader(t *testing.T) {
+	t.Setenv("GATE_INTEL_NEWS_MCP_URL", "https://example.com/mcp/news")
+	t.Setenv("GATE_INTEL_EXTRA_HEADERS", `{"MCP-Session-Id":"evil"}`)
+
+	_, err := Resolve(ResolveOptions{Backend: "news"})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "not allowed")
+}
+
+func TestResolveDeniedForwardedAndCookieHeaders(t *testing.T) {
+	t.Setenv("GATE_INTEL_NEWS_MCP_URL", "https://example.com/mcp/news")
+	t.Setenv("GATE_INTEL_EXTRA_HEADERS", `{"x-forwarded-for":"1.2.3.4"}`)
+	_, err := Resolve(ResolveOptions{Backend: "news"})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "not allowed")
+
+	t.Setenv("GATE_INTEL_EXTRA_HEADERS", `{"cookie":"a=b"}`)
+	_, err = Resolve(ResolveOptions{Backend: "news"})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "not allowed")
+
+	t.Setenv("GATE_INTEL_EXTRA_HEADERS", `{"proxy-authorization":"Basic xyz"}`)
+	_, err = Resolve(ResolveOptions{Backend: "news"})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "not allowed")
+}
+
+func TestResolveRejectsControlCharsInPathOrQuery(t *testing.T) {
+	t.Setenv("GATE_INTEL_NEWS_MCP_URL", "https://example.com/foo%00bar")
+	_, err := Resolve(ResolveOptions{Backend: "news"})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "control characters")
+}
+
+func TestResolveRejectsControlCharsInFragment(t *testing.T) {
+	t.Setenv("GATE_INTEL_NEWS_MCP_URL", "https://example.com/mcp/news#bad\rfrag")
+	_, err := Resolve(ResolveOptions{Backend: "news"})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "control characters")
+}
+
+func TestResolveRejectsShortBearerFromEnv(t *testing.T) {
+	t.Setenv("GATE_INTEL_NEWS_MCP_URL", "https://example.com/mcp/news")
+	t.Setenv("GATE_INTEL_BEARER_TOKEN", "tiny")
+
+	_, err := Resolve(ResolveOptions{Backend: "news"})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "bearer token must be at least")
+}
+
+func TestResolveRejectsShortBearerFromFile(t *testing.T) {
+	t.Setenv("GATE_INTEL_NEWS_MCP_URL", "https://example.com/mcp/news")
+	t.Setenv("GATE_INTEL_BEARER_TOKEN", "")
+
+	_, err := Resolve(ResolveOptions{
+		Backend: "news",
+		IntelFile: config.IntelFile{
+			BearerToken: "1234567",
+		},
+	})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "bearer token must be at least")
 }
 
 func TestResolveTimeoutSecondsFallback(t *testing.T) {
@@ -107,6 +180,39 @@ func TestResolveExtraHeadersFromFileWhenEnvUnset(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "data-mcp", cfg.ExtraHeaders["rule"])
 	assert.Equal(t, "yaml", cfg.ExtraHeaders["x-from"])
+}
+
+func TestResolveFileExtraHeadersRejectsDeniedKeys(t *testing.T) {
+	t.Setenv("GATE_INTEL_NEWS_MCP_URL", "https://example.com/mcp/news")
+	t.Setenv("GATE_INTEL_EXTRA_HEADERS", "")
+
+	_, err := Resolve(ResolveOptions{
+		Backend: "news",
+		IntelFile: config.IntelFile{
+			ExtraHeaders: map[string]string{"cookie": "a=b"},
+		},
+	})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "intel.extra_headers")
+	assert.Contains(t, err.Error(), "not allowed")
+
+	_, err = Resolve(ResolveOptions{
+		Backend: "news",
+		IntelFile: config.IntelFile{
+			ExtraHeaders: map[string]string{"x-forwarded-for": "1.2.3.4"},
+		},
+	})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "not allowed")
+
+	_, err = Resolve(ResolveOptions{
+		Backend: "news",
+		IntelFile: config.IntelFile{
+			ExtraHeaders: map[string]string{"MCP-Session-Id": "evil"},
+		},
+	})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "not allowed")
 }
 
 func TestResolveHTTPTimeoutFromFileWhenEnvUnset(t *testing.T) {

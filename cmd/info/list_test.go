@@ -15,6 +15,7 @@ import (
 	"github.com/gate/gate-cli/internal/intelfacade"
 	"github.com/gate/gate-cli/internal/mcpclient"
 	"github.com/gate/gate-cli/internal/output"
+	"github.com/gate/gate-cli/internal/toolschema"
 )
 
 type fakeInfoLister struct {
@@ -49,8 +50,10 @@ func newTestCmd(format string) *cobra.Command {
 func TestRunInfoListJSON(t *testing.T) {
 	oldFactory := newInfoService
 	oldPrinter := getPrinter
+	oldSaveCache := saveInfoSchemaCache
 	t.Cleanup(func() { newInfoService = oldFactory })
 	t.Cleanup(func() { getPrinter = oldPrinter })
+	t.Cleanup(func() { saveInfoSchemaCache = oldSaveCache })
 
 	newInfoService = func(cmd *cobra.Command) (infoService, error) {
 		return &fakeInfoLister{
@@ -58,6 +61,41 @@ func TestRunInfoListJSON(t *testing.T) {
 				{Name: "info_coin_get_coin_info", Description: "coin info", HasInputSchema: true},
 			},
 		}, nil
+	}
+
+	cmd := newTestCmd("json")
+	var out bytes.Buffer
+	var errOut bytes.Buffer
+	getPrinter = func(cmd *cobra.Command) *output.Printer {
+		return output.NewWithStderr(&out, &errOut, output.FormatJSON)
+	}
+	saveInfoSchemaCache = func(backend string, items []toolschema.ToolSummary) error {
+		return nil
+	}
+
+	err := runInfoList(cmd, nil)
+	require.NoError(t, err)
+	assert.Contains(t, out.String(), "info_coin_get_coin_info")
+	assert.Empty(t, errOut.String())
+}
+
+func TestRunInfoListSaveCacheFailureIgnored(t *testing.T) {
+	oldFactory := newInfoService
+	oldPrinter := getPrinter
+	oldSaveCache := saveInfoSchemaCache
+	t.Cleanup(func() { newInfoService = oldFactory })
+	t.Cleanup(func() { getPrinter = oldPrinter })
+	t.Cleanup(func() { saveInfoSchemaCache = oldSaveCache })
+
+	newInfoService = func(cmd *cobra.Command) (infoService, error) {
+		return &fakeInfoLister{
+			items: []intelfacade.ToolSummary{
+				{Name: "info_coin_get_coin_info", Description: "coin info", HasInputSchema: true},
+			},
+		}, nil
+	}
+	saveInfoSchemaCache = func(backend string, items []toolschema.ToolSummary) error {
+		return errors.New("cache write failed")
 	}
 
 	cmd := newTestCmd("json")
@@ -76,8 +114,10 @@ func TestRunInfoListJSON(t *testing.T) {
 func TestRunInfoListErrorGoesStderr(t *testing.T) {
 	oldFactory := newInfoService
 	oldPrinter := getPrinter
+	oldSaveCache := saveInfoSchemaCache
 	t.Cleanup(func() { newInfoService = oldFactory })
 	t.Cleanup(func() { getPrinter = oldPrinter })
+	t.Cleanup(func() { saveInfoSchemaCache = oldSaveCache })
 
 	newInfoService = func(cmd *cobra.Command) (infoService, error) {
 		return &fakeInfoLister{
@@ -90,6 +130,9 @@ func TestRunInfoListErrorGoesStderr(t *testing.T) {
 	var errOut bytes.Buffer
 	getPrinter = func(cmd *cobra.Command) *output.Printer {
 		return output.NewWithStderr(&out, &errOut, output.FormatJSON)
+	}
+	saveInfoSchemaCache = func(backend string, items []toolschema.ToolSummary) error {
+		return nil
 	}
 
 	err := runInfoList(cmd, nil)
@@ -105,8 +148,10 @@ func TestRunInfoListErrorGoesStderr(t *testing.T) {
 func TestRunInfoListPrettySegmented(t *testing.T) {
 	oldFactory := newInfoService
 	oldPrinter := getPrinter
+	oldSaveCache := saveInfoSchemaCache
 	t.Cleanup(func() { newInfoService = oldFactory })
 	t.Cleanup(func() { getPrinter = oldPrinter })
+	t.Cleanup(func() { saveInfoSchemaCache = oldSaveCache })
 
 	newInfoService = func(cmd *cobra.Command) (infoService, error) {
 		return &fakeInfoLister{
@@ -122,6 +167,9 @@ func TestRunInfoListPrettySegmented(t *testing.T) {
 	getPrinter = func(cmd *cobra.Command) *output.Printer {
 		return output.NewWithStderr(&out, &errOut, output.FormatPretty)
 	}
+	saveInfoSchemaCache = func(backend string, items []toolschema.ToolSummary) error {
+		return nil
+	}
 
 	require.NoError(t, runInfoList(cmd, nil))
 	assert.Contains(t, out.String(), "Capabilities")
@@ -134,8 +182,10 @@ func TestRunInfoListPrettySegmented(t *testing.T) {
 func TestRunInfoListTableColumns(t *testing.T) {
 	oldFactory := newInfoService
 	oldPrinter := getPrinter
+	oldSaveCache := saveInfoSchemaCache
 	t.Cleanup(func() { newInfoService = oldFactory })
 	t.Cleanup(func() { getPrinter = oldPrinter })
+	t.Cleanup(func() { saveInfoSchemaCache = oldSaveCache })
 
 	newInfoService = func(cmd *cobra.Command) (infoService, error) {
 		return &fakeInfoLister{
@@ -150,6 +200,9 @@ func TestRunInfoListTableColumns(t *testing.T) {
 	var errOut bytes.Buffer
 	getPrinter = func(cmd *cobra.Command) *output.Printer {
 		return output.NewWithStderr(&out, &errOut, output.FormatTable)
+	}
+	saveInfoSchemaCache = func(backend string, items []toolschema.ToolSummary) error {
+		return nil
 	}
 
 	require.NoError(t, runInfoList(cmd, nil))

@@ -15,6 +15,7 @@ import (
 	"github.com/gate/gate-cli/internal/intelfacade"
 	"github.com/gate/gate-cli/internal/mcpclient"
 	"github.com/gate/gate-cli/internal/output"
+	"github.com/gate/gate-cli/internal/toolschema"
 )
 
 type fakeNewsLister struct {
@@ -49,8 +50,10 @@ func newTestCmd(format string) *cobra.Command {
 func TestRunNewsListJSON(t *testing.T) {
 	oldFactory := newNewsService
 	oldPrinter := getPrinter
+	oldSaveCache := saveNewsSchemaCache
 	t.Cleanup(func() { newNewsService = oldFactory })
 	t.Cleanup(func() { getPrinter = oldPrinter })
+	t.Cleanup(func() { saveNewsSchemaCache = oldSaveCache })
 
 	newNewsService = func(cmd *cobra.Command) (newsService, error) {
 		return &fakeNewsLister{
@@ -58,6 +61,41 @@ func TestRunNewsListJSON(t *testing.T) {
 				{Name: "news_feed_search_news", Description: "search", HasInputSchema: true},
 			},
 		}, nil
+	}
+
+	cmd := newTestCmd("json")
+	var out bytes.Buffer
+	var errOut bytes.Buffer
+	getPrinter = func(cmd *cobra.Command) *output.Printer {
+		return output.NewWithStderr(&out, &errOut, output.FormatJSON)
+	}
+	saveNewsSchemaCache = func(backend string, items []toolschema.ToolSummary) error {
+		return nil
+	}
+
+	err := runNewsList(cmd, nil)
+	require.NoError(t, err)
+	assert.Contains(t, out.String(), "news_feed_search_news")
+	assert.Empty(t, errOut.String())
+}
+
+func TestRunNewsListSaveCacheFailureIgnored(t *testing.T) {
+	oldFactory := newNewsService
+	oldPrinter := getPrinter
+	oldSaveCache := saveNewsSchemaCache
+	t.Cleanup(func() { newNewsService = oldFactory })
+	t.Cleanup(func() { getPrinter = oldPrinter })
+	t.Cleanup(func() { saveNewsSchemaCache = oldSaveCache })
+
+	newNewsService = func(cmd *cobra.Command) (newsService, error) {
+		return &fakeNewsLister{
+			items: []intelfacade.ToolSummary{
+				{Name: "news_feed_search_news", Description: "search", HasInputSchema: true},
+			},
+		}, nil
+	}
+	saveNewsSchemaCache = func(backend string, items []toolschema.ToolSummary) error {
+		return errors.New("cache write failed")
 	}
 
 	cmd := newTestCmd("json")
@@ -76,8 +114,10 @@ func TestRunNewsListJSON(t *testing.T) {
 func TestRunNewsListErrorGoesStderr(t *testing.T) {
 	oldFactory := newNewsService
 	oldPrinter := getPrinter
+	oldSaveCache := saveNewsSchemaCache
 	t.Cleanup(func() { newNewsService = oldFactory })
 	t.Cleanup(func() { getPrinter = oldPrinter })
+	t.Cleanup(func() { saveNewsSchemaCache = oldSaveCache })
 
 	newNewsService = func(cmd *cobra.Command) (newsService, error) {
 		return &fakeNewsLister{
@@ -90,6 +130,9 @@ func TestRunNewsListErrorGoesStderr(t *testing.T) {
 	var errOut bytes.Buffer
 	getPrinter = func(cmd *cobra.Command) *output.Printer {
 		return output.NewWithStderr(&out, &errOut, output.FormatJSON)
+	}
+	saveNewsSchemaCache = func(backend string, items []toolschema.ToolSummary) error {
+		return nil
 	}
 
 	err := runNewsList(cmd, nil)
@@ -105,8 +148,10 @@ func TestRunNewsListErrorGoesStderr(t *testing.T) {
 func TestRunNewsListPrettySegmented(t *testing.T) {
 	oldFactory := newNewsService
 	oldPrinter := getPrinter
+	oldSaveCache := saveNewsSchemaCache
 	t.Cleanup(func() { newNewsService = oldFactory })
 	t.Cleanup(func() { getPrinter = oldPrinter })
+	t.Cleanup(func() { saveNewsSchemaCache = oldSaveCache })
 
 	newNewsService = func(cmd *cobra.Command) (newsService, error) {
 		return &fakeNewsLister{
@@ -122,6 +167,9 @@ func TestRunNewsListPrettySegmented(t *testing.T) {
 	getPrinter = func(cmd *cobra.Command) *output.Printer {
 		return output.NewWithStderr(&out, &errOut, output.FormatPretty)
 	}
+	saveNewsSchemaCache = func(backend string, items []toolschema.ToolSummary) error {
+		return nil
+	}
 
 	require.NoError(t, runNewsList(cmd, nil))
 	assert.Contains(t, out.String(), "Capabilities")
@@ -133,8 +181,10 @@ func TestRunNewsListPrettySegmented(t *testing.T) {
 func TestRunNewsListTableColumns(t *testing.T) {
 	oldFactory := newNewsService
 	oldPrinter := getPrinter
+	oldSaveCache := saveNewsSchemaCache
 	t.Cleanup(func() { newNewsService = oldFactory })
 	t.Cleanup(func() { getPrinter = oldPrinter })
+	t.Cleanup(func() { saveNewsSchemaCache = oldSaveCache })
 
 	newNewsService = func(cmd *cobra.Command) (newsService, error) {
 		return &fakeNewsLister{
@@ -149,6 +199,9 @@ func TestRunNewsListTableColumns(t *testing.T) {
 	var errOut bytes.Buffer
 	getPrinter = func(cmd *cobra.Command) *output.Printer {
 		return output.NewWithStderr(&out, &errOut, output.FormatTable)
+	}
+	saveNewsSchemaCache = func(backend string, items []toolschema.ToolSummary) error {
+		return nil
 	}
 
 	require.NoError(t, runNewsList(cmd, nil))

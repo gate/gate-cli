@@ -39,6 +39,9 @@ func (s *Service) DescribeTool(ctx context.Context, name string) (*ToolSummary, 
 	if err != nil {
 		return nil, resp, err
 	}
+	if tool == nil {
+		return nil, resp, nil
+	}
 	summary := toToolSummary(*tool)
 	return &summary, resp, nil
 }

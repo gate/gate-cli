@@ -170,6 +170,13 @@ func (p *Printer) Table(headers []string, rows [][]string) error {
 // JSON mode: structured JSON with "error" wrapper.
 // Table mode: human-readable lines.
 func (p *Printer) PrintError(gateErr *GateError) {
+	if gateErr == nil {
+		gateErr = &GateError{
+			Status:  http.StatusInternalServerError,
+			Label:   "INTERNAL_ERROR",
+			Message: "unknown error",
+		}
+	}
 	if p.format == FormatJSON {
 		out := map[string]interface{}{"error": gateErr}
 		b, _ := json.Marshal(out)

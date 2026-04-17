@@ -38,14 +38,18 @@ func RunMigrate(opts MigrateOptions) (MigrateReport, error) {
 		opts.Scanner = NewScanner()
 	}
 	if strings.TrimSpace(opts.BackupDir) == "" {
-		opts.BackupDir = filepath.Join(os.TempDir(), "gate-cli-migrate-backups")
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return MigrateReport{}, err
+		}
+		opts.BackupDir = filepath.Join(home, ".gate-cli", "migrate-backups")
 	}
 	mode := "dry_run"
 	if opts.Apply {
 		mode = "apply"
 	}
 
-	if err := os.MkdirAll(opts.BackupDir, 0o755); err != nil {
+	if err := os.MkdirAll(opts.BackupDir, 0o700); err != nil {
 		return MigrateReport{}, err
 	}
 
@@ -100,7 +104,7 @@ func RunMigrate(opts MigrateOptions) (MigrateReport, error) {
 				continue
 			}
 			if changed {
-				if err := os.WriteFile(target, []byte(updated), 0o644); err != nil {
+				if err := atomicWritePreservePerm(target, []byte(updated)); err != nil {
 					result.Status = "fail"
 					anyFail = true
 					result.ManualPatch = "failed to write modified file: " + err.Error()
@@ -110,7 +114,7 @@ func RunMigrate(opts MigrateOptions) (MigrateReport, error) {
 					result.ManualPatch = ""
 				}
 			} else {
-				// Keep JSON and other non-comment-safe formats in manual patch mode.
+				// No safe structural change was produced for this file; keep manual patch mode.
 				result.Action = "manual_patch"
 				result.Status = "warn"
 				result.ManualPatch = "auto-change not safe for this file format; apply manual patch"
@@ -148,37 +152,57 @@ func pickExisting(paths []string) string {
 }
 
 func backupFile(src, backupDir string) (string, error) {
-	data, err := os.ReadFile(src)
+	f, err := os.Open(src)
 	if err != nil {
 		return "", err
 	}
+	defer func() { _ = f.Close() }()
+	info, err := f.Stat()
+	if err != nil {
+		return "", err
+	}
+	if !info.Mode().IsRegular() {
+		return "", fmt.Errorf("backup source is not a regular file: %s", src)
+	}
+	const maxBackup = 1 << 20
+	data, err := readFromReaderLimited(f, maxBackup)
+	if err != nil {
+		return "", fmt.Errorf("read backup source %s: %w", src, err)
+	}
 	name := filepath.Base(src) + "." + time.Now().Format("20060102-150405") + ".bak"
 	dst := filepath.Join(backupDir, name)
-	return dst, os.WriteFile(dst, data, 0o644)
+	return dst, os.WriteFile(dst, data, info.Mode().Perm())
 }
 
 func removeGateMarkers(path string) (string, bool, error) {
 	ext := strings.ToLower(filepath.Ext(path))
-	if ext == ".json" {
-		return "", false, nil
+	switch ext {
+	case ".json":
+		return removeGateMarkersJSON(path)
+	case ".toml":
+		return removeGateMarkersTOML(path)
 	}
-	data, err := os.ReadFile(path)
+	return "", false, nil
+}
+
+func removeGateMarkersJSON(path string) (string, bool, error) {
+	// Keep JSON in manual patch mode to avoid rewriting user formatting
+	// (indentation/key-order/newline style).
+	_, err := os.ReadFile(path)
 	if err != nil {
 		return "", false, err
 	}
-	lines := strings.Split(string(data), "\n")
-	changed := false
-	for i, line := range lines {
-		lc := strings.ToLower(line)
-		for _, marker := range gateMarkers {
-			if strings.Contains(lc, marker) && !strings.HasPrefix(strings.TrimSpace(line), "#") && !strings.HasPrefix(strings.TrimSpace(line), "//") {
-				lines[i] = "# " + line
-				changed = true
-				break
-			}
-		}
+	return "", false, nil
+}
+
+func removeGateMarkersTOML(path string) (string, bool, error) {
+	// Keep TOML in manual patch mode: structural unmarshal/marshal drops comments
+	// and key order, which is too destructive for user-managed config.
+	_, err := os.ReadFile(path)
+	if err != nil {
+		return "", false, err
 	}
-	return strings.Join(lines, "\n"), changed, nil
+	return "", false, nil
 }
 
 func MigrateExitCode(report MigrateReport) int {
@@ -190,6 +214,55 @@ func MigrateExitCode(report MigrateReport) int {
 	default:
 		return 20
 	}
+}
+
+func atomicWritePreservePerm(path string, data []byte) error {
+	info, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+
+	dir := filepath.Dir(path)
+	f, err := os.CreateTemp(dir, filepath.Base(path)+".tmp-*")
+	if err != nil {
+		return err
+	}
+	tmp := f.Name()
+	cleanup := true
+	defer func() {
+		if cleanup {
+			_ = os.Remove(tmp)
+		}
+	}()
+
+	if err := f.Chmod(info.Mode().Perm()); err != nil {
+		_ = f.Close()
+		return err
+	}
+	if _, err := f.Write(data); err != nil {
+		_ = f.Close()
+		return err
+	}
+	if err := f.Sync(); err != nil {
+		_ = f.Close()
+		return err
+	}
+	if err := f.Close(); err != nil {
+		return err
+	}
+	// On Unix this is atomic within the same filesystem; on Windows, os.Rename may refuse
+	// if the target exists—callers should ensure path is the intended final name (CR-1011).
+	if err := os.Rename(tmp, path); err != nil {
+		return err
+	}
+	cleanup = false
+
+	// Best-effort directory sync to reduce rename durability risk.
+	if d, err := os.Open(dir); err == nil {
+		_ = d.Sync()
+		_ = d.Close()
+	}
+	return nil
 }
 
 func ParseProviders(raw string) []string {

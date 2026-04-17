@@ -33,11 +33,15 @@ type cachePayload struct {
 }
 
 func cachePath(backend string) (string, error) {
+	b := strings.ToLower(strings.TrimSpace(backend))
+	if b != "info" && b != "news" {
+		return "", fmt.Errorf("unsupported backend for schema cache: %q", backend)
+	}
 	base, err := os.UserCacheDir()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(base, "gate-cli", "intel", strings.ToLower(backend)+"-tools-schema.json"), nil
+	return filepath.Join(base, "gate-cli", "intel", b+"-tools-schema.json"), nil
 }
 
 func LoadCache(backend string) ([]ToolSummary, bool, error) {
@@ -64,20 +68,22 @@ func LoadCache(backend string) ([]ToolSummary, bool, error) {
 	return payload.Tools, fresh, nil
 }
 
+// ForceRefreshEnabled reports whether Intel tool schema caches should be treated as stale
+// for this process. Non-empty `GATE_INTEL_REFRESH_SCHEMA` set to 1/true/yes enables refresh
+// (see README Intel MCP section; CR-833).
 func ForceRefreshEnabled() bool {
 	v := strings.TrimSpace(strings.ToLower(os.Getenv(forceRefreshEnv)))
 	if v == "1" || v == "true" || v == "yes" {
 		return true
 	}
-	for _, arg := range os.Args[1:] {
-		if arg == "--refresh-schema" {
-			return true
-		}
-	}
 	return false
 }
 
-// IsBackendInvoked returns true when current CLI argv targets a backend command.
+// IsBackendInvoked reports whether os.Args contains the given backend name as its own token.
+//
+// Deprecated: argv sniffing is brittle (flags, command order). Prefer checking the active
+// Cobra command. Kept for existing unit tests; do not use in new call sites. See
+// specs/open-items-and-dependencies.md (Intel / MCP) and specs/cli/cli-first-mcp-technical-implementation-plan.md.
 func IsBackendInvoked(backend string) bool {
 	b := strings.TrimSpace(strings.ToLower(backend))
 	if b == "" {
@@ -96,8 +102,18 @@ func SaveCache(backend string, tools []ToolSummary) error {
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(p), 0o700); err != nil {
 		return err
+	}
+	existingMode := os.FileMode(0o600)
+	if st, err := os.Stat(p); err == nil {
+		existingMode = st.Mode().Perm()
+	}
+	if prevRaw, err := os.ReadFile(p); err == nil {
+		var prev cachePayload
+		if json.Unmarshal(prevRaw, &prev) == nil && sameToolSummaries(prev.Tools, tools) {
+			return nil
+		}
 	}
 	payload := cachePayload{
 		Backend:   strings.ToLower(backend),
@@ -108,14 +124,34 @@ func SaveCache(backend string, tools []ToolSummary) error {
 	if err != nil {
 		return err
 	}
-	if prev, err := os.ReadFile(p); err == nil && string(prev) == string(raw) {
-		return nil
-	}
 	tmp := p + ".tmp"
-	if err := os.WriteFile(tmp, raw, 0o644); err != nil {
+	// Always create the temp file with tight permissions; final mode comes from existing file or default 0o600 (CR-409).
+	if err := os.WriteFile(tmp, raw, 0o600); err != nil {
 		return err
 	}
-	return os.Rename(tmp, p)
+	if err := os.Rename(tmp, p); err != nil {
+		_ = os.Remove(tmp)
+		return err
+	}
+	if st, err := os.Stat(p); err == nil && st.Mode().Perm() != existingMode {
+		_ = os.Chmod(p, existingMode)
+	}
+	return nil
+}
+
+func sameToolSummaries(a, b []ToolSummary) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	left, err := json.Marshal(a)
+	if err != nil {
+		return false
+	}
+	right, err := json.Marshal(b)
+	if err != nil {
+		return false
+	}
+	return string(left) == string(right)
 }
 
 func getCacheTTL() (time.Duration, error) {

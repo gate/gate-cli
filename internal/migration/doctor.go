@@ -123,15 +123,19 @@ func BuildDoctorReport(opts DoctorOptions) DoctorReport {
 				out.Summary.LegacyMCPDetected = true
 				out.Summary.ProvidersAffected = append(out.Summary.ProvidersAffected, s.ProviderID)
 			}
+			detail := map[string]interface{}{
+				"entries_found": s.EntriesFound,
+				"files_checked": s.FilesChecked,
+			}
+			if len(s.Warnings) > 0 {
+				detail["warnings"] = s.Warnings
+			}
 			out.Checks = append(out.Checks, DoctorCheck{
 				ID:       "legacy_mcp." + s.ProviderID,
 				Status:   ternary(warn, "warn", "pass"),
 				Blocking: false,
 				Message:  ternary(warn, "legacy Gate MCP entries detected", "no legacy Gate MCP entries"),
-				Detail: map[string]interface{}{
-					"entries_found": s.EntriesFound,
-					"files_checked": s.FilesChecked,
-				},
+				Detail:   detail,
 			})
 		}
 		sort.Strings(out.Summary.ProvidersAffected)

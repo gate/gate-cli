@@ -6,7 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased] - v0.3.1
 
+### Fixed
+- **QC 收尾**：`internal/intelcmd/doc.go`；`toolconfig` deniedHeaders 字母序；`toolargs` `expandUserPath` 更清晰的 home 错误；`mcpclient` `callWithRetry` 重试语义 godoc；`migration` `atomicWritePreservePerm` 注释 Windows `Rename`；`toolrender` `ApplyOutputLimitWithData` 测量字节语义注释；scanner `rawLower` 命名。
+- **`internal/toolargs`**：`stringSlice` 与 `stringArray` 一致，归一化后为「全空」时合并 **`[]string{}`** 到 MCP 参数（CR-806 / CR-405）；`TestMergeFromCommand_StringSliceExplicitEmptyPreserved`。
+- **`internal/migration` scanner（CR-207）**：每个配置文件最多 **一次** JSON `Unmarshal`；合法 JSON 不再对全文做 `ToLower`，非 JSON 仍走子串检测。
+- **Intel MCP HTTP**：默认 `User-Agent` 与交易 REST 同形态（`internal/useragent`，`intel/{backend}` + `jsonrpc` 后缀）；`GATE_INTEL_EXTRA_HEADERS` 若已设 `User-Agent` 则不覆盖。
+- **`tools/list`（CR-309）**：缓存与返回值对 `Tool.InputSchema` 做 JSON 深拷贝，避免与解码结构或调用方原地修改共享指针。
+- **Intel MCP errors**: response body over the HTTP read limit uses `errors.Is` messaging that separates **transport** `GATE_INTEL_MAX_RESPONSE_BYTES` from **`--max-output-bytes`** (printed output only) (CR-705).
+- **Intel config**: non-empty bearer tokens must be at least 8 characters so trivial values like `"123"` fail fast at resolve time (QC / `toolconfig.Resolve`).
+- **`tools/list` cache**: unit tests cover `shouldInvalidateListCacheOnListError` and recovery after a malformed list result invalidates the snapshot (CR-805).
+- **`--args-file`**: relative paths must stay within the working directory (`filepath.IsLocal` after `Rel`); absolute paths unchanged (CR-1012).
+- **Intel schema cache**: temp write uses `0o600`, then restores prior file permission when rewriting (CR-409); `Rename` failure removes `.tmp`.
+- **CR-811**: Intel leaf aliases share `internal/intelcmd` (`NewLeafAliasCommand`, `LoadToolSchemasFromCache`, `AddFallbackArgFlags`, `MergeToolBaselineInto`, `ReservedMCPJSONFallbackFlags`); `cmd/info` and `cmd/news` only wire backend-specific baselines.
+- **Info `info_coin_get_coin_info` (CR-1002)**: `--symbol` is defined in the frozen baseline input schema; removed the `AfterAliasBuilt` special-case in `cmd/info/aliases.go`.
+- **`internal/toolrender` (CR-505)**: `ApplyOutputLimitWithData` returns display JSON for the truncated placeholder so Pretty mode avoids an extra `json.Marshal` of `data`.
+- **`internal/migration` (CR-211)**: `readFromReaderLimited` centralizes bounded reads (`LimitReader(max+1)`); `scanner` and `backupFile` reuse it.
+- **Root**: format compat notice line uses `io.WriteString` (CR-1005).
+- Removed unused `newsObjAny` and dead `pruneGateMarkers` helper so `staticcheck` U1000 stays clean on Intel packages.
+- **Intel MCP**: HTTP response body over the configured read limit now wraps a stable sentinel error for `errors.Is` (size-limit diagnostics).
+- **Migration**: `backupFile` reads via `Open`+`Stat` on the same descriptor and caps read size (reduced TOCTOU vs `ReadFile`+`Stat`).
+- **CLI**: default `--format` compatibility notice prints only on an interactive stderr TTY (or when `GATE_CLI_FORMAT_NOTICE_FORCE` is set for tests); avoids noisy stderr in pipelines.
+- **toolschema**: `IsBackendInvoked` documented as deprecated (argv sniffing); schema refresh pointers in `info`/`news` package comments.
+
 ### Added
+- **`scripts/test-changed-go.sh`**: run `go test` / `go vet` only on packages that contain **changed** `.go` files (from `git diff` / `git diff --cached`, or `base...HEAD`), avoiding default `go test ./...` during local iteration.
+- **`scripts/test-intel-scope.sh`**: run `go test` / `go vet` only on Intel/MCP/migrate-related packages plus `./cmd` (avoids scanning the full `./cmd/...` trading subtree during iteration).
 - **Structured User-Agent header** with environment auto-detection
   - Format: `gate-cli/{version}/{command}/{agent}/{extra} {sdkUA}`
   - Auto-detects 9 environments: Claude Code, Cursor (Agent + CLI), Qoder, Antigravity, Trae, OpenCode, Codex (Desktop + CLI), Windsurf, JetBrains
@@ -33,6 +57,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Unit tests for all 15 new modules (command structure and flag validation)
 
 ### Changed
+- **Intel (`info` / `news`)**: default root `--format` is `pretty` (was `table` in older snapshots). Scripts should pass `--format json` explicitly for stable machine output. Optional stderr notice can be suppressed with `GATE_CLI_SUPPRESS_FORMAT_NOTICE=1`.
+- **Intel**: the `--refresh-schema` flag was removed; force a one-off schema refresh with environment variable `GATE_INTEL_REFRESH_SCHEMA=1` (see README Intel migration notes).
 - **SDK upgraded** from `gateapi-go/v7` v7.2.40 to v7.2.57
   - `InlineObject` / `InlineObject1` replaced with named types (`UpdateDualCompPositionCrossModeRequest`, `AmendOptionsOrderRequest`)
   - `InlineResponse*` types replaced with semantic names (`TrailOrderResponse`, `CreateTrailOrderResponse`, etc.)

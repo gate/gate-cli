@@ -1,6 +1,9 @@
 package intelfacade
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 func TestNewsBaselineInputSchemaCoverage(t *testing.T) {
 	t.Parallel()
@@ -58,5 +61,35 @@ func TestNewsBaselineInputSchemaCriticalFields(t *testing.T) {
 		if !ok || len(enums) != 3 {
 			t.Fatalf("%s lang enum mismatch: %#v", tool, lang["enum"])
 		}
+	}
+}
+
+func TestNewsBaselineInputSchemaDeepCopyIsolation(t *testing.T) {
+	t.Parallel()
+
+	schema := NewsBaselineInputSchema("news_feed_search_x")
+	if schema == nil {
+		t.Fatalf("expected non-nil schema")
+	}
+	props := schema["properties"].(map[string]interface{})
+
+	allowed := props["allowed_handles"].(map[string]interface{})
+	excluded := props["excluded_handles"].(map[string]interface{})
+
+	aItems := allowed["items"].(map[string]interface{})
+	bItems := excluded["items"].(map[string]interface{})
+	if reflect.ValueOf(aItems).Pointer() == reflect.ValueOf(bItems).Pointer() {
+		t.Fatalf("expected distinct nested items maps across sibling fields")
+	}
+
+	origType, _ := bItems["type"].(string)
+	bItems["type"] = "integer"
+
+	fresh := NewsBaselineInputSchema("news_feed_search_x")
+	freshProps := fresh["properties"].(map[string]interface{})
+	freshExcluded := freshProps["excluded_handles"].(map[string]interface{})
+	freshItems := freshExcluded["items"].(map[string]interface{})
+	if typ, _ := freshItems["type"].(string); typ != origType {
+		t.Fatalf("mutating a returned copy leaked into subsequent baseline reads: got %q want %q", typ, origType)
 	}
 }

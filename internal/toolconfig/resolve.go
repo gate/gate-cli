@@ -3,7 +3,9 @@ package toolconfig
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -12,6 +14,25 @@ import (
 )
 
 const defaultHTTPTimeout = 60 * time.Second
+
+// minIntelBearerLen rejects obvious misconfiguration when bearer is non-empty (QC: trivial tokens).
+const minIntelBearerLen = 8
+
+var (
+	headerNamePattern = regexp.MustCompile(`^[A-Za-z0-9-]+$`)
+	// Keys sorted alphabetically (CR-822 readability).
+	deniedHeaders = map[string]struct{}{
+		"authorization":       {},
+		"content-length":      {},
+		"cookie":              {},
+		"cookie2":             {},
+		"forwarded":           {},
+		"host":                {},
+		"mcp-session-id":      {},
+		"proxy-authorization": {},
+		"set-cookie":          {},
+	}
+)
 
 // ResolveOptions controls endpoint resolution for intel facade commands.
 type ResolveOptions struct {
@@ -35,6 +56,9 @@ func Resolve(opts ResolveOptions) (*ResolvedEndpoint, error) {
 	if backend == "" {
 		return nil, fmt.Errorf("intel backend is required")
 	}
+	if backend != "news" && backend != "info" {
+		return nil, fmt.Errorf("unsupported intel backend %q: only info and news are supported", backend)
+	}
 
 	file := opts.IntelFile
 	envKey := "GATE_INTEL_" + strings.ToUpper(backend) + "_MCP_URL"
@@ -53,9 +77,10 @@ func Resolve(opts ResolveOptions) (*ResolvedEndpoint, error) {
 			baseURL = config.DefaultIntelNewsMCPURL
 		case "info":
 			baseURL = config.DefaultIntelInfoMCPURL
-		default:
-			return nil, fmt.Errorf("intel endpoint URL is required for %s command", backend)
 		}
+	}
+	if err := validateBaseURL(baseURL); err != nil {
+		return nil, err
 	}
 
 	tokenKey := "GATE_INTEL_" + strings.ToUpper(backend) + "_BEARER_TOKEN"
@@ -73,6 +98,10 @@ func Resolve(opts ResolveOptions) (*ResolvedEndpoint, error) {
 	}
 	if bearer == "" {
 		bearer = strings.TrimSpace(file.BearerToken)
+	}
+
+	if err := validateIntelBearerToken(bearer); err != nil {
+		return nil, err
 	}
 
 	extraHeaders, err := resolveExtraHeaders(os.Getenv("GATE_INTEL_EXTRA_HEADERS"), file.ExtraHeaders)
@@ -98,18 +127,25 @@ func resolveExtraHeaders(envRaw string, fileHeaders map[string]string) (map[stri
 	if strings.TrimSpace(envRaw) != "" {
 		return parseExtraHeaders(envRaw)
 	}
-	return cloneStringMap(fileHeaders), nil
+	return validateFileExtraHeaders(fileHeaders)
 }
 
-func cloneStringMap(m map[string]string) map[string]string {
+func validateFileExtraHeaders(m map[string]string) (map[string]string, error) {
 	if len(m) == 0 {
-		return map[string]string{}
+		return map[string]string{}, nil
 	}
 	out := make(map[string]string, len(m))
 	for k, v := range m {
-		out[k] = v
+		key := strings.TrimSpace(k)
+		if key == "" {
+			continue
+		}
+		if err := validateIntelExtraHeaderKV(key, v, "intel.extra_headers"); err != nil {
+			return nil, err
+		}
+		out[key] = v
 	}
-	return out
+	return out, nil
 }
 
 func resolveHTTPTimeout(envRaw, fileRaw string) (time.Duration, error) {
@@ -153,8 +189,62 @@ func parseExtraHeaders(raw string) (map[string]string, error) {
 		if key == "" {
 			continue
 		}
-		out[key] = fmt.Sprint(v)
+		val := fmt.Sprint(v)
+		if err := validateIntelExtraHeaderKV(key, val, "GATE_INTEL_EXTRA_HEADERS"); err != nil {
+			return nil, err
+		}
+		out[key] = val
 	}
 	return out, nil
 }
 
+func validateIntelExtraHeaderKV(key, val, field string) error {
+	if !headerNamePattern.MatchString(key) {
+		return fmt.Errorf("invalid %s key: %q", field, key)
+	}
+	if isDeniedExtraHeader(strings.ToLower(key)) {
+		return fmt.Errorf("%s key is not allowed: %q", field, key)
+	}
+	if strings.ContainsAny(val, "\r\n") {
+		return fmt.Errorf("invalid %s value for %q", field, key)
+	}
+	return nil
+}
+
+func isDeniedExtraHeader(lowerKey string) bool {
+	if _, denied := deniedHeaders[lowerKey]; denied {
+		return true
+	}
+	return strings.HasPrefix(lowerKey, "x-forwarded-")
+}
+
+func validateIntelBearerToken(bearer string) error {
+	if bearer == "" {
+		return nil
+	}
+	if len(bearer) < minIntelBearerLen {
+		return fmt.Errorf("intel bearer token must be at least %d characters when set, or left empty", minIntelBearerLen)
+	}
+	return nil
+}
+
+func validateBaseURL(raw string) error {
+	u, err := url.Parse(strings.TrimSpace(raw))
+	if err != nil {
+		return fmt.Errorf("invalid intel endpoint url: %w", err)
+	}
+	if u.Host == "" {
+		return fmt.Errorf("invalid intel endpoint url: missing host")
+	}
+	if strings.ContainsAny(u.Path, "\r\n\x00") || strings.ContainsAny(u.RawQuery, "\r\n\x00") || strings.ContainsAny(u.Fragment, "\r\n\x00") {
+		return fmt.Errorf("invalid intel endpoint url: path, query, or fragment contains control characters")
+	}
+	scheme := strings.ToLower(u.Scheme)
+	if scheme == "https" {
+		return nil
+	}
+	if scheme == "http" && (u.Hostname() == "localhost" || u.Hostname() == "127.0.0.1") {
+		return nil
+	}
+	return fmt.Errorf("invalid intel endpoint url: scheme must be https (or localhost http)")
+}

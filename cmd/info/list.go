@@ -5,6 +5,7 @@ import (
 
 	"github.com/gate/gate-cli/internal/intelcmd"
 	"github.com/gate/gate-cli/internal/intelfacade"
+	"github.com/gate/gate-cli/internal/toolschema"
 )
 
 var listCmd = &cobra.Command{
@@ -17,6 +18,8 @@ func init() {
 	Cmd.AddCommand(listCmd)
 }
 
+var saveInfoSchemaCache = toolschema.SaveCache
+
 func runInfoList(cmd *cobra.Command, args []string) error {
 	p := getPrinter(cmd)
 	svc, err := newInfoService(cmd)
@@ -28,22 +31,20 @@ func runInfoList(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return intelcmd.FailListTransport(p, err, httpResp, "info")
 	}
+	_ = saveInfoSchemaCache("info", toInfoSchemaSummaries(items))
 
-	if p.IsJSON() {
-		return p.Print(items)
+	return intelcmd.RenderToolList(p, items)
+}
+
+func toInfoSchemaSummaries(items []intelfacade.ToolSummary) []toolschema.ToolSummary {
+	out := make([]toolschema.ToolSummary, 0, len(items))
+	for _, item := range items {
+		out = append(out, toolschema.ToolSummary{
+			Name:           item.Name,
+			Description:    item.Description,
+			HasInputSchema: item.HasInputSchema,
+			InputSchema:    item.InputSchema,
+		})
 	}
-
-	if p.IsTable() {
-		rows := make([][]string, 0, len(items))
-		for _, item := range items {
-			params := "no"
-			if item.HasInputSchema {
-				params = "yes"
-			}
-			rows = append(rows, []string{item.Name, item.Description, params})
-		}
-		return p.Table([]string{"Name", "Description", "Accepts parameters"}, rows)
-	}
-
-	return p.WritePretty(intelfacade.ListCapabilitiesPrettyText(items))
+	return out
 }
