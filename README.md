@@ -148,6 +148,8 @@ gate-cli spot market ticker --pair BTC_USDT --format json | jq '.last'
 | square | `gate-cli square` | Gate Square |
 | welfare | `gate-cli welfare` | Welfare & tasks |
 | config | `gate-cli config` | CLI configuration |
+| info | `gate-cli info` | Market and intelligence info commands |
+| news | `gate-cli news` | News and market intelligence commands |
 
 ## Global flags
 
@@ -157,19 +159,10 @@ gate-cli spot market ticker --pair BTC_USDT --format json | jq '.last'
 | `--profile` | `default` | Config profile to use |
 | `--api-key` | — | API key (overrides env and config file) |
 | `--api-secret` | — | API secret (overrides env and config file) |
-| `--verbose` | `false` | Print Intel MCP transport lines to stderr (`info` / `news`), prefixed `[verbose]`; stdout JSON unchanged |
-| `--debug` | `false` | Print HTTP debug for Gate API clients; with Intel commands, MCP transport lines use `[debug]` (wins if both flags are set) |
+| `--max-output-bytes` | `0` | Cap printed bytes for `info` / `news` results (`0` = unlimited; env `GATE_MAX_OUTPUT_BYTES`) |
+| `--verbose` | `false` | Print low-level Intel backend transport lines to stderr (`info` / `news`), prefixed `[verbose]`; stdout JSON unchanged |
+| `--debug` | `false` | HTTP debug for Gate API clients; with `info` / `news`, backend transport uses `[debug]` on stderr (wins over `--verbose` when both are set) |
 
-## Intel MCP (`info`, `news`, `tool`)
+## Intel (`info`, `news`)
 
-- **No interactive login**: the CLI does not open a browser and does not implement OAuth 2.0 or PKCE for MCP. Use a token your environment already trusts: set `GATE_INTEL_BEARER_TOKEN` / `GATE_INTEL_NEWS_BEARER_TOKEN` / `GATE_INTEL_INFO_BEARER_TOKEN`, or `bearer_token` in `~/.gate-cli/intel.yaml`, plus optional `GATE_INTEL_EXTRA_HEADERS` where your gateway requires routing headers. Details: [specs/intel-config-and-security.md](specs/intel-config-and-security.md); OAuth2/PKCE scope and “not implemented” status: [specs/README.md](specs/README.md).
-- **Default `--format` notice**: when stderr is an interactive terminal and `--format` was not set on the command line, gate-cli may print a one-line notice that the default is `pretty`. Suppress with `GATE_CLI_SUPPRESS_FORMAT_NOTICE=1`. For tests or non-TTY environments that must assert on that notice, set `GATE_CLI_FORMAT_NOTICE_FORCE=1` (not needed for normal scripts if you pass `--format json` explicitly).
-
-## Intel Migration Notes
-
-- `migrate --apply` now writes target files atomically and preserves original file permissions.
-- Default migrate backups are stored under `~/.gate-cli/migrate-backups` instead of a shared temp directory.
-- `GATE_INTEL_EXTRA_HEADERS` rejects sensitive/unsafe header names (`Authorization`, `Host`, `Content-Length`) and CRLF-containing values.
-- `--refresh-schema` flag has been removed; use `GATE_INTEL_REFRESH_SCHEMA=1` to force schema refresh (see `internal/toolschema` and `gate-cli tool` help for cache behavior).
-- `GATE_INTEL_SCHEMA_CACHE_TTL` optionally overrides how long cached `tools/list` schemas are considered fresh (default 10 minutes).
-- `GATE_INTEL_MAX_RESPONSE_BYTES` overrides the MCP HTTP response read limit (default 16 MiB).
+Behavior, flags, and environment variables: `gate-cli info -h`, `gate-cli news -h`. Optional defaults go under `intel:` in the same `config.yaml` as `profiles`; trading `GATE_API_KEY` / `--api-key` are not used as the Intel bearer (bearer is optional if your backend allows it).
