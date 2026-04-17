@@ -31,14 +31,14 @@ func clearEnv(t *testing.T) func() {
 		if v, ok := os.LookupEnv(k); ok {
 			saved[k] = v
 		}
-		os.Unsetenv(k)
+		_ = os.Unsetenv(k)
 	}
 	return func() {
 		for _, k := range allEnvKeys {
 			if v, ok := saved[k]; ok {
-				os.Setenv(k, v)
+				_ = os.Setenv(k, v)
 			} else {
-				os.Unsetenv(k)
+				_ = os.Unsetenv(k)
 			}
 		}
 	}
@@ -191,7 +191,7 @@ func TestDetect(t *testing.T) {
 			defer restore()
 
 			for k, v := range tt.envs {
-				os.Setenv(k, v)
+				_ = os.Setenv(k, v)
 			}
 
 			got := Detect()
@@ -206,8 +206,8 @@ func TestDetectPriority_CursorOverVSCode(t *testing.T) {
 	defer restore()
 
 	// Cursor sets both CURSOR_AGENT and TERM_PROGRAM=vscode
-	os.Setenv("CURSOR_AGENT", "1")
-	os.Setenv("TERM_PROGRAM", "vscode")
+	_ = os.Setenv("CURSOR_AGENT", "1")
+	_ = os.Setenv("TERM_PROGRAM", "vscode")
 
 	got := Detect()
 	assert.Equal(t, "cursor", got.Name, "Cursor should take priority over VSCode")
@@ -217,9 +217,9 @@ func TestDetectPriority_QoderOverVSCode(t *testing.T) {
 	restore := clearEnv(t)
 	defer restore()
 
-	os.Setenv("QODER_CLI", "1")
-	os.Setenv("QODERCLI_INTEGRATION_MODE", "quest")
-	os.Setenv("TERM_PROGRAM", "vscode")
+	_ = os.Setenv("QODER_CLI", "1")
+	_ = os.Setenv("QODERCLI_INTEGRATION_MODE", "quest")
+	_ = os.Setenv("TERM_PROGRAM", "vscode")
 
 	got := Detect()
 	assert.Equal(t, "qoder", got.Name, "Qoder should take priority over VSCode")
@@ -229,8 +229,8 @@ func TestDetectPriority_AntigravityOverVSCode(t *testing.T) {
 	restore := clearEnv(t)
 	defer restore()
 
-	os.Setenv("ANTIGRAVITY_AGENT", "1")
-	os.Setenv("TERM_PROGRAM", "vscode")
+	_ = os.Setenv("ANTIGRAVITY_AGENT", "1")
+	_ = os.Setenv("TERM_PROGRAM", "vscode")
 
 	got := Detect()
 	assert.Equal(t, "antigravity", got.Name, "Antigravity should take priority over VSCode")
@@ -240,8 +240,8 @@ func TestDetectPriority_TraeOverVSCode(t *testing.T) {
 	restore := clearEnv(t)
 	defer restore()
 
-	os.Setenv("AI_AGENT", "TRAE")
-	os.Setenv("TERM_PROGRAM", "vscode")
+	_ = os.Setenv("AI_AGENT", "TRAE")
+	_ = os.Setenv("TERM_PROGRAM", "vscode")
 
 	got := Detect()
 	assert.Equal(t, "trae", got.Name, "Trae should take priority over VSCode")
@@ -252,10 +252,10 @@ func TestDetectPriority_ExplicitOverrideWins(t *testing.T) {
 	defer restore()
 
 	// Set everything — explicit override should still win
-	os.Setenv("GATE_CLI_AGENT", "custom")
-	os.Setenv("GATE_CLI_AGENT_VERSION", "9.9")
-	os.Setenv("CLAUDECODE", "1")
-	os.Setenv("CURSOR_AGENT", "1")
+	_ = os.Setenv("GATE_CLI_AGENT", "custom")
+	_ = os.Setenv("GATE_CLI_AGENT_VERSION", "9.9")
+	_ = os.Setenv("CLAUDECODE", "1")
+	_ = os.Setenv("CURSOR_AGENT", "1")
 
 	got := Detect()
 	assert.Equal(t, "custom", got.Name, "Explicit override should always win")
@@ -266,8 +266,8 @@ func TestBuild(t *testing.T) {
 	restore := clearEnv(t)
 	defer restore()
 
-	os.Setenv("CLAUDECODE", "1")
-	os.Setenv("CLAUDE_CODE_ENTRYPOINT", "cli")
+	_ = os.Setenv("CLAUDECODE", "1")
+	_ = os.Setenv("CLAUDE_CODE_ENTRYPOINT", "cli")
 
 	ua := Build("spot/order/create", "OpenAPI-Generator/7.2.40/go")
 

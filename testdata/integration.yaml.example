@@ -12,3 +12,19 @@ profiles:
     api_key: "YOUR_TESTNET_API_KEY"
     api_secret: "YOUR_TESTNET_API_SECRET"
     base_url: "https://api-testnet.gateapi.io"
+
+# --- Intel / MCP (optional)
+# Prefer ~/.gate-cli/config.yaml "intel" (news_mcp_url / info_mcp_url, etc.); non-empty GATE_INTEL_*
+# environment variables override file values. For integration tests, env exports are still common.
+# See specs/cli/mcp-wire-appendix.md and internal/config.IntelFile for fields / env names.
+#
+# Local debug quick start (public QC endpoints):
+# export GATE_INTEL_NEWS_MCP_URL="https://api.gatemcp.ai/mcp/news"
+# export GATE_INTEL_INFO_MCP_URL="https://api.gatemcp.ai/mcp/info"
+# Optional internal test environment (replace host/port by current deployment):
+# export GATE_INTEL_NEWS_MCP_URL="http://<host>:30725/mcp"
+# export GATE_INTEL_INFO_MCP_URL="http://<host>:30729/mcp"
+#
+# Optional auth and transport tuning:
+# GATE_INTEL_BEARER_TOKEN=...          # optional per QC; see Wire appendix / intel-config §2
+# GATE_INTEL_HTTP_TIMEOUT=60s          # optional

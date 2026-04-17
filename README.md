@@ -60,7 +60,7 @@ gate-cli config init
 
 ### Architecture
 - **Dual-position mode** — `add`, `remove`, `close` automatically detect position direction; single and dual (hedge) mode handled transparently via the `dual_comp` API
-- **Two output modes** — human-friendly table (default) or `--format json` for scripts and agents
+- **Output formats** — `--format pretty` (default for humans), `--format json` for scripts and agents, and `--format table` only where a command supports tabular list output
 - **Multiple profiles** — manage several API keys in one config file
 - **Credential priority** — `--api-key` flag > env var > config file
 
@@ -153,8 +153,9 @@ gate-cli spot market ticker --pair BTC_USDT --format json | jq '.last'
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--format` | `table` | Output format: `table` or `json` |
+| `--format` | `pretty` | Output format: `pretty`, `json`, or `table` (only on tabular commands) |
 | `--profile` | `default` | Config profile to use |
 | `--api-key` | — | API key (overrides env and config file) |
 | `--api-secret` | — | API secret (overrides env and config file) |
-| `--debug` | `false` | Print raw HTTP request/response |
+| `--verbose` | `false` | Print Intel MCP transport lines to stderr (`info` / `news`), prefixed `[verbose]`; stdout JSON unchanged |
+| `--debug` | `false` | Print HTTP debug for Gate API clients; with Intel commands, MCP transport lines use `[debug]` (wins if both flags are set) |

@@ -7,9 +7,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var positionCmd = &cobra.Command{
@@ -90,7 +90,9 @@ func init() {
 	Cmd.AddCommand(positionCmd)
 }
 
-func printDeliveryPosition(p interface{ Table([]string, [][]string) error }, pos gateapi.DeliveryPosition) error {
+func printDeliveryPosition(p interface {
+	Table([]string, [][]string) error
+}, pos gateapi.DeliveryPosition) error {
 	return p.Table(
 		[]string{"Contract", "Size", "Leverage", "Entry Price", "Mark Price", "Unrealised PnL"},
 		[][]string{{pos.Contract, fmt.Sprintf("%d", pos.Size), pos.Leverage, pos.EntryPrice, pos.MarkPrice, pos.UnrealisedPnl}},

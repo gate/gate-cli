@@ -3,6 +3,7 @@ package output_test
 import (
 	"bytes"
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,6 +12,21 @@ import (
 	"github.com/gate/gate-cli/internal/output"
 )
 
+func TestWritePrettyRejectedInJSONMode(t *testing.T) {
+	var buf bytes.Buffer
+	p := output.New(&buf, output.FormatJSON)
+	err := p.WritePretty("hello")
+	require.Error(t, err)
+	assert.Empty(t, buf.String())
+}
+
+func TestWritePrettyPrettyMode(t *testing.T) {
+	var buf bytes.Buffer
+	p := output.New(&buf, output.FormatPretty)
+	require.NoError(t, p.WritePretty("hello"))
+	assert.Equal(t, "hello\n", buf.String())
+}
+
 func TestJSONOutput(t *testing.T) {
 	var buf bytes.Buffer
 	p := output.New(&buf, output.FormatJSON)
@@ -18,6 +34,10 @@ func TestJSONOutput(t *testing.T) {
 	data := map[string]string{"currency": "BTC", "available": "0.1"}
 	err := p.Print(data)
 	require.NoError(t, err)
+
+	// Compact JSON: no interior newlines; Fprintln adds a single trailing newline.
+	s := strings.TrimSpace(buf.String())
+	assert.NotContains(t, s, "\n")
 
 	var result map[string]string
 	err = json.Unmarshal(buf.Bytes(), &result)
@@ -59,10 +79,12 @@ func TestErrorJSONGateStandard(t *testing.T) {
 	p := output.NewWithStderr(&stdout, &stderr, output.FormatJSON)
 
 	gateErr := &output.GateError{
-		Status:  400,
-		Label:   "INVALID_PARAM_VALUE",
-		Message: "Invalid currency pair",
-		TraceID: "abc123",
+		Status:    400,
+		Label:     "INVALID_PARAM_VALUE",
+		Message:   "Invalid currency pair",
+		TraceID:   "abc123",
+		RequestID: "req-1",
+		ToolName:  "news_feed_search_news",
 		Request: &output.RequestInfo{
 			Method: "POST",
 			URL:    "https://api.gateio.ws/api/v4/spot/orders",
@@ -78,6 +100,8 @@ func TestErrorJSONGateStandard(t *testing.T) {
 	assert.Equal(t, float64(400), errObj["status"])
 	assert.Equal(t, "INVALID_PARAM_VALUE", errObj["label"])
 	assert.Equal(t, "abc123", errObj["trace_id"])
+	assert.Equal(t, "req-1", errObj["request_id"])
+	assert.Equal(t, "news_feed_search_news", errObj["tool_name"])
 	assert.NotNil(t, errObj["request"])
 }
 
@@ -103,7 +127,53 @@ func TestErrorTableMode(t *testing.T) {
 
 func TestIsJSON(t *testing.T) {
 	pJSON := output.New(nil, output.FormatJSON)
+	pPretty := output.New(nil, output.FormatPretty)
 	pTable := output.New(nil, output.FormatTable)
 	assert.True(t, pJSON.IsJSON())
+	assert.False(t, pPretty.IsJSON())
 	assert.False(t, pTable.IsJSON())
+}
+
+func TestIsTable(t *testing.T) {
+	pJSON := output.New(nil, output.FormatJSON)
+	pPretty := output.New(nil, output.FormatPretty)
+	pTable := output.New(nil, output.FormatTable)
+	assert.False(t, pJSON.IsTable())
+	assert.False(t, pPretty.IsTable())
+	assert.True(t, pTable.IsTable())
+}
+
+func TestParseFormat(t *testing.T) {
+	assert.Equal(t, output.FormatPretty, output.ParseFormat("pretty"))
+	assert.Equal(t, output.FormatTable, output.ParseFormat("table"))
+	assert.Equal(t, output.FormatJSON, output.ParseFormat("json"))
+	assert.Equal(t, output.FormatPretty, output.ParseFormat("unknown"))
+}
+
+func TestUnsupportedTableFormatError(t *testing.T) {
+	err := output.UnsupportedTableFormatError()
+	require.NotNil(t, err)
+	assert.Equal(t, 400, err.Status)
+	assert.Equal(t, "UNSUPPORTED_FORMAT", err.Label)
+}
+
+func TestUserFacingErrorOutputDoesNotContainMCPWord(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	pJSON := output.NewWithStderr(&stdout, &stderr, output.FormatJSON)
+	pTable := output.NewWithStderr(&stdout, &stderr, output.FormatTable)
+
+	gateErr := &output.GateError{
+		Status:      500,
+		Label:       "INTEL_PROTOCOL_ERROR",
+		Message:     "backend protocol failure",
+		RequestID:   "req-1",
+		ToolName:    "news_feed_search_news",
+		JSONRPCCode: func() *int { v := -32603; return &v }(),
+	}
+
+	pJSON.PrintError(gateErr)
+	pTable.PrintError(gateErr)
+
+	combined := strings.ToLower(stderr.String())
+	assert.NotContains(t, combined, "mcp")
 }

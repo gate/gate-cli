@@ -16,3 +16,10 @@ testdata/integration.yaml
 *.test
 *.out
 coverage.html
+
+# Generated Feishu diagram exports (run scripts/feishu-export-mermaid-png.sh)
+specs/
+scripts/
+.cursor/
+.tmp*
+

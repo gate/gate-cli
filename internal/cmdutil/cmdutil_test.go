@@ -20,6 +20,7 @@ func newRootCmd() *cobra.Command {
 	root.PersistentFlags().String("format", "table", "")
 	root.PersistentFlags().String("profile", "default", "")
 	root.PersistentFlags().Bool("debug", false, "")
+	root.PersistentFlags().Bool("verbose", false, "")
 	root.PersistentFlags().String("api-key", "", "")
 	root.PersistentFlags().String("api-secret", "", "")
 	return root
@@ -31,6 +32,31 @@ func newChildCmd(root *cobra.Command) *cobra.Command {
 	child := &cobra.Command{Use: "sub"}
 	root.AddCommand(child)
 	return child
+}
+
+func TestIntelMCPTransportDiag_DebugOrVerbose(t *testing.T) {
+	root := newRootCmd()
+	child := newChildCmd(root)
+
+	en, tag := cmdutil.IntelMCPTransportDiag(child)
+	assert.False(t, en)
+	assert.Equal(t, "", tag)
+
+	require.NoError(t, root.PersistentFlags().Set("verbose", "true"))
+	en, tag = cmdutil.IntelMCPTransportDiag(child)
+	assert.True(t, en)
+	assert.Equal(t, "[verbose]", tag)
+
+	require.NoError(t, root.PersistentFlags().Set("verbose", "false"))
+	require.NoError(t, root.PersistentFlags().Set("debug", "true"))
+	en, tag = cmdutil.IntelMCPTransportDiag(child)
+	assert.True(t, en)
+	assert.Equal(t, "[debug]", tag)
+
+	require.NoError(t, root.PersistentFlags().Set("verbose", "true"))
+	en, tag = cmdutil.IntelMCPTransportDiag(child)
+	assert.True(t, en)
+	assert.Equal(t, "[debug]", tag)
 }
 
 // --- GetClient flag priority ---
