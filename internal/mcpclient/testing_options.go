@@ -9,3 +9,10 @@ func CacheTTLForTest(full, empty time.Duration) Option {
 		c.listCacheTTLEmpty = empty
 	}
 }
+
+// UserAgentForTest overrides the default MCP User-Agent (tests only).
+func UserAgentForTest(ua string) Option {
+	return func(c *Client) {
+		c.userAgent = ua
+	}
+}

@@ -23,6 +23,10 @@ func TestListToolsInitializeThenList(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "gate-cli", r.Header.Get("X-Gate-Cli-Name"))
 		assert.Equal(t, "data-mcp", r.Header.Get("rule"))
+		ua := r.Header.Get("User-Agent")
+		assert.Contains(t, ua, "gate-cli/")
+		assert.Contains(t, ua, "intel/news")
+		assert.Contains(t, ua, "jsonrpc")
 
 		var req map[string]interface{}
 		require.NoError(t, json.NewDecoder(r.Body).Decode(&req))

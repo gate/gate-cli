@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased] - v0.3.1
 
 ### Fixed
+- **Intel MCP HTTP**：默认 `User-Agent` 与交易 REST 同形态（`internal/useragent`，`intel/{backend}` + `jsonrpc` 后缀）；`GATE_INTEL_EXTRA_HEADERS` 若已设 `User-Agent` 则不覆盖。
+- **`tools/list`（CR-309）**：缓存与返回值对 `Tool.InputSchema` 做 JSON 深拷贝，避免与解码结构或调用方原地修改共享指针。
 - **Intel MCP errors**: response body over the HTTP read limit uses `errors.Is` messaging that separates **transport** `GATE_INTEL_MAX_RESPONSE_BYTES` from **`--max-output-bytes`** (printed output only) (CR-705).
 - **Intel config**: non-empty bearer tokens must be at least 8 characters so trivial values like `"123"` fail fast at resolve time (QC / `toolconfig.Resolve`).
 - **`tools/list` cache**: unit tests cover `shouldInvalidateListCacheOnListError` and recovery after a malformed list result invalidates the snapshot (CR-805).

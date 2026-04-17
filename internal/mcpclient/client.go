@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/gate/gate-cli/internal/toolconfig"
+	"github.com/gate/gate-cli/internal/useragent"
 	"github.com/gate/gate-cli/internal/version"
 )
 
@@ -140,6 +141,7 @@ type Client struct {
 	transportDiag            bool
 	transportDiagTag         string
 	injectDefaultGateCliName bool
+	userAgent                string
 	errOut                   io.Writer
 
 	sessionID string
@@ -172,6 +174,7 @@ func New(endpoint *toolconfig.ResolvedEndpoint, opts ...Option) *Client {
 		baseURL:      endpoint.BaseURL,
 		bearerToken:  endpoint.BearerToken,
 		extraHeaders: endpoint.ExtraHeaders,
+		userAgent:    useragent.Build("intel/"+endpoint.Backend, "jsonrpc"),
 		httpClient: &http.Client{
 			Timeout: endpoint.Timeout,
 			Transport: &http.Transport{
@@ -274,23 +277,24 @@ func (c *Client) ListTools(ctx context.Context) ([]Tool, *http.Response, error) 
 		}
 	}
 
+	tools := cloneToolsForList(parsed.Tools)
 	c.mu.Lock()
 	c.listCacheValid = true
-	c.listCache = append([]Tool(nil), parsed.Tools...)
+	c.listCache = append([]Tool(nil), tools...)
 	ttl := c.listCacheTTLFull
-	if len(parsed.Tools) == 0 {
+	if len(tools) == 0 {
 		ttl = c.listCacheTTLEmpty
 	}
 	if ttl <= 0 {
 		ttl = 30 * time.Second
-		if len(parsed.Tools) == 0 {
+		if len(tools) == 0 {
 			ttl = 2 * time.Second
 		}
 	}
 	c.listCacheUntil = time.Now().Add(ttl)
 	c.mu.Unlock()
 
-	return parsed.Tools, httpResp, nil
+	return tools, httpResp, nil
 }
 
 func shouldInvalidateListCacheOnListError(err error) bool {
@@ -565,7 +569,8 @@ func (c *Client) call(ctx context.Context, method string, params interface{}) (*
 }
 
 // applyHeaders mutates req in a fixed order so extra_headers cannot permanently pin a
-// stale MCP-Session-Id: extras first, then Authorization, Del(session), then Set from c.sessionID.
+// stale MCP-Session-Id: extras first, then Authorization, Del(session), then Set from c.sessionID,
+// then optional product name and User-Agent (only if the header is still empty so extras can override).
 func (c *Client) applyHeaders(req *http.Request) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json, text/event-stream")
@@ -584,6 +589,9 @@ func (c *Client) applyHeaders(req *http.Request) {
 	}
 	if c.injectDefaultGateCliName && strings.TrimSpace(req.Header.Get(gateCLIProductHeader)) == "" {
 		req.Header.Set(gateCLIProductHeader, gateCLIProductValue)
+	}
+	if strings.TrimSpace(req.Header.Get("User-Agent")) == "" && strings.TrimSpace(c.userAgent) != "" {
+		req.Header.Set("User-Agent", c.userAgent)
 	}
 }
 
