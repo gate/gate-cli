@@ -10,5 +10,6 @@ var Cmd = &cobra.Command{
 
 func init() {
 	// Schema refresh is env-only (no --refresh-schema flag): set GATE_INTEL_REFRESH_SCHEMA=1.
-	// See repository README (Intel migration notes) and specs/cli/cli-first-mcp-technical-implementation-plan.md.
+	// See README.md (Intel), specs/intel-config-and-security.md, specs/open-items-and-dependencies.md,
+	// and specs/cli/cli-first-mcp-technical-implementation-plan.md.
 }

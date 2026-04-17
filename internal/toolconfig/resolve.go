@@ -20,16 +20,17 @@ const minIntelBearerLen = 8
 
 var (
 	headerNamePattern = regexp.MustCompile(`^[A-Za-z0-9-]+$`)
-	deniedHeaders     = map[string]struct{}{
+	// Keys sorted alphabetically (CR-822 readability).
+	deniedHeaders = map[string]struct{}{
 		"authorization":       {},
-		"host":                {},
 		"content-length":      {},
-		"mcp-session-id":      {},
 		"cookie":              {},
 		"cookie2":             {},
-		"set-cookie":          {},
-		"proxy-authorization": {},
 		"forwarded":           {},
+		"host":                {},
+		"mcp-session-id":      {},
+		"proxy-authorization": {},
+		"set-cookie":          {},
 	}
 )
 

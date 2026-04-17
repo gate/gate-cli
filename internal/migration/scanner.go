@@ -135,9 +135,18 @@ func (s *Scanner) scanProvider(providerID string, paths []string) ProviderScan {
 			pathErrors = append(pathErrors, err.Error())
 			continue
 		}
-		content := strings.ToLower(string(data))
+		raw := string(data)
+		var decoded interface{}
+		jsonOK := json.Unmarshal(data, &decoded) == nil
+
 		for _, marker := range gateMarkers {
-			if containsGateToken(content, string(data), marker) {
+			var match bool
+			if jsonOK {
+				match = visitJSONForMarker(decoded, marker)
+			} else {
+				match = containsGateTokenLegacy(strings.ToLower(raw), marker)
+			}
+			if match {
 				result.Entries = append(result.Entries, Entry{
 					ServerName: marker,
 					FilePath:   p,
@@ -153,31 +162,28 @@ func (s *Scanner) scanProvider(providerID string, paths []string) ProviderScan {
 	return result
 }
 
-func containsGateToken(contentLower, raw, marker string) bool {
-	found, parsed := containsGateTokenStructuredJSON(raw, marker)
-	if found {
-		return true
-	}
-	if parsed {
-		return false
-	}
-	if strings.Contains(contentLower, `"`+marker+`"`) {
+// containsGateTokenLegacy is the substring / hint path for non-JSON or invalid JSON files (CR-207).
+func containsGateTokenLegacy(rawLower, marker string) bool {
+	if strings.Contains(rawLower, `"`+marker+`"`) {
 		return true
 	}
 	for _, hint := range gateTokenHints {
-		if strings.EqualFold(hint, marker) && strings.Contains(contentLower, hint) {
+		if strings.EqualFold(hint, marker) && strings.Contains(rawLower, hint) {
 			return true
 		}
 	}
 	return false
 }
 
-func containsGateTokenStructuredJSON(raw, marker string) (bool, bool) {
+// containsGateToken reports whether raw config text references marker.
+// rawLower should be strings.ToLower(raw); it is ignored when raw is valid JSON (CR-207).
+// Kept for unit tests; scanProvider uses the same JSON-once logic inline.
+func containsGateToken(rawLower, raw, marker string) bool {
 	var decoded interface{}
-	if err := json.Unmarshal([]byte(raw), &decoded); err != nil {
-		return false, false
+	if err := json.Unmarshal([]byte(raw), &decoded); err == nil {
+		return visitJSONForMarker(decoded, marker)
 	}
-	return visitJSONForMarker(decoded, marker), true
+	return containsGateTokenLegacy(rawLower, marker)
 }
 
 func visitJSONForMarker(v interface{}, marker string) bool {

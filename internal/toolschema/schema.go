@@ -79,7 +79,8 @@ func ForceRefreshEnabled() bool {
 // IsBackendInvoked reports whether os.Args contains the given backend name as its own token.
 //
 // Deprecated: argv sniffing is brittle (flags, command order). Prefer checking the active
-// Cobra command. Kept for existing unit tests; do not use in new call sites.
+// Cobra command. Kept for existing unit tests; do not use in new call sites. See
+// specs/open-items-and-dependencies.md (Intel / MCP) and specs/cli/cli-first-mcp-technical-implementation-plan.md.
 func IsBackendInvoked(backend string) bool {
 	b := strings.TrimSpace(strings.ToLower(backend))
 	if b == "" {

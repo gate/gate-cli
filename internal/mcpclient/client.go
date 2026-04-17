@@ -469,6 +469,9 @@ func (c *Client) ensureInitialized(ctx context.Context) (err error) {
 	return err
 }
 
+// callWithRetry performs at most one follow-up attempt after HTTP 401 when retryOnUnauthorized
+// is true (used for tools/list and initialize). There is no generic exponential backoff; CR-601
+// scope is "single session reset + one re-call" only.
 func (c *Client) callWithRetry(ctx context.Context, method string, params interface{}, retryOnUnauthorized bool) (*rpcResponse, *http.Response, string, error) {
 	resp, httpResp, reqID, err := c.call(ctx, method, params)
 	if err == nil || !retryOnUnauthorized {

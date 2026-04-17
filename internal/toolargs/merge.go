@@ -136,14 +136,14 @@ func expandUserPath(raw string) (string, error) {
 	if path == "~" {
 		home, err := os.UserHomeDir()
 		if err != nil {
-			return "", fmt.Errorf("failed to resolve home directory: %w", err)
+			return "", fmt.Errorf("cannot resolve ~ (user home directory): %w", err)
 		}
 		return home, nil
 	}
 	if strings.HasPrefix(path, "~/") {
 		home, err := os.UserHomeDir()
 		if err != nil {
-			return "", fmt.Errorf("failed to resolve home directory: %w", err)
+			return "", fmt.Errorf("cannot resolve ~/ prefix (user home directory): %w", err)
 		}
 		return filepath.Join(home, strings.TrimPrefix(path, "~/")), nil
 	}
@@ -229,7 +229,12 @@ func readFlagArgument(cmd *cobra.Command, f *pflag.Flag) (interface{}, bool) {
 		if err != nil {
 			return nil, false
 		}
-		return normalizeFlagStringList(v), true
+		norm := normalizeFlagStringList(v)
+		if norm == nil {
+			// Align with stringArray: explicit empty clears to [] in MCP args (CR-806 / CR-405).
+			return []string{}, true
+		}
+		return norm, true
 	case "stringArray":
 		v, err := cmd.Flags().GetStringArray(name)
 		if err != nil {

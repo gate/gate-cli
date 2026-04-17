@@ -110,6 +110,21 @@ func TestMergeFromCommand_StringArrayExplicitEmptyPreserved(t *testing.T) {
 	assert.Equal(t, []string{}, got["symbols"])
 }
 
+func TestMergeFromCommand_StringSliceExplicitEmptyPreserved(t *testing.T) {
+	cmd := &cobra.Command{Use: "call"}
+	cmd.Flags().String("params", "", "")
+	cmd.Flags().String("args-json", "", "")
+	cmd.Flags().String("args-file", "", "")
+	cmd.Flags().StringSlice("tags", nil, "")
+	require.NoError(t, cmd.Flags().Set("tags", ""))
+
+	got, err := MergeFromCommand(cmd, MergeOptions{ReservedFlags: map[string]struct{}{
+		"params": {}, "args-json": {}, "args-file": {},
+	}})
+	require.NoError(t, err)
+	assert.Equal(t, []string{}, got["tags"])
+}
+
 func TestMergeFromCommand_ArgsFileExpandsHome(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
