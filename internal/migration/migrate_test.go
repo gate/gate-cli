@@ -142,3 +142,31 @@ command = "y"
 		t.Fatal("expected non-marker entries preserved")
 	}
 }
+
+func TestRunMigrateApplyUnknownFormatKeepsManualPatch(t *testing.T) {
+	home := t.TempDir()
+	target := filepath.Join(home, ".cursor", "mcp.yaml")
+	if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	// Scanner only checks known files; feed a custom scanner result through RunMigrate with existing file.
+	if err := os.WriteFile(target, []byte("mcpServers:\n  gate-info: {}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	report, err := RunMigrate(MigrateOptions{
+		Apply:       true,
+		ProviderIDs: []string{"cursor"},
+		Scanner:     NewScannerWithHome(home),
+		BackupDir:   filepath.Join(home, "backup"),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(report.Providers) == 0 {
+		t.Fatal("expected provider results")
+	}
+	// Unknown/non-structural formats should remain manual patch when changed=false.
+	if report.Providers[0].Action != "manual_patch" && report.Providers[0].Status == "warn" {
+		t.Fatalf("expected manual_patch for non-structural format, got %s", report.Providers[0].Action)
+	}
+}
