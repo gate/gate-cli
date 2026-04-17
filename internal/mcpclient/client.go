@@ -505,6 +505,9 @@ func (c *Client) call(ctx context.Context, method string, params interface{}) (*
 		c.logTransportFailure(method, reqID, 0, err)
 		return nil, nil, reqID, err
 	}
+	// Header order (CR-310): applyHeaders runs before Do; it sets Content-Type/Accept,
+	// user extra_headers, optional Bearer, strips any client-supplied session header,
+	// then attaches the session id from client state, then optional X-Gate-Cli-Name.
 	c.applyHeaders(req)
 
 	start := time.Now()
@@ -561,6 +564,8 @@ func (c *Client) call(ctx context.Context, method string, params interface{}) (*
 	return &parsed, resp, reqID, nil
 }
 
+// applyHeaders mutates req in a fixed order so extra_headers cannot permanently pin a
+// stale MCP-Session-Id: extras first, then Authorization, Del(session), then Set from c.sessionID.
 func (c *Client) applyHeaders(req *http.Request) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json, text/event-stream")

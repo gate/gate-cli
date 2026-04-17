@@ -99,6 +99,29 @@ func TestResolveRejectsControlCharsInPathOrQuery(t *testing.T) {
 	assert.Contains(t, err.Error(), "control characters")
 }
 
+func TestResolveRejectsShortBearerFromEnv(t *testing.T) {
+	t.Setenv("GATE_INTEL_NEWS_MCP_URL", "https://example.com/mcp/news")
+	t.Setenv("GATE_INTEL_BEARER_TOKEN", "tiny")
+
+	_, err := Resolve(ResolveOptions{Backend: "news"})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "bearer token must be at least")
+}
+
+func TestResolveRejectsShortBearerFromFile(t *testing.T) {
+	t.Setenv("GATE_INTEL_NEWS_MCP_URL", "https://example.com/mcp/news")
+	t.Setenv("GATE_INTEL_BEARER_TOKEN", "")
+
+	_, err := Resolve(ResolveOptions{
+		Backend: "news",
+		IntelFile: config.IntelFile{
+			BearerToken: "1234567",
+		},
+	})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "bearer token must be at least")
+}
+
 func TestResolveTimeoutSecondsFallback(t *testing.T) {
 	t.Setenv("GATE_INTEL_NEWS_MCP_URL", "https://example.com/mcp/news")
 	t.Setenv("GATE_INTEL_HTTP_TIMEOUT", "30")

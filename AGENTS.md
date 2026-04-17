@@ -7,8 +7,8 @@
 
 ## 常用命令
 - 构建: `go build -o gate-cli .`
-- 单元测试: `go test ./...`（发版/全量门禁）
-- Intel / MCP / migrate 快速测: `./scripts/test-intel-scope.sh -count=1`（见 `scripts/test-intel-scope.sh`）
+- 单元测试: `go test ./...`（发版或改动面超出 Intel 时的全量门禁）
+- Intel / MCP / migrate **日常自检**（推荐）: `./scripts/test-intel-scope.sh -count=1` 与 `./scripts/test-intel-scope.sh vet`（见 `scripts/test-intel-scope.sh`；避免未改交易子命令仍全量跑）
 - Integration 测试: `go test -tags integration ./internal/integration/... -v`
 - 本地 smoke test（公共 API 无需 key）: `./gate-cli spot market ticker --pair BTC_USDT`
 
