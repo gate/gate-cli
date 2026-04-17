@@ -1,6 +1,6 @@
 package intelfacade
 
-// Backend tool baselines aligned with specs/intel-tool-inventory.md.
+// Backend tool baselines aligned with the live Info/News MCP tool lists (Info: 29 tools on public gateway as of 2026-04).
 var NewsToolBaseline = []string{
 	"news_feed_search_news",
 	"news_feed_search_ugc",
@@ -41,12 +41,7 @@ var InfoToolBaseline = []string{
 	"info_coin_get_coin_rankings",
 	"info_marketsnapshot_batch_market_snapshot",
 	"info_marketsnapshot_get_market_overview",
-	"info_onchain_get_smart_money",
-	"info_onchain_get_entity_profile",
-	"info_onchain_trace_fund_flow",
 	"info_compliance_check_token_security",
-	"info_compliance_check_address_risk",
-	"info_compliance_search_regulatory_updates",
 }
 
 func BaselineToolCount() int {

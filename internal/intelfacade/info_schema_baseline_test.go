@@ -31,8 +31,7 @@ func TestInfoBaselineInputSchemaCriticalFields(t *testing.T) {
 		"info_marketsnapshot_batch_market_snapshot": {"symbols", "timeframe"},
 		"info_onchain_get_address_transactions":     {"from_address", "to_address", "nonzero_value"},
 		"info_compliance_check_token_security":      {"token", "address", "chain"},
-		"info_marketdetail_get_kline":               {"symbol", "timeframe", "extra"},
-		"info_compliance_search_regulatory_updates": {"query", "symbol", "address"},
+		"info_marketdetail_get_kline": {"symbol", "timeframe", "extra"},
 	}
 	for tool, fields := range cases {
 		schema := InfoBaselineInputSchema(tool)
