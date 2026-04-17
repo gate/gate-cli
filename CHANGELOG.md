@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased] - v0.3.1
+## [0.5.0] - 2026-04-17
 
 ### Fixed
 - **QC 收尾**：`internal/intelcmd/doc.go`；`toolconfig` deniedHeaders 字母序；`toolargs` `expandUserPath` 更清晰的 home 错误；`mcpclient` `callWithRetry` 重试语义 godoc；`migration` `atomicWritePreservePerm` 注释 Windows `Rename`；`toolrender` `ApplyOutputLimitWithData` 测量字节语义注释；scanner `rawLower` 命名。
@@ -69,6 +69,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Go version** bumped from 1.21 to 1.23 (go.mod and CI workflow)
 - **Client struct** extended with 17 new API service fields
 - **README** rewritten with full module listing and categorized features
+
+## [0.4.1]
+
+### Fixed
+- **Homebrew tap**: move generated formula into `Formula/` directory so `brew tap` can discover it (`2d7106d`)
+
+### Changed
+- **README**: update installation sections to reflect v0.4.0 distribution channels (`5b2795e`)
+
+## [0.4.0]
+
+### Added
+- **One-line install scripts**
+  - `install.sh` for Unix (macOS / Linux) — checksum-verified download, `$HOME/.local/bin` default, PATH hint
+  - `install.ps1` for Windows — parity with Unix installer
+  - Homebrew tap wiring in goreleaser (`.goreleaser.yaml`) for `brew install gate/tap/gate-cli`
+- **Installation distribution design spec & implementation plan** under `docs/plans/`
+
+### Fixed
+- Run checksum verification inside a TMP subshell so partial downloads cannot pollute the target directory
+- Pass `HOMEBREW_TAP_TOKEN` through to goreleaser in the release workflow
+- Harden install scripts: strict checksum guard, CRLF normalization for Windows, PATH deduplication
+
+### Changed
+- Refresh README installation instructions to cover Homebrew, one-line installer, and manual download paths
+
+## [0.3.2]
+
+### Added
+- **`--version` flag and `version` subcommand**: unified version reporting for both top-level flag and subcommand invocations
+- **Install distribution design spec** committed under `docs/plans/`
 
 ## [0.2.2]
 
