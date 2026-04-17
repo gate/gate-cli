@@ -83,6 +83,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 	fc := fileLayout{
 		DefaultProfile: profileName,
 		DefaultSettle:  "usdt",
+		// Defaults come from internal/config constants (CR-1010); bump those when public QC URLs move.
 		Intel: config.IntelFile{
 			InfoMCPURL: config.DefaultIntelInfoMCPURL,
 			NewsMCPURL: config.DefaultIntelNewsMCPURL,

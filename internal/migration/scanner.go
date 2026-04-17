@@ -3,7 +3,6 @@ package migration
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,11 +13,15 @@ var gateMarkers = []string{
 	"gate-news",
 }
 
-var gateTokenHints = []string{
-	`"gate-info"`,
-	`"gate-news"`,
-	`gate-info`,
-	`gate-news`,
+// gateTokenHints derives JSON/string hints from gateMarkers (CR-832).
+var gateTokenHints = buildGateTokenHints(gateMarkers)
+
+func buildGateTokenHints(markers []string) []string {
+	out := make([]string, 0, len(markers)*2)
+	for _, m := range markers {
+		out = append(out, `"`+m+`"`, m)
+	}
+	return out
 }
 
 // Entry describes one legacy Gate MCP match.
@@ -35,6 +38,8 @@ type ProviderScan struct {
 	EntriesFound int      `json:"entries_found"`
 	Entries      []Entry  `json:"entries,omitempty"`
 	Error        string   `json:"error,omitempty"`
+	// Warnings are non-fatal notes (e.g. symlink followed within home; CR-1009).
+	Warnings []string `json:"warnings,omitempty"`
 }
 
 // Scanner scans known provider config files for legacy Gate MCP entries.
@@ -101,6 +106,28 @@ func (s *Scanner) Scan(providerIDs []string) []ProviderScan {
 	return out
 }
 
+// subpathWithinHome reports whether target is under home. Both paths are cleaned and
+// EvalSymlinks so macOS /var vs /private/var does not falsely reject valid configs (CR-1009).
+func subpathWithinHome(home, target string) bool {
+	homeRes, err := filepath.EvalSymlinks(home)
+	if err != nil {
+		homeRes = filepath.Clean(home)
+	} else {
+		homeRes = filepath.Clean(homeRes)
+	}
+	targetRes, err := filepath.EvalSymlinks(target)
+	if err != nil {
+		targetRes = filepath.Clean(target)
+	} else {
+		targetRes = filepath.Clean(targetRes)
+	}
+	rel, err := filepath.Rel(homeRes, targetRes)
+	if err != nil {
+		return false
+	}
+	return rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
+}
+
 func (s *Scanner) scanProvider(providerID string, paths []string) ProviderScan {
 	result := ProviderScan{
 		ProviderID:   providerID,
@@ -108,6 +135,7 @@ func (s *Scanner) scanProvider(providerID string, paths []string) ProviderScan {
 		Entries:      make([]Entry, 0),
 	}
 	pathErrors := make([]string, 0)
+	warnings := make([]string, 0)
 	for _, p := range paths {
 		info, err := os.Lstat(p)
 		if err != nil {
@@ -116,20 +144,36 @@ func (s *Scanner) scanProvider(providerID string, paths []string) ProviderScan {
 			}
 			continue
 		}
+		openPath := p
 		if info.Mode()&os.ModeSymlink != 0 {
-			pathErrors = append(pathErrors, fmt.Sprintf("refuse symlink config: %s", p))
-			continue
+			resolved, err := filepath.EvalSymlinks(p)
+			if err != nil {
+				pathErrors = append(pathErrors, fmt.Sprintf("symlink %q: %v", p, err))
+				continue
+			}
+			resolved = filepath.Clean(resolved)
+			if !subpathWithinHome(s.home, resolved) {
+				pathErrors = append(pathErrors, fmt.Sprintf("symlink target outside home (refused): %q -> %q", p, resolved))
+				continue
+			}
+			openPath = resolved
+			warnings = append(warnings, fmt.Sprintf("followed symlink within home: %q -> %q", p, resolved))
 		}
-		if info.Size() > 1<<20 {
-			pathErrors = append(pathErrors, fmt.Sprintf("config too large (>1MiB): %s", p))
-			continue
-		}
-		f, err := os.Open(p)
+		statInfo, err := os.Stat(openPath)
 		if err != nil {
 			pathErrors = append(pathErrors, err.Error())
 			continue
 		}
-		data, err := io.ReadAll(io.LimitReader(f, 1<<20))
+		if statInfo.Size() > 1<<20 {
+			pathErrors = append(pathErrors, fmt.Sprintf("config too large (>1MiB): %s", p))
+			continue
+		}
+		f, err := os.Open(openPath)
+		if err != nil {
+			pathErrors = append(pathErrors, err.Error())
+			continue
+		}
+		data, err := readFromReaderLimited(f, 1<<20)
 		_ = f.Close()
 		if err != nil {
 			pathErrors = append(pathErrors, err.Error())
@@ -156,6 +200,7 @@ func (s *Scanner) scanProvider(providerID string, paths []string) ProviderScan {
 		}
 	}
 	result.EntriesFound = len(result.Entries)
+	result.Warnings = warnings
 	if result.EntriesFound == 0 && len(pathErrors) > 0 {
 		result.Error = strings.Join(pathErrors, "; ")
 	}
@@ -163,27 +208,29 @@ func (s *Scanner) scanProvider(providerID string, paths []string) ProviderScan {
 }
 
 // containsGateTokenLegacy is the substring / hint path for non-JSON or invalid JSON files (CR-207).
-func containsGateTokenLegacy(rawLower, marker string) bool {
-	if strings.Contains(rawLower, `"`+marker+`"`) {
+// legacyTextLower must be strings.ToLower(rawContent); substring matches can false-positive in
+// comments/URLs vs structured JSON (CR-411) — prefer valid JSON configs when possible.
+func containsGateTokenLegacy(legacyTextLower, marker string) bool {
+	if strings.Contains(legacyTextLower, `"`+marker+`"`) {
 		return true
 	}
 	for _, hint := range gateTokenHints {
-		if strings.EqualFold(hint, marker) && strings.Contains(rawLower, hint) {
+		if strings.EqualFold(hint, marker) && strings.Contains(legacyTextLower, hint) {
 			return true
 		}
 	}
 	return false
 }
 
-// containsGateToken reports whether raw config text references marker.
-// rawLower should be strings.ToLower(raw); it is ignored when raw is valid JSON (CR-207).
+// containsGateToken reports whether rawContent references marker.
+// legacyTextLower should be strings.ToLower(rawContent); ignored when rawContent is valid JSON (CR-207).
 // Kept for unit tests; scanProvider uses the same JSON-once logic inline.
-func containsGateToken(rawLower, raw, marker string) bool {
+func containsGateToken(legacyTextLower, rawContent, marker string) bool {
 	var decoded interface{}
-	if err := json.Unmarshal([]byte(raw), &decoded); err == nil {
+	if err := json.Unmarshal([]byte(rawContent), &decoded); err == nil {
 		return visitJSONForMarker(decoded, marker)
 	}
-	return containsGateTokenLegacy(rawLower, marker)
+	return containsGateTokenLegacy(legacyTextLower, marker)
 }
 
 func visitJSONForMarker(v interface{}, marker string) bool {

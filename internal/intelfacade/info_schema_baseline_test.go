@@ -25,6 +25,7 @@ func TestInfoBaselineInputSchemaCoverage(t *testing.T) {
 func TestInfoBaselineInputSchemaCriticalFields(t *testing.T) {
 	t.Parallel()
 	cases := map[string][]string{
+		"info_coin_get_coin_info":                   {"query", "symbol"},
 		"info_markettrend_get_kline":                {"symbol", "timeframe", "with_indicators"},
 		"info_markettrend_get_indicator_history":    {"symbol", "indicators", "timeframe"},
 		"info_marketsnapshot_batch_market_snapshot": {"symbols", "timeframe"},

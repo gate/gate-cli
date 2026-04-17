@@ -13,6 +13,7 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 		"scope":      infoStr("scope"),
 		"size":       infoInt("size"),
 		"fields":     infoArrStr("fields"),
+		"symbol":     infoStr("Coin symbol alias to query"),
 	}, "query"),
 	"info_coin_search_coins": infoObj(map[string]interface{}{
 		"category":       infoStr("category"),
@@ -299,7 +300,5 @@ var (
 
 func initInfoBaselineFrozen() {
 	infoBaselineFrozen = make(map[string]map[string]interface{}, len(InfoBaselineInputSchemas))
-	for k, v := range InfoBaselineInputSchemas {
-		infoBaselineFrozen[k] = deepCloneSchemaMap(v)
-	}
+	freezeToolBaseline(infoBaselineFrozen, InfoBaselineInputSchemas)
 }

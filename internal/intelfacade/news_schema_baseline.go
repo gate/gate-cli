@@ -165,7 +165,5 @@ var (
 
 func initNewsBaselineFrozen() {
 	newsBaselineFrozen = make(map[string]map[string]interface{}, len(NewsBaselineInputSchemas))
-	for k, v := range NewsBaselineInputSchemas {
-		newsBaselineFrozen[k] = deepCloneSchemaMap(v)
-	}
+	freezeToolBaseline(newsBaselineFrozen, NewsBaselineInputSchemas)
 }

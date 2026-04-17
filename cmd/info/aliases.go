@@ -27,7 +27,7 @@ var infoSchemaLoader = loadInfoToolSchemas
 
 func buildInfoAliases() {
 	schemas := infoSchemaLoader()
-	groups := intelcmd.BuildGroupedAliases(intelcmd.AliasBuildOptions{
+	groups := intelcmd.BuildGroupedAliases(&intelcmd.AliasBuildOptions{
 		BackendPrefix:   "info",
 		BackendTitle:    "Info",
 		ToolBaseline:    intelfacade.InfoToolBaseline,
@@ -40,17 +40,13 @@ func buildInfoAliases() {
 				toolschema.ApplyInputSchemaFlags(cmd, b)
 			}
 		},
-		AfterAliasBuilt: func(toolName string, cmd *cobra.Command) {
-			if toolName == "info_coin_get_coin_info" && cmd.Flags().Lookup("symbol") == nil {
-				cmd.Flags().String("symbol", "", "Coin symbol alias to query")
-			}
-		},
 	})
 	for _, group := range groups {
 		Cmd.AddCommand(group)
 	}
 }
 
+// loadInfoToolSchemas reads the on-disk schema cache once per init (single return path; CR-829).
 func loadInfoToolSchemas() map[string]toolschema.ToolSummary {
 	return intelcmd.LoadToolSchemasFromCache("info", func(out map[string]toolschema.ToolSummary) {
 		intelcmd.MergeToolBaselineInto(out, intelfacade.InfoToolBaseline, intelfacade.InfoBaselineInputSchema)

@@ -236,8 +236,8 @@ func validateBaseURL(raw string) error {
 	if u.Host == "" {
 		return fmt.Errorf("invalid intel endpoint url: missing host")
 	}
-	if strings.ContainsAny(u.Path, "\r\n\x00") || strings.ContainsAny(u.RawQuery, "\r\n\x00") {
-		return fmt.Errorf("invalid intel endpoint url: path or query contains control characters")
+	if strings.ContainsAny(u.Path, "\r\n\x00") || strings.ContainsAny(u.RawQuery, "\r\n\x00") || strings.ContainsAny(u.Fragment, "\r\n\x00") {
+		return fmt.Errorf("invalid intel endpoint url: path, query, or fragment contains control characters")
 	}
 	scheme := strings.ToLower(u.Scheme)
 	if scheme == "https" {

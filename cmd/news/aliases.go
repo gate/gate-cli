@@ -27,7 +27,7 @@ var newsSchemaLoader = loadNewsToolSchemas
 
 func buildNewsAliases() {
 	schemas := newsSchemaLoader()
-	groups := intelcmd.BuildGroupedAliases(intelcmd.AliasBuildOptions{
+	groups := intelcmd.BuildGroupedAliases(&intelcmd.AliasBuildOptions{
 		BackendPrefix:   "news",
 		BackendTitle:    "News",
 		ToolBaseline:    intelfacade.NewsToolBaseline,
@@ -45,6 +45,7 @@ func buildNewsAliases() {
 	}
 }
 
+// loadNewsToolSchemas reads the on-disk schema cache once per init (single return path; CR-829).
 func loadNewsToolSchemas() map[string]toolschema.ToolSummary {
 	return intelcmd.LoadToolSchemasFromCache("news", func(out map[string]toolschema.ToolSummary) {
 		intelcmd.MergeToolBaselineInto(out, intelfacade.NewsToolBaseline, intelfacade.NewsBaselineInputSchema)

@@ -19,6 +19,8 @@ func cloneToolsForList(in []Tool) []Tool {
 	return out
 }
 
+// cloneInputSchemaAny deep-copies schema-shaped JSON via round-trip (CR-308: no manual
+// recursive walk; encoding/json applies safe nesting limits on decode).
 func cloneInputSchemaAny(v interface{}) interface{} {
 	if v == nil {
 		return nil

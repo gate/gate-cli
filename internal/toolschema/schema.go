@@ -68,6 +68,9 @@ func LoadCache(backend string) ([]ToolSummary, bool, error) {
 	return payload.Tools, fresh, nil
 }
 
+// ForceRefreshEnabled reports whether Intel tool schema caches should be treated as stale
+// for this process. Non-empty `GATE_INTEL_REFRESH_SCHEMA` set to 1/true/yes enables refresh
+// (see README Intel MCP section; CR-833).
 func ForceRefreshEnabled() bool {
 	v := strings.TrimSpace(strings.ToLower(os.Getenv(forceRefreshEnv)))
 	if v == "1" || v == "true" || v == "yes" {

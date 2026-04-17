@@ -99,6 +99,13 @@ func TestResolveRejectsControlCharsInPathOrQuery(t *testing.T) {
 	assert.Contains(t, err.Error(), "control characters")
 }
 
+func TestResolveRejectsControlCharsInFragment(t *testing.T) {
+	t.Setenv("GATE_INTEL_NEWS_MCP_URL", "https://example.com/mcp/news#bad\rfrag")
+	_, err := Resolve(ResolveOptions{Backend: "news"})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "control characters")
+}
+
 func TestResolveRejectsShortBearerFromEnv(t *testing.T) {
 	t.Setenv("GATE_INTEL_NEWS_MCP_URL", "https://example.com/mcp/news")
 	t.Setenv("GATE_INTEL_BEARER_TOKEN", "tiny")

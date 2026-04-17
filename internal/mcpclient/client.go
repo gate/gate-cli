@@ -40,6 +40,7 @@ var (
 	}
 )
 
+// redactMaxDepth caps recursion for debug redaction (CR-506: trie/substring overhaul deferred as non-hot-path).
 const redactMaxDepth = 16
 
 // gateCLIProductHeader aligns MCP HTTP requests with REST client defaults
@@ -143,6 +144,7 @@ type Client struct {
 	injectDefaultGateCliName bool
 	userAgent                string
 	errOut                   io.Writer
+	diagMu                   sync.Mutex // serializes transport diag lines to errOut (CR-410)
 
 	sessionID string
 	idSeq     uint64
@@ -155,7 +157,9 @@ type Client struct {
 	listCacheUntil time.Time
 	initializing   bool
 	initErr        error
-	initWait       chan struct{}
+	// initWait is an unbuffered "done" channel for the in-flight initialize round; it is
+	// make+closed under mu so waiters block until the initializer finishes (CR-412 / CR-301).
+	initWait chan struct{}
 
 	listCacheTTLFull  time.Duration
 	listCacheTTLEmpty time.Duration
@@ -199,6 +203,18 @@ func New(endpoint *toolconfig.ResolvedEndpoint, opts ...Option) *Client {
 	return c
 }
 
+func (c *Client) writeDiagf(format string, a ...interface{}) {
+	if c == nil {
+		return
+	}
+	c.diagMu.Lock()
+	defer c.diagMu.Unlock()
+	_, _ = fmt.Fprintf(c.errOut, format, a...)
+}
+
+// readLimit is the maximum MCP JSON-RPC response body size in bytes. The client reads at
+// most limit+1 bytes (see call path) so peak allocation is bounded; tune with
+// GATE_INTEL_MAX_RESPONSE_BYTES (CR-208: intentional trade-off vs streaming decode).
 func (c *Client) readLimit() int64 {
 	if c == nil || c.maxResponseBytes <= 0 {
 		return defaultMaxResponseBytes
@@ -416,7 +432,7 @@ func (c *Client) logCallArguments(toolName string, arguments map[string]interfac
 			args = `{"_error":"failed to marshal arguments"}`
 		}
 	}
-	_, _ = fmt.Fprintf(c.errOut, "%s backend=%s rpc_method=tools/call tool_name=%s arguments=%s\n",
+	c.writeDiagf("%s backend=%s rpc_method=tools/call tool_name=%s arguments=%s\n",
 		tag, c.backend, toolName, args)
 }
 
@@ -615,7 +631,7 @@ func (c *Client) logDebug(method, requestID string, elapsed time.Duration, resp 
 	c.mu.Lock()
 	sessionSet := c.sessionID != ""
 	c.mu.Unlock()
-	_, _ = fmt.Fprintf(c.errOut, "%s backend=%s rpc_method=%s request_id=%s status=%d elapsed_ms=%d trace_id=%s session_set=%t\n",
+	c.writeDiagf("%s backend=%s rpc_method=%s request_id=%s status=%d elapsed_ms=%d trace_id=%s session_set=%t\n",
 		tag, c.backend, method, requestID, status, elapsed.Milliseconds(), traceID, sessionSet)
 }
 
@@ -630,7 +646,7 @@ func (c *Client) logTransportFailure(method, requestID string, elapsed time.Dura
 	c.mu.Lock()
 	sessionSet := c.sessionID != ""
 	c.mu.Unlock()
-	_, _ = fmt.Fprintf(c.errOut, "%s backend=%s rpc_method=%s request_id=%s transport_error=%q elapsed_ms=%d session_set=%t\n",
+	c.writeDiagf("%s backend=%s rpc_method=%s request_id=%s transport_error=%q elapsed_ms=%d session_set=%t\n",
 		tag, c.backend, method, requestID, err.Error(), elapsed.Milliseconds(), sessionSet)
 }
 
@@ -647,6 +663,8 @@ func (c *Client) resetSession() {
 // invalidateListCache drops the cached tools/list snapshot. Callers must not hold c.mu
 // when invoking it (sync.Mutex is not re-entrant); ListTools holds the lock only around
 // cache reads/writes and calls this helper on error paths without nesting.
+// Assigning nil (not [:0]) releases the backing array for GC once no callers retain slices
+// derived from the previous cache (CR-210).
 func (c *Client) invalidateListCache() {
 	c.mu.Lock()
 	defer c.mu.Unlock()

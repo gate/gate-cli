@@ -77,6 +77,27 @@ func TestEmitFormatCompatNotice(t *testing.T) {
 		}
 	})
 
+	t.Run("silent for version subcommand", func(t *testing.T) {
+		t.Setenv("GATE_CLI_FORMAT_NOTICE_FORCE", "1")
+		oldStderr := os.Stderr
+		r, w, _ := os.Pipe()
+		os.Stderr = w
+		defer func() { os.Stderr = oldStderr }()
+
+		root := &cobra.Command{Use: "gate-cli"}
+		root.PersistentFlags().String("format", "pretty", "")
+		ver := &cobra.Command{Use: "version", Run: func(*cobra.Command, []string) {}}
+		root.AddCommand(ver)
+		emitFormatCompatNotice(ver)
+		_ = w.Close()
+
+		var buf bytes.Buffer
+		_, _ = buf.ReadFrom(r)
+		if buf.Len() != 0 {
+			t.Fatalf("expected no notice for version, got %q", buf.String())
+		}
+	})
+
 	t.Run("silent when format explicitly set", func(t *testing.T) {
 		oldStderr := os.Stderr
 		r, w, _ := os.Pipe()

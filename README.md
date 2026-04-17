@@ -170,5 +170,6 @@ gate-cli spot market ticker --pair BTC_USDT --format json | jq '.last'
 - `migrate --apply` now writes target files atomically and preserves original file permissions.
 - Default migrate backups are stored under `~/.gate-cli/migrate-backups` instead of a shared temp directory.
 - `GATE_INTEL_EXTRA_HEADERS` rejects sensitive/unsafe header names (`Authorization`, `Host`, `Content-Length`) and CRLF-containing values.
-- `--refresh-schema` flag has been removed; use `GATE_INTEL_REFRESH_SCHEMA=1` to force schema refresh.
+- `--refresh-schema` flag has been removed; use `GATE_INTEL_REFRESH_SCHEMA=1` to force schema refresh (see `internal/toolschema` and `gate-cli tool` help for cache behavior).
+- `GATE_INTEL_SCHEMA_CACHE_TTL` optionally overrides how long cached `tools/list` schemas are considered fresh (default 10 minutes).
 - `GATE_INTEL_MAX_RESPONSE_BYTES` overrides the MCP HTTP response read limit (default 16 MiB).

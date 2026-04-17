@@ -61,8 +61,12 @@ const (
 	formatNoticeForceEnv = "GATE_CLI_FORMAT_NOTICE_FORCE" // non-empty: emit compat notice even when stderr is not a TTY (tests only)
 )
 
-func Execute() {
+func setupRootForExecute() {
 	intelcmd.SilenceCommandTree(rootCmd)
+}
+
+func Execute() {
+	setupRootForExecute()
 	if err := rootCmd.Execute(); err != nil {
 		var codedErr *exitcode.Error
 		if errors.As(err, &codedErr) {
@@ -155,11 +159,36 @@ func normalizeMaxOutputBytesFlag(cmd *cobra.Command) {
 	}
 }
 
-func emitFormatCompatNotice(root *cobra.Command) {
-	if root == nil {
+func suppressFormatCompatNoticeFor(cmd *cobra.Command) bool {
+	if cmd == nil {
+		return false
+	}
+	for x := cmd; x != nil; x = x.Parent() {
+		switch strings.ToLower(x.Name()) {
+		case "version", "help", "completion":
+			return true
+		}
+	}
+	r := cmd.Root()
+	if r != nil {
+		if f := r.PersistentFlags().Lookup("help"); f != nil && f.Changed {
+			return true
+		}
+	}
+	if f := cmd.Flags().Lookup("help"); f != nil && f.Changed {
+		return true
+	}
+	return false
+}
+
+func emitFormatCompatNotice(cmd *cobra.Command) {
+	if cmd == nil {
 		return
 	}
-	root = root.Root()
+	if suppressFormatCompatNoticeFor(cmd) {
+		return
+	}
+	root := cmd.Root()
 	if strings.TrimSpace(os.Getenv(formatDeprecationEnv)) != "" {
 		return
 	}

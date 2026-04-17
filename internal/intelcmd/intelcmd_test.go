@@ -65,11 +65,14 @@ func TestSilenceCommandTreeSetsFlagsOnChildren(t *testing.T) {
 }
 
 func TestBuildGroupedAliasesNilMakeAliasReturnsEmpty(t *testing.T) {
-	out := BuildGroupedAliases(AliasBuildOptions{
+	out := BuildGroupedAliases(&AliasBuildOptions{
 		BackendPrefix: "info",
 		BackendTitle:  "Info",
 		ToolBaseline:  []string{"info_coin_get_coin_info"},
 		MakeAlias:     nil,
 	})
 	assert.Nil(t, out)
+	if BuildGroupedAliases(nil) != nil {
+		t.Fatal("expected nil for nil opts")
+	}
 }

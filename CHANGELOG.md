@@ -17,7 +17,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`tools/list` cache**: unit tests cover `shouldInvalidateListCacheOnListError` and recovery after a malformed list result invalidates the snapshot (CR-805).
 - **`--args-file`**: relative paths must stay within the working directory (`filepath.IsLocal` after `Rel`); absolute paths unchanged (CR-1012).
 - **Intel schema cache**: temp write uses `0o600`, then restores prior file permission when rewriting (CR-409); `Rename` failure removes `.tmp`.
-- **CR-811**: Intel leaf aliases share `internal/intelcmd` (`NewLeafAliasCommand`, `LoadToolSchemasFromCache`, `AddFallbackArgFlags`, `MergeToolBaselineInto`, `ReservedMCPJSONFallbackFlags`); `cmd/info` and `cmd/news` only wire backend-specific baselines and `AfterAliasBuilt`.
+- **CR-811**: Intel leaf aliases share `internal/intelcmd` (`NewLeafAliasCommand`, `LoadToolSchemasFromCache`, `AddFallbackArgFlags`, `MergeToolBaselineInto`, `ReservedMCPJSONFallbackFlags`); `cmd/info` and `cmd/news` only wire backend-specific baselines.
+- **Info `info_coin_get_coin_info` (CR-1002)**: `--symbol` is defined in the frozen baseline input schema; removed the `AfterAliasBuilt` special-case in `cmd/info/aliases.go`.
+- **`internal/toolrender` (CR-505)**: `ApplyOutputLimitWithData` returns display JSON for the truncated placeholder so Pretty mode avoids an extra `json.Marshal` of `data`.
+- **`internal/migration` (CR-211)**: `readFromReaderLimited` centralizes bounded reads (`LimitReader(max+1)`); `scanner` and `backupFile` reuse it.
 - **Root**: format compat notice line uses `io.WriteString` (CR-1005).
 - Removed unused `newsObjAny` and dead `pruneGateMarkers` helper so `staticcheck` U1000 stays clean on Intel packages.
 - **Intel MCP**: HTTP response body over the configured read limit now wraps a stable sentinel error for `errors.Is` (size-limit diagnostics).

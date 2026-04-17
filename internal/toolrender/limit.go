@@ -10,18 +10,21 @@ func ApplyOutputLimit(envelope map[string]interface{}, maxBytes int64) map[strin
 	if data := envelope["data"]; data != nil {
 		measured, _ = json.Marshal(data)
 	}
-	return ApplyOutputLimitWithData(envelope, maxBytes, measured)
+	out, _ := ApplyOutputLimitWithData(envelope, maxBytes, measured)
+	return out
 }
 
 // ApplyOutputLimitWithData applies output-size limit using caller-provided serialized data.
-// dataJSON must be json.Marshal(envelope["data"]) when non-empty so size checks match what
-// would be printed (CR-903: single measurement source for truncation decisions).
-func ApplyOutputLimitWithData(envelope map[string]interface{}, maxBytes int64, dataJSON []byte) map[string]interface{} {
+// measureJSON must be json.Marshal(envelope["data"]) when non-empty so size checks match what
+// would be printed (CR-903). The second return is JSON bytes to render for "data": when
+// truncated it is the compact encoding of the replacement placeholder (CR-505: avoid an
+// extra Marshal in the pretty path).
+func ApplyOutputLimitWithData(envelope map[string]interface{}, maxBytes int64, dataJSON []byte) (map[string]interface{}, []byte) {
 	if maxBytes <= 0 {
-		return envelope
+		return envelope, dataJSON
 	}
 	if len(dataJSON) == 0 || int64(len(dataJSON)) <= maxBytes {
-		return envelope
+		return envelope, dataJSON
 	}
 
 	out := cloneMap(envelope)
@@ -36,11 +39,16 @@ func ApplyOutputLimitWithData(envelope map[string]interface{}, maxBytes int64, d
 		}
 	}
 	out["meta"] = meta
-	out["data"] = map[string]interface{}{
+	placeholder := map[string]interface{}{
 		"truncated": true,
 		"message":   "output exceeded max bytes; data omitted",
 	}
-	return out
+	out["data"] = placeholder
+	display, err := json.Marshal(placeholder)
+	if err != nil {
+		display = []byte(`{"truncated":true,"message":"output exceeded max bytes; data omitted"}`)
+	}
+	return out, display
 }
 
 func cloneMap(in map[string]interface{}) map[string]interface{} {

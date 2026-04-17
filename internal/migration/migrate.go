@@ -2,7 +2,6 @@ package migration
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -166,12 +165,9 @@ func backupFile(src, backupDir string) (string, error) {
 		return "", fmt.Errorf("backup source is not a regular file: %s", src)
 	}
 	const maxBackup = 1 << 20
-	data, err := io.ReadAll(io.LimitReader(f, maxBackup+1))
+	data, err := readFromReaderLimited(f, maxBackup)
 	if err != nil {
-		return "", err
-	}
-	if len(data) > maxBackup {
-		return "", fmt.Errorf("source file exceeds %d bytes: %s", maxBackup, src)
+		return "", fmt.Errorf("read backup source %s: %w", src, err)
 	}
 	name := filepath.Base(src) + "." + time.Now().Format("20060102-150405") + ".bak"
 	dst := filepath.Join(backupDir, name)

@@ -83,4 +83,63 @@ func TestScanProviderClearsErrorWhenEntryFound(t *testing.T) {
 	if items[0].Error != "" {
 		t.Fatalf("expected empty error when entries found, got %q", items[0].Error)
 	}
+	// Second path is a symlink into the first file; scanner follows it within home (CR-1009).
+	if len(items[0].Warnings) == 0 {
+		t.Fatalf("expected symlink follow warning, got none")
+	}
+}
+
+func TestScannerFollowsSymlinkWithinHome(t *testing.T) {
+	home := t.TempDir()
+	real := filepath.Join(home, ".cursor", "real-mcp.json")
+	link := filepath.Join(home, ".cursor", "mcp.json")
+	if err := os.MkdirAll(filepath.Dir(real), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(real, []byte(`{"mcpServers":{"gate-news":{"command":"x"}}}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(real, link); err != nil {
+		t.Fatal(err)
+	}
+
+	sc := NewScannerWithHome(home)
+	items := sc.Scan([]string{"cursor"})
+	if len(items) != 1 {
+		t.Fatalf("expected 1 provider, got %d", len(items))
+	}
+	if items[0].EntriesFound == 0 {
+		t.Fatalf("expected entries via symlink")
+	}
+	if len(items[0].Warnings) == 0 || !strings.Contains(items[0].Warnings[0], "followed symlink") {
+		t.Fatalf("expected followed symlink warning, got %#v", items[0].Warnings)
+	}
+}
+
+func TestScannerRefusesSymlinkTargetOutsideHome(t *testing.T) {
+	home := t.TempDir()
+	outside := t.TempDir()
+	outFile := filepath.Join(outside, "secret.json")
+	if err := os.WriteFile(outFile, []byte(`{"mcpServers":{"gate-info":{"command":"x"}}}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(home, ".cursor", "mcp.json")
+	if err := os.MkdirAll(filepath.Dir(link), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(outFile, link); err != nil {
+		t.Fatal(err)
+	}
+
+	sc := NewScannerWithHome(home)
+	items := sc.Scan([]string{"cursor"})
+	if len(items) != 1 {
+		t.Fatalf("expected 1 provider, got %d", len(items))
+	}
+	if items[0].EntriesFound != 0 {
+		t.Fatalf("expected no entries when symlink escapes home")
+	}
+	if items[0].Error == "" || !strings.Contains(items[0].Error, "outside home") {
+		t.Fatalf("expected outside-home error, got Error=%q", items[0].Error)
+	}
 }

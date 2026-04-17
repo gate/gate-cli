@@ -20,8 +20,8 @@ type AliasBuildOptions struct {
 }
 
 // BuildGroupedAliases constructs grouped alias command trees for info/news style backends.
-func BuildGroupedAliases(opts AliasBuildOptions) []*cobra.Command {
-	if opts.MakeAlias == nil {
+func BuildGroupedAliases(opts *AliasBuildOptions) []*cobra.Command {
+	if opts == nil || opts.MakeAlias == nil {
 		return nil
 	}
 	groups := map[string]*cobra.Command{}
