@@ -14,9 +14,9 @@ profiles:
     base_url: "https://api-testnet.gateapi.io"
 
 # --- Intel / MCP (optional)
-# Copy these into your environment when running `go test -tags integration` for Intel/MCP tests,
-# or extend this yaml if a future integration test reads intel URLs from file (not wired in repo yet).
-# Full variable list and precedence: specs/intel-config-and-security.md
+# Prefer ~/.gate-cli/config.yaml "intel" (news_mcp_url / info_mcp_url, etc.); non-empty GATE_INTEL_*
+# environment variables override file values. For integration tests, env exports are still common.
+# See specs/cli/mcp-wire-appendix.md and internal/config.IntelFile for fields / env names.
 #
 # Local debug quick start (public QC endpoints):
 # export GATE_INTEL_NEWS_MCP_URL="https://api.gatemcp.ai/mcp/news"

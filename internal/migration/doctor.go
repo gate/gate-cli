@@ -112,7 +112,7 @@ func BuildDoctorReport(opts DoctorOptions) DoctorReport {
 			ID:       "cli.connectivity",
 			Status:   passFail(ok),
 			Blocking: true,
-			Message:  ternary(ok, "intel endpoint env configured", "intel endpoint env not configured"),
+			Message:  ternary(ok, "intel MCP base URL configured", "intel MCP base URL not configured"),
 		})
 	}
 

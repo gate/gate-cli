@@ -53,6 +53,7 @@ type profileEntry struct {
 type fileLayout struct {
 	DefaultProfile string                  `yaml:"default_profile"`
 	DefaultSettle  string                  `yaml:"default_settle"`
+	Intel          config.IntelFile        `yaml:"intel,omitempty"`
 	Profiles       map[string]profileEntry `yaml:"profiles"`
 }
 
@@ -102,7 +103,9 @@ func maskSecrets(content string) string {
 	lines := strings.Split(content, "\n")
 	for i, line := range lines {
 		trimmed := strings.TrimLeft(line, " \t")
-		if strings.HasPrefix(trimmed, "api_key:") || strings.HasPrefix(trimmed, "api_secret:") {
+		if strings.HasPrefix(trimmed, "api_key:") || strings.HasPrefix(trimmed, "api_secret:") ||
+			strings.HasPrefix(trimmed, "bearer_token:") || strings.HasPrefix(trimmed, "news_bearer_token:") ||
+			strings.HasPrefix(trimmed, "info_bearer_token:") {
 			indent := line[:len(line)-len(trimmed)]
 			field := trimmed[:strings.Index(trimmed, ":")]
 			lines[i] = indent + field + ": ****"

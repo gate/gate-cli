@@ -9,7 +9,6 @@ import (
 	"github.com/gate/gate-cli/internal/cmdutil"
 	"github.com/gate/gate-cli/internal/intelfacade"
 	"github.com/gate/gate-cli/internal/mcpclient"
-	"github.com/gate/gate-cli/internal/toolconfig"
 )
 
 type newsService interface {
@@ -19,7 +18,7 @@ type newsService interface {
 }
 
 var newNewsService = func(cmd *cobra.Command) (newsService, error) {
-	endpoint, err := toolconfig.Resolve(toolconfig.ResolveOptions{Backend: "news"})
+	endpoint, err := cmdutil.ResolveIntelEndpoint(cmd, "news")
 	if err != nil {
 		return nil, err
 	}

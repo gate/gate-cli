@@ -10,6 +10,7 @@ import (
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/config"
 	"github.com/gate/gate-cli/internal/output"
+	"github.com/gate/gate-cli/internal/toolconfig"
 	"github.com/gate/gate-cli/internal/useragent"
 )
 
@@ -32,6 +33,43 @@ func IntelMCPTransportDiag(cmd *cobra.Command) (enabled bool, tag string) {
 		return true, "[verbose]"
 	}
 	return false, ""
+}
+
+// IntelMCPBaseURLs returns effective Info/News MCP base URLs (env overrides config file "intel").
+func IntelMCPBaseURLs(cmd *cobra.Command) (infoURL, newsURL string, err error) {
+	root := cmd.Root().PersistentFlags()
+	profile, _ := root.GetString("profile")
+	apiKey, _ := root.GetString("api-key")
+	apiSecret, _ := root.GetString("api-secret")
+	cfg, err := config.Load(config.Options{
+		Profile:       profile,
+		FlagAPIKey:    apiKey,
+		FlagAPISecret: apiSecret,
+	})
+	if err != nil {
+		return "", "", err
+	}
+	infoURL, newsURL = config.EffectiveIntelMCPURLs(cfg.Intel)
+	return infoURL, newsURL, nil
+}
+
+// ResolveIntelEndpoint loads ~/.gate-cli/config.yaml (respecting profile and API key flags)
+// and resolves the MCP endpoint for the given intel backend ("info" or "news").
+// Non-empty GATE_INTEL_* environment variables override file defaults.
+func ResolveIntelEndpoint(cmd *cobra.Command, backend string) (*toolconfig.ResolvedEndpoint, error) {
+	root := cmd.Root().PersistentFlags()
+	profile, _ := root.GetString("profile")
+	apiKey, _ := root.GetString("api-key")
+	apiSecret, _ := root.GetString("api-secret")
+	cfg, err := config.Load(config.Options{
+		Profile:       profile,
+		FlagAPIKey:    apiKey,
+		FlagAPISecret: apiSecret,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return toolconfig.Resolve(toolconfig.ResolveOptions{Backend: backend, IntelFile: cfg.Intel})
 }
 
 // GetClient builds a Gate API client.

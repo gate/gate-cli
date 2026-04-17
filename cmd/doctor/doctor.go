@@ -2,7 +2,6 @@ package doctor
 
 import (
 	"errors"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -36,12 +35,18 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	strict, _ := cmd.Flags().GetBool("strict")
 	profile, _ := cmd.Root().PersistentFlags().GetString("profile")
 
+	infoURL, newsURL, err := cmdutil.IntelMCPBaseURLs(cmd)
+	if err != nil {
+		p.PrintError(&output.GateError{Status: 500, Label: "CONFIG_ERROR", Message: err.Error()})
+		return exitcode.New(30, err)
+	}
+
 	report := migration.BuildDoctorReport(migration.DoctorOptions{
 		Profile: profile,
 		Checks:  migration.ParseCheckList(checkRaw),
 		Strict:  strict,
-		InfoURL: os.Getenv("GATE_INTEL_INFO_MCP_URL"),
-		NewsURL: os.Getenv("GATE_INTEL_NEWS_MCP_URL"),
+		InfoURL: infoURL,
+		NewsURL: newsURL,
 	})
 
 	if p.IsJSON() {

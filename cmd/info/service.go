@@ -9,7 +9,6 @@ import (
 	"github.com/gate/gate-cli/internal/cmdutil"
 	"github.com/gate/gate-cli/internal/intelfacade"
 	"github.com/gate/gate-cli/internal/mcpclient"
-	"github.com/gate/gate-cli/internal/toolconfig"
 )
 
 type infoService interface {
@@ -19,7 +18,7 @@ type infoService interface {
 }
 
 var newInfoService = func(cmd *cobra.Command) (infoService, error) {
-	endpoint, err := toolconfig.Resolve(toolconfig.ResolveOptions{Backend: "info"})
+	endpoint, err := cmdutil.ResolveIntelEndpoint(cmd, "info")
 	if err != nil {
 		return nil, err
 	}

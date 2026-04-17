@@ -17,6 +17,13 @@ func TestLoadFromFile(t *testing.T) {
 	os.WriteFile(cfgFile, []byte(`
 default_profile: main
 default_settle: usdt
+intel:
+  news_mcp_url: "https://cfg.example/mcp/news"
+  info_mcp_url: "https://cfg.example/mcp/info"
+  bearer_token: "file-bearer"
+  extra_headers:
+    rule: data-mcp
+  http_timeout: "90s"
 profiles:
   main:
     api_key: "key123"
@@ -30,6 +37,31 @@ profiles:
 	assert.Equal(t, "secret456", cfg.APISecret)
 	assert.Equal(t, "https://api.gateio.ws", cfg.BaseURL)
 	assert.Equal(t, "usdt", cfg.DefaultSettle)
+	assert.Equal(t, "https://cfg.example/mcp/news", cfg.Intel.NewsMCPURL)
+	assert.Equal(t, "https://cfg.example/mcp/info", cfg.Intel.InfoMCPURL)
+	assert.Equal(t, "file-bearer", cfg.Intel.BearerToken)
+	assert.Equal(t, "data-mcp", cfg.Intel.ExtraHeaders["rule"])
+	assert.Equal(t, "90s", cfg.Intel.HTTPTimeout)
+}
+
+func TestEffectiveIntelMCPURLs_BuiltinDefaults(t *testing.T) {
+	t.Setenv("GATE_INTEL_INFO_MCP_URL", "")
+	t.Setenv("GATE_INTEL_NEWS_MCP_URL", "")
+	infoURL, newsURL := config.EffectiveIntelMCPURLs(config.IntelFile{})
+	assert.Equal(t, config.DefaultIntelInfoMCPURL, infoURL)
+	assert.Equal(t, config.DefaultIntelNewsMCPURL, newsURL)
+}
+
+func TestEffectiveIntelMCPURLs_EnvOverridesFile(t *testing.T) {
+	t.Setenv("GATE_INTEL_INFO_MCP_URL", "https://env.example/info")
+	t.Setenv("GATE_INTEL_NEWS_MCP_URL", "")
+	f := config.IntelFile{
+		InfoMCPURL: "https://file.example/info",
+		NewsMCPURL: "https://file.example/news",
+	}
+	infoURL, newsURL := config.EffectiveIntelMCPURLs(f)
+	assert.Equal(t, "https://env.example/info", infoURL)
+	assert.Equal(t, "https://file.example/news", newsURL)
 }
 
 func TestEnvVarOverridesFile(t *testing.T) {
