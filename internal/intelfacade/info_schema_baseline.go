@@ -208,36 +208,6 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 		"settle":      infoStr("settle"),
 		"extra":       infoObjAny("extra"),
 	}, "symbol", "timeframe"),
-	"info_onchain_get_smart_money": infoObj(map[string]interface{}{
-		"query":   infoStr("query"),
-		"symbol":  infoStr("symbol"),
-		"limit":   infoInt("limit"),
-		"address": infoStr("address"),
-	}),
-	"info_onchain_get_entity_profile": infoObj(map[string]interface{}{
-		"query":   infoStr("query"),
-		"symbol":  infoStr("symbol"),
-		"limit":   infoInt("limit"),
-		"address": infoStr("address"),
-	}),
-	"info_onchain_trace_fund_flow": infoObj(map[string]interface{}{
-		"query":   infoStr("query"),
-		"symbol":  infoStr("symbol"),
-		"limit":   infoInt("limit"),
-		"address": infoStr("address"),
-	}),
-	"info_compliance_check_address_risk": infoObj(map[string]interface{}{
-		"query":   infoStr("query"),
-		"symbol":  infoStr("symbol"),
-		"limit":   infoInt("limit"),
-		"address": infoStr("address"),
-	}),
-	"info_compliance_search_regulatory_updates": infoObj(map[string]interface{}{
-		"query":   infoStr("query"),
-		"symbol":  infoStr("symbol"),
-		"limit":   infoInt("limit"),
-		"address": infoStr("address"),
-	}),
 }
 
 func infoStr(desc string) map[string]interface{} {
