@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.2] - 2026-04-18
+
+### Removed
+- **Info baseline**: retire 5 frozen baseline commands that are no longer supported upstream — `info_onchain_get_smart_money`, `info_onchain_get_entity_profile`, `info_onchain_trace_fund_flow`, `info_compliance_check_address_risk`, `info_compliance_search_regulatory_updates`. Updates `cmd/info/aliases.go`, `internal/intelfacade/info_schema_baseline.go`, and the corresponding inventory/tests.
+
 ## [0.5.1] - 2026-04-17
 
 ### Changed
