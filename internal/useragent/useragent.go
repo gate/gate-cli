@@ -93,15 +93,22 @@ func Build(cmdPath, sdkUA string) string {
 }
 
 // ExtractCmdPath converts a cobra CommandPath to slash-separated format,
-// stripping the root command name.
+// stripping the root command name and the optional `cex` group.
 //
-//	"gate-cli spot order create" → "spot/order/create"
+//	"gate-cli cex spot order create" → "spot/order/create"
+//	"gate-cli config init" → "config/init"
 func ExtractCmdPath(commandPath string) string {
 	parts := strings.Fields(commandPath)
-	if len(parts) > 1 {
-		return strings.Join(parts[1:], "/")
+	if len(parts) <= 1 {
+		return "unknown"
 	}
-	return "unknown"
+	if parts[1] == "cex" {
+		if len(parts) == 2 {
+			return "cex"
+		}
+		return strings.Join(parts[2:], "/")
+	}
+	return strings.Join(parts[1:], "/")
 }
 
 func envOrDefault(key, fallback string) string {

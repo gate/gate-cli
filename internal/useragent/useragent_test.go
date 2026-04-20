@@ -291,8 +291,9 @@ func TestExtractCmdPath(t *testing.T) {
 		input string
 		want  string
 	}{
-		{"gate-cli spot order create", "spot/order/create"},
-		{"gate-cli futures position list", "futures/position/list"},
+		{"gate-cli cex spot order create", "spot/order/create"},
+		{"gate-cli cex futures position list", "futures/position/list"},
+		{"gate-cli cex", "cex"},
 		{"gate-cli config init", "config/init"},
 		{"gate-cli", "unknown"},
 		{"", "unknown"},
