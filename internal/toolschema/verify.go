@@ -175,11 +175,21 @@ func valueMatchesType(v interface{}, t string) bool {
 		_, ok := v.(string)
 		return ok
 	case "integer":
-		f, ok := v.(float64)
-		return ok && f == float64(int64(f))
+		switch x := v.(type) {
+		case float64:
+			return x == float64(int64(x))
+		case int:
+			return true
+		case int64:
+			return true
+		}
+		return false
 	case "number":
-		_, ok := v.(float64)
-		return ok
+		switch v.(type) {
+		case float64, int, int64:
+			return true
+		}
+		return false
 	case "boolean":
 		_, ok := v.(bool)
 		return ok

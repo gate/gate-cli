@@ -29,14 +29,14 @@ func TestFailAfterPrintErrorReturnsExitCode1(t *testing.T) {
 func TestGateErrorForIntelToolIsErrorCopiesTraceID(t *testing.T) {
 	resp := &http.Response{Header: http.Header{}}
 	resp.Header.Set("x-gate-trace-id", "abc-123")
-	ge := GateErrorForIntelToolIsError("info_coin_get_coin_info", resp)
+	ge := GateErrorForIntelToolIsError("info_coin_get_coin_info", resp, nil)
 	require.Equal(t, "abc-123", ge.TraceID)
 }
 
 func TestGateErrorForIntelToolIsErrorNoTraceWhenMissing(t *testing.T) {
-	ge := GateErrorForIntelToolIsError("t", nil)
+	ge := GateErrorForIntelToolIsError("t", nil, nil)
 	assert.Empty(t, ge.TraceID)
-	ge2 := GateErrorForIntelToolIsError("t", &http.Response{Header: http.Header{}})
+	ge2 := GateErrorForIntelToolIsError("t", &http.Response{Header: http.Header{}}, nil)
 	assert.Empty(t, ge2.TraceID)
 }
 

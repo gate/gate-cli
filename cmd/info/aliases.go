@@ -5,6 +5,7 @@ import (
 
 	"github.com/gate/gate-cli/internal/intelcmd"
 	"github.com/gate/gate-cli/internal/intelfacade"
+	"github.com/gate/gate-cli/internal/mcpspec"
 	"github.com/gate/gate-cli/internal/toolschema"
 )
 
@@ -13,6 +14,7 @@ func makeInfoAliasCommand(use, toolName string) *cobra.Command {
 		BackendCLI: "info",
 		Use:        use,
 		ToolName:   toolName,
+		LongAppend: mcpspec.InfoLeafLongAppend(toolName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runInfoCallByName(cmd, toolName, intelcmd.ReservedMCPJSONFallbackFlags())
 		},

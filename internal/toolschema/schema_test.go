@@ -87,7 +87,8 @@ func TestApplyInputSchemaFlagsAddsRichUsage(t *testing.T) {
 			},
 			"limit": map[string]interface{}{
 				"type":    "integer",
-				"default": float64(10),
+				"default": 10,
+				"maximum": 100,
 			},
 		},
 	}
@@ -114,7 +115,7 @@ func TestApplyInputSchemaFlagsAddsRichUsage(t *testing.T) {
 	if limit == nil {
 		t.Fatal("missing limit flag")
 	}
-	if !stringsContainsAll(limit.Usage, []string{"type=integer", "default=10"}) {
+	if !stringsContainsAll(limit.Usage, []string{"type=integer", "default=10", "max=100"}) {
 		t.Fatalf("unexpected limit usage: %s", limit.Usage)
 	}
 }

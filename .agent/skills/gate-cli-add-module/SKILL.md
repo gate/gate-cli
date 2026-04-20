@@ -83,10 +83,10 @@ Record exact field names and types — they often differ from what you'd guess (
 
 ## Step 4 — Scaffold Files
 
-Create `cmd/<module>/` with one file per subgroup:
+Create `cmd/cex/<module>/` with one file per subgroup:
 
 ```
-cmd/<module>/
+cmd/cex/<module>/
   <module>.go   — root Cmd only
   market.go     — public endpoints (no auth)
   account.go    — account/balance endpoints (auth)
@@ -237,21 +237,23 @@ return &Client{
 }
 ```
 
-**`cmd/root.go`** — register the command:
+**`cmd/cex/cex.go`** — register the command under the `cex` group:
 
 ```go
-import "github.com/gate/gate-cli/cmd/<module>"
-// ...
-rootCmd.AddCommand(<module>.Cmd)
+import "github.com/gate/gate-cli/cmd/cex/<module>"
+// in init():
+Cmd.AddCommand(<module>.Cmd)
 ```
+
+(`cmd/root.go` already adds `cex.Cmd`; do not register business modules on `rootCmd` directly.)
 
 ## Step 6 — Build and Test
 
 ```bash
 go build -o gate-cli .
 go test ./...
-./gate-cli <module> --help            # verify group structure
-./gate-cli <module> market --help     # verify leaf commands
+./gate-cli cex <module> --help            # verify group structure
+./gate-cli cex <module> market --help     # verify leaf commands
 ```
 
 Fix any field-name mismatches against actual SDK model files (the agent's guess about field names is often wrong — always verify).
@@ -272,7 +274,7 @@ Fix all issues, re-review if needed.
 When SDK was upgraded in the same session, include `go.mod`/`go.sum` in the module's commit:
 
 ```bash
-git add cmd/<module>/ cmd/root.go internal/client/client.go go.mod go.sum
+git add cmd/cex/cex.go cmd/cex/<module>/ internal/client/client.go go.mod go.sum
 git commit -m "feat(<module>): add <module> module with full API coverage
 
 Adds N commands across M files:

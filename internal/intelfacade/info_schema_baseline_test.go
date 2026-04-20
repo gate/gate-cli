@@ -50,6 +50,41 @@ func TestInfoBaselineInputSchemaCriticalFields(t *testing.T) {
 	if typ, _ := symbols["type"].(string); typ != "array" {
 		t.Fatalf("symbols type mismatch: want array got %q", typ)
 	}
+	if symbols["maxItems"].(float64) != 20 {
+		t.Fatalf("symbols maxItems want 20 got %#v", symbols["maxItems"])
+	}
+}
+
+func TestInfoBaselineComplianceRequiredMatchesSpec(t *testing.T) {
+	t.Parallel()
+	sch := InfoBaselineInputSchema("info_compliance_check_token_security")
+	req := sch["required"].([]interface{})
+	if len(req) != 1 {
+		t.Fatalf("expected single required field, got %#v", req)
+	}
+	key, _ := req[0].(string)
+	if key != "chain" {
+		t.Fatalf("expected required chain only (token xor address conditional), got %q", key)
+	}
+}
+
+func TestInfoBaselineIntegerBoundsMatchSpecDoc(t *testing.T) {
+	t.Parallel()
+	search := InfoBaselineInputSchema("info_coin_search_coins")
+	props := search["properties"].(map[string]interface{})
+	limit := props["limit"].(map[string]interface{})
+	if limit["maximum"].(float64) != 100 || limit["default"].(float64) != 20 {
+		t.Fatalf("search_coins limit bounds: %#v", limit)
+	}
+	off := props["offset"].(map[string]interface{})
+	if off["maximum"].(float64) != 100000 || off["default"].(float64) != 0 {
+		t.Fatalf("search_coins offset bounds: %#v", off)
+	}
+	kline := InfoBaselineInputSchema("info_marketdetail_get_kline")
+	kp := kline["properties"].(map[string]interface{})["limit"].(map[string]interface{})
+	if kp["maximum"].(float64) != 2000 || kp["default"].(float64) != 100 {
+		t.Fatalf("marketdetail kline limit bounds: %#v", kp)
+	}
 }
 
 func TestInfoBaselineInputSchemaDeepCopyIsolation(t *testing.T) {

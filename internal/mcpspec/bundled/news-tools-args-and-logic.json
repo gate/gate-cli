@@ -1,0 +1,239 @@
+{
+  "version": "2026-04-16",
+  "source_of_truth": [
+    "internal/mcphost/toolnames.go",
+    "internal/mcphost/tools_news_feed.go",
+    "internal/mcphost/tools_event.go",
+    "internal/event/types.go",
+    "internal/event/service.go",
+    "internal/event/opensearch.go"
+  ],
+  "tools": [
+    {
+      "name": "news_feed_search_news",
+      "category": "news_feed",
+      "description": "Search platform news index and return normalized list.",
+      "input_rules": {
+        "required_policy": "no strict required params",
+        "params": [
+          { "name": "query", "type": "string", "required": false, "notes": "If non-empty, enters similarity mode; tickers are not sent downstream." },
+          { "name": "coin", "type": "string", "required": false, "notes": "Comma-separated tickers; only sent as downstream tickers when query is empty." },
+          { "name": "platform", "type": "string", "required": false, "notes": "Preferred source platform filter, higher priority than platform_type." },
+          { "name": "platform_type", "type": "string", "required": false, "notes": "Legacy platform mapping; ignored when platform exists; 'all' means omit." },
+          { "name": "lang", "type": "string", "required": false, "notes": "MCP local filter only, not sent downstream." },
+          { "name": "time_range", "type": "string", "required": false, "default": "24h for invalid preset", "enum": ["1h", "24h", "7d", "30d"], "notes": "If present, overrides start_time/end_time." },
+          { "name": "start_time", "type": "string", "required": false, "notes": "ISO8601 or Unix sec/ms supported." },
+          { "name": "end_time", "type": "string", "required": false, "notes": "ISO8601 or Unix sec/ms supported; date-only end is treated as end-of-day." },
+          { "name": "sort_by", "type": "string", "required": false, "default": "time" },
+          { "name": "top_total_score", "type": "integer|null", "required": false, "notes": "Effective value forced by mode: query non-empty -> 0; query empty -> default 1 unless explicitly 0." },
+          { "name": "limit", "type": "integer", "required": false, "default": 10, "max": 100 },
+          { "name": "page", "type": "integer", "required": false, "default": 1 },
+          { "name": "similarity_score", "type": "string", "required": false, "default": "0.6 when query non-empty" }
+        ]
+      },
+      "logic": [
+        "Resolve effective time window: time_range > (start_time,end_time); if both empty then default to last 7d.",
+        "Build GET request to real_time_news_feed-compatible endpoint with from/to Unix seconds, paging, and mode fields.",
+        "If query is empty and initial default-window result is empty, auto fallback once to 30d window.",
+        "Apply local post-filters: time window safety filter, optional lang filter, optional entity-based rerank for query mode.",
+        "Sort locally by time desc only when top_total_score=0 and sort_by=time."
+      ],
+      "errors": [
+        { "code": "invalid_param", "when": "start_time/end_time cannot be parsed or start_time > end_time" },
+        { "code": "config_load_failed", "when": "API config missing" }
+      ]
+    },
+    {
+      "name": "news_feed_search_ugc",
+      "category": "news_feed",
+      "description": "Search social UGC by vector API or OpenSearch fallback path.",
+      "input_rules": {
+        "required_policy": "query or coin must be provided (at least one)",
+        "params": [
+          { "name": "query", "type": "string", "required": false, "notes": "If non-empty, uses vector API branch." },
+          { "name": "coin", "type": "string", "required": false, "notes": "If query empty, coin is required to enter OpenSearch branch." },
+          { "name": "platform", "type": "string", "required": false, "default": "all", "enum": ["reddit", "discord", "telegram", "youtube", "all"] },
+          { "name": "domain", "type": "string", "required": false, "default": "all", "enum": ["crypto", "defi", "finance", "macro", "ai_agent", "web3_dev", "all"] },
+          { "name": "channel", "type": "string", "required": false },
+          { "name": "quality_tier", "type": "string", "required": false, "default": "A", "enum": ["A", "B", "all"] },
+          { "name": "time_range", "type": "string", "required": false, "default": "7d", "enum": ["1h", "24h", "7d", "30d", "all"] },
+          { "name": "sort_by", "type": "string", "required": false, "default": "relevance", "enum": ["relevance", "upvotes", "recent"] },
+          { "name": "limit", "type": "integer", "required": false, "default": 10, "max": 50 }
+        ]
+      },
+      "logic": [
+        "Validation first: if both query and coin are empty, return invalid_param.",
+        "Branch A (query non-empty): call ugc_vector_data with normalized filters and time_start/time_end Unix seconds; local sort and trim by limit.",
+        "Branch B (query empty): use OpenSearch index query with filters/sort/time range mapping; requires opensearch client/index config.",
+        "Both branches map downstream items into unified spec field set."
+      ],
+      "errors": [
+        { "code": "invalid_param", "when": "query and coin are both empty" },
+        { "code": "config_load_failed", "when": "API config missing for vector branch or OpenSearch unavailable for empty-query branch" }
+      ]
+    },
+    {
+      "name": "news_feed_search_x",
+      "category": "news_feed",
+      "description": "Search X/Twitter discussions with xAI primary path and optional platform fallback.",
+      "input_rules": {
+        "required_policy": "no hard required param, but empty query on xAI path returns empty result",
+        "params": [
+          { "name": "query", "type": "string", "required": false, "notes": "Topic text for X discussion search." },
+          { "name": "days", "type": "integer", "required": false, "default": 7, "min": 1 },
+          { "name": "allowed_handles", "type": "string[]", "required": false, "max_items": 10 },
+          { "name": "excluded_handles", "type": "string[]", "required": false, "max_items": 10 },
+          { "name": "model", "type": "string", "required": false },
+          { "name": "enable_image_understanding", "type": "boolean", "required": false, "default": false },
+          { "name": "enable_video_understanding", "type": "boolean", "required": false, "default": false },
+          { "name": "coin", "type": "string", "required": false, "notes": "Only used in platform fallback path (mapped to search_news style)." },
+          { "name": "platform", "type": "string", "required": false, "notes": "Platform fallback only." },
+          { "name": "platform_type", "type": "string", "required": false, "notes": "Platform fallback only." },
+          { "name": "lang", "type": "string", "required": false, "notes": "Affects disclaimer language." },
+          { "name": "start_time", "type": "string", "required": false, "notes": "Platform fallback only." },
+          { "name": "end_time", "type": "string", "required": false, "notes": "Platform fallback only." },
+          { "name": "sort_by", "type": "string", "required": false, "notes": "Platform fallback only." },
+          { "name": "top_total_score", "type": "integer|null", "required": false, "notes": "Platform fallback only." },
+          { "name": "limit", "type": "integer", "required": false, "default": 10, "notes": "Platform fallback only." },
+          { "name": "page", "type": "integer", "required": false, "default": 1, "notes": "Platform fallback only." },
+          { "name": "similarity_score", "type": "string", "required": false, "notes": "Platform fallback only." }
+        ]
+      },
+      "logic": [
+        "Validation: allowed_handles and excluded_handles cannot both be non-empty.",
+        "If xAI key exists, run xAI Responses search_x flow with date window from days; parse structured output and merge citations.",
+        "If xAI key missing and platform fallback enabled, convert args to search_news-compatible args and call platform endpoint.",
+        "If xAI key missing and fallback disabled, return config_load_failed.",
+        "Always coerce sentiment fields in response to stable defaults."
+      ],
+      "errors": [
+        { "code": "invalid_param", "when": "allowed_handles and excluded_handles are both provided" },
+        { "code": "config_load_failed", "when": "xAI key missing and fallback disabled, or core config unavailable" }
+      ]
+    },
+    {
+      "name": "news_feed_web_search",
+      "category": "news_feed",
+      "description": "Run open-web synthesis via xAI web_search with cited sources.",
+      "input_rules": {
+        "required_policy": "query is required",
+        "params": [
+          { "name": "query", "type": "string", "required": true },
+          { "name": "coin", "type": "string", "required": false },
+          { "name": "mode", "type": "string", "required": false, "default": "analysis", "enum": ["analysis", "brief"] },
+          { "name": "time_range", "type": "string", "required": false, "default": "24h", "enum": ["1h", "24h", "7d", "30d"] },
+          { "name": "lang", "type": "string", "required": false, "default": "en", "enum": ["en", "zh", "auto"] },
+          { "name": "limit", "type": "integer", "required": false, "default": 5, "max": 10 }
+        ]
+      },
+      "logic": [
+        "Normalize mode/time_range/lang/limit, then call xAI ResponsesWebSearch API.",
+        "Parse structured output into summary/key_points/cited_sources and normalize citations.",
+        "If mode=brief, truncate summary to about 100 characters.",
+        "Return citations also as items list for generic clients."
+      ],
+      "errors": [
+        { "code": "invalid_param", "when": "query is empty" },
+        { "code": "config_load_failed", "when": "xAI key or app config missing" }
+      ]
+    },
+    {
+      "name": "news_feed_get_exchange_announcements",
+      "category": "news_feed",
+      "description": "Fetch exchange notice list (listing/delisting/maintenance style).",
+      "input_rules": {
+        "required_policy": "no strict required params",
+        "params": [
+          { "name": "exchange", "type": "string", "required": false, "notes": "Used as platform fallback if platform is empty." },
+          { "name": "platform", "type": "string", "required": false, "notes": "Wins over exchange for downstream platform param." },
+          { "name": "query", "type": "string", "required": false },
+          { "name": "coin", "type": "string", "required": false },
+          { "name": "announcement_type", "type": "string", "required": false, "enum": ["listing", "delisting", "maintenance", "all"] },
+          { "name": "limit", "type": "integer", "required": false, "max": 100, "notes": "Only forwarded when >0." },
+          { "name": "from", "type": "integer", "required": false, "notes": "Unix sec lower bound; local post-filter also applied." },
+          { "name": "to", "type": "integer", "required": false, "notes": "Unix sec upper bound; local post-filter also applied." }
+        ]
+      },
+      "logic": [
+        "Build request to exchange_notice_sql endpoint with selected params.",
+        "platform param is resolved as platform > exchange priority.",
+        "Parse compatible list shapes (notice_list/news_list/items/list/data).",
+        "Apply local time filtering for from/to and sort by time desc."
+      ],
+      "errors": [
+        { "code": "config_load_failed", "when": "API config missing" }
+      ]
+    },
+    {
+      "name": "news_feed_get_social_sentiment",
+      "category": "news_feed",
+      "description": "Aggregate per-coin social sentiment from multiple downstream APIs.",
+      "input_rules": {
+        "required_policy": "no strict required params",
+        "params": [
+          { "name": "coin", "type": "string", "required": false, "default": "BTC" },
+          { "name": "time_range", "type": "string", "required": false, "default": "24h", "enum": ["1h", "24h", "7d"], "notes": "Invalid values are normalized to 24h." }
+        ]
+      },
+      "logic": [
+        "Normalize coin/time_range and convert to Unix start/end window.",
+        "Run 3 downstream calls in parallel: sentiment_score, positive_ratio, sentiment_analysis.",
+        "Compute overall_sentiment + normalized sentiment_label + mention_count + distribution + top_tweets.",
+        "top_tweets are parsed from sentiment_analysis response and returned in unified structure."
+      ],
+      "errors": [
+        { "code": "config_load_failed", "when": "API config missing" }
+      ]
+    },
+    {
+      "name": "news_events_get_latest_events",
+      "category": "news_events",
+      "description": "Get latest event digest list from OpenSearch.",
+      "input_rules": {
+        "required_policy": "no strict required params",
+        "params": [
+          { "name": "event_type", "type": "string", "required": false, "notes": "all or empty means no type filter." },
+          { "name": "coin", "type": "string", "required": false, "notes": "Comma-separated; expanded to variant terms for related_coins/symbols filtering." },
+          { "name": "time_range", "type": "string", "required": false, "enum": ["1h", "24h", "7d"], "notes": "Mutually exclusive with start_time/end_time." },
+          { "name": "start_time", "type": "string", "required": false, "notes": "Mutually exclusive with time_range." },
+          { "name": "end_time", "type": "string", "required": false, "notes": "Mutually exclusive with time_range." },
+          { "name": "cursor", "type": "string", "required": false },
+          { "name": "limit", "type": "integer", "required": false, "default": 20, "max": 100 }
+        ]
+      },
+      "logic": [
+        "Validate request: limit default 20, max 100; time_range enum check; time_range cannot coexist with start/end.",
+        "Build OpenSearch bool query with event_type/coin/time filters and sort by event time desc.",
+        "If no time params: use service policy (optional all-time mode or default 24h).",
+        "Map source docs to event list schema and return total/count/items."
+      ],
+      "errors": [
+        { "code": "invalid_param", "when": "time_range invalid or mixed with start/end" },
+        { "code": "invalid_size", "when": "limit > 100" },
+        { "code": "opensearch_query_failed", "when": "OpenSearch query fails" }
+      ],
+      "placeholder_when_unconfigured": true
+    },
+    {
+      "name": "news_events_get_event_detail",
+      "category": "news_events",
+      "description": "Get one event detail by event_id from OpenSearch.",
+      "input_rules": {
+        "required_policy": "event_id is required",
+        "params": [
+          { "name": "event_id", "type": "string", "required": true, "max_length": 512, "pattern": "^[A-Za-z0-9:_-]+$", "notes": "Cannot contain unsafe chars like quotes/semicolon/backslash." }
+        ]
+      },
+      "logic": [
+        "Validate event_id non-empty and safe format.",
+        "Query OpenSearch by configured id field and map result into detail response.",
+        "Return not-found style error if id has no hit."
+      ],
+      "errors": [
+        { "code": "invalid_event_id", "when": "event_id empty, too long, or illegal characters" },
+        { "code": "opensearch_query_failed", "when": "OpenSearch query fails" }
+      ],
+      "placeholder_when_unconfigured": true
+    }
+  ]
+}

@@ -63,6 +63,31 @@ func TestValidateToolsStatusOK(t *testing.T) {
 	}
 }
 
+func TestValidateToolsIntegerDefaultIntLiteralOK(t *testing.T) {
+	tools := []ToolSummary{
+		{
+			Name:           "bounded",
+			HasInputSchema: true,
+			InputSchema: map[string]interface{}{
+				"properties": map[string]interface{}{
+					"limit": map[string]interface{}{
+						"type":    "integer",
+						"default": 10,
+						"maximum": 50,
+					},
+				},
+			},
+		},
+	}
+	report := ValidateTools("news", tools, true)
+	if report.WarningCount != 0 {
+		t.Fatalf("expected no warnings, got %+v", report.Warnings)
+	}
+	if report.Status != "ok" {
+		t.Fatalf("expected status ok, got %s", report.Status)
+	}
+}
+
 func TestVerifyReportStrictFieldsDefaultFalse(t *testing.T) {
 	report := ValidateTools("info", nil, true)
 	if report.StrictMode {

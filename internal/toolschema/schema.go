@@ -233,13 +233,13 @@ func ApplyInputSchemaFlags(cmd *cobra.Command, schemaAny interface{}) {
 			// "--flag true" with flexBool (non-native bool) instead.
 		case "integer":
 			def := 0
-			if v, ok := spec["default"].(float64); ok {
-				def = int(v)
+			if v, ok := coerceIntDefault(spec["default"]); ok {
+				def = v
 			}
 			cmd.Flags().Int(flagName, def, desc)
 		case "number":
 			def := 0.0
-			if v, ok := spec["default"].(float64); ok {
+			if v, ok := coerceFloatDefault(spec["default"]); ok {
 				def = v
 			}
 			cmd.Flags().Float64(flagName, def, desc)
@@ -291,6 +291,24 @@ func enrichUsage(base string, spec map[string]interface{}, required bool) string
 	if def, ok := schemaDefault(spec); ok {
 		parts = append(parts, "default="+def)
 	}
+	for _, pair := range []struct {
+		key   string
+		label string
+	}{
+		{"minimum", "min"},
+		{"maximum", "max"},
+		{"minLength", "minLen"},
+		{"maxLength", "maxLen"},
+		{"minItems", "minItems"},
+		{"maxItems", "maxItems"},
+	} {
+		if s := formatSchemaBound(spec[pair.key]); s != "" {
+			parts = append(parts, pair.label+"="+s)
+		}
+	}
+	if pat, ok := spec["pattern"].(string); ok && strings.TrimSpace(pat) != "" {
+		parts = append(parts, "pattern="+strings.TrimSpace(pat))
+	}
 	return strings.TrimSpace(base) + " [" + strings.Join(parts, ", ") + "]"
 }
 
@@ -313,4 +331,65 @@ func schemaDefault(spec map[string]interface{}) (string, bool) {
 		return "", false
 	}
 	return fmt.Sprint(v), true
+}
+
+// coerceIntDefault accepts JSON-number shapes used in hand-written and unmarshaled schemas.
+func coerceIntDefault(v interface{}) (int, bool) {
+	switch x := v.(type) {
+	case float64:
+		return int(x), true
+	case int:
+		return x, true
+	case int64:
+		return int(x), true
+	case json.Number:
+		i, err := x.Int64()
+		if err != nil {
+			return 0, false
+		}
+		return int(i), true
+	default:
+		return 0, false
+	}
+}
+
+func coerceFloatDefault(v interface{}) (float64, bool) {
+	switch x := v.(type) {
+	case float64:
+		return x, true
+	case int:
+		return float64(x), true
+	case int64:
+		return float64(x), true
+	case json.Number:
+		f, err := x.Float64()
+		if err != nil {
+			return 0, false
+		}
+		return f, true
+	default:
+		return 0, false
+	}
+}
+
+// formatSchemaBound renders JSON Schema numeric keywords for flag usage (integers and whole floats).
+func formatSchemaBound(v interface{}) string {
+	if v == nil {
+		return ""
+	}
+	switch x := v.(type) {
+	case float64:
+		if x == float64(int64(x)) {
+			return strconv.FormatInt(int64(x), 10)
+		}
+		return strconv.FormatFloat(x, 'g', -1, 64)
+	case int:
+		return strconv.Itoa(x)
+	case int64:
+		return strconv.FormatInt(x, 10)
+	case json.Number:
+		return strings.TrimSpace(x.String())
+	default:
+		return ""
+	}
 }

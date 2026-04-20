@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.1] - 2026-04-20
+
+### Added
+
+- **`internal/mcpspec/`** — new package that embeds the Info/News MCP spec JSON (`info-mcp-tools-inputs-logic.json`, `news-tools-args-and-logic.json`) for offline agent/LLM consumption. Bundled JSON is validated at init and kept byte-identical to `specs/mcp/*.json` via new parity tests (`internal/intelfacade/spec_baseline_parity_test.go`, `news_spec_baseline_parity_test.go`, `internal/mcpspec/spec_test.go`).
+- **`gate-cli info mcp-spec`** / **`gate-cli news mcp-spec`** — new leaf commands that print the embedded MCP inputs/spec document (tool names, fields, enums, bounds, logic text) with **no network call**. Table format is unsupported; use `--format json` or `pretty`.
+- **`GATE_INTEL_LEAF_HELP`** — leaf `--help` `Long` text now appends MCP-spec narrative (description / policy / logic / errors) via `mcpspec.InfoLeafLongAppend` / `NewsLeafLongAppend`. Default stays compact (cobra already lists flag type/default/enum/max); set `GATE_INTEL_LEAF_HELP=full` (or `detailed`) to embed per-field notes.
+- **`AnnotationIntelToolName`** (`gate-cli.intel.tool-name`) — cobra annotation attached to every intel leaf alias so tests and tooling can resolve the underlying MCP tool name.
+- **Intel `isError` helpers** — new `internal/intelcmd/intel_result_error_classify.go` and `is_error_message.go` with unit tests classify tool-side failures and extract a human-readable message from the MCP payload.
+
+### Changed
+
+- **Info / News baseline schemas** (`internal/intelfacade/info_schema_baseline.go`, `news_schema_baseline.go`) — enrich flat-flag help with `enum`, `default`, `minimum`, `maximum`, `maxLength`, `maxItems`, and `pattern` mirrored from `specs/mcp/*.json` (e.g. Info `query_type` / `scope` / `asset_type` / `sort_by` / `ranking_type` / `time_range` / `timeframe` / `period` / `indicators` / `source`; News `platform` / `domain` / `quality_tier` / `time_range` / `sort_by` / `limit` / `page` / `days` / `allowed_handles` / `excluded_handles`).
+- **`internal/toolschema`** — `ApplyInputSchemaFlags` now coerces `default` from `float64` / `int` / `int64` / `json.Number` for `integer` and `number` fields; flag usage strings append `min`, `max`, `minLen`, `maxLen`, `minItems`, `maxItems`, `pattern` when defined. `verify.valueMatchesType` accepts `int` / `int64` alongside `float64` for integer/number values.
+- **`internal/toolrender/envelope`** — treat empty `structuredContent` (`{}`) as absent and fall back to `content[].text`; matches gateways that attach an empty structured payload.
+- **`internal/intelcmd/leaf_alias.go`** — `LeafAliasConfig` gains `LongAppend`; the default `Long` block now documents `GATE_INTEL_LEAF_HELP=full` alongside the `--params` / `--args-json` / `--args-file` JSON-fallback flags.
+- **`internal/intelfacade/inventory.go`** — comment documents the News baseline at 8 tools (Info: 29, public gateway as of 2026-04).
+
+### Fixed
+
+- **Intel `isError` classification** (`internal/intelcmd/run_tool_call.go` — `GateErrorForIntelToolIsError`) — tool-side argument / validation failures now surface as **HTTP 400 + `INVALID_ARGUMENTS`** (based on 4xx `http_status` / `status_code` fields, well-known error codes such as `INVALID_ARGUMENT` / `BAD_REQUEST` / `VALIDATION_ERROR` / `OUT_OF_RANGE`, or snake_case `"<param> not supported"` wording). Transport / server errors stay at **502 + `INTEL_RESULT_ERROR`**, so scripts can distinguish caller-fixable input from backend outages.
+- **Intel error messages** — surface a trimmed, redacted summary (≤ 2048 runes) from `structuredContent` / `content[].text` / raw payload instead of the generic `"tool returned isError=true"`; bearer tokens in the message are redacted to `Bearer [redacted]`.
+
 ## [0.6.0] - 2026-04-20
 
 ### Breaking
@@ -14,6 +37,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **`cmd/cex/`** tree: `cex.go` wires every CEX domain package (`spot`, `futures`, `wallet`, `earn`, …) under **`gate-cli cex`**. Trading/account implementations now live under **`cmd/cex/<domain>/`** (moved from the former top-level **`cmd/<domain>/`** layout).
 - **Skill / MCP alignment docs** (for mapping Exchange skills and legacy MCP names to CLI):
+  - `cmd/cex/GATE_EXCHANGE_SKILLS_MCP_TO_GATE_CLI.md` — skill token → `gate-cli` invocation
+  - `cmd/cex/MCP_LEGACY_TOOL_RESOLUTION.md` — legacy `cex_*` tool resolution
+  - `cmd/cex/COMMAND_API_MAP.md` — API ↔ command reference
+- **`bin/`** — prebuilt `gate-cli` binaries for **darwin / linux** (**arm64**, **x86_64**) for bundled or offline installs (e.g. skills / OpenClaw workflows).
 
 ### Changed
 

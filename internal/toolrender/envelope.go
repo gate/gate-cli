@@ -40,8 +40,9 @@ func BuildCLIEnvelope(toolName string, result *mcpclient.CallResult) map[string]
 }
 
 func extractData(result *mcpclient.CallResult) (interface{}, string, []string) {
-	if result.StructuredContent != nil {
-		return result.StructuredContent, "structured_content", nil
+	// Gateways may attach structuredContent as {} while the real payload is in content[].text.
+	if sc := result.StructuredContent; len(sc) > 0 {
+		return sc, "structured_content", nil
 	}
 	if len(result.ContentRaw) > 0 {
 		if normalized, warnings, ok := normalizeContentRaw(result.ContentRaw); ok {

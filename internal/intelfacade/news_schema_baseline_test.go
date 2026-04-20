@@ -40,8 +40,8 @@ func TestNewsBaselineInputSchemaCriticalFields(t *testing.T) {
 	}
 
 	searchX := NewsBaselineInputSchema("news_feed_search_x")
-	props := searchX["properties"].(map[string]interface{})
-	timeRange := props["time_range"].(map[string]interface{})
+	sxProps := searchX["properties"].(map[string]interface{})
+	timeRange := sxProps["time_range"].(map[string]interface{})
 	if def, _ := timeRange["default"].(string); def != "24h" {
 		t.Fatalf("time_range default mismatch: want 24h got %q", def)
 	}
@@ -50,17 +50,49 @@ func TestNewsBaselineInputSchemaCriticalFields(t *testing.T) {
 		t.Fatalf("time_range enum mismatch: %#v", timeRange["enum"])
 	}
 
-	for _, tool := range []string{"news_feed_search_x", "news_feed_web_search"} {
-		schema := NewsBaselineInputSchema(tool)
-		props := schema["properties"].(map[string]interface{})
-		lang := props["lang"].(map[string]interface{})
-		if def, _ := lang["default"].(string); def != "zh" {
-			t.Fatalf("%s lang default mismatch: want zh got %q", tool, def)
-		}
-		enums, ok := lang["enum"].([]interface{})
-		if !ok || len(enums) != 3 {
-			t.Fatalf("%s lang enum mismatch: %#v", tool, lang["enum"])
-		}
+	sxLang := sxProps["lang"].(map[string]interface{})
+	if def, _ := sxLang["default"].(string); def != "zh" {
+		t.Fatalf("search_x lang default mismatch: want zh got %q", def)
+	}
+	if enums, ok := sxLang["enum"].([]interface{}); !ok || len(enums) != 3 {
+		t.Fatalf("search_x lang enum mismatch: %#v", sxLang["enum"])
+	}
+
+	web := NewsBaselineInputSchema("news_feed_web_search")
+	wProps := web["properties"].(map[string]interface{})
+	wLang := wProps["lang"].(map[string]interface{})
+	if def, _ := wLang["default"].(string); def != "en" {
+		t.Fatalf("web_search lang default mismatch: want en got %q", def)
+	}
+	if enums, ok := wLang["enum"].([]interface{}); !ok || len(enums) != 3 {
+		t.Fatalf("web_search lang enum mismatch: %#v", wLang["enum"])
+	}
+}
+
+func TestNewsBaselineBoundKeywordsForCLIHelp(t *testing.T) {
+	t.Parallel()
+	ugc := NewsBaselineInputSchema("news_feed_search_ugc")
+	lim := ugc["properties"].(map[string]interface{})["limit"].(map[string]interface{})
+	if lim["maximum"].(float64) != 50 {
+		t.Fatalf("ugc limit maximum: got %#v", lim["maximum"])
+	}
+	if lim["default"].(float64) != 10 {
+		t.Fatalf("ugc limit default: got %#v", lim["default"])
+	}
+
+	detail := NewsBaselineInputSchema("news_events_get_event_detail")
+	ev := detail["properties"].(map[string]interface{})["event_id"].(map[string]interface{})
+	if ev["maxLength"].(float64) != 512 {
+		t.Fatalf("event_id maxLength: got %#v", ev["maxLength"])
+	}
+	if pat, _ := ev["pattern"].(string); pat == "" {
+		t.Fatal("expected event_id pattern")
+	}
+
+	x := NewsBaselineInputSchema("news_feed_search_x")
+	ah := x["properties"].(map[string]interface{})["allowed_handles"].(map[string]interface{})
+	if ah["maxItems"].(float64) != 10 {
+		t.Fatalf("allowed_handles maxItems: got %#v", ah["maxItems"])
 	}
 }
 

@@ -32,6 +32,19 @@ func TestBuildCLIEnvelopeUsesStructuredContentFirst(t *testing.T) {
 	assert.Equal(t, "y", data["x"])
 }
 
+func TestBuildCLIEnvelopeFallsBackWhenStructuredContentEmpty(t *testing.T) {
+	env := BuildCLIEnvelope("info_markettrend_get_indicator_history", &mcpclient.CallResult{
+		StructuredContent: map[string]interface{}{},
+		ContentRaw:        []interface{}{map[string]interface{}{"type": "text", "text": `{"series":[{"t":1}]}`}},
+	})
+	assert.Equal(t, "content", env["data_source"])
+	data, ok := env["data"].(map[string]interface{})
+	assert.True(t, ok)
+	series, ok := data["series"].([]interface{})
+	assert.True(t, ok)
+	assert.Len(t, series, 1)
+}
+
 func TestBuildCLIEnvelopeNormalizesMultiContent(t *testing.T) {
 	env := BuildCLIEnvelope("tool", &mcpclient.CallResult{
 		ContentRaw: []interface{}{

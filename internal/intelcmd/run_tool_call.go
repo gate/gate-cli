@@ -26,12 +26,21 @@ func invokePath(backend string) string {
 }
 
 // GateErrorForIntelToolIsError is the stderr shape for tools/call when result.isError is true.
+// When the payload looks like an argument/validation problem (structured error codes, 4xx
+// hints in content, or typical validation wording), status is 400 with label INVALID_ARGUMENTS;
+// otherwise status 502 with label INTEL_RESULT_ERROR.
 // When httpResp carries x-gate-trace-id, it is copied for support without exposing MCP content.
-func GateErrorForIntelToolIsError(toolName string, httpResp *http.Response) *output.GateError {
+// When result carries structuredContent or text content, a trimmed summary is used as Message.
+func GateErrorForIntelToolIsError(toolName string, httpResp *http.Response, result *mcpclient.CallResult) *output.GateError {
+	msg := messageFromIntelToolIsError(result)
+	if msg == "" {
+		msg = "tool returned isError=true"
+	}
+	status, label := gateErrorMetaForIntelToolIsError(msg, result)
 	ge := &output.GateError{
-		Status:   502,
-		Label:    "INTEL_RESULT_ERROR",
-		Message:  "tool returned isError=true",
+		Status:   status,
+		Label:    label,
+		Message:  msg,
 		ToolName: toolName,
 	}
 	if httpResp != nil && httpResp.Header != nil {
@@ -81,7 +90,7 @@ func RunToolCall(cmd *cobra.Command, p *output.Printer, svc ToolCaller, name str
 		})
 	}
 	if result.IsError {
-		return FailAfterPrintError(p, GateErrorForIntelToolIsError(name, httpResp))
+		return FailAfterPrintError(p, GateErrorForIntelToolIsError(name, httpResp, result))
 	}
 	return toolrender.RenderCallResult(p, name, result, maxOutputBytes)
 }

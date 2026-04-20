@@ -1,6 +1,6 @@
 package intelfacade
 
-// Backend tool baselines aligned with the live Info/News MCP tool lists (Info: 29 tools on public gateway as of 2026-04).
+// Backend tool baselines aligned with the live Info/News MCP tool lists (Info: 29 tools on public gateway as of 2026-04; News: 8).
 var NewsToolBaseline = []string{
 	"news_feed_search_news",
 	"news_feed_search_ugc",
