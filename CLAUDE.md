@@ -11,7 +11,7 @@
 - **只跑改动的包**: `./scripts/test-changed-go.sh`（见 `scripts/test-changed-go.sh`）
 - Intel / MCP / migrate: `./scripts/test-intel-scope.sh -count=1` 与 `./scripts/test-intel-scope.sh vet`
 - Integration 测试: `go test -tags integration ./internal/integration/... -v`
-- 本地 smoke test（公共 API 无需 key）: `./gate-cli spot market ticker --pair BTC_USDT`
+- 本地 smoke test（公共 API 无需 key）: `./gate-cli cex spot market ticker --pair BTC_USDT`
 
 ## Integration 测试
 - 配置文件: `testdata/integration.yaml`（gitignored，**不会提交**）
@@ -42,7 +42,7 @@
 ## 架构约定
 - 共享 CLI helper（GetPrinter/GetClient）放在 `internal/cmdutil/`，**不要**放 `cmd/root.go`（会循环 import）
 - 错误输出走 stderr，正常数据走 stdout（agent 管道安全）
-- `--settle` 默认 `usdt`，在 `cmd/futures/market.go` 的 `getSettle()` 中处理
+- `--settle` 默认 `usdt`，在 `cmd/cex/futures/market.go` 的 `getSettle()` 中处理
 
 ## tablewriter v1.1.3 注意
 - `NewWriter(w)` 返回单值（无 error）

@@ -4,7 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.5.4] - 2026-04-19
+## [0.6.0] - 2026-04-20
+
+### Breaking
+
+- **CEX command namespace**: All centralized-exchange CLI groups (spot, futures, wallet, earn, margin, unified, etc.) are registered under a single parent command **`gate-cli cex`**. Replace former invocations such as `gate-cli spot …` with **`gate-cli cex spot …`** (same pattern for other groups). Top-level commands unchanged: **`config`**, **`news`**, **`info`**, **`preflight`**, **`doctor`**, **`migrate`**.
+
+### Added
+
+- **`cmd/cex/`** tree: `cex.go` wires every CEX domain package (`spot`, `futures`, `wallet`, `earn`, …) under **`gate-cli cex`**. Trading/account implementations now live under **`cmd/cex/<domain>/`** (moved from the former top-level **`cmd/<domain>/`** layout).
+- **Skill / MCP alignment docs** (for mapping Exchange skills and legacy MCP names to CLI):
+
+### Changed
+
+- **README**, **docs/quickstart.md**, **docs/quickstart_zh.md** — examples and navigation updated for the **`cex`** prefix and skill-oriented usage.
+- **Go**: `go.mod` **`go 1.24`**; indirect dependency bumps (e.g. `olekukonko/tablewriter` stack, `clipperhouse/*`, `cespare/xxhash/v2`).
+- **`internal/useragent`** — minor behavior / test updates.
+- **`.agent/skills/gate-cli-add-module/SKILL.md`**, **AGENTS.md**, **CLAUDE.md** — paths and guidance aligned with the `cmd/cex` layout.
+
+## [0.5.2] - 2026-04-18
 
 ### Removed
 - **Info baseline**: retire 5 frozen baseline commands that are no longer supported upstream — `info_onchain_get_smart_money`, `info_onchain_get_entity_profile`, `info_onchain_trace_fund_flow`, `info_compliance_check_address_risk`, `info_compliance_search_regulatory_updates`. Updates `cmd/info/aliases.go`, `internal/intelfacade/info_schema_baseline.go`, and the corresponding inventory/tests.
