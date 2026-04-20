@@ -40,8 +40,14 @@ func TestBundledMatchesSpecs(t *testing.T) {
 		},
 	}
 	for _, p := range pairs {
+		// specs/ is gitignored, so this parity check only runs where the
+		// author keeps the source spec. CI has the bundled copy only and
+		// must skip rather than Fatal.
 		a, err := os.ReadFile(p.spec)
 		if err != nil {
+			if os.IsNotExist(err) {
+				t.Skipf("skip parity: spec %s not present (expected in CI)", p.spec)
+			}
 			t.Fatalf("read spec %s: %v", p.spec, err)
 		}
 		b, err := os.ReadFile(p.bundled)
