@@ -39,7 +39,8 @@ gate-cli config init
 - **Cross-Exchange** — cross-exchange trading, positions, orders, convert, margin
 
 ### Finance
-- **Earn** — dual investment, staking, fixed-term lending, auto-invest plans, uni simple earn
+- **Earn** — dual investment (incl. early-redemption refund, reinvest modify, project recommend), staking, fixed-term lending, auto-invest plans, uni simple earn
+- **Asset Swap** — portfolio optimization (valuation, recommended strategies, create/preview/list orders)
 - **Flash Swap** — instant token swaps, multi-currency many-to-one / one-to-many
 - **Multi-Collateral Loan** — multi-collateral borrowing, repayment, collateral management
 
@@ -52,14 +53,18 @@ gate-cli config init
 ### Ecosystem
 - **P2P** — merchant ads, transactions, chat, payment methods
 - **Rebate** — partner/broker/agency commissions and transaction history
-- **Launch** — launch pool projects, pledge, redeem, records
+- **Launch** — launch pool projects/pledge/redeem, Candy Drop V4 activities, HODLer Airdrop V4 activities
 - **Activity** — platform activities and promotions
 - **Coupon** — user coupons and details
 - **Square** — AI search, live replay
 - **Welfare** — user identity, beginner tasks
 
 ### Architecture
-- **Dual-position mode** — `add`, `remove`, `close` automatically detect position direction; single and dual (hedge) mode handled transparently via the `dual_comp` API
+- **Futures position modes** — three orthogonal command groups expose every gateapi-go position flow:
+  - `position update-*` → **one-way (single)** mode — `UpdatePosition{Margin,Leverage,CrossMode,RiskLimit}` + `GetPosition`
+  - `position update-dual-*` → **dual (hedge)** mode — `UpdateDualModePosition*` + `GetDualModePosition`
+  - `position update-contract-leverage` → **contract** mode — `UpdateContractPositionLeverage`
+- **Order helpers** — `add`, `remove`, `close` automatically detect position direction for single/dual mode via the `dual_comp` API
 - **Output formats** — `--format pretty` (default for humans), `--format json` for scripts and agents, and `--format table` only where a command supports tabular list output
 - **Multiple profiles** — manage several API keys in one config file
 - **Credential priority** — `--api-key` flag > env var > config file
@@ -101,9 +106,21 @@ gate-cli cex unified account get
 
 # Earn & staking
 gate-cli cex earn dual plans
+gate-cli cex earn dual recommend --mode normal --coin BTC     # recommended dual-investment projects
+gate-cli cex earn dual refund-preview 12345                    # preview early-redemption
 gate-cli cex earn uni currencies
 gate-cli cex earn fixed products
 gate-cli cex earn auto-invest coins
+
+# Asset swap (portfolio optimization)
+gate-cli cex assetswap assets
+gate-cli cex assetswap config
+gate-cli cex assetswap order list --size 20
+
+# Launch pool / Candy Drop / HODLer Airdrop
+gate-cli cex launch projects
+gate-cli cex launch candy-drop activities --status active
+gate-cli cex launch hodler projects --keyword BTC
 
 # Flash swap
 gate-cli cex flash-swap pairs
@@ -130,7 +147,8 @@ gate-cli cex spot market ticker --pair BTC_USDT --format json | jq '.last'
 | options | `gate-cli cex options` | Options trading |
 | margin | `gate-cli cex margin` | Margin trading & lending |
 | unified | `gate-cli cex unified` | Unified account management |
-| earn | `gate-cli cex earn` | Earn, staking, dual investment, auto-invest |
+| earn | `gate-cli cex earn` | Earn, staking, dual investment (incl. refund/recommend), auto-invest |
+| assetswap | `gate-cli cex assetswap` | Asset-swap / portfolio optimization |
 | flash-swap | `gate-cli cex flash-swap` | Instant token swaps |
 | mcl | `gate-cli cex mcl` | Multi-collateral loans |
 | cross-ex | `gate-cli cex cross-ex` | Cross-exchange trading |
@@ -142,7 +160,7 @@ gate-cli cex spot market ticker --pair BTC_USDT --format json | jq '.last'
 | tradfi | `gate-cli cex tradfi` | TradFi (MT5) trading |
 | p2p | `gate-cli cex p2p` | P2P trading |
 | rebate | `gate-cli cex rebate` | Rebate & commissions |
-| launch | `gate-cli cex launch` | Launch pool |
+| launch | `gate-cli cex launch` | Launch pool + Candy Drop V4 + HODLer Airdrop V4 |
 | activity | `gate-cli cex activity` | Activities & promotions |
 | coupon | `gate-cli cex coupon` | Coupons |
 | square | `gate-cli cex square` | Gate Square |

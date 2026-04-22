@@ -7,9 +7,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var balanceCmd = &cobra.Command{
@@ -31,6 +31,8 @@ func init() {
 		RunE:  runWalletSubBalances,
 	}
 	subCmd.Flags().String("sub-uid", "", "Filter by sub-account user IDs (comma-separated)")
+	subCmd.Flags().Int32("page", 0, "Page number (default 1)")
+	subCmd.Flags().Int32("limit", 0, "Page size, max 100 (default 100)")
 
 	subMarginCmd := &cobra.Command{
 		Use:   "sub-margin",
@@ -122,6 +124,8 @@ func runWalletTotalBalance(cmd *cobra.Command, args []string) error {
 
 func runWalletSubBalances(cmd *cobra.Command, args []string) error {
 	subUID, _ := cmd.Flags().GetString("sub-uid")
+	page, _ := cmd.Flags().GetInt32("page")
+	limit, _ := cmd.Flags().GetInt32("limit")
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
@@ -134,6 +138,12 @@ func runWalletSubBalances(cmd *cobra.Command, args []string) error {
 	opts := &gateapi.ListSubAccountBalancesOpts{}
 	if subUID != "" {
 		opts.SubUid = optional.NewString(subUID)
+	}
+	if page != 0 {
+		opts.Page = optional.NewInt32(page)
+	}
+	if limit != 0 {
+		opts.Limit = optional.NewInt32(limit)
 	}
 
 	result, httpResp, err := c.WalletAPI.ListSubAccountBalances(c.Context(), opts)

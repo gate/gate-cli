@@ -86,3 +86,29 @@ func TestRequireAuthSucceedsWhenKeySet(t *testing.T) {
 	c, _ := client.New(cfg, "test")
 	assert.NoError(t, c.RequireAuth())
 }
+
+// TestNewClientExposesAllSDKApis guards against API accessor fields being
+// dropped during refactors. Each CEX module's command layer dereferences one
+// of these, so a missing field surfaces only as a nil-pointer panic at
+// runtime without this check.
+func TestNewClientExposesAllSDKApis(t *testing.T) {
+	cfg := &config.Config{BaseURL: "https://api.gateio.ws"}
+	c, err := client.New(cfg, "test")
+	require.NoError(t, err)
+
+	assert.NotNil(t, c.SpotAPI, "SpotAPI")
+	assert.NotNil(t, c.FuturesAPI, "FuturesAPI")
+	assert.NotNil(t, c.DeliveryAPI, "DeliveryAPI")
+	assert.NotNil(t, c.MarginAPI, "MarginAPI")
+	assert.NotNil(t, c.MarginUniAPI, "MarginUniAPI")
+	assert.NotNil(t, c.OptionsAPI, "OptionsAPI")
+	assert.NotNil(t, c.UnifiedAPI, "UnifiedAPI")
+	assert.NotNil(t, c.SubAccountAPI, "SubAccountAPI")
+	assert.NotNil(t, c.WalletAPI, "WalletAPI")
+	assert.NotNil(t, c.EarnAPI, "EarnAPI")
+	assert.NotNil(t, c.EarnUniAPI, "EarnUniAPI")
+	assert.NotNil(t, c.RebateAPI, "RebateAPI")
+	assert.NotNil(t, c.AccountAPI, "AccountAPI")
+	assert.NotNil(t, c.LaunchAPI, "LaunchAPI")
+	assert.NotNil(t, c.AssetswapAPI, "AssetswapAPI (added in v7.2.71 sync)")
+}

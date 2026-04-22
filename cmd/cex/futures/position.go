@@ -25,14 +25,14 @@ func init() {
 	}
 	addSettleFlag(listCmd)
 
-	getCmd := &cobra.Command{
-		Use:   "get",
-		Short: "Get position(s) for a contract (works in both single and dual mode)",
-		RunE:  runFuturesPositionGet,
+	getDualCmd := &cobra.Command{
+		Use:   "get-dual",
+		Short: "Get dual-mode (hedge) position(s) for a contract",
+		RunE:  runFuturesPositionGetDual,
 	}
-	getCmd.Flags().String("contract", "", "Contract name, e.g. BTC_USDT (required)")
-	getCmd.MarkFlagRequired("contract")
-	addSettleFlag(getCmd)
+	getDualCmd.Flags().String("contract", "", "Contract name, e.g. BTC_USDT (required)")
+	getDualCmd.MarkFlagRequired("contract")
+	addSettleFlag(getDualCmd)
 
 	listTimerangeCmd := &cobra.Command{
 		Use:   "list-timerange",
@@ -57,28 +57,28 @@ func init() {
 	leverageCmd.MarkFlagRequired("contract")
 	addSettleFlag(leverageCmd)
 
-	updateMarginCmd := &cobra.Command{
-		Use:   "update-margin",
-		Short: "Update position margin",
-		RunE:  runFuturesUpdatePositionMargin,
+	updateDualMarginCmd := &cobra.Command{
+		Use:   "update-dual-margin",
+		Short: "Update dual-mode (hedge) position margin",
+		RunE:  runFuturesUpdateDualPositionMargin,
 	}
-	updateMarginCmd.Flags().String("contract", "", "Contract name (required)")
-	updateMarginCmd.Flags().String("change", "", "Margin change amount (required)")
-	updateMarginCmd.Flags().String("dual-side", "", "Position side for dual mode: dual_long or dual_short (omit for single mode)")
-	updateMarginCmd.MarkFlagRequired("contract")
-	updateMarginCmd.MarkFlagRequired("change")
-	addSettleFlag(updateMarginCmd)
+	updateDualMarginCmd.Flags().String("contract", "", "Contract name (required)")
+	updateDualMarginCmd.Flags().String("change", "", "Margin change amount (required)")
+	updateDualMarginCmd.Flags().String("dual-side", "", "Position side: dual_long or dual_short (required)")
+	updateDualMarginCmd.MarkFlagRequired("contract")
+	updateDualMarginCmd.MarkFlagRequired("change")
+	addSettleFlag(updateDualMarginCmd)
 
-	updateLeverageCmd := &cobra.Command{
-		Use:   "update-leverage",
-		Short: "Update position leverage",
-		RunE:  runFuturesUpdatePositionLeverage,
+	updateDualLeverageCmd := &cobra.Command{
+		Use:   "update-dual-leverage",
+		Short: "Update dual-mode (hedge) position leverage",
+		RunE:  runFuturesUpdateDualPositionLeverage,
 	}
-	updateLeverageCmd.Flags().String("contract", "", "Contract name (required)")
-	updateLeverageCmd.Flags().String("leverage", "", "New leverage (required)")
-	updateLeverageCmd.MarkFlagRequired("contract")
-	updateLeverageCmd.MarkFlagRequired("leverage")
-	addSettleFlag(updateLeverageCmd)
+	updateDualLeverageCmd.Flags().String("contract", "", "Contract name (required)")
+	updateDualLeverageCmd.Flags().String("leverage", "", "New leverage (required)")
+	updateDualLeverageCmd.MarkFlagRequired("contract")
+	updateDualLeverageCmd.MarkFlagRequired("leverage")
+	addSettleFlag(updateDualLeverageCmd)
 
 	updateContractLeverageCmd := &cobra.Command{
 		Use:   "update-contract-leverage",
@@ -93,27 +93,27 @@ func init() {
 	updateContractLeverageCmd.MarkFlagRequired("margin-mode")
 	addSettleFlag(updateContractLeverageCmd)
 
-	updateCrossCmd := &cobra.Command{
-		Use:   "update-cross-mode",
-		Short: "Update position cross/isolated margin mode (works in both single and dual mode)",
-		RunE:  runFuturesUpdatePositionCrossMode,
+	updateDualCrossCmd := &cobra.Command{
+		Use:   "update-dual-cross-mode",
+		Short: "Update dual-mode (hedge) position cross/isolated margin mode",
+		RunE:  runFuturesUpdateDualPositionCrossMode,
 	}
-	updateCrossCmd.Flags().String("contract", "", "Contract name (required)")
-	updateCrossCmd.Flags().String("mode", "", "Margin mode: ISOLATED or CROSS (required)")
-	updateCrossCmd.MarkFlagRequired("contract")
-	updateCrossCmd.MarkFlagRequired("mode")
-	addSettleFlag(updateCrossCmd)
+	updateDualCrossCmd.Flags().String("contract", "", "Contract name (required)")
+	updateDualCrossCmd.Flags().String("mode", "", "Margin mode: ISOLATED or CROSS (required)")
+	updateDualCrossCmd.MarkFlagRequired("contract")
+	updateDualCrossCmd.MarkFlagRequired("mode")
+	addSettleFlag(updateDualCrossCmd)
 
-	updateRiskLimitCmd := &cobra.Command{
-		Use:   "update-risk-limit",
-		Short: "Update position risk limit",
-		RunE:  runFuturesUpdatePositionRiskLimit,
+	updateDualRiskLimitCmd := &cobra.Command{
+		Use:   "update-dual-risk-limit",
+		Short: "Update dual-mode (hedge) position risk limit",
+		RunE:  runFuturesUpdateDualPositionRiskLimit,
 	}
-	updateRiskLimitCmd.Flags().String("contract", "", "Contract name (required)")
-	updateRiskLimitCmd.Flags().String("risk-limit", "", "New risk limit (required)")
-	updateRiskLimitCmd.MarkFlagRequired("contract")
-	updateRiskLimitCmd.MarkFlagRequired("risk-limit")
-	addSettleFlag(updateRiskLimitCmd)
+	updateDualRiskLimitCmd.Flags().String("contract", "", "Contract name (required)")
+	updateDualRiskLimitCmd.Flags().String("risk-limit", "", "New risk limit (required)")
+	updateDualRiskLimitCmd.MarkFlagRequired("contract")
+	updateDualRiskLimitCmd.MarkFlagRequired("risk-limit")
+	addSettleFlag(updateDualRiskLimitCmd)
 
 	closeHistoryCmd := &cobra.Command{
 		Use:   "close-history",
@@ -144,11 +144,12 @@ func init() {
 	adlCmd.Flags().Int32("limit", 0, "Number of records to return")
 	addSettleFlag(adlCmd)
 
-	positionCmd.AddCommand(listCmd, getCmd,
+	positionCmd.AddCommand(listCmd, getDualCmd,
 		listTimerangeCmd, leverageCmd,
-		updateMarginCmd, updateLeverageCmd, updateContractLeverageCmd,
-		updateCrossCmd, updateRiskLimitCmd,
+		updateDualMarginCmd, updateDualLeverageCmd, updateContractLeverageCmd,
+		updateDualCrossCmd, updateDualRiskLimitCmd,
 		closeHistoryCmd, liquidatesCmd, adlCmd)
+	registerSinglePositionCommands(positionCmd)
 	Cmd.AddCommand(positionCmd)
 }
 
@@ -184,7 +185,7 @@ func runFuturesPositionList(cmd *cobra.Command, args []string) error {
 	return p.Table([]string{"Contract", "Size", "Entry Price", "Mark Price", "Unrealised PNL", "Leverage"}, rows)
 }
 
-func runFuturesPositionGet(cmd *cobra.Command, args []string) error {
+func runFuturesPositionGetDual(cmd *cobra.Command, args []string) error {
 	contract, _ := cmd.Flags().GetString("contract")
 	settle := cmdutil.GetSettle(cmd)
 	p := cmdutil.GetPrinter(cmd)
@@ -289,7 +290,7 @@ func runFuturesPositionLeverage(cmd *cobra.Command, args []string) error {
 	)
 }
 
-func runFuturesUpdatePositionMargin(cmd *cobra.Command, args []string) error {
+func runFuturesUpdateDualPositionMargin(cmd *cobra.Command, args []string) error {
 	contract, _ := cmd.Flags().GetString("contract")
 	change, _ := cmd.Flags().GetString("change")
 	dualSide, _ := cmd.Flags().GetString("dual-side")
@@ -314,7 +315,7 @@ func runFuturesUpdatePositionMargin(cmd *cobra.Command, args []string) error {
 	return p.Print(result)
 }
 
-func runFuturesUpdatePositionLeverage(cmd *cobra.Command, args []string) error {
+func runFuturesUpdateDualPositionLeverage(cmd *cobra.Command, args []string) error {
 	contract, _ := cmd.Flags().GetString("contract")
 	leverage, _ := cmd.Flags().GetString("leverage")
 	settle := cmdutil.GetSettle(cmd)
@@ -357,7 +358,7 @@ func runFuturesUpdateContractPositionLeverage(cmd *cobra.Command, args []string)
 	return p.Print(result)
 }
 
-func runFuturesUpdatePositionCrossMode(cmd *cobra.Command, args []string) error {
+func runFuturesUpdateDualPositionCrossMode(cmd *cobra.Command, args []string) error {
 	contract, _ := cmd.Flags().GetString("contract")
 	mode, _ := cmd.Flags().GetString("mode")
 	settle := cmdutil.GetSettle(cmd)
@@ -380,7 +381,7 @@ func runFuturesUpdatePositionCrossMode(cmd *cobra.Command, args []string) error 
 	return p.Print(result)
 }
 
-func runFuturesUpdatePositionRiskLimit(cmd *cobra.Command, args []string) error {
+func runFuturesUpdateDualPositionRiskLimit(cmd *cobra.Command, args []string) error {
 	contract, _ := cmd.Flags().GetString("contract")
 	riskLimit, _ := cmd.Flags().GetString("risk-limit")
 	settle := cmdutil.GetSettle(cmd)

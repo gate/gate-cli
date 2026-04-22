@@ -72,6 +72,8 @@ func init() {
 	rewardRecordsCmd.Flags().String("coin", "", "Reward currency")
 
 	Cmd.AddCommand(projectsCmd, pledgeCmd, redeemCmd, pledgeRecordsCmd, rewardRecordsCmd)
+	registerCandyDropCommands(Cmd)
+	registerHodlerAirdropCommands(Cmd)
 }
 
 func runProjects(cmd *cobra.Command, args []string) error {

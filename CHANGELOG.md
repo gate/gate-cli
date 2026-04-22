@@ -4,6 +4,95 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [v0.6.5] - 2026-04-22
+
+### Summary
+
+Syncs gate-cli to **gateapi-go/v7 v7.2.71** (from v7.2.57) and closes every remaining CLI ↔ SDK gap across the 11 core CEX modules plus the newly-surfaced `assetswap` module and `launch` Candy Drop / HODLer Airdrop V4 subtrees. **28 new commands + 1 parameter addition + 5 breaking renames + 66 new unit tests.** One existing dependency upgrade with zero behavioural regressions.
+
+### Added — MCP gap closure (assetswap + launch CandyDrop)
+
+- **`gate-cli cex assetswap`** — new top-level command group for Gate's Portfolio Optimization (asset-swap) APIs. Previously CLI had no assetswap coverage. SDK methods backing each subcommand:
+  - `cex assetswap assets` → `AssetswapAPI.ListAssetSwapAssets`
+  - `cex assetswap config` → `AssetswapAPI.GetAssetSwapConfig`
+  - `cex assetswap evaluate [--max-value] [--cursor] [--size]` → `AssetswapAPI.EvaluateAssetSwap`
+  - `cex assetswap order create --json '<body>'` → `AssetswapAPI.CreateAssetSwapOrderV1`
+  - `cex assetswap order preview --json '<body>'` → `AssetswapAPI.PreviewAssetSwapOrderV1`
+  - `cex assetswap order list [--from --to --status --offset --size --sort-mode --order-by]` → `AssetswapAPI.ListAssetSwapOrdersV1`
+  - `cex assetswap order get <order-id>` → `AssetswapAPI.GetAssetSwapOrderV1`
+- **`gate-cli cex launch hodler`** — new subtree under the existing `launch` module exposing HODLer Airdrop V4:
+  - `cex launch hodler projects [--status --keyword --join --page --size]` → `LaunchAPI.GetHodlerAirdropProjectList` (public; logged-in users get extra info)
+  - `cex launch hodler order --hodler-id <id>` → `LaunchAPI.HodlerAirdropOrder` (participate in activity)
+  - `cex launch hodler order-records [--keyword --start-timest --end-timest --page --size]` → `LaunchAPI.GetHodlerAirdropUserOrderRecords`
+  - `cex launch hodler airdrop-records [--keyword --start-timest --end-timest --page --size]` → `LaunchAPI.GetHodlerAirdropUserAirdropRecords`
+- **`gate-cli cex launch candy-drop`** — new subtree under the existing `launch` module exposing Candy Drop V4:
+  - `cex launch candy-drop activities` → `LaunchAPI.GetCandyDropActivityListV4`
+  - `cex launch candy-drop rules` → `LaunchAPI.GetCandyDropActivityRulesV4`
+  - `cex launch candy-drop register --currency <name> [--activity-id]` → `LaunchAPI.RegisterCandyDropV4`
+  - `cex launch candy-drop progress` → `LaunchAPI.GetCandyDropTaskProgressV4`
+  - `cex launch candy-drop participations` → `LaunchAPI.GetCandyDropParticipationRecordsV4`
+  - `cex launch candy-drop airdrops` → `LaunchAPI.GetCandyDropAirdropRecordsV4`
+- **`internal/client.Client`** — added `AssetswapAPI` field (wrapping `gateapi.AssetswapApiService`) so the new assetswap commands can invoke SDK methods via the standard client accessor.
+
+### Added — SDK v7.2.71 sync (CEX)
+
+- **`gate-cli cex earn dual refund-preview <order-id>`** — preview early-redemption of a dual-investment order (`EarnAPI.GetDualOrderRefundPreview`, new in SDK v7.2.58+).
+- **`gate-cli cex earn dual refund --order-id <id> --req-id <id>`** — execute early-redemption using the `req_id` obtained from `refund-preview` (`EarnAPI.PlaceDualOrderRefund`).
+- **`gate-cli cex earn dual modify-reinvest --order-id <id> --status <0|1> [--duration <secs>]`** — toggle or adjust reinvest setting on a dual-investment order (`EarnAPI.ModifyDualOrderReinvest`).
+- **`gate-cli cex earn dual recommend [--mode] [--coin] [--type] [--history-pids]`** — fetch recommended dual-investment projects (`EarnAPI.GetDualProjectRecommend`).
+- **`gate-cli cex futures position get`** — get one-way (single-mode) position for a contract (`FuturesAPI.GetPosition`). Previously unavailable in the CLI.
+- **`gate-cli cex futures position update-margin|update-leverage|update-cross-mode|update-risk-limit`** — new one-way position-mode update commands backed by SDK's bare `UpdatePosition*` methods. Previously unavailable in the CLI.
+- **`gate-cli cex futures market risk-limit-table <table-id>`** — query a specific futures risk-limit table (`FuturesAPI.GetFuturesRiskLimitTable`). Previously unavailable.
+- **`gate-cli cex wallet sub --page <n> --limit <n>`** — added pagination flags to sub-account balance listing (SDK v7.2.71 extended `ListSubAccountBalancesOpts` with `Page`/`Limit`).
+
+### Changed — Futures dual-mode naming (breaking)
+
+Dual-mode (hedge) position commands have been renamed to free up the unprefixed names for the new one-way (single-mode) variants. **Any scripts using these commands must be updated.**
+
+| Old command | New command | Backing SDK method (unchanged) |
+|-------------|-------------|-------------------------------|
+| `cex futures position get` | `cex futures position get-dual` | `FuturesAPI.GetDualModePosition` |
+| `cex futures position update-margin` | `cex futures position update-dual-margin` | `FuturesAPI.UpdateDualModePositionMargin` |
+| `cex futures position update-leverage` | `cex futures position update-dual-leverage` | `FuturesAPI.UpdateDualModePositionLeverage` |
+| `cex futures position update-cross-mode` | `cex futures position update-dual-cross-mode` | `FuturesAPI.UpdateDualCompPositionCrossMode` |
+| `cex futures position update-risk-limit` | `cex futures position update-dual-risk-limit` | `FuturesAPI.UpdateDualModePositionRiskLimit` |
+
+`cex futures position update-contract-leverage` is unchanged (it maps to the contract-based `UpdateContractPositionLeverage`, a third mode that is distinct from both dual and one-way).
+
+### Dependencies
+
+- **`github.com/gate/gateapi-go/v7`**: `v7.2.57` → `v7.2.71`. Verified zero breaking changes to methods already in use; the upgrade unlocks the dual-investment refund/recommend methods and SDK-level pagination fields listed above.
+
+### Tests — 66 new unit tests, coverage lifted across every affected package
+
+Coverage strategy is three-layered: (1) cobra structural checks (subcommand tree, required flag annotations, positional-arg contracts), (2) direct RunE invocation with no credentials to exercise the `cmdutil.GetClient` / `RequireAuth` paths, (3) `httptest.NewServer` + `GATE_BASE_URL` redirection so no-auth public endpoints and downstream `opts` / JSON-unmarshal branches are covered end-to-end.
+
+Package-level coverage delta (statements):
+
+| Package | Before | After |
+|---------|-------:|-------:|
+| `cmd/cex/assetswap` | 17.4% | **59.4%** |
+| `cmd/cex/launch` | 21.0% | **50.2%** |
+| `cmd/cex/futures` | 22.7% | **26.6%** |
+| `cmd/cex/earn` | 19.9% | **24.6%** |
+| `cmd/cex/wallet` | 17.3% | **18.6%** |
+| `internal/client` | 55.2% | **55.2%** (stable, guarded by new API-accessor non-nil test) |
+
+New test files:
+
+- `cmd/cex/assetswap/assetswap_test.go` (18 tests) — structural, RequireAuth, invalid-`--json`, httptest success + server-error branches
+- `cmd/cex/launch/candy_drop_test.go` (11 tests), `cmd/cex/launch/hodler_airdrop_test.go` (9 tests) — structural, RequireAuth, httptest all-flags / no-flags matrices
+- `cmd/cex/earn/dual_test.go` (10 tests) — structural, positional-args, RequireAuth, httptest for `runDualRecommend`
+- `cmd/cex/futures/position_test.go` (4 tests) — full 17-command subtree guard + route-β rename regression via Short-field assertions
+- `cmd/cex/futures/position_single_test.go` (7 tests) — RequireAuth for all single-mode + 2 dual-mode regression handlers
+- `cmd/cex/futures/market_test.go` (3 tests) — `risk-limit-table` registration, Args contract, httptest success path
+- `cmd/cex/wallet/balance_test.go` (4 tests) — new `--page` / `--limit` flags (non-zero + zero) + subcommand regression
+
+Updated tests:
+
+- `cmd/cex/launch/launch_test.go` — `candy-drop` and `hodler` added to the structural guard list
+- `internal/client/client_test.go` — new `TestNewClientExposesAllSDKApis` asserts all 15 wrapped `*ApiService` fields (including the newly-added `AssetswapAPI`) are non-nil after `client.New`
+
 ## [0.6.4] - 2026-04-22
 
 ### Added

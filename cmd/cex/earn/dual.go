@@ -52,7 +52,46 @@ func init() {
 		RunE:  runDualBalance,
 	}
 
-	dualCmd.AddCommand(plansCmd, ordersCmd, placeCmd, balanceCmd)
+	refundPreviewCmd := &cobra.Command{
+		Use:   "refund-preview <order-id>",
+		Short: "Preview early-redemption of a dual investment order",
+		Args:  cobra.ExactArgs(1),
+		RunE:  runDualRefundPreview,
+	}
+
+	refundCmd := &cobra.Command{
+		Use:   "refund",
+		Short: "Execute early-redemption of a dual investment order",
+		RunE:  runDualRefund,
+	}
+	refundCmd.Flags().String("order-id", "", "Order ID (required)")
+	refundCmd.Flags().String("req-id", "", "Request ID returned by refund-preview (required)")
+	refundCmd.MarkFlagRequired("order-id")
+	refundCmd.MarkFlagRequired("req-id")
+
+	modifyReinvestCmd := &cobra.Command{
+		Use:   "modify-reinvest",
+		Short: "Modify reinvest setting of a dual investment order",
+		RunE:  runDualModifyReinvest,
+	}
+	modifyReinvestCmd.Flags().Int64("order-id", 0, "Order ID (required)")
+	modifyReinvestCmd.Flags().Int32("status", 0, "0=off, 1=on (required)")
+	modifyReinvestCmd.Flags().Int64("duration", 0, "Effective duration in seconds; default 86400 (1 day) if omitted")
+	modifyReinvestCmd.MarkFlagRequired("order-id")
+	modifyReinvestCmd.MarkFlagRequired("status")
+
+	recommendCmd := &cobra.Command{
+		Use:   "recommend",
+		Short: "Get recommended dual investment projects (public, no auth required)",
+		RunE:  runDualRecommend,
+	}
+	recommendCmd.Flags().String("mode", "", "Sort mode: normal / senior / apy_up etc.")
+	recommendCmd.Flags().String("coin", "", "Filter by invest currency, e.g. BTC, USDT")
+	recommendCmd.Flags().String("type", "", "Filter by type: call (sell high) / put (buy low)")
+	recommendCmd.Flags().String("history-pids", "", "Comma-separated product IDs already held by the user")
+
+	dualCmd.AddCommand(plansCmd, ordersCmd, placeCmd, balanceCmd,
+		refundPreviewCmd, refundCmd, modifyReinvestCmd, recommendCmd)
 }
 
 func runDualPlans(cmd *cobra.Command, args []string) error {
@@ -163,6 +202,110 @@ func runDualBalance(cmd *cobra.Command, args []string) error {
 		[]string{"Asset (USDT)", "Asset (BTC)", "Interest (USDT)", "Interest (BTC)"},
 		[][]string{{result.UserAssetUsdt, result.UserAssetBtc, result.UserTotalInterestUsdt, result.UserTotalInterestBtc}},
 	)
+}
+
+func runDualRefundPreview(cmd *cobra.Command, args []string) error {
+	orderID := args[0]
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+	if err := c.RequireAuth(); err != nil {
+		return err
+	}
+
+	result, httpResp, err := c.EarnAPI.GetDualOrderRefundPreview(c.Context(), orderID)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/dual/order-refund-preview", ""))
+		return nil
+	}
+	return p.Print(result)
+}
+
+func runDualRefund(cmd *cobra.Command, args []string) error {
+	orderID, _ := cmd.Flags().GetString("order-id")
+	reqID, _ := cmd.Flags().GetString("req-id")
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+	if err := c.RequireAuth(); err != nil {
+		return err
+	}
+
+	body := gateapi.DualOrderRefundParams{
+		OrderId: orderID,
+		ReqId:   reqID,
+	}
+	bodyJSON, _ := json.Marshal(body)
+	httpResp, err := c.EarnAPI.PlaceDualOrderRefund(c.Context(), body)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/earn/dual/order-refund", string(bodyJSON)))
+		return nil
+	}
+	return p.Print(map[string]string{"status": "ok", "order_id": orderID, "req_id": reqID})
+}
+
+func runDualModifyReinvest(cmd *cobra.Command, args []string) error {
+	orderID, _ := cmd.Flags().GetInt64("order-id")
+	status, _ := cmd.Flags().GetInt32("status")
+	duration, _ := cmd.Flags().GetInt64("duration")
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+	if err := c.RequireAuth(); err != nil {
+		return err
+	}
+
+	body := gateapi.DualModifyOrderReinvestParams{
+		OrderId:               orderID,
+		Status:                status,
+		EffectiveTimeDuration: duration,
+	}
+	bodyJSON, _ := json.Marshal(body)
+	httpResp, err := c.EarnAPI.ModifyDualOrderReinvest(c.Context(), body)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/earn/dual/modify-order-reinvest", string(bodyJSON)))
+		return nil
+	}
+	return p.Print(map[string]any{"status": "ok", "order_id": orderID, "reinvest": status})
+}
+
+func runDualRecommend(cmd *cobra.Command, args []string) error {
+	mode, _ := cmd.Flags().GetString("mode")
+	coin, _ := cmd.Flags().GetString("coin")
+	typ, _ := cmd.Flags().GetString("type")
+	historyPids, _ := cmd.Flags().GetString("history-pids")
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+
+	opts := &gateapi.GetDualProjectRecommendOpts{}
+	if mode != "" {
+		opts.Mode = optional.NewString(mode)
+	}
+	if coin != "" {
+		opts.Coin = optional.NewString(coin)
+	}
+	if typ != "" {
+		opts.Type_ = optional.NewString(typ)
+	}
+	if historyPids != "" {
+		opts.HistoryPids = optional.NewString(historyPids)
+	}
+
+	result, httpResp, err := c.EarnAPI.GetDualProjectRecommend(c.Context(), opts)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/dual/project-recommend", ""))
+		return nil
+	}
+	return p.Print(result)
 }
 
 // Ensure fmt is used (for potential future table formatting).

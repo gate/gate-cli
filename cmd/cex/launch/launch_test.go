@@ -13,7 +13,11 @@ func TestLaunchCommandStructure(t *testing.T) {
 		subCmds[c.Name()] = true
 	}
 
-	expected := []string{"projects", "pledge", "redeem", "pledge-records", "reward-records"}
+	expected := []string{
+		"projects", "pledge", "redeem", "pledge-records", "reward-records",
+		// Added alongside SDK v7.2.71 sync:
+		"candy-drop", "hodler",
+	}
 	for _, name := range expected {
 		assert.True(t, subCmds[name], "missing subcommand: %s", name)
 	}

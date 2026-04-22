@@ -7,9 +7,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var marketCmd = &cobra.Command{
@@ -137,6 +137,14 @@ func init() {
 	riskLimitTiersCmd.Flags().Int32("limit", 0, "Number of records to return")
 	addSettleFlag(riskLimitTiersCmd)
 
+	riskLimitTableCmd := &cobra.Command{
+		Use:   "risk-limit-table <table-id>",
+		Short: "Query a specific risk limit table (public, no authentication required)",
+		Args:  cobra.ExactArgs(1),
+		RunE:  runFuturesRiskLimitTable,
+	}
+	addSettleFlag(riskLimitTableCmd)
+
 	liquidationsCmd := &cobra.Command{
 		Use:   "liquidations",
 		Short: "List recently liquidated orders (public, no authentication required)",
@@ -164,7 +172,7 @@ func init() {
 	addSettleFlag(batchFundingRatesCmd)
 
 	marketCmd.AddCommand(tickerCmd, tickersCmd, orderbookCmd, tradesCmd, candlesticksCmd, fundingRateCmd,
-		contractsCmd, contractCmd, premiumCmd, statsCmd, indexCmd, riskLimitTiersCmd,
+		contractsCmd, contractCmd, premiumCmd, statsCmd, indexCmd, riskLimitTiersCmd, riskLimitTableCmd,
 		liquidationsCmd, insuranceCmd, batchFundingRatesCmd)
 	Cmd.AddCommand(marketCmd)
 }
@@ -480,6 +488,30 @@ func runFuturesRiskLimitTiers(cmd *cobra.Command, args []string) error {
 	result, httpResp, err := c.FuturesAPI.ListFuturesRiskLimitTiers(c.Context(), settle, opts)
 	if err != nil {
 		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/risk_limit_tiers", ""))
+		return nil
+	}
+	if p.IsJSON() {
+		return p.Print(result)
+	}
+	rows := make([][]string, len(result))
+	for i, r := range result {
+		rows[i] = []string{fmt.Sprintf("%d", r.Tier), r.RiskLimit, r.InitialRate, r.MaintenanceRate}
+	}
+	return p.Table([]string{"Tier", "Risk Limit", "Initial Rate", "Maintenance Rate"}, rows)
+}
+
+func runFuturesRiskLimitTable(cmd *cobra.Command, args []string) error {
+	tableID := args[0]
+	settle := cmdutil.GetSettle(cmd)
+	p := cmdutil.GetPrinter(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+
+	result, httpResp, err := c.FuturesAPI.GetFuturesRiskLimitTable(c.Context(), settle, tableID)
+	if err != nil {
+		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/risk_limit_table/"+tableID, ""))
 		return nil
 	}
 	if p.IsJSON() {
