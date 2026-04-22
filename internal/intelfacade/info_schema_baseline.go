@@ -125,12 +125,12 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 	"info_platformmetrics_search_platforms": infoObj(map[string]interface{}{
 		"platform_type": infoStr("platform_type"),
 		"chain":         infoStr("chain"),
-		"sort_by":       infoStrEnum("sort_by", "tvl", "tvl", "volume_24h", "volume_spot_24h", "volume_perps_24h", "fees_24h"),
+		"sort_by":       infoStrEnum("sort_by", "tvl", "tvl", "volume_24h", "volume_spot_24h", "volume_perps_24h", "volume_perps_7d", "volume_perps_30d", "volume_perps_qtd", "fees_24h"),
 		"sort_order":    infoStrEnum("sort_order", "desc", "asc", "desc"),
 		"limit":         infoIntDefaultMax("limit", 20, 100),
 	}),
 	"info_platformmetrics_get_defi_overview": infoObj(map[string]interface{}{
-		"category": infoStrEnum("category", "all", "all", "defi", "de-fi", "cex", "perp", "spot", "stablecoin", "dex", "dexes", "lending", "cdp", "yield", "bridge", "derivatives", "yield aggregator"),
+		"category": infoStrEnum("category", "all", "all", "defi", "de-fi", "cex", "perp", "spot", "stablecoin", "dex", "dexs", "dexes", "lending", "cdp", "yield", "bridge", "derivatives", "yield aggregator"),
 	}),
 	"info_platformmetrics_get_stablecoin_info": infoObj(map[string]interface{}{
 		"symbol": infoStr("symbol"),
@@ -143,6 +143,13 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 		"sort_by":     infoStrEnum("sort_by", "volume_24h", "volume_24h", "volume_7d", "volume_30d", "deposit_txs_24h"),
 		"limit":       infoIntDefaultMax("limit", 20, 100),
 	}),
+	"info_platformmetrics_get_cex_orderbook_depth": infoObj(map[string]interface{}{
+		"symbol":      infoStr("symbol"),
+		"market_type": infoStrEnum("market_type", "perp", "spot", "perp", "perps", "futures", "future"),
+		"exchange":    infoStr("exchange"),
+		"data_scope":  infoStrEnum("data_scope", "", "exchange", "market"),
+		"limit":       infoIntDefaultMax("limit", 20, 100),
+	}, "symbol"),
 	"info_platformmetrics_get_yield_pools": infoObj(map[string]interface{}{
 		"project":     infoStr("project"),
 		"chain":       infoStr("chain"),
@@ -154,7 +161,9 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 	}),
 	"info_platformmetrics_get_platform_history": infoObj(map[string]interface{}{
 		"platform_name": infoStr("platform_name"),
+		"exchange_slug": infoStr("exchange_slug"),
 		"metrics":       infoArrStrMetricsHints("metrics"),
+		"granularity":   infoStrEnum("granularity", "day", "day", "week", "month", "quarter"),
 		"start_date":    infoStr("start_date"),
 		"end_date":      infoStr("end_date"),
 	}, "platform_name"),

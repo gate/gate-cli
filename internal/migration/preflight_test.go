@@ -10,7 +10,7 @@ func TestBuildPreflightReady(t *testing.T) {
 		Installed: func(string) bool {
 			return true
 		},
-		Version: "0.3.0",
+		Version: "0.6.0",
 	})
 	if res.Status != "ready" {
 		t.Fatalf("expected ready, got %s", res.Status)
@@ -28,7 +28,7 @@ func TestBuildPreflightFallbackToMCP(t *testing.T) {
 		Installed: func(string) bool {
 			return false
 		},
-		Version: "0.3.0",
+		Version: "0.6.0",
 	})
 	// with no legacy entries it should be install required
 	if res.Status != "install_cli_required" {
@@ -41,7 +41,7 @@ func TestBuildPreflightInstallHintTemplate(t *testing.T) {
 		FallbackEnabled: false,
 		Scanner:         NewScannerWithHome(t.TempDir()),
 		Installed:       func(string) bool { return false },
-		Version:         "0.3.0",
+		Version:         "0.6.0",
 	})
 	if res.ActionCode != "SHOW_INSTALL_HINT" {
 		t.Fatalf("expected SHOW_INSTALL_HINT")
@@ -70,7 +70,7 @@ func TestBuildPreflightMigrateHintTemplate(t *testing.T) {
 		FallbackEnabled: true,
 		Scanner:         NewScannerWithHome(home),
 		Installed:       func(string) bool { return true },
-		Version:         "0.3.0",
+		Version:         "0.6.0",
 	})
 	// If no legacy was found due to path not existing, skip strict assertion.
 	if res.Status == "ready_with_migration_warning" && res.UserMessage != PreflightMsgMigrateHint {

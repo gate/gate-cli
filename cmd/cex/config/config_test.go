@@ -132,6 +132,35 @@ func TestRunInit_WritesDefaultIntelURLs(t *testing.T) {
 	assert.Equal(t, config.DefaultIntelNewsMCPURL, fc.Intel.NewsMCPURL)
 }
 
+func TestRunInit_UsesEnvCredentials(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("GATE_API_KEY", "env-api-key")
+	t.Setenv("GATE_API_SECRET", "env-api-secret")
+
+	input, err := os.CreateTemp(t.TempDir(), "config-init-input-*.txt")
+	require.NoError(t, err)
+	_, err = input.WriteString("\n")
+	require.NoError(t, err)
+	_, err = input.Seek(0, 0)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = input.Close()
+	})
+
+	oldStdin := os.Stdin
+	os.Stdin = input
+	t.Cleanup(func() {
+		os.Stdin = oldStdin
+	})
+
+	require.NoError(t, runInit(initCmd, nil))
+
+	fc := readConfig(t, home)
+	assert.Equal(t, "env-api-key", fc.Profiles["default"].APIKey)
+	assert.Equal(t, "env-api-secret", fc.Profiles["default"].APISecret)
+}
+
 // --- maskSecrets (P2-1) ---
 
 func TestMaskSecrets_BasicYAML(t *testing.T) {

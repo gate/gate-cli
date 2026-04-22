@@ -27,6 +27,7 @@ var InfoToolBaseline = []string{
 	"info_platformmetrics_get_defi_overview",
 	"info_platformmetrics_get_stablecoin_info",
 	"info_platformmetrics_get_bridge_metrics",
+	"info_platformmetrics_get_cex_orderbook_depth",
 	"info_platformmetrics_get_yield_pools",
 	"info_platformmetrics_get_platform_history",
 	"info_platformmetrics_get_exchange_reserves",

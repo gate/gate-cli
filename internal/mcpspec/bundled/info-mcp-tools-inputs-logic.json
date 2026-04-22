@@ -2,12 +2,11 @@
   "meta": {
     "source_repo": "gate/mcp-server",
     "scope": "RegisteredToolNames in internal/mcphost/toolnames.go",
-    "note": "news/docs tools are in other repos and excluded. gate-cli InfoToolBaseline wires 29 production Info leaf commands; the last five tool_name entries in this file are placeholder/notImplemented stubs for MCP roadmap documentation and are not exposed as gate-cli subcommands.",
-    "total_tools": 29,
+    "note": "news/docs tools are in other repos and excluded.",
+    "total_tools": 35,
     "enum_note": "Request structs generally do not use jsonschema enum tags; closed sets come from Go validators (internal/coin, cointrend, snapshot, transaction, onchain, platformmetrics, macro, marketdetail, tokensecurity). Empty string often selects a server default.",
     "items_enum_note": "For string[] fields, items_enum lists allowed elements when the server validates a closed set.",
-    "common_values_note": "common_values lists typical examples where the server does not reject unknown entries (e.g. ES dynamic field names).",
-    "integer_bounds_note": "Where present, default and max on int/int64 fields document gate-cli baseline hints (JSON Schema default/maximum in internal/intelfacade/info_schema_baseline.go); mcphost remains authoritative for clamping or rejection."
+    "common_values_note": "common_values lists typical examples where the server does not reject unknown entries (e.g. ES dynamic field names)."
   },
   "tools": [
     {
@@ -22,7 +21,7 @@
         { "name": "query_type", "type": "string", "required": false, "enum": ["auto", "address", "symbol", "name", "project", "gate_symbol", "source_id"], "enum_note": "omit defaults to auto" },
         { "name": "chain", "type": "string", "required": false },
         { "name": "scope", "type": "string", "required": false, "enum": ["basic", "detailed", "full", "with_project", "with_tokenomics"], "enum_note": "omit defaults to basic" },
-        { "name": "size", "type": "int", "required": false, "default": 10, "max": 100 },
+        { "name": "size", "type": "int", "required": false },
         { "name": "fields", "type": "string[]", "required": false }
       ],
       "logic": "mcphost tools_coin -> coinSearcher.SearchCoins; validates query/query_type/scope, builds OpenSearch query by query_type, supports chain hint disambiguation for address/auto."
@@ -39,8 +38,8 @@
         { "name": "market_cap_max", "type": "float64", "required": false },
         { "name": "asset_type", "type": "string", "required": false, "enum": ["crypto", "tradefi", "all"], "enum_note": "omit defaults to crypto" },
         { "name": "sort_by", "type": "string", "required": false, "enum": ["market_cap", "fdv", "circulating_supply"], "enum_note": "omit defaults to market_cap ordering" },
-        { "name": "limit", "type": "int", "required": false, "default": 20, "max": 100 },
-        { "name": "offset", "type": "int", "required": false, "default": 0, "max": 100000 }
+        { "name": "limit", "type": "int", "required": false },
+        { "name": "offset", "type": "int", "required": false }
       ],
       "logic": "mcphost tools_coin -> coinSearcher.SearchCoinsByFilter; multi-condition asset list query."
     },
@@ -54,7 +53,7 @@
       "fields": [
         { "name": "ranking_type", "type": "string", "required": true, "enum": ["popular", "top_gainers", "top_losers", "twitter_hot", "airdrop", "new_listing"] },
         { "name": "time_range", "type": "string", "required": false, "enum": ["1h", "24h", "7d"], "enum_note": "only for top_gainers|top_losers; must omit for other ranking_type" },
-        { "name": "limit", "type": "int", "required": false, "default": 50, "max": 100 },
+        { "name": "limit", "type": "int", "required": false },
         { "name": "listing_query", "type": "string", "required": false },
         { "name": "listing_from", "type": "int64", "required": false },
         { "name": "listing_tickers", "type": "string", "required": false }
@@ -73,8 +72,8 @@
         { "name": "symbol", "type": "string", "required": true },
         { "name": "timeframe", "type": "string", "required": true, "enum": ["1m", "5m", "15m", "1h", "4h", "1d"] },
         { "name": "period", "type": "string", "required": false, "enum": ["1h", "4h", "24h", "7d", "3d", "5d", "10d", "all"], "enum_note": "omit defaults to 24h; all disables time window filter" },
-        { "name": "size", "type": "int", "required": false, "default": 100, "max": 2000 },
-        { "name": "limit", "type": "int", "required": false, "default": 100, "max": 2000 },
+        { "name": "size", "type": "int", "required": false },
+        { "name": "limit", "type": "int", "required": false },
         { "name": "start_time", "type": "string", "required": false },
         { "name": "end_time", "type": "string", "required": false },
         { "name": "with_indicators", "type": "bool", "required": false }
@@ -96,9 +95,7 @@
         { "name": "timeframe", "type": "string", "required": true, "enum": ["15m", "1h", "4h", "1d"] },
         { "name": "start_time", "type": "string", "required": false },
         { "name": "end_time", "type": "string", "required": false },
-        { "name": "limit", "type": "int", "required": false, "default": 100, "max": 500 },
-        { "name": "source", "type": "string", "required": false, "enum": ["alpha", "spot", "future", "fx", "futures"], "enum_note": "omit defaults to spot; aligns with snapshot-style market routing when supported by host" },
-        { "name": "quote", "type": "string", "required": false, "notes": "Optional quote currency hint when supported" }
+        { "name": "limit", "type": "int", "required": false }
       ],
       "logic": "mcphost tools_trend -> trendFetcherSet.GetIndicatorHistory."
     },
@@ -132,7 +129,7 @@
         { "name": "quote", "type": "string", "required": false },
         { "name": "scope", "type": "string", "required": false, "enum": ["basic", "detailed", "full"], "enum_note": "omit -> basic" }
       ],
-      "logic": "mcphost tools_snapshot -> snapshot.Service.GetSnapshot; if snapshot service nil returns snapshot_not_configured."
+      "logic": "mcphost tools_snapshot -> snapshot.Service.GetSnapshot; scope detailed|full merges Coinglass derivatives when platformmetrics.coinglassCoinDerivatives index configured; if snapshot service nil returns snapshot_not_configured."
     },
     {
       "tool_name": "info_marketsnapshot_batch_market_snapshot",
@@ -142,7 +139,7 @@
         "symbols"
       ],
       "fields": [
-        { "name": "symbols", "type": "string[]", "required": true, "max_items": 20 },
+        { "name": "symbols", "type": "string[]", "required": true },
         { "name": "timeframe", "type": "string", "required": false, "enum": ["15m", "1h", "4h", "1d"], "enum_note": "omit -> 1h" },
         { "name": "source", "type": "string", "required": false, "enum": ["alpha", "spot", "future", "fx", "futures"], "enum_note": "futures alias of future; omit -> spot" },
         { "name": "quote", "type": "string", "required": false },
@@ -190,7 +187,7 @@
         { "name": "time_range", "type": "string", "required": false, "enum": ["1h", "24h", "1d", "7d", "30d", "90d"], "enum_note": "ignored when start_time or end_time set; 1d same window as 24h" },
         { "name": "start_time", "type": "int64", "required": false },
         { "name": "end_time", "type": "int64", "required": false },
-        { "name": "limit", "type": "int", "required": false, "default": 50, "max": 200 },
+        { "name": "limit", "type": "int", "required": false },
         { "name": "from_address", "type": "string", "required": false },
         { "name": "to_address", "type": "string", "required": false },
         { "name": "nonzero_value", "type": "bool", "required": false },
@@ -260,7 +257,7 @@
         { "name": "platform_name", "type": "string", "required": true },
         { "name": "scope", "type": "string", "required": false, "enum": ["basic", "with_chain_breakdown", "full", "detailed"], "enum_note": "detailed maps to with_chain_breakdown; unknown -> basic" }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.GetPlatformInfo; nil fetcher returns requires_open_search."
+      "logic": "mcphost tools_platformmetrics -> fetcher.GetPlatformInfo; scope=full merges period_metrics from cexExchangeDerivativesVolume index when configured; nil fetcher returns requires_open_search."
     },
     {
       "tool_name": "info_platformmetrics_search_platforms",
@@ -268,13 +265,13 @@
       "request_type": "platformmetrics.SearchPlatformsRequest",
       "required": [],
       "fields": [
-        { "name": "platform_type", "type": "string", "required": false },
+        { "name": "platform_type", "type": "string", "required": false, "common_values": ["all", "cex", "derivatives", "defi", "dex", "dexs", "dexes", "lending"], "enum_note": "no closed enum validation; empty/all means no filter; unknown values pass through as platform_type term(s)" },
         { "name": "chain", "type": "string", "required": false },
-        { "name": "sort_by", "type": "string", "required": false, "enum": ["tvl", "volume_24h", "volume_spot_24h", "volume_perps_24h", "fees_24h"], "enum_note": "omit or other -> tvl sort field" },
-        { "name": "sort_order", "type": "string", "required": false, "enum": ["asc", "desc"], "enum_note": "omit defaults to desc when supported" },
-        { "name": "limit", "type": "int64", "required": false, "default": 20, "max": 100 }
+        { "name": "sort_by", "type": "string", "required": false, "enum": ["tvl", "volume_24h", "volume_spot_24h", "volume_perps_24h", "volume_perps_7d", "volume_perps_30d", "volume_perps_qtd", "fees_24h"], "enum_note": "omit or other -> tvl sort field" },
+        { "name": "sort_order", "type": "string", "required": false, "enum": ["asc", "desc"], "enum_note": "omit or non-asc -> desc" },
+        { "name": "limit", "type": "int64", "required": false }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.SearchPlatforms; nil fetcher returns requires_open_search."
+      "logic": "mcphost tools_platformmetrics -> fetcher.SearchPlatforms; platform_type normalization: empty/all=no filter, dex|dexs|dexes -> DEX group, cex keeps CEX/cex variants, defi expands to grouped terms, unknown strings pass through to ES platform_type; sort_order normalized to asc|desc (default desc); nil fetcher returns requires_open_search."
     },
     {
       "tool_name": "info_platformmetrics_get_defi_overview",
@@ -282,9 +279,9 @@
       "request_type": "platformmetrics.GetDefiOverviewRequest",
       "required": [],
       "fields": [
-        { "name": "category", "type": "string", "required": false, "enum": ["all", "defi", "de-fi", "cex", "perp", "spot", "stablecoin", "dex", "dexes", "lending", "cdp", "yield", "bridge", "derivatives", "yield aggregator"], "enum_note": "omit -> all; comparison is case-insensitive for these; other strings pass through as platform_type filter" }
+        { "name": "category", "type": "string", "required": false, "enum": ["all", "defi", "de-fi", "cex", "perp", "spot", "stablecoin"], "common_values": ["dex", "dexs", "dexes", "lending", "cdp", "yield", "bridge", "derivatives", "yield aggregator"], "enum_note": "omit -> all; known values are case-insensitive; unknown strings are allowed and passed through as platform_type filter (no hard reject)" }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.GetDefiOverview; nil fetcher returns requires_open_search."
+      "logic": "mcphost tools_platformmetrics -> fetcher.GetDefiOverview; optional cex_perps_volume_* from cexExchangeDerivativesVolume index, exchange_usdt_reserve_total from exchange_reserves USDT sum; nil fetcher returns requires_open_search."
     },
     {
       "tool_name": "info_platformmetrics_get_stablecoin_info",
@@ -294,7 +291,7 @@
       "fields": [
         { "name": "symbol", "type": "string", "required": false },
         { "name": "chain", "type": "string", "required": false },
-        { "name": "limit", "type": "int64", "required": false, "default": 20, "max": 100 }
+        { "name": "limit", "type": "int64", "required": false }
       ],
       "logic": "mcphost tools_platformmetrics -> fetcher.GetStablecoinInfo; nil fetcher returns requires_open_search."
     },
@@ -307,9 +304,25 @@
         { "name": "bridge_name", "type": "string", "required": false },
         { "name": "chain", "type": "string", "required": false },
         { "name": "sort_by", "type": "string", "required": false, "enum": ["volume_24h", "volume_7d", "volume_30d", "deposit_txs_24h"], "enum_note": "omit -> volume_24h" },
-        { "name": "limit", "type": "int64", "required": false, "default": 20, "max": 100 }
+        { "name": "limit", "type": "int64", "required": false }
       ],
       "logic": "mcphost tools_platformmetrics -> fetcher.GetBridgeMetrics; nil fetcher returns requires_open_search."
+    },
+    {
+      "tool_name": "info_platformmetrics_get_cex_orderbook_depth",
+      "domain": "platformmetrics",
+      "request_type": "platformmetrics.GetCexOrderbookDepthRequest",
+      "required": [
+        "symbol"
+      ],
+      "fields": [
+        { "name": "symbol", "type": "string", "required": true },
+        { "name": "market_type", "type": "string", "required": false, "enum": ["spot", "perp", "perps", "futures", "future"], "enum_note": "case-insensitive; omit -> PERP; spot -> SPOT; unrecognized values are uppercased and passed through" },
+        { "name": "exchange", "type": "string", "required": false },
+        { "name": "data_scope", "type": "string", "required": false, "enum": ["exchange", "market"], "enum_note": "omit: exchange when exchange is set and exchange index exists, else market if market index exists, else exchange; invalid value -> invalid_param; missing target index -> not_implemented" },
+        { "name": "limit", "type": "int64", "required": false }
+      ],
+      "logic": "mcphost tools_platformmetrics -> fetcher.GetCexOrderbookDepth; symbol required; limit default 20 max 100; requires orderbookDepthExchange or orderbookDepthMarket index; nil fetcher returns requires_open_search."
     },
     {
       "tool_name": "info_platformmetrics_get_yield_pools",
@@ -322,7 +335,7 @@
         { "name": "symbol", "type": "string", "required": false },
         { "name": "pool_type", "type": "string", "required": false },
         { "name": "sort_by", "type": "string", "required": false, "enum": ["apy", "tvl_usd"], "enum_note": "only tvl_usd switches sort key; omit or any other value -> apy sort" },
-        { "name": "limit", "type": "int64", "required": false, "default": 20, "max": 100 },
+        { "name": "limit", "type": "int64", "required": false },
         { "name": "min_tvl_usd", "type": "float64", "required": false }
       ],
       "logic": "mcphost tools_platformmetrics -> fetcher.GetYieldPools; nil fetcher returns requires_open_search."
@@ -336,11 +349,13 @@
       ],
       "fields": [
         { "name": "platform_name", "type": "string", "required": true },
-        { "name": "metrics", "type": "string[]", "required": false, "common_values": ["tvl", "volume", "fees", "revenue"], "enum_note": "omit or empty -> [tvl]; no strict per-element validation in fetcher" },
+        { "name": "exchange_slug", "type": "string", "required": false },
+        { "name": "metrics", "type": "string[]", "required": false, "common_values": ["tvl", "volume", "fees", "revenue", "volume_perps"], "enum_note": "omit or empty -> [tvl]; no strict per-element validation in fetcher" },
+        { "name": "granularity", "type": "string", "required": false, "enum": ["day", "week", "month", "quarter"], "enum_note": "omit or unknown -> day; affects volume_perps field mapping in derivatives history index" },
         { "name": "start_date", "type": "string", "required": false },
         { "name": "end_date", "type": "string", "required": false }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.GetPlatformHistory; defaults metrics=['tvl'] when empty; nil fetcher returns requires_open_search."
+      "logic": "mcphost tools_platformmetrics -> fetcher.GetPlatformHistory; requires platform_name; defaults metrics=['tvl'] and granularity='day'; when metrics contains volume_perps switches to cexExchangeDerivativesVolume index and maps output field by granularity; nil fetcher returns requires_open_search."
     },
     {
       "tool_name": "info_platformmetrics_get_exchange_reserves",
@@ -384,7 +399,7 @@
         { "name": "end_time", "type": "string", "required": false },
         { "name": "start_date", "type": "string", "required": false },
         { "name": "end_date", "type": "string", "required": false },
-        { "name": "size", "type": "int", "required": false, "default": 50, "max": 200 }
+        { "name": "size", "type": "int", "required": false }
       ],
       "logic": "mcphost tools_macro -> fetcher.GetMacroIndicator; fetcher nil returns requires_open_search."
     },
@@ -398,7 +413,7 @@
         { "name": "end_date", "type": "string", "required": false },
         { "name": "event_type", "type": "string", "required": false },
         { "name": "importance", "type": "string", "required": false },
-        { "name": "size", "type": "int", "required": false, "default": 50, "max": 200 }
+        { "name": "size", "type": "int", "required": false }
       ],
       "logic": "mcphost tools_macro -> fetcher.GetEconomicCalendar; fetcher nil returns requires_open_search."
     },
@@ -420,7 +435,7 @@
       "fields": [
         { "name": "symbol", "type": "string", "required": true },
         { "name": "market_type", "type": "string", "required": false, "enum": ["spot", "futures", "delivery", "options"], "enum_note": "omit -> spot" },
-        { "name": "depth", "type": "int", "required": false, "default": 20, "max": 100 },
+        { "name": "depth", "type": "int", "required": false },
         { "name": "settle", "type": "string", "required": false },
         { "name": "extra", "type": "object", "required": false }
       ],
@@ -436,7 +451,7 @@
       "fields": [
         { "name": "symbol", "type": "string", "required": true },
         { "name": "market_type", "type": "string", "required": false, "enum": ["spot", "futures", "delivery", "options"], "enum_note": "omit -> spot" },
-        { "name": "limit", "type": "int64", "required": false, "default": 100, "max": 1000 },
+        { "name": "limit", "type": "int64", "required": false },
         { "name": "settle", "type": "string", "required": false },
         { "name": "extra", "type": "object", "required": false }
       ],
@@ -456,7 +471,7 @@
         { "name": "timeframe", "type": "string", "required": true },
         { "name": "start_time", "type": "int64", "required": false },
         { "name": "end_time", "type": "int64", "required": false },
-        { "name": "limit", "type": "int64", "required": false, "default": 100, "max": 2000 },
+        { "name": "limit", "type": "int64", "required": false },
         { "name": "settle", "type": "string", "required": false },
         { "name": "extra", "type": "object", "required": false }
       ],
@@ -470,7 +485,7 @@
       "fields": [
         { "name": "query", "type": "string", "required": false },
         { "name": "symbol", "type": "string", "required": false },
-        { "name": "limit", "type": "int64", "required": false, "default": 20, "max": 100 },
+        { "name": "limit", "type": "int64", "required": false },
         { "name": "address", "type": "string", "required": false }
       ],
       "logic": "mcphost tools_placeholder -> notImplemented returns errs.CodeNotImplemented."
@@ -483,7 +498,7 @@
       "fields": [
         { "name": "query", "type": "string", "required": false },
         { "name": "symbol", "type": "string", "required": false },
-        { "name": "limit", "type": "int64", "required": false, "default": 20, "max": 100 },
+        { "name": "limit", "type": "int64", "required": false },
         { "name": "address", "type": "string", "required": false }
       ],
       "logic": "mcphost tools_placeholder -> notImplemented returns errs.CodeNotImplemented."
@@ -496,7 +511,7 @@
       "fields": [
         { "name": "query", "type": "string", "required": false },
         { "name": "symbol", "type": "string", "required": false },
-        { "name": "limit", "type": "int64", "required": false, "default": 20, "max": 100 },
+        { "name": "limit", "type": "int64", "required": false },
         { "name": "address", "type": "string", "required": false }
       ],
       "logic": "mcphost tools_placeholder -> notImplemented returns errs.CodeNotImplemented."
@@ -509,7 +524,7 @@
       "fields": [
         { "name": "query", "type": "string", "required": false },
         { "name": "symbol", "type": "string", "required": false },
-        { "name": "limit", "type": "int64", "required": false, "default": 20, "max": 100 },
+        { "name": "limit", "type": "int64", "required": false },
         { "name": "address", "type": "string", "required": false }
       ],
       "logic": "mcphost tools_placeholder -> notImplemented returns errs.CodeNotImplemented."
@@ -522,7 +537,7 @@
       "fields": [
         { "name": "query", "type": "string", "required": false },
         { "name": "symbol", "type": "string", "required": false },
-        { "name": "limit", "type": "int64", "required": false, "default": 20, "max": 100 },
+        { "name": "limit", "type": "int64", "required": false },
         { "name": "address", "type": "string", "required": false }
       ],
       "logic": "mcphost tools_placeholder -> notImplemented returns errs.CodeNotImplemented."

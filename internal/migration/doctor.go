@@ -10,7 +10,7 @@ import (
 	"github.com/gate/gate-cli/internal/version"
 )
 
-const MinDoctorVersion = "0.3.0"
+const MinDoctorVersion = "0.6.0"
 
 type DoctorCheck struct {
 	ID       string                 `json:"id"`
