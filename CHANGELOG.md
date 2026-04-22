@@ -8,8 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **`gate-cli info platformmetrics get-cex-orderbook-depth`** — new intel leaf exposing the `info_platformmetrics_get_cex_orderbook_depth` MCP tool (CEX orderbook depth lookup). Inputs: required `symbol`; optional `market_type` (enum: `perp` [default], `spot`, `perps`, `futures`, `future`), `exchange`, `data_scope` (enum: `exchange`, `market`), `limit` (default `20`, max `100`). Registered in `internal/intelfacade/inventory.go` (`InfoToolBaseline`); schema added to `internal/intelfacade/info_schema_baseline.go`; bundled spec (`internal/mcpspec/bundled/info-mcp-tools-inputs-logic.json`) refreshed; `internal/intelfacade/inventory_test.go` baseline count updated (29 → 30).
-- **`gate-cli config init`** (`cmd/cex/config/config.go`, `cmd/config/config.go`) — `API Key` / `API Secret` prompts now read `GATE_API_KEY` / `GATE_API_SECRET` environment variables first; the interactive prompt only appears when the env var is empty. New `TestRunInit_UsesEnvCredentials` (`cmd/cex/config/config_test.go`) covers the env-credential path.
+- **`gate-cli info platformmetrics get-cex-orderbook-depth`** — new intel leaf exposing the `info_platformmetrics_get_cex_orderbook_depth` MCP tool (CEX orderbook depth lookup). Inputs: required `symbol`; optional `market_type` (enum: `perp` [default], `spot`, `perps`, `futures`, `future`), `exchange`, `data_scope` (enum: `exchange`, `market`), `limit` (default `20`, max `100`). Registered in `internal/intelfacade/inventory.go` (`InfoToolBaseline`); schema added to `internal/intelfacade/info_schema_baseline.go`; bundled spec (`internal/mcpspec/bundled/info-mcp-tools-inputs-logic.json`) refreshed; `internal/intelfacade/inventory_test.go` baseline count updated (37 → 38).
 
 ### Changed
 
