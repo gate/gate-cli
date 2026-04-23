@@ -34,9 +34,9 @@
 - `FuturesTrade.Size` → `string`
 - `FuturesTrade.CreateTimeMs` → `float64`
 
-## MCP / `tool`（信息与研究能力，规划中）
-- 通过 MCP Streamable HTTP 对接 news / info / docs；**规范主命令** `gate-cli tool`（`list` / `call` / `describe`）；与交易 API **鉴权隔离**（勿用 `GATE_API_KEY` 作 MCP Bearer）。
-- 见 [`specs/README.md`](specs/README.md)、[`specs/open-items-and-dependencies.md`](specs/open-items-and-dependencies.md)、[`docs/plans/2026-04-10-gate-cli-tool-mcp-review.md`](docs/plans/2026-04-10-gate-cli-tool-mcp-review.md)。
+## MCP / Intel（`info` / `news` 已发布；`tool` 仍为规格命名）
+- **用户 CLI**：`gate-cli info` / `gate-cli news`（README、quickstart）。**规划统一命令**：`gate-cli tool`（`list` / `call` / `describe`）；与交易 API **鉴权隔离**（勿用 `GATE_API_KEY` 作 MCP Bearer）。
+- 见 [`specs/README.md`](specs/README.md)（含与实现对读）、[`specs/open-items-and-dependencies.md`](specs/open-items-and-dependencies.md)、[`docs/plans/2026-04-10-gate-cli-tool-mcp-review.md`](docs/plans/2026-04-10-gate-cli-tool-mcp-review.md)。
 - **Cursor**：见 [`.cursor/rules/`](.cursor/rules/)（**`gate-cli-cli-layer-conventions.mdc`** + Intel 规则；`specs/cli/mcp-wire-appendix.md` **v0.4**）。
 
 ## 架构约定

@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [v0.6.6] - 2026-04-23
+
+### Summary
+
+Docs-only refresh aligning user-facing documentation with the shipped Intel surface: `gate-cli info` / `gate-cli news` now documents **38** MCP-backed tools (**30** `info` + **8** `news`). No behavioural changes; no SDK bump; no new commands.
+
+### Changed — Documentation
+
+- **`README.md`** — New top-level **Intel (Info & News)** Features subsection listing all command groups (`coin`, `marketsnapshot`, `markettrend`, `onchain`, `platformmetrics`, `marketdetail`, `macro`, `compliance`, `feed`, `events`) with discovery hints (`info list`, `news list`, `-h`). Added one minimal `--format json` example per tool covering all 38 leaves. Modules table for `info` / `news` now shows tool counts and group lists; `Intel (info, news)` bottom section rewritten to point at the Features subsection and `specs/intel-config-and-security.md`.
+- **`docs/quickstart.md` & `docs/quickstart_zh.md`** — New **Intel (`info` & `news`)** section between futures examples and multi-profile section, documenting groups, discovery commands, config (`intel:` block), and bearer isolation from trading `GATE_API_KEY`. Debugging section amended to note `--debug` / `--verbose` / `--max-output-bytes` behaviour for Intel MCP transport lines (stderr, unchanged stdout JSON shape).
+- **`AGENTS.md` & `CLAUDE.md`** — MCP / Intel section rewritten to reflect that `info` / `news` are **published** (38 MCP leaves, discovery via `list` / `-h`). The planned unified `gate-cli tool` (`list` / `call` / `describe`) remains a spec-only path; auth-isolation guidance versus trading `GATE_API_KEY` reaffirmed.
+- **`internal/intelfacade/inventory.go`** — Source-file comment updated from "Info: 29 tools on public gateway as of 2026-04; News: 8" to "Info: 30; News: 8; total 38. Keep in sync with BaselineToolCount tests." No code change; existing `TestBaselineToolCount` already asserts **38**.
+
+### Unchanged
+
+- `gateapi-go/v7 v7.2.71` (no SDK version bump).
+- No new commands, flags, or breaking renames.
+- No behavioural changes in any command; exit codes, output formats, and error surfaces are identical to v0.6.5.
+
 ## [v0.6.5] - 2026-04-22
 
 ### Summary

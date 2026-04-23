@@ -339,6 +339,28 @@ gate-cli cex futures position list --format json | jq '.[].contract'
 
 ---
 
+## Intel (`info` & `news`)
+
+Market intelligence and news are shipped as **38** MCP-style CLI tools (**30** `info`, **8** `news`). Invoke a capability as `gate-cli info <group> <tool>` or `gate-cli news <group> <tool>` with **flat flags** for arguments (add `--format json` for scripts and agents).
+
+**`info` groups:** `coin`, `marketsnapshot`, `markettrend`, `onchain`, `platformmetrics`, `marketdetail`, `macro`, `compliance`.
+
+**`news` groups:** `feed` (search across sources, web research, sentiment, exchange announcements) and `events` (latest events and per-event detail).
+
+List tool ids: `gate-cli info list`, `gate-cli news list`. Flags and env vars: `gate-cli info -h`, `gate-cli news -h`.
+
+Optional Intel defaults go under `intel:` in `~/.gate-cli/config.yaml`. Gate trading `--api-key` / `GATE_API_KEY` are **not** used as the Intel bearer; follow your Intel/MCP backend if a bearer or base URL is required. Env vars, URLs, and timeouts: [`specs/intel-config-and-security.md`](../specs/intel-config-and-security.md).
+
+```bash
+gate-cli info coin get-coin-info --query BTC --format json
+gate-cli info marketsnapshot get-market-snapshot --symbol BTC_USDT --format json
+gate-cli news feed search-news --query bitcoin --format json   # alias: search → search-news
+```
+
+One minimal example per tool (all 38) is in the repository **README.md**.
+
+---
+
 ## Multiple profiles
 
 Useful when managing multiple API keys (e.g., main account and sub-account).
@@ -358,6 +380,8 @@ gate-cli cex spot account list --profile sub
 gate-cli cex spot market ticker --pair BTC_USDT --debug
 # Prints full HTTP request and response to stderr
 ```
+
+For **`info`** / **`news`**, root `--debug` and `--verbose` print Intel MCP transport lines on **stderr** (stdout JSON shape unchanged). Cap printed bytes with `--max-output-bytes` or `GATE_MAX_OUTPUT_BYTES`. See the **Global flags** table in the repository `README.md`.
 
 ---
 

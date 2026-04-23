@@ -340,6 +340,28 @@ gate-cli cex futures position list --format json | jq '.[].contract'
 
 ---
 
+## Intel（`info` / `news`）
+
+市场情报与资讯以 **38** 个 MCP 风格 CLI 工具提供（**30** 个 `info`，**8** 个 `news`）。调用方式为 `gate-cli info <分组> <子命令>` 或 `gate-cli news <分组> <子命令>`，参数以**平铺 flag** 为主（脚本/Agent 建议加 `--format json`）。
+
+**`info` 分组：** `coin`、`marketsnapshot`、`markettrend`、`onchain`、`platformmetrics`、`marketdetail`、`macro`、`compliance`。
+
+**`news` 分组：** `feed`（多源检索、网页研究、情绪、交易所公告）、`events`（最新事件与单条事件详情）。
+
+列出工具名：`gate-cli info list`、`gate-cli news list`。参数与环境变量：`gate-cli info -h`、`gate-cli news -h`。
+
+可选 Intel 默认值写在 `~/.gate-cli/config.yaml` 的 `intel:` 下。现货/合约用的 `--api-key` / `GATE_API_KEY`**不会**作为 Intel 的 Bearer；若后端需要鉴权，请按 Intel/MCP 环境单独配置。环境变量、URL、超时等见 [`specs/intel-config-and-security.md`](../specs/intel-config-and-security.md)。
+
+```bash
+gate-cli info coin get-coin-info --query BTC --format json
+gate-cli info marketsnapshot get-market-snapshot --symbol BTC_USDT --format json
+gate-cli news feed search-news --query bitcoin --format json   # 别名：search → search-news
+```
+
+全部 **38** 个工具各一条最小示例见仓库根目录 **README.md**。
+
+---
+
 ## 多账号 Profile
 
 适合同时管理主账号和子账号等多套 API Key 的场景。
@@ -359,6 +381,8 @@ gate-cli cex spot account list --profile sub
 gate-cli cex spot market ticker --pair BTC_USDT --debug
 # 将完整的 HTTP 请求和响应输出到 stderr
 ```
+
+对 **`info`** / **`news`**，根级 `--debug` 与 `--verbose` 会在 **stderr** 打印 Intel MCP 传输日志（stdout 上 JSON 结构不变）。可用 `--max-output-bytes` 或环境变量 `GATE_MAX_OUTPUT_BYTES` 限制输出字节。详见仓库根目录 **README.md** 的 **Global flags** 表。
 
 ---
 
