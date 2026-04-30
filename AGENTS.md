@@ -35,7 +35,7 @@
 - `FuturesTrade.CreateTimeMs` → `float64`
 
 ## MCP / Intel（`info` / `news` 已发布；`tool` 仍为规格命名）
-- **用户 CLI**：`gate-cli info` / `gate-cli news`（38 个 MCP 叶子；`info list` / `news list`，`-h` 查 flag）。用户文档：根目录 [`README.md`](README.md)、[`docs/quickstart.md`](docs/quickstart.md)。
+- **用户 CLI**：`gate-cli info` / `gate-cli news`（40 个 MCP 叶子；`info list` / `news list`，`-h` 查 flag）。用户文档：根目录 [`README.md`](README.md)、[`docs/quickstart.md`](docs/quickstart.md)。
 - **规格中的统一主路径（规划）**：`gate-cli tool`（`list` / `call` / `describe`）；与交易 API（`gateapi-go`）**鉴权隔离**：勿用 `GATE_API_KEY` 充当 MCP Bearer。规格与待办：[`specs/README.md`](specs/README.md)（**含「已对读」说明**）、[`specs/open-items-and-dependencies.md`](specs/open-items-and-dependencies.md)；**技术评审只读** [`specs/clidocs/gate-cli-intel-mcp-technical-solution-feishu.md`](specs/clidocs/gate-cli-intel-mcp-technical-solution-feishu.md)；评审摘要：[`docs/plans/2026-04-10-gate-cli-tool-mcp-review.md`](docs/plans/2026-04-10-gate-cli-tool-mcp-review.md)。
 - **Cursor**：默认决策见 [`.cursor/rules/`](.cursor/rules/) — **`gate-cli-cli-layer-conventions.mdc`**（`GetPrinter`/`PrintError`、失败 **stderr** `{"error":...}`，与交易子命令一致；MCP 仅替换 `mcpclient`）、**`gate-cli-intel-mcp-specs.mdc`**、**`mcp-intel-curl-endpoints.mdc`**；Wire **`specs/cli/mcp-wire-appendix.md` v0.4**。
 

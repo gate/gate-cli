@@ -89,6 +89,7 @@ func TestListToolsJSONRPCError(t *testing.T) {
 }
 
 func TestDescribeToolFromList(t *testing.T) {
+	var listCalls atomic.Uint32
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req map[string]interface{}
 		require.NoError(t, json.NewDecoder(r.Body).Decode(&req))
@@ -98,6 +99,7 @@ func TestDescribeToolFromList(t *testing.T) {
 			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"1","result":{"ok":true}}`))
 			return
 		}
+		listCalls.Add(1)
 		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"2","result":{"tools":[{"name":"info_coin_get_coin_info","description":"desc","inputSchema":{"type":"object"}}]}}`))
 	}))
 	defer srv.Close()
@@ -111,6 +113,10 @@ func TestDescribeToolFromList(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, tool)
 	assert.Equal(t, "info_coin_get_coin_info", tool.Name)
+	tool, _, err = c.DescribeTool(context.Background(), "info_coin_get_coin_info")
+	require.NoError(t, err)
+	require.NotNil(t, tool)
+	assert.Equal(t, uint32(1), listCalls.Load(), "describe should use cached index on subsequent lookups")
 }
 
 func TestCallTool(t *testing.T) {
@@ -507,18 +513,19 @@ func TestListToolsUnmarshalFailureAfterGoodListInvalidatesCache(t *testing.T) {
 		var req map[string]interface{}
 		require.NoError(t, json.NewDecoder(r.Body).Decode(&req))
 		method := req["method"].(string)
+		id := req["id"].(string)
 		if method == "initialize" {
-			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"1","result":{"ok":true}}`))
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"` + id + `","result":{"ok":true}}`))
 			return
 		}
 		n := toolListCalls.Add(1)
 		switch n {
 		case 1:
-			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"2","result":{"tools":[{"name":"t0"}]}}`))
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"` + id + `","result":{"tools":[{"name":"t0"}]}}`))
 		case 2:
-			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"2","result":"not-an-object"}`))
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"` + id + `","result":"not-an-object"}`))
 		default:
-			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"2","result":{"tools":[{"name":"t1"}]}}`))
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"` + id + `","result":{"tools":[{"name":"t1"}]}}`))
 		}
 	}))
 	defer srv.Close()
@@ -554,12 +561,13 @@ func TestListToolsMissingToolsFieldReturnsErrorAndNoCache(t *testing.T) {
 		var req map[string]interface{}
 		require.NoError(t, json.NewDecoder(r.Body).Decode(&req))
 		method := req["method"].(string)
+		id := req["id"].(string)
 		if method == "initialize" {
-			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"1","result":{"ok":true}}`))
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"` + id + `","result":{"ok":true}}`))
 			return
 		}
 		callCount++
-		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"2","result":{}}`))
+		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"` + id + `","result":{}}`))
 	}))
 	defer srv.Close()
 
@@ -583,12 +591,13 @@ func TestListToolsEmptyToolsUsesShortTTL(t *testing.T) {
 		var req map[string]interface{}
 		require.NoError(t, json.NewDecoder(r.Body).Decode(&req))
 		method := req["method"].(string)
+		id := req["id"].(string)
 		if method == "initialize" {
-			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"1","result":{"ok":true}}`))
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"` + id + `","result":{"ok":true}}`))
 			return
 		}
 		listCalls.Add(1)
-		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"2","result":{"tools":[]}}`))
+		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"` + id + `","result":{"tools":[]}}`))
 	}))
 	defer srv.Close()
 
@@ -617,17 +626,18 @@ func TestListToolsTransientJSONRPCErrorDoesNotInvalidateGoodCache(t *testing.T) 
 		var req map[string]interface{}
 		require.NoError(t, json.NewDecoder(r.Body).Decode(&req))
 		method := req["method"].(string)
+		id := req["id"].(string)
 		if method == "initialize" {
-			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"1","result":{"ok":true}}`))
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"` + id + `","result":{"ok":true}}`))
 			return
 		}
 		n := listCalls.Add(1)
 		if n == 2 {
 			w.WriteHeader(http.StatusBadGateway)
-			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"2","error":{"code":-32000,"message":"temporary"}}`))
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"` + id + `","error":{"code":-32000,"message":"temporary"}}`))
 			return
 		}
-		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"2","result":{"tools":[{"name":"t1","description":"d"}]}}`))
+		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"` + id + `","result":{"tools":[{"name":"t1","description":"d"}]}}`))
 	}))
 	defer srv.Close()
 
@@ -650,6 +660,45 @@ func TestListToolsTransientJSONRPCErrorDoesNotInvalidateGoodCache(t *testing.T) 
 	_, _, err = c.ListTools(context.Background())
 	require.NoError(t, err)
 	assert.Equal(t, uint32(2), listCalls.Load(), "good list cache should survive transient tools/list failure")
+}
+
+func TestFallbackListToolsRebuildsDescribeIndex(t *testing.T) {
+	var listCalls atomic.Uint32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req map[string]interface{}
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&req))
+		method := req["method"].(string)
+		id := req["id"].(string)
+		if method == "initialize" {
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"` + id + `","result":{"ok":true}}`))
+			return
+		}
+		n := listCalls.Add(1)
+		if n == 1 {
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"` + id + `","result":{"tools":[{"name":"t1","description":"d"}]}}`))
+			return
+		}
+		w.WriteHeader(http.StatusBadGateway)
+		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"` + id + `","error":{"code":-32000,"message":"temporary"}}`))
+	}))
+	defer srv.Close()
+
+	c := New(&toolconfig.ResolvedEndpoint{
+		Backend: "news",
+		BaseURL: srv.URL,
+		Timeout: 3 * time.Second,
+	}, CacheTTLForTest(200*time.Millisecond, 200*time.Millisecond))
+
+	_, _, err := c.ListTools(context.Background())
+	require.NoError(t, err)
+	time.Sleep(250 * time.Millisecond)
+	_, _, err = c.ListTools(context.Background())
+	require.NoError(t, err)
+
+	c.mu.Lock()
+	_, ok := c.toolByName["t1"]
+	c.mu.Unlock()
+	assert.True(t, ok, "fallback cache restore should rebuild toolByName index")
 }
 
 func TestGATE_INTEL_MAX_RESPONSE_BYTESOverridesReadLimit(t *testing.T) {
@@ -675,4 +724,56 @@ func TestGATE_INTEL_MAX_RESPONSE_BYTESOverridesReadLimit(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "response body exceeded 10 bytes")
 	require.ErrorIs(t, err, errIntelHTTPBodyTooLarge)
+}
+
+func TestListToolsRejectsMismatchedResponseID(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req map[string]interface{}
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&req))
+		method := req["method"].(string)
+		if method == "initialize" {
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"1","result":{"ok":true}}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"999","result":{"tools":[]}}`))
+	}))
+	defer srv.Close()
+
+	c := New(&toolconfig.ResolvedEndpoint{
+		Backend: "news",
+		BaseURL: srv.URL,
+		Timeout: 3 * time.Second,
+	})
+	_, _, err := c.ListTools(context.Background())
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "json-rpc id mismatch")
+	var mcpErr *Error
+	require.ErrorAs(t, err, &mcpErr)
+	assert.Equal(t, ErrorKindProtocol, mcpErr.Kind)
+}
+
+func TestInitializeRejectsNonObjectResult(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req map[string]interface{}
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&req))
+		method := req["method"].(string)
+		if method == "initialize" {
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"1","result":"ok"}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"2","result":{"tools":[]}}`))
+	}))
+	defer srv.Close()
+
+	c := New(&toolconfig.ResolvedEndpoint{
+		Backend: "news",
+		BaseURL: srv.URL,
+		Timeout: 3 * time.Second,
+	})
+	_, _, err := c.ListTools(context.Background())
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid initialize result")
+	var mcpErr *Error
+	require.ErrorAs(t, err, &mcpErr)
+	assert.Equal(t, ErrorKindProtocol, mcpErr.Kind)
 }

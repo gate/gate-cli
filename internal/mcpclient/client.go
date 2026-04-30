@@ -154,6 +154,7 @@ type Client struct {
 	mu             sync.Mutex
 	listCacheValid bool
 	listCache      []Tool
+	toolByName     map[string]Tool
 	listCacheUntil time.Time
 	initializing   bool
 	initErr        error
@@ -249,6 +250,7 @@ func (c *Client) ListTools(ctx context.Context) ([]Tool, *http.Response, error) 
 			c.mu.Lock()
 			c.listCacheValid = true
 			c.listCache = append([]Tool(nil), fallbackTools...)
+			c.rebuildToolIndexLocked(c.listCache)
 			ttl := c.listCacheTTLFull
 			if len(fallbackTools) == 0 {
 				ttl = c.listCacheTTLEmpty
@@ -297,6 +299,7 @@ func (c *Client) ListTools(ctx context.Context) ([]Tool, *http.Response, error) 
 	c.mu.Lock()
 	c.listCacheValid = true
 	c.listCache = append([]Tool(nil), tools...)
+	c.rebuildToolIndexLocked(c.listCache)
 	ttl := c.listCacheTTLFull
 	if len(tools) == 0 {
 		ttl = c.listCacheTTLEmpty
@@ -349,6 +352,13 @@ func (c *Client) DescribeTool(ctx context.Context, name string) (*Tool, *http.Re
 	if err != nil {
 		return nil, resp, err
 	}
+	c.mu.Lock()
+	if t, ok := c.toolByName[name]; ok {
+		c.mu.Unlock()
+		cp := t
+		return &cp, resp, nil
+	}
+	c.mu.Unlock()
 	for _, t := range tools {
 		if t.Name == name {
 			cp := t
@@ -481,8 +491,26 @@ func (c *Client) ensureInitialized(ctx context.Context) (err error) {
 		},
 		"capabilities": map[string]interface{}{},
 	}
-	_, _, _, err = c.call(ctx, "initialize", params)
-	return err
+	respPayload, _, reqID, err := c.call(ctx, "initialize", params)
+	if err != nil {
+		return err
+	}
+	if len(respPayload.Result) == 0 {
+		return &Error{
+			Kind:      ErrorKindProtocol,
+			Err:       errors.New("invalid initialize result: missing result"),
+			RequestID: reqID,
+		}
+	}
+	var initResult map[string]interface{}
+	if err := json.Unmarshal(respPayload.Result, &initResult); err != nil {
+		return &Error{
+			Kind:      ErrorKindProtocol,
+			Err:       fmt.Errorf("invalid initialize result: %w", err),
+			RequestID: reqID,
+		}
+	}
+	return nil
 }
 
 // callWithRetry performs at most one follow-up attempt after HTTP 401 when retryOnUnauthorized
@@ -582,6 +610,11 @@ func (c *Client) call(ctx context.Context, method string, params interface{}) (*
 			JSONRPCCode: &parsed.Error.Code,
 		}
 	}
+	if !matchRPCResponseID(parsed.ID, reqID) {
+		idErr := fmt.Errorf("json-rpc id mismatch: got=%v want=%s", parsed.ID, reqID)
+		c.logTransportFailure(method, reqID, time.Since(start), idErr)
+		return nil, resp, reqID, &Error{Kind: ErrorKindProtocol, Err: idErr, RequestID: reqID}
+	}
 
 	c.logDebug(method, reqID, time.Since(start), resp)
 	return &parsed, resp, reqID, nil
@@ -670,7 +703,35 @@ func (c *Client) invalidateListCache() {
 	defer c.mu.Unlock()
 	c.listCacheValid = false
 	c.listCache = nil
+	c.toolByName = nil
 	c.listCacheUntil = time.Time{}
+}
+
+func (c *Client) rebuildToolIndexLocked(tools []Tool) {
+	if len(tools) == 0 {
+		c.toolByName = map[string]Tool{}
+		return
+	}
+	idx := make(map[string]Tool, len(tools))
+	for _, t := range tools {
+		idx[t.Name] = t
+	}
+	c.toolByName = idx
+}
+
+func matchRPCResponseID(got interface{}, want string) bool {
+	switch v := got.(type) {
+	case string:
+		return v == want
+	case float64:
+		n, err := strconv.ParseFloat(want, 64)
+		if err != nil {
+			return false
+		}
+		return v == n
+	default:
+		return false
+	}
 }
 
 func redactSensitive(input map[string]interface{}) map[string]interface{} {

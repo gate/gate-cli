@@ -94,6 +94,16 @@ func TestNewsBaselineBoundKeywordsForCLIHelp(t *testing.T) {
 	if ah["maxItems"].(float64) != 10 {
 		t.Fatalf("allowed_handles maxItems: got %#v", ah["maxItems"])
 	}
+
+	pred := NewsBaselineInputSchema("news_prediction_get_volume_delta_ranking")
+	plim := pred["properties"].(map[string]interface{})["limit"].(map[string]interface{})
+	if plim["default"].(float64) != 20 || plim["maximum"].(float64) != 100 {
+		t.Fatalf("prediction limit default/max: got %#v", plim)
+	}
+	venueItems := pred["properties"].(map[string]interface{})["venue"].(map[string]interface{})["items"].(map[string]interface{})
+	if len(venueItems["enum"].([]interface{})) != 3 {
+		t.Fatalf("venue enum: got %#v", venueItems["enum"])
+	}
 }
 
 func TestNewsBaselineInputSchemaDeepCopyIsolation(t *testing.T) {

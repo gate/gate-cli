@@ -90,6 +90,8 @@ var NewsBaselineInputSchemas = map[string]map[string]interface{}{
 	"news_events_get_event_detail": newsObj(map[string]interface{}{
 		"event_id": newsEventID("event_id"),
 	}, "event_id"),
+	"news_prediction_get_volume_delta_ranking":   newsPredictionRankingProps(),
+	"news_prediction_get_fastest_rising_ranking": newsPredictionRankingProps(),
 }
 
 func newsStr(desc string) map[string]interface{} {
@@ -227,6 +229,35 @@ func newsArrStr(desc string) map[string]interface{} {
 		"description": desc,
 		"items":       map[string]interface{}{"type": "string"},
 	}
+}
+
+func newsDateUTCOptional(desc string) map[string]interface{} {
+	return map[string]interface{}{
+		"type":        "string",
+		"description": desc,
+		"pattern":     `^\d{4}-\d{2}-\d{2}$`,
+	}
+}
+
+func newsArrVenuePolymarketOpinionPredictFun(desc string) map[string]interface{} {
+	return map[string]interface{}{
+		"type":        "array",
+		"description": desc,
+		"items": map[string]interface{}{
+			"type": "string",
+			"enum": []interface{}{"polymarket", "opinion", "predict_fun"},
+		},
+	}
+}
+
+func newsPredictionRankingProps() map[string]interface{} {
+	return newsObj(map[string]interface{}{
+		"date_utc": newsDateUTCOptional("date_utc; UTC YYYY-MM-DD; omit for today UTC"),
+		"limit":    newsIntDefaultMax("limit", 20, 100),
+		"venue":    newsArrVenuePolymarketOpinionPredictFun("venue"),
+		"category": newsStrEnum("category", "", "crypto_price", "macro", "policy", "sports", "all"),
+		"status":   newsStrEnum("status", "active", "active", "closed", "resolved", "all"),
+	})
 }
 
 func newsObj(props map[string]interface{}, required ...string) map[string]interface{} {

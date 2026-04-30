@@ -4,24 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [v0.6.6] - 2026-04-23
+## [v0.6.7]
 
-### Summary
+### Added
 
-Docs-only refresh aligning user-facing documentation with the shipped Intel surface: `gate-cli info` / `gate-cli news` now documents **38** MCP-backed tools (**30** `info` + **8** `news`). No behavioural changes; no SDK bump; no new commands.
+- **Intel / `gate-cli news`** — register two News MCP tools from `specs/mcp/news-tools-args-and-logic.json`: `news_prediction_get_volume_delta_ranking` and `news_prediction_get_fastest_rising_ranking` (CLI: `news prediction get-volume-delta-ranking`, `news prediction get-fastest-rising-ranking`). Baseline count is now **40** (30 `info` + 10 `news`).
 
-### Changed — Documentation
+### Changed — Intel MCP HTTP client (`internal/mcpclient`)
 
-- **`README.md`** — New top-level **Intel (Info & News)** Features subsection listing all command groups (`coin`, `marketsnapshot`, `markettrend`, `onchain`, `platformmetrics`, `marketdetail`, `macro`, `compliance`, `feed`, `events`) with discovery hints (`info list`, `news list`, `-h`). Added one minimal `--format json` example per tool covering all 38 leaves. Modules table for `info` / `news` now shows tool counts and group lists; `Intel (info, news)` bottom section rewritten to point at the Features subsection and `specs/intel-config-and-security.md`.
-- **`docs/quickstart.md` & `docs/quickstart_zh.md`** — New **Intel (`info` & `news`)** section between futures examples and multi-profile section, documenting groups, discovery commands, config (`intel:` block), and bearer isolation from trading `GATE_API_KEY`. Debugging section amended to note `--debug` / `--verbose` / `--max-output-bytes` behaviour for Intel MCP transport lines (stderr, unchanged stdout JSON shape).
-- **`AGENTS.md` & `CLAUDE.md`** — MCP / Intel section rewritten to reflect that `info` / `news` are **published** (38 MCP leaves, discovery via `list` / `-h`). The planned unified `gate-cli tool` (`list` / `call` / `describe`) remains a spec-only path; auth-isolation guidance versus trading `GATE_API_KEY` reaffirmed.
-- **`internal/intelfacade/inventory.go`** — Source-file comment updated from "Info: 29 tools on public gateway as of 2026-04; News: 8" to "Info: 30; News: 8; total 38. Keep in sync with BaselineToolCount tests." No code change; existing `TestBaselineToolCount` already asserts **38**.
+- Reject MCP JSON-RPC responses whose `id` does not match the outbound request (`tools/list`, `tools/call`, `initialize`, etc.).
+- Require `initialize` to return a non-empty JSON `result` that unmarshals into a JSON object (not a bare scalar or missing `result`).
+- While a warm `tools/list` cache exists, resolve tool names via an indexed map so repeated `DescribeTool` calls avoid scanning the whole tool list; the index tracks cache invalidation.
 
-### Unchanged
+### Fixed
 
-- `gateapi-go/v7 v7.2.71` (no SDK version bump).
-- No new commands, flags, or breaking renames.
-- No behavioural changes in any command; exit codes, output formats, and error surfaces are identical to v0.6.5.
+- **`internal/mcpclient`** — when `tools/list` temporarily fails after cache expiry but the client falls back to the last-good snapshot for that request, **`toolByName` is rebuilt** together with restored `listCache`, keeping describe-by-name lookups consistent with the fallback data.
 
 ## [v0.6.5] - 2026-04-22
 

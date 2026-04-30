@@ -1,12 +1,16 @@
 {
-  "version": "2026-04-16",
+  "version": "2026-04-30",
   "source_of_truth": [
     "internal/mcphost/toolnames.go",
     "internal/mcphost/tools_news_feed.go",
     "internal/mcphost/tools_event.go",
+    "internal/mcphost/tools_prediction.go",
     "internal/event/types.go",
     "internal/event/service.go",
-    "internal/event/opensearch.go"
+    "internal/event/opensearch.go",
+    "internal/prediction/types.go",
+    "internal/prediction/service.go",
+    "internal/prediction/opensearch.go"
   ],
   "tools": [
     {
@@ -80,7 +84,8 @@
         "required_policy": "no hard required param, but empty query on xAI path returns empty result",
         "params": [
           { "name": "query", "type": "string", "required": false, "notes": "Topic text for X discussion search." },
-          { "name": "days", "type": "integer", "required": false, "default": 7, "min": 1 },
+          { "name": "time_range", "type": "string", "required": false, "default": "24h", "enum": ["1h", "24h", "7d"], "notes": "Preferred recency window; when provided it overrides days." },
+          { "name": "days", "type": "integer", "required": false, "default": 1, "min": 1, "notes": "Backward-compatible fallback when time_range is not provided." },
           { "name": "allowed_handles", "type": "string[]", "required": false, "max_items": 10 },
           { "name": "excluded_handles", "type": "string[]", "required": false, "max_items": 10 },
           { "name": "model", "type": "string", "required": false },
@@ -89,7 +94,7 @@
           { "name": "coin", "type": "string", "required": false, "notes": "Only used in platform fallback path (mapped to search_news style)." },
           { "name": "platform", "type": "string", "required": false, "notes": "Platform fallback only." },
           { "name": "platform_type", "type": "string", "required": false, "notes": "Platform fallback only." },
-          { "name": "lang", "type": "string", "required": false, "notes": "Affects disclaimer language." },
+          { "name": "lang", "type": "string", "required": false, "default": "zh", "enum": ["zh", "en", "auto"], "notes": "Controls xAI answer language; also used by platform fallback MCP lang filter." },
           { "name": "start_time", "type": "string", "required": false, "notes": "Platform fallback only." },
           { "name": "end_time", "type": "string", "required": false, "notes": "Platform fallback only." },
           { "name": "sort_by", "type": "string", "required": false, "notes": "Platform fallback only." },
@@ -101,7 +106,7 @@
       },
       "logic": [
         "Validation: allowed_handles and excluded_handles cannot both be non-empty.",
-        "If xAI key exists, run xAI Responses search_x flow with date window from days; parse structured output and merge citations.",
+        "If xAI key exists, run xAI Responses search_x flow with date window resolved from time_range (1h/24h->1d, 7d->7d); if time_range missing then use days.",
         "If xAI key missing and platform fallback enabled, convert args to search_news-compatible args and call platform endpoint.",
         "If xAI key missing and fallback disabled, return config_load_failed.",
         "Always coerce sentiment fields in response to stable defaults."
@@ -122,7 +127,7 @@
           { "name": "coin", "type": "string", "required": false },
           { "name": "mode", "type": "string", "required": false, "default": "analysis", "enum": ["analysis", "brief"] },
           { "name": "time_range", "type": "string", "required": false, "default": "24h", "enum": ["1h", "24h", "7d", "30d"] },
-          { "name": "lang", "type": "string", "required": false, "default": "en", "enum": ["en", "zh", "auto"] },
+          { "name": "lang", "type": "string", "required": false, "default": "zh", "enum": ["zh", "en", "auto"] },
           { "name": "limit", "type": "integer", "required": false, "default": 5, "max": 10 }
         ]
       },
@@ -232,6 +237,65 @@
       "errors": [
         { "code": "invalid_event_id", "when": "event_id empty, too long, or illegal characters" },
         { "code": "opensearch_query_failed", "when": "OpenSearch query fails" }
+      ],
+      "placeholder_when_unconfigured": true
+    },
+    {
+      "name": "news_prediction_get_volume_delta_ranking",
+      "category": "news_prediction",
+      "description": "Daily venue/overall ranking by volume delta (UTC day). Optional filters: venue[], category, status; OpenSearch index must expose category/status fields for those filters to match.",
+      "input_rules": {
+        "required_policy": "no strict required params",
+        "params": [
+          { "name": "date_utc", "type": "string", "required": false, "default": "today_utc (UTC YYYY-MM-DD)", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "notes": "Empty or omitted -> current UTC date." },
+          { "name": "limit", "type": "integer", "required": false, "default": 20, "max": 100, "notes": "OpenSearch size; values <=0 normalized to 20." },
+          { "name": "venue", "type": "string[]", "required": false, "enum": ["polymarket", "opinion", "predict_fun"], "notes": "Each element must be allowed; empty or omitted -> no venue filter (all venues). Multiple values -> OpenSearch terms filter (exact)." },
+          { "name": "category", "type": "string", "required": false, "enum": ["crypto_price", "macro", "policy", "sports", "all"], "notes": "Empty or omitted -> no category filter. Non-empty and not 'all' -> term filter on field category (exact). 'all' -> no category filter. Index missing field or no matching docs -> empty overall, not an error." },
+          { "name": "status", "type": "string", "required": false, "default": "active", "enum": ["active", "closed", "resolved", "all"], "notes": "Empty or omitted -> treated as 'active' before query. 'all' -> no status filter. Otherwise term filter on field status (exact)." }
+        ]
+      },
+      "logic": [
+        "Validate: limit in 1..100 after normalize (default 20); date_utc must be YYYY-MM-DD when set; each venue in whitelist; category must be empty or one of allowed enums; status must be empty (then default active) or allowed enum.",
+        "OpenSearch bool filter: term rank_type=volume_delta; range on part_date for the UTC calendar day; optional terms on venue; optional term on category when set and not 'all'; optional term on status when not 'all'.",
+        "Sort: volume_delta_usd_today desc, rank_no asc. Size = limit.",
+        "Map _source to RankingItem; event_name prefers event_name else market_title; market_name similar; parse excluded_reasons_json to excluded_reasons (invalid JSON -> []).",
+        "Response: overall = ordered hits; by_venue groups by venue (keys include polymarket, opinion, predict_fun); generated_at = max(calc_time) from hits else UTC now; duration_ms; partial/source_data_status/excluded_reasons aggregated per implementation.",
+        "Do not drop hits for null volume_delta_usd_today on this rank_type (all matching docs returned up to limit)."
+      ],
+      "errors": [
+        { "code": "invalid_param", "when": "date_utc not YYYY-MM-DD; venue not in whitelist; category/status not in allowed set when non-empty" },
+        { "code": "invalid_size", "when": "limit > 100" },
+        { "code": "opensearch_query_failed", "when": "OpenSearch query fails" },
+        { "code": "not_implemented", "when": "opensearch.predictionRankIndex unset or prediction service not wired (placeholder tool)" }
+      ],
+      "placeholder_when_unconfigured": true
+    },
+    {
+      "name": "news_prediction_get_fastest_rising_ranking",
+      "category": "news_prediction",
+      "description": "Daily venue/overall ranking by probability rise (UTC day). Optional filters: venue[], category, status; OpenSearch index must expose category/status fields for those filters to match.",
+      "input_rules": {
+        "required_policy": "no strict required params",
+        "params": [
+          { "name": "date_utc", "type": "string", "required": false, "default": "today_utc (UTC YYYY-MM-DD)", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "notes": "Empty or omitted -> current UTC date." },
+          { "name": "limit", "type": "integer", "required": false, "default": 20, "max": 100, "notes": "OpenSearch size; values <=0 normalized to 20." },
+          { "name": "venue", "type": "string[]", "required": false, "enum": ["polymarket", "opinion", "predict_fun"], "notes": "Each element must be allowed; empty or omitted -> no venue filter. Multiple values -> terms filter (exact)." },
+          { "name": "category", "type": "string", "required": false, "enum": ["crypto_price", "macro", "policy", "sports", "all"], "notes": "Same semantics as volume_delta tool: empty/omit -> no filter; non-empty not 'all' -> term category; 'all' -> no filter." },
+          { "name": "status", "type": "string", "required": false, "default": "active", "enum": ["active", "closed", "resolved", "all"], "notes": "Same semantics as volume_delta tool: empty -> active; 'all' -> no status filter." }
+        ]
+      },
+      "logic": [
+        "Same validation and OpenSearch filter shape as volume_delta, except rank_type=fastest_rising.",
+        "Sort: probability_delta_today desc, rank_no asc. Size = limit.",
+        "Post-filter from result set: drop items where open_mid_probability_utc is null or probability_delta_today is null (not eligible for fastest_rising list); excluded_reasons from dropped rows may contribute to partial/excluded_reasons aggregation.",
+        "Map remaining docs to RankingItem; parse excluded_reasons_json as volume_delta tool.",
+        "Response shape same family as volume_delta (overall, by_venue, generated_at, duration_ms, partial, etc.)."
+      ],
+      "errors": [
+        { "code": "invalid_param", "when": "date_utc not YYYY-MM-DD; venue not in whitelist; category/status not in allowed set when non-empty" },
+        { "code": "invalid_size", "when": "limit > 100" },
+        { "code": "opensearch_query_failed", "when": "OpenSearch query fails" },
+        { "code": "not_implemented", "when": "opensearch.predictionRankIndex unset or prediction service not wired (placeholder tool)" }
       ],
       "placeholder_when_unconfigured": true
     }
