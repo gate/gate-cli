@@ -245,7 +245,7 @@ func newsArrVenuePolymarketOpinionPredictFun(desc string) map[string]interface{}
 		"description": desc,
 		"items": map[string]interface{}{
 			"type": "string",
-			"enum": []interface{}{"polymarket", "opinion", "predict_fun"},
+			"enum": []interface{}{"polymarket", "predict_fun"},
 		},
 	}
 }

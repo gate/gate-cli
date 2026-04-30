@@ -249,7 +249,7 @@
         "params": [
           { "name": "date_utc", "type": "string", "required": false, "default": "today_utc (UTC YYYY-MM-DD)", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "notes": "Empty or omitted -> current UTC date." },
           { "name": "limit", "type": "integer", "required": false, "default": 20, "max": 100, "notes": "OpenSearch size; values <=0 normalized to 20." },
-          { "name": "venue", "type": "string[]", "required": false, "enum": ["polymarket", "opinion", "predict_fun"], "notes": "Each element must be allowed; empty or omitted -> no venue filter (all venues). Multiple values -> OpenSearch terms filter (exact)." },
+          { "name": "venue", "type": "string[]", "required": false, "enum": ["polymarket", "predict_fun"], "notes": "Each element must be allowed; empty or omitted -> no venue filter (all venues). Multiple values -> OpenSearch terms filter (exact)." },
           { "name": "category", "type": "string", "required": false, "notes": "Optional category filter. Empty or omitted -> no category filter. Non-empty -> term filter on field category (exact). Index missing field or no matching docs -> empty overall, not an error." },
           { "name": "status", "type": "string", "required": false, "default": "active", "enum": ["active", "closed", "resolved", "all"], "notes": "Empty or omitted -> treated as 'active' before query. 'all' -> no status filter. Otherwise term filter on field status (exact)." }
         ]
@@ -259,7 +259,7 @@
         "OpenSearch bool filter: term rank_type=volume_delta; range on part_date for the UTC calendar day; optional terms on venue; optional term on category when set and not 'all'; optional term on status when not 'all'.",
         "Sort: volume_delta_usd_today desc, rank_no asc. Size = limit.",
         "Map _source to RankingItem; event_name prefers event_name else market_title; market_name similar; parse excluded_reasons_json to excluded_reasons (invalid JSON -> []).",
-        "Response: overall = ordered hits; by_venue groups by venue (keys include polymarket, opinion, predict_fun); generated_at = max(calc_time) from hits else UTC now; duration_ms; partial/source_data_status/excluded_reasons aggregated per implementation.",
+        "Response: overall = ordered hits; by_venue groups by venue (keys include polymarket, predict_fun); generated_at = max(calc_time) from hits else UTC now; duration_ms; partial/source_data_status/excluded_reasons aggregated per implementation.",
         "Do not drop hits for null volume_delta_usd_today on this rank_type (all matching docs returned up to limit)."
       ],
       "errors": [
@@ -279,7 +279,7 @@
         "params": [
           { "name": "date_utc", "type": "string", "required": false, "default": "today_utc (UTC YYYY-MM-DD)", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "notes": "Empty or omitted -> current UTC date." },
           { "name": "limit", "type": "integer", "required": false, "default": 20, "max": 100, "notes": "OpenSearch size; values <=0 normalized to 20." },
-          { "name": "venue", "type": "string[]", "required": false, "enum": ["polymarket", "opinion", "predict_fun"], "notes": "Each element must be allowed; empty or omitted -> no venue filter. Multiple values -> terms filter (exact)." },
+          { "name": "venue", "type": "string[]", "required": false, "enum": ["polymarket", "predict_fun"], "notes": "Each element must be allowed; empty or omitted -> no venue filter. Multiple values -> terms filter (exact)." },
           { "name": "category", "type": "string", "required": false, "notes": "Same semantics as volume_delta tool: empty/omit -> no filter; non-empty -> term category." },
           { "name": "status", "type": "string", "required": false, "default": "active", "enum": ["active", "closed", "resolved", "all"], "notes": "Same semantics as volume_delta tool: empty -> active; 'all' -> no status filter." }
         ]

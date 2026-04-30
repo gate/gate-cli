@@ -101,7 +101,7 @@ func TestNewsBaselineBoundKeywordsForCLIHelp(t *testing.T) {
 		t.Fatalf("prediction limit default/max: got %#v", plim)
 	}
 	venueItems := pred["properties"].(map[string]interface{})["venue"].(map[string]interface{})["items"].(map[string]interface{})
-	if len(venueItems["enum"].([]interface{})) != 3 {
+	if len(venueItems["enum"].([]interface{})) != 2 {
 		t.Fatalf("venue enum: got %#v", venueItems["enum"])
 	}
 }
