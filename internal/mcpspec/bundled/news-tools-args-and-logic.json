@@ -250,12 +250,12 @@
           { "name": "date_utc", "type": "string", "required": false, "default": "today_utc (UTC YYYY-MM-DD)", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "notes": "Empty or omitted -> current UTC date." },
           { "name": "limit", "type": "integer", "required": false, "default": 20, "max": 100, "notes": "OpenSearch size; values <=0 normalized to 20." },
           { "name": "venue", "type": "string[]", "required": false, "enum": ["polymarket", "opinion", "predict_fun"], "notes": "Each element must be allowed; empty or omitted -> no venue filter (all venues). Multiple values -> OpenSearch terms filter (exact)." },
-          { "name": "category", "type": "string", "required": false, "enum": ["crypto_price", "macro", "policy", "sports", "all"], "notes": "Empty or omitted -> no category filter. Non-empty and not 'all' -> term filter on field category (exact). 'all' -> no category filter. Index missing field or no matching docs -> empty overall, not an error." },
+          { "name": "category", "type": "string", "required": false, "notes": "Optional category filter. Empty or omitted -> no category filter. Non-empty -> term filter on field category (exact). Index missing field or no matching docs -> empty overall, not an error." },
           { "name": "status", "type": "string", "required": false, "default": "active", "enum": ["active", "closed", "resolved", "all"], "notes": "Empty or omitted -> treated as 'active' before query. 'all' -> no status filter. Otherwise term filter on field status (exact)." }
         ]
       },
       "logic": [
-        "Validate: limit in 1..100 after normalize (default 20); date_utc must be YYYY-MM-DD when set; each venue in whitelist; category must be empty or one of allowed enums; status must be empty (then default active) or allowed enum.",
+        "Validate: limit in 1..100 after normalize (default 20); date_utc must be YYYY-MM-DD when set; each venue in whitelist; status must be empty (then default active) or allowed enum.",
         "OpenSearch bool filter: term rank_type=volume_delta; range on part_date for the UTC calendar day; optional terms on venue; optional term on category when set and not 'all'; optional term on status when not 'all'.",
         "Sort: volume_delta_usd_today desc, rank_no asc. Size = limit.",
         "Map _source to RankingItem; event_name prefers event_name else market_title; market_name similar; parse excluded_reasons_json to excluded_reasons (invalid JSON -> []).",
@@ -263,7 +263,7 @@
         "Do not drop hits for null volume_delta_usd_today on this rank_type (all matching docs returned up to limit)."
       ],
       "errors": [
-        { "code": "invalid_param", "when": "date_utc not YYYY-MM-DD; venue not in whitelist; category/status not in allowed set when non-empty" },
+        { "code": "invalid_param", "when": "date_utc not YYYY-MM-DD; venue not in whitelist; status not in allowed set when non-empty" },
         { "code": "invalid_size", "when": "limit > 100" },
         { "code": "opensearch_query_failed", "when": "OpenSearch query fails" },
         { "code": "not_implemented", "when": "opensearch.predictionRankIndex unset or prediction service not wired (placeholder tool)" }
@@ -280,7 +280,7 @@
           { "name": "date_utc", "type": "string", "required": false, "default": "today_utc (UTC YYYY-MM-DD)", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "notes": "Empty or omitted -> current UTC date." },
           { "name": "limit", "type": "integer", "required": false, "default": 20, "max": 100, "notes": "OpenSearch size; values <=0 normalized to 20." },
           { "name": "venue", "type": "string[]", "required": false, "enum": ["polymarket", "opinion", "predict_fun"], "notes": "Each element must be allowed; empty or omitted -> no venue filter. Multiple values -> terms filter (exact)." },
-          { "name": "category", "type": "string", "required": false, "enum": ["crypto_price", "macro", "policy", "sports", "all"], "notes": "Same semantics as volume_delta tool: empty/omit -> no filter; non-empty not 'all' -> term category; 'all' -> no filter." },
+          { "name": "category", "type": "string", "required": false, "notes": "Same semantics as volume_delta tool: empty/omit -> no filter; non-empty -> term category." },
           { "name": "status", "type": "string", "required": false, "default": "active", "enum": ["active", "closed", "resolved", "all"], "notes": "Same semantics as volume_delta tool: empty -> active; 'all' -> no status filter." }
         ]
       },
@@ -292,7 +292,7 @@
         "Response shape same family as volume_delta (overall, by_venue, generated_at, duration_ms, partial, etc.)."
       ],
       "errors": [
-        { "code": "invalid_param", "when": "date_utc not YYYY-MM-DD; venue not in whitelist; category/status not in allowed set when non-empty" },
+        { "code": "invalid_param", "when": "date_utc not YYYY-MM-DD; venue not in whitelist; status not in allowed set when non-empty" },
         { "code": "invalid_size", "when": "limit > 100" },
         { "code": "opensearch_query_failed", "when": "OpenSearch query fails" },
         { "code": "not_implemented", "when": "opensearch.predictionRankIndex unset or prediction service not wired (placeholder tool)" }

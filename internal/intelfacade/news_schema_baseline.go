@@ -255,7 +255,7 @@ func newsPredictionRankingProps() map[string]interface{} {
 		"date_utc": newsDateUTCOptional("date_utc; UTC YYYY-MM-DD; omit for today UTC"),
 		"limit":    newsIntDefaultMax("limit", 20, 100),
 		"venue":    newsArrVenuePolymarketOpinionPredictFun("venue"),
-		"category": newsStrEnum("category", "", "crypto_price", "macro", "policy", "sports", "all"),
+		"category": newsStr("category"),
 		"status":   newsStrEnum("status", "active", "active", "closed", "resolved", "all"),
 	})
 }
