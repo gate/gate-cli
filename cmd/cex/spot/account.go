@@ -222,7 +222,10 @@ func runSpotAccountBook(cmd *cobra.Command, args []string) error {
 	}
 	rows := make([][]string, len(result))
 	for i, r := range result {
-		rows[i] = []string{r.Id, fmt.Sprintf("%d", r.Time), r.Currency, r.Change, r.Balance, r.Type}
+		rows[i] = []string{r.Id, fmt.Sprintf("%d", r.Time), r.Currency, r.Change, r.Balance, r.Type, r.Code}
 	}
-	return p.Table([]string{"ID", "Time(ms)", "Currency", "Change", "Balance", "Type"}, rows)
+	// SDK v7.2.78 marks Type as deprecated; Code is the authoritative
+	// account-change identifier. Keep Type for backward visibility while
+	// surfacing Code so downstream tooling can migrate.
+	return p.Table([]string{"ID", "Time(ms)", "Currency", "Change", "Balance", "Type", "Code"}, rows)
 }

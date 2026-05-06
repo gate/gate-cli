@@ -99,6 +99,7 @@ func TestGetClient_CredentialsFromEnvWhenNoFile(t *testing.T) {
 }
 
 func TestGetClient_NoCredentials(t *testing.T) {
+	t.Setenv("HOME", t.TempDir()) // isolate from any real ~/.gate-cli/config.yaml
 	t.Setenv("GATE_API_KEY", "")
 	t.Setenv("GATE_API_SECRET", "")
 

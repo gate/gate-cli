@@ -1,8 +1,8 @@
 # gate-cli
 
-A command-line interface for the [Gate](https://gate.com) API. Covers spot, futures, delivery, options, margin, unified account, earn, wallet, and 15+ more modules.
+A command-line interface for the [Gate](https://gate.com) API. Covers spot, futures, delivery, options, margin, unified account, earn, wallet, AI Hub quant strategies, and 15+ more modules.
 
-**Top-level layout:** CEX / trading APIs live under **`gate-cli cex …`** (for example `gate-cli cex spot market ticker --pair BTC_USDT`). Profiles and API credentials use **`gate-cli config …`**. **Intel** (market intelligence) uses **`gate-cli info`** and **`gate-cli news`** (**40** MCP-style tools: 30 + 10). Operational helpers: **`gate-cli doctor`** (local checks), **`gate-cli migrate`** (move legacy MCP provider configs toward CLI-first), **`gate-cli preflight`** (info/news readiness). Shell completion: **`gate-cli completion`**. Designed for developers, quants, and AI agents. For a full walkthrough, see the [English Quick Start](docs/quickstart.md) or [中文快速上手](docs/quickstart_zh.md).
+**Top-level layout:** CEX / trading APIs live under **`gate-cli cex …`** (for example `gate-cli cex spot market ticker --pair BTC_USDT`). Profiles and API credentials use **`gate-cli config …`**. **Intel** (market intelligence) uses **`gate-cli info`** and **`gate-cli news`** (**40** MCP-style tools: 30 + 10). Operational helpers: **`gate-cli doctor`** (local checks), **`gate-cli migrate`** (move legacy MCP provider configs toward CLI-first), **`gate-cli preflight`** (info/news readiness). Shell completion: **`gate-cli completion`**. Designed for developers, quants, and AI agents. For a full walkthrough, see the [English Quick Start](docs/quickstart.md) or [中文快速上手](docs/quickstart_zh.md). Per-release changes are tracked in [CHANGELOG.md](CHANGELOG.md).
 
 ## Installation
 
@@ -41,6 +41,7 @@ API keys and secrets for **trading** are stored per profile (for example `gate-c
 - **Alpha** — alpha token market data, account, orders
 - **TradFi** — MT5 account, symbols, positions, orders, transactions
 - **Cross-Exchange** — cross-exchange trading, positions, orders, convert, margin
+- **AI Hub (Bot)** — Gate's quant strategy engine: AI-recommended strategy discovery, 4 grid types (spot, margin, infinite, futures) and 2 martingale types (spot, contract), running portfolio listing, detail, and stop
 
 ### Finance
 - **Earn** — dual investment (incl. early-redemption refund, reinvest modify, project recommend), staking, fixed-term lending, auto-invest plans, uni simple earn
@@ -162,6 +163,16 @@ gate-cli cex mcl ltv
 gate-cli cex sub-account list
 gate-cli cex sub-account key list --user-id 12345
 
+# AI Hub (quant strategies) — 10 BotAPI methods wrapped under cex bot
+gate-cli cex bot recommend --market BTC_USDT --strategy-type spot_grid     # browse AI recommendations
+gate-cli cex bot running --strategy-type spot_grid --page 1 --page-size 20 # list running strategies
+gate-cli cex bot detail --strategy-id strat-001 --strategy-type spot_grid  # detail by id+type
+gate-cli cex bot stop --strategy-id strat-001 --strategy-type spot_grid    # stop a running strategy
+# Create flows take a JSON body matching the SDK's *CreateRequest shape; see -h on each leaf:
+gate-cli cex bot grid spot       --json '{"strategy_type":"spot_grid","market":"BTC_USDT","create_params":{"money":"100","low_price":"60000","high_price":"70000","grid_num":10,"price_type":0}}'
+gate-cli cex bot grid infinite   --json '{"strategy_type":"infinite_grid","market":"BTC_USDT","create_params":{"money":"100","price_floor":"60000","profit_per_grid":"0.005"}}'
+gate-cli cex bot martingale spot --json '{"strategy_type":"spot_martingale","market":"BTC_USDT","create_params":{"invest_amount":"100","price_deviation":"0.02","max_orders":5,"take_profit_ratio":"0.01","stop_loss_per_cycle":"0.05"}}'
+
 # JSON output for scripting
 gate-cli cex spot market ticker --pair BTC_USDT --format json | jq '.last'
 
@@ -237,6 +248,7 @@ gate-cli news prediction get-fastest-rising-ranking --format json
 | margin | `gate-cli cex margin` | Margin trading & lending |
 | unified | `gate-cli cex unified` | Unified account management |
 | earn | `gate-cli cex earn` | Earn, staking, dual investment (incl. refund/recommend), auto-invest |
+| bot | `gate-cli cex bot` | AI Hub quant strategies — recommend / running / detail / stop + 4 grid types + 2 martingale types |
 | assetswap | `gate-cli cex assetswap` | Asset-swap / portfolio optimization |
 | flash-swap | `gate-cli cex flash-swap` | Instant token swaps |
 | mcl | `gate-cli cex mcl` | Multi-collateral loans |

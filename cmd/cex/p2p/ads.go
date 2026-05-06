@@ -46,11 +46,10 @@ func init() {
 		Short: "Update ad status",
 		RunE:  runAdsUpdateStatus,
 	}
-	updateStatusCmd.Flags().Int32("adv-no", 0, "Ad number (required)")
+	updateStatusCmd.Flags().Int32("adv-no", 0, "Advertisement ID (required)")
 	updateStatusCmd.MarkFlagRequired("adv-no")
-	updateStatusCmd.Flags().Int32("adv-status", 0, "Status: 1=Active, 3=Inactive, 4=Closed (required)")
+	updateStatusCmd.Flags().Int32("adv-status", 0, "Ad status: 1=listed, 3=delisted, 4=closed (required)")
 	updateStatusCmd.MarkFlagRequired("adv-status")
-	updateStatusCmd.Flags().String("trade-type", "", "Trade type (optional)")
 
 	adsCmd.AddCommand(listCmd, myListCmd, detailCmd, updateStatusCmd)
 	Cmd.AddCommand(adsCmd)
@@ -136,7 +135,6 @@ func runAdsDetail(cmd *cobra.Command, args []string) error {
 func runAdsUpdateStatus(cmd *cobra.Command, args []string) error {
 	advNo, _ := cmd.Flags().GetInt32("adv-no")
 	advStatus, _ := cmd.Flags().GetInt32("adv-status")
-	tradeType, _ := cmd.Flags().GetString("trade-type")
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
@@ -151,14 +149,7 @@ func runAdsUpdateStatus(cmd *cobra.Command, args []string) error {
 		AdvStatus: advStatus,
 	}
 
-	var opts *gateapi.P2pMerchantBooksAdsUpdateStatusOpts
-	if tradeType != "" {
-		opts = &gateapi.P2pMerchantBooksAdsUpdateStatusOpts{
-			TradeType: optional.NewString(tradeType),
-		}
-	}
-
-	result, httpResp, err := c.P2pAPI.P2pMerchantBooksAdsUpdateStatus(c.Context(), body, opts)
+	result, httpResp, err := c.P2pAPI.P2pMerchantBooksAdsUpdateStatus(c.Context(), body)
 	if err != nil {
 		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/p2p/merchant/books/ads_update_status", ""))
 		return nil

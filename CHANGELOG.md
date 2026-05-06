@@ -4,6 +4,72 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [v0.7.0] - 2026-05-06
+
+### Summary
+
+Syncs gate-cli to **gateapi-go/v7 v7.2.78** (from v7.2.71) and ships a new top-level **`gate-cli cex bot`** module that exposes every method on `BotApiService` (10 AI Hub / quant-strategy endpoints — recommend, running, detail, stop + 4 grid + 2 martingale create flows). Targeted forward-compat tweaks cover the v7.2.78 wire-shape changes across `cross_ex`, `p2p`, and `spot`. **10 new commands + 1 new flag + 1 new column + 41 new unit tests + 1 breaking flag removal.**
+
+### Added — AI Hub (Quant Strategies) module
+
+- **`gate-cli cex bot`** — new top-level command group wrapping `BotApiService`. Previously the CLI had no quant/AI Hub coverage. SDK methods backing each subcommand:
+  - `cex bot recommend [--market] [--strategy-type] [--direction] [--invest-amount] [--scene] [--refresh-recommendation-id] [--limit] [--max-drawdown-lte] [--backtest-apr-gte]` → `BotAPI.GetAIHubStrategyRecommend`
+  - `cex bot running [--strategy-type] [--market] [--page] [--page-size]` → `BotAPI.GetAIHubPortfolioRunning`
+  - `cex bot detail --strategy-id <id> --strategy-type <type>` → `BotAPI.GetAIHubPortfolioDetail`
+  - `cex bot stop --strategy-id <id> --strategy-type <type>` → `BotAPI.PostAIHubPortfolioStop`
+  - `cex bot grid spot --json '<SpotGridCreateRequest>'` → `BotAPI.PostAIHubSpotGridCreate`
+  - `cex bot grid margin --json '<MarginGridCreateRequest>'` → `BotAPI.PostAIHubMarginGridCreate`
+  - `cex bot grid infinite --json '<InfiniteGridCreateRequest>'` → `BotAPI.PostAIHubInfiniteGridCreate`
+  - `cex bot grid futures --json '<FuturesGridCreateRequest>'` → `BotAPI.PostAIHubFuturesGridCreate`
+  - `cex bot martingale spot --json '<SpotMartingaleCreateRequest>'` → `BotAPI.PostAIHubSpotMartingaleCreate`
+  - `cex bot martingale contract --json '<ContractMartingaleCreateRequest>'` → `BotAPI.PostAIHubContractMartingaleCreate`
+- **`internal/client.Client`** — added `BotAPI` field (wrapping `gateapi.BotApiService`) so the new bot commands can invoke SDK methods via the standard client accessor.
+
+### Added — SDK v7.2.78 sync (CEX)
+
+- **`gate-cli cex cross-ex account book --statement-type <type>`** — new optional filter exposing the v7.2.78 `ListCrossexAccountBookOpts.StatementType` query parameter (e.g. `TRANSACTION`, `TRADING_FEE`, `FUNDING_FEE`, `LIQUIDATION_FEE`, `TRANSFER_IN`, `TRANSFER_OUT`, `BANKRUPT_COMPENSATION`, `AUTO_REPAY`).
+- **`gate-cli cex spot account book`** — added a `Code` column to the table output. v7.2.78 marks `SpotAccountBook.Type` as deprecated and exposes the new authoritative `Code` field; both columns now render so downstream tooling can migrate at its own pace.
+
+### Changed — User-visible behavior
+
+- **`gate-cli cex p2p chat list --txid 0`** — `--txid` help text now documents the v7.2.78 server contract: passing `0` returns the latest order with chat for the current user (the SDK added `omitempty` to `GetChatsListRequest.Txid`, so the field is elided on the wire when zero). The flag remains required at the cobra layer.
+- **`gate-cli cex cross-ex account book`** — output table column header renamed `Type` → `Statement Type` to match the SDK rename `CrossexAccountBookRecord.Type` → `StatementType`.
+- **`gate-cli cex p2p ads update-status`** — flag descriptions aligned with v7.2.78 SDK docs (`Ad number` → `Advertisement ID`, status enum reworded to `1=listed, 3=delisted, 4=closed`).
+- **`gate-cli cex bot martingale contract`** — long help warns that v7.2.78 SDK still defines `create_params.stop_loss_price` for backward compatibility but the AIHub `contract_martingale` creation path does not map it; users should not include `stop_loss_price` in `--json`.
+
+### Changed — Wire-level SDK field renames (CLI flags unchanged)
+
+The CLI flags below are unchanged in name and semantics, but the JSON body sent to the Gate API now uses the v7.2.78 field names:
+
+| Command | Wire field | v7.2.71 → v7.2.78 |
+|---------|-----------|--------------------|
+| `cex p2p transaction confirm-payment` body | order ID | `trade_id` → `txid` |
+| `cex p2p transaction confirm-receipt` body | order ID | `trade_id` → `txid` |
+| `cex p2p transaction cancel` body | order ID | `trade_id` → `txid` |
+| `cex cross-ex account book` row response | bill type | `type` → `statement_type` |
+
+### Removed — Breaking flag removal
+
+- **`gate-cli cex p2p ads update-status`** — removed `--trade-type` flag. v7.2.78 dropped the `TradeType` query parameter from `P2pMerchantBooksAdsUpdateStatus`. **Any scripts passing `--trade-type` must drop the flag.**
+
+### Fixed
+
+- **`internal/cmdutil/cmdutil_test.go::TestGetClient_NoCredentials`** — added missing `t.Setenv("HOME", t.TempDir())` so the test is isolated from a real `~/.gate-cli/config.yaml` on the developer's machine. Pre-existing bug surfaced while running the full suite; not a regression of this release.
+
+### Tests — 41 new unit tests covering v7.2.78 contracts
+
+- **`cmd/cex/bot/bot_test.go`** — 33 cases across 5 layers: command tree wiring (9), SDK type contracts (5: `StrategyType` enum stability, `SpotMartingaleCreateParams` new fields, `InfiniteGridCreateParams` omitempty, `AiHubPortfolioStopRequest` shape), RunE end-to-end with query/body capture (11), `RequireAuth` gate (10), and invalid-`--json` input validation (6).
+- **`cmd/cex/p2p/sdk_v7_2_78_compat_test.go`** — locks the `TradeId → Txid` rename at both model layer (JSON tags) and wire level (mock-server captures); pins `omitempty` and the v7.2.78 `P2pTransactionActionResponse` shape (`Timestamp` `int32 → float32`, new `Method/Data/Version`); covers `PlaceBizPushOrder.HidePayment` silent drop and `team_payment_uid` forwarding for legacy `--json` blobs; protects `GetChatsListRequest.Txid` omitempty for `chat list --txid 0`.
+- **`cmd/cex/cross_ex/sdk_v7_2_78_compat_test.go`** — pins the new `--statement-type` flag wiring, the `CrossexAccountBookRecord.StatementType` JSON tag, the rejected legacy `type` JSON key, and the renamed `Statement Type` table header.
+- **`cmd/cex/spot/sdk_v7_2_78_compat_test.go`** — pins the new `Code` column rendering and the `SpotAccountBook.code` wire-tag binding.
+- All 506 tests pass; zero failures across 42 test packages.
+
+### Unchanged
+
+- No new CLI flags on the existing cex modules beyond those listed above.
+- Output formats, exit codes, profile/config layout, and Intel (`info`/`news`) baseline (40 tools) unchanged.
+- No public API changes outside the `cmd/cex/bot/` namespace.
+
 ## [v0.6.8]
 
 ### Changed

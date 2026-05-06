@@ -41,6 +41,7 @@ func init() {
 	bookCmd.Flags().Int32("page", 0, "Page number")
 	bookCmd.Flags().Int32("limit", 0, "Max records to return")
 	bookCmd.Flags().String("coin", "", "Filter by currency")
+	bookCmd.Flags().String("statement-type", "", "Bill entry type filter (e.g. TRANSACTION, TRADING_FEE, FUNDING_FEE, LIQUIDATION_FEE, TRANSFER_IN, TRANSFER_OUT, BANKRUPT_COMPENSATION, AUTO_REPAY)")
 	bookCmd.Flags().Int32("from", 0, "Start millisecond timestamp")
 	bookCmd.Flags().Int32("to", 0, "End millisecond timestamp")
 
@@ -117,6 +118,7 @@ func runAccountBook(cmd *cobra.Command, args []string) error {
 	page, _ := cmd.Flags().GetInt32("page")
 	limit, _ := cmd.Flags().GetInt32("limit")
 	coin, _ := cmd.Flags().GetString("coin")
+	statementType, _ := cmd.Flags().GetString("statement-type")
 	from, _ := cmd.Flags().GetInt32("from")
 	to, _ := cmd.Flags().GetInt32("to")
 	p := cmdutil.GetPrinter(cmd)
@@ -138,6 +140,9 @@ func runAccountBook(cmd *cobra.Command, args []string) error {
 	if coin != "" {
 		opts.Coin = optional.NewString(coin)
 	}
+	if statementType != "" {
+		opts.StatementType = optional.NewString(statementType)
+	}
 	if from != 0 {
 		opts.From = optional.NewInt32(from)
 	}
@@ -155,7 +160,7 @@ func runAccountBook(cmd *cobra.Command, args []string) error {
 	}
 	rows := make([][]string, len(result))
 	for i, r := range result {
-		rows[i] = []string{r.Id, r.Type, r.Coin, r.ExchangeType, r.Change, r.Balance, r.CreateTime}
+		rows[i] = []string{r.Id, r.StatementType, r.Coin, r.ExchangeType, r.Change, r.Balance, r.CreateTime}
 	}
-	return p.Table([]string{"ID", "Type", "Coin", "Exchange", "Change", "Balance", "Created"}, rows)
+	return p.Table([]string{"ID", "Statement Type", "Coin", "Exchange", "Change", "Balance", "Created"}, rows)
 }

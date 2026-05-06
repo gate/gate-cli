@@ -170,7 +170,7 @@ func runConfirmPayment(cmd *cobra.Command, args []string) error {
 	}
 
 	body := gateapi.ConfirmPayment{
-		TradeId:       tradeID,
+		Txid:          tradeID,
 		PaymentMethod: paymentMethod,
 	}
 
@@ -194,7 +194,7 @@ func runConfirmReceipt(cmd *cobra.Command, args []string) error {
 	}
 
 	body := gateapi.ConfirmReceipt{
-		TradeId: tradeID,
+		Txid: tradeID,
 	}
 
 	result, httpResp, err := c.P2pAPI.P2pMerchantTransactionConfirmReceipt(c.Context(), body)
@@ -219,7 +219,7 @@ func runTransactionCancel(cmd *cobra.Command, args []string) error {
 	}
 
 	body := gateapi.CancelOrder{
-		TradeId: tradeID,
+		Txid: tradeID,
 	}
 	if reasonID != "" {
 		body.ReasonId = reasonID

@@ -42,6 +42,7 @@ type Client struct {
 	SquareAPI              *gateapi.SquareApiService
 	WelfareAPI             *gateapi.WelfareApiService
 	AssetswapAPI           *gateapi.AssetswapApiService
+	BotAPI                 *gateapi.BotApiService
 	ctx                    context.Context
 	auth                   bool
 	userAgent              string
@@ -104,6 +105,7 @@ func New(cfg *config.Config, cmdPath string) (*Client, error) {
 		SquareAPI:              apiClient.SquareApi,
 		WelfareAPI:             apiClient.WelfareApi,
 		AssetswapAPI:           apiClient.AssetswapApi,
+		BotAPI:                 apiClient.BotApi,
 		ctx:                    context.Background(),
 		auth:                   cfg.APIKey != "" && cfg.APISecret != "",
 		userAgent:              gateCfg.UserAgent,

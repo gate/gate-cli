@@ -20,12 +20,18 @@ func init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List chat messages for an order",
-		RunE:  runChatList,
+		Long: `List chat messages for an order.
+
+v7.2.78 contract: --txid is required by the CLI but the value 0 is treated by
+the server as 'omit' — pass --txid 0 to fetch the latest order with chat for
+the current user. Pass --lastreceived / --firstreceived to paginate forward
+or backward from a known timestamp.`,
+		RunE: runChatList,
 	}
-	listCmd.Flags().Int32("txid", 0, "Order ID (required)")
+	listCmd.Flags().Int32("txid", 0, "Order ID (required; pass 0 to return the latest order with chat)")
 	listCmd.MarkFlagRequired("txid")
-	listCmd.Flags().Int32("lastreceived", 0, "Pagination timestamp (forward)")
-	listCmd.Flags().Int32("firstreceived", 0, "Pagination timestamp (backward)")
+	listCmd.Flags().Int32("lastreceived", 0, "Timestamp of last received message; backward incremental fetch")
+	listCmd.Flags().Int32("firstreceived", 0, "Timestamp of first received message; forward paging")
 
 	sendCmd := &cobra.Command{
 		Use:   "send",

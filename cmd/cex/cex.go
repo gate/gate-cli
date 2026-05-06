@@ -9,6 +9,7 @@ import (
 	"github.com/gate/gate-cli/cmd/cex/activity"
 	"github.com/gate/gate-cli/cmd/cex/alpha"
 	"github.com/gate/gate-cli/cmd/cex/assetswap"
+	"github.com/gate/gate-cli/cmd/cex/bot"
 	"github.com/gate/gate-cli/cmd/cex/coupon"
 	crossex "github.com/gate/gate-cli/cmd/cex/cross_ex"
 	"github.com/gate/gate-cli/cmd/cex/delivery"
@@ -64,4 +65,5 @@ func init() {
 	Cmd.AddCommand(square.Cmd)
 	Cmd.AddCommand(welfare.Cmd)
 	Cmd.AddCommand(assetswap.Cmd)
+	Cmd.AddCommand(bot.Cmd)
 }
