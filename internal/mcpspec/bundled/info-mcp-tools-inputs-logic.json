@@ -255,9 +255,11 @@
       ],
       "fields": [
         { "name": "platform_name", "type": "string", "required": true },
-        { "name": "scope", "type": "string", "required": false, "enum": ["basic", "with_chain_breakdown", "full", "detailed"], "enum_note": "detailed maps to with_chain_breakdown; unknown -> basic" }
+        { "name": "scope", "type": "string", "required": false, "enum": ["basic", "with_chain_breakdown", "full", "detailed"], "enum_note": "omit or unknown -> basic; detailed maps to with_chain_breakdown" },
+        { "name": "include_oi_symbol_detail", "type": "bool", "required": false, "enum_note": "scope=full only; true adds competition_metrics.oi_symbol_detail[] (OI USD desc) when CEX competition index configured; default false" },
+        { "name": "oi_symbol_limit", "type": "int", "required": false, "enum_note": "only when include_oi_symbol_detail=true; omit or <=0 uses default 20; values >100 return invalid_param" }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.GetPlatformInfo; scope=full merges period_metrics from cexExchangeDerivativesVolume index when configured; nil fetcher returns requires_open_search."
+      "logic": "mcphost tools_platformmetrics -> fetcher.GetPlatformInfo; resolve platform by platform_id|platform_name (recent snapshot_time); scope=full enriches with platform_history (tvl|volume|fees), top_pools (yield limit 5), cexExchangeDerivativesVolume merge (derivatives + period_metrics), then mergeCexCompetitionIntoPlatformInfo when CEX index + CEX row; include_oi_symbol_detail gates oi_symbol_detail slice capped by oi_symbol_limit; applyPlatformInfoScope strips fields for basic|with_chain_breakdown; nil fetcher returns requires_open_search."
     },
     {
       "tool_name": "info_platformmetrics_search_platforms",
@@ -344,18 +346,19 @@
       "tool_name": "info_platformmetrics_get_platform_history",
       "domain": "platformmetrics",
       "request_type": "platformmetrics.GetPlatformHistoryRequest",
-      "required": [
-        "platform_name"
+      "required": [],
+      "conditional_required": [
+        "platform_name or exchange_slug (at least one required)"
       ],
       "fields": [
-        { "name": "platform_name", "type": "string", "required": true },
+        { "name": "platform_name", "type": "string", "required": false },
         { "name": "exchange_slug", "type": "string", "required": false },
         { "name": "metrics", "type": "string[]", "required": false, "common_values": ["tvl", "volume", "fees", "revenue", "volume_perps"], "enum_note": "omit or empty -> [tvl]; no strict per-element validation in fetcher" },
         { "name": "granularity", "type": "string", "required": false, "enum": ["day", "week", "month", "quarter"], "enum_note": "omit or unknown -> day; affects volume_perps field mapping in derivatives history index" },
         { "name": "start_date", "type": "string", "required": false },
         { "name": "end_date", "type": "string", "required": false }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.GetPlatformHistory; requires platform_name; defaults metrics=['tvl'] and granularity='day'; when metrics contains volume_perps switches to cexExchangeDerivativesVolume index and maps output field by granularity; nil fetcher returns requires_open_search."
+      "logic": "mcphost tools_platformmetrics -> fetcher.GetPlatformHistory; requires platform_name or exchange_slug; defaults metrics=['tvl'] and granularity='day'; when metrics contains volume_perps switches to cexExchangeDerivativesVolume index and maps output field by granularity; nil fetcher returns requires_open_search."
     },
     {
       "tool_name": "info_platformmetrics_get_exchange_reserves",
@@ -363,11 +366,13 @@
       "request_type": "platformmetrics.GetExchangeReservesRequest",
       "required": [],
       "fields": [
-        { "name": "exchange", "type": "string", "required": false },
-        { "name": "asset", "type": "string", "required": false },
-        { "name": "period", "type": "string", "required": false, "enum": ["24h", "7d"], "enum_note": "only these trigger snapshot_time range; other values ignored for time filter" }
+        { "name": "exchange", "type": "string", "required": false, "enum_note": "empty -> all-exchange rollup (mustBoolAllExchangeExchangeName); non-empty expands exchange name terms for ES match" },
+        { "name": "asset", "type": "string", "required": false, "enum": ["BTC", "ETH", "USDT", "USDC"], "enum_note": "empty = no asset filter; other values -> invalid_param" },
+        { "name": "scope", "type": "string", "required": false, "enum": ["basic", "full"], "enum_note": "omit -> basic; full merges por from exchangeReservesPOR index when configured; invalid scope -> invalid_param" },
+        { "name": "include_history", "type": "bool", "required": false, "enum_note": "default false; true only with scope=full else invalid_param; attaches precomputed PoR comparison fields, not raw snapshots" },
+        { "name": "history_window", "type": "string", "required": false, "enum": ["quarter"], "enum_note": "only when include_history=true; omit defaults to quarter; other values -> invalid_param" }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.GetExchangeReserves; nil fetcher returns requires_open_search."
+      "logic": "mcphost tools_platformmetrics -> fetcher.GetExchangeReserves; searches exchangeReserves (no default snapshot_time range; latest via sort); scope=full and POR index set runs second query on POR index and enrichExchangeReservesItemsWithPOR; requires exchangeReserves index else not_implemented; nil fetcher returns requires_open_search."
     },
     {
       "tool_name": "info_platformmetrics_get_liquidation_heatmap",

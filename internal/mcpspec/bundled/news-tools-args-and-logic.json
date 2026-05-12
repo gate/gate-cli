@@ -4,10 +4,14 @@
     "internal/mcphost/toolnames.go",
     "internal/mcphost/tools_news_feed.go",
     "internal/mcphost/tools_event.go",
+    "internal/mcphost/tools_explain_market_move.go",
     "internal/mcphost/tools_prediction.go",
     "internal/event/types.go",
     "internal/event/service.go",
     "internal/event/opensearch.go",
+    "internal/explain/types.go",
+    "internal/explain/service.go",
+    "internal/tavily/client.go",
     "internal/prediction/types.go",
     "internal/prediction/service.go",
     "internal/prediction/opensearch.go"
@@ -241,6 +245,34 @@
       "placeholder_when_unconfigured": true
     },
     {
+      "name": "news_events_explain_market_move",
+      "category": "news_events",
+      "description": "[Read] Aggregates evidence for what may have driven a crypto asset price move in a time window: Tavily real-time web search (with AI answer snippets merged into summary) plus up to two items from the internal event pool (same index family as news_events_get_latest_events). Returns summary, latest_news (Tavily-derived), supporting_events (internal pool), data_status (partial/missing_sources/notes), and duration_ms. Not a list-style tool (no items/total/count); downstream agent does final attribution reasoning.",
+      "input_rules": {
+        "required_policy": "query and coin are required",
+        "params": [
+          { "name": "query", "type": "string", "required": true, "notes": "User question, e.g. why did BTC surge; whitespace-trimmed; empty rejected." },
+          { "name": "coin", "type": "string", "required": true, "notes": "Target symbol; whitespace-trimmed; empty -> missing_coin. Passed through event.NormalizeCoin (alias/full name -> standard ticker); unknown aliases are kept, not rejected." },
+          { "name": "time_range", "type": "string", "required": false, "default": "2h", "enum": ["30m", "1h", "2h", "4h", "24h"], "notes": "Only these literals are preserved (case-insensitive); any other value including empty or 7d normalizes to 2h. Drives Tavily recency (days) and maps upward for internal pool window (see logic)." },
+          { "name": "mode", "type": "string", "required": false, "default": "auto", "enum": ["auto", "price_move", "event_impact"], "notes": "Normalized at handler; forwarded on Request but not read by explain service today (reserved)." },
+          { "name": "lang", "type": "string", "required": false, "default": "zh", "enum": ["zh", "en"], "notes": "Normalized at handler; forwarded on Request but not read by explain service today (reserved)." }
+        ]
+      },
+      "logic": [
+        "Handler validates query/coin, normalizes coin via NormalizeCoin, normalizes time_range/lang/mode, then calls explain.Service.ExplainMarketMove.",
+        "Two goroutines in parallel: (A) Tavily multi-query search, (B) event.Service.GetLatestEvents with limit=2.",
+        "Tavily path: skipped with data_status missing_sources tavily_realtime_search if client nil. Else builds sub-queries: always the original query; for non-BTC adds '{coin} token crypto latest updates and announcements'; for BTC appends explain.btcSubtopics from YAML as separate '{topic} latest updates' queries. Each sub-query uses Tavily Search with include_answer=true, search_depth=advanced, max_results=3, days from normalized time_range (30m/1h/24h -> 1; 2h/4h -> default 3; invalid/out-of-enum values normalize to 2h per params before mapping). Per-query context timeout: btcSubtopicsTimeoutSeconds for BTC sub-queries, nonBtcTimeoutSeconds for non-BTC (defaults 10s if <=0).",
+        "Tavily results: collect result.Answer strings into summary; map result.Results to MarketMoveEvent (title, truncated content summary, source from URL host, url, relevance_score adjusted by days factor). Dedupe by URL else title (keep highest score), sort by relevance_score desc, cap count to btcResultLimit (BTC) or nonBtcResultLimit (non-BTC) from YAML.",
+        "Internal pool path: skipped with missing_sources internal_event_pool if eventSvc nil. Else maps normalized time_range to Tool-1 window: 30m->1h, 1h->1h, 2h/4h->24h, 24h->24h; calls GetLatestEvents(coin, that time_range, limit=2). Maps each item to MarketMoveEvent (title, summary from context else impact_analysis, source 'Internal Event Pool', first_seen_time from event_time, relevance_score from event_type + time decay).",
+        "Merge: summary = Tavily answers joined by newline; data_status.is_partial if any missing_sources; notes aggregate Tavily/internal notes; if both lists empty and not partial, note 'No relevant events found'."
+      ],
+      "errors": [
+        { "code": "invalid_param", "when": "query is empty after trim" },
+        { "code": "missing_coin", "when": "coin is empty after trim" },
+        { "code": "internal", "when": "ExplainMarketMove returns error (current implementation usually returns success with partial empty slices)" }
+      ]
+    },
+    {
       "name": "news_prediction_get_volume_delta_ranking",
       "category": "news_prediction",
       "description": "Daily venue/overall ranking by volume delta (UTC day). Optional filters: venue[], category, status; OpenSearch index must expose category/status fields for those filters to match.",
@@ -250,20 +282,20 @@
           { "name": "date_utc", "type": "string", "required": false, "default": "today_utc (UTC YYYY-MM-DD)", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "notes": "Empty or omitted -> current UTC date." },
           { "name": "limit", "type": "integer", "required": false, "default": 20, "max": 100, "notes": "OpenSearch size; values <=0 normalized to 20." },
           { "name": "venue", "type": "string[]", "required": false, "enum": ["polymarket", "predict_fun"], "notes": "Each element must be allowed; empty or omitted -> no venue filter (all venues). Multiple values -> OpenSearch terms filter (exact)." },
-          { "name": "category", "type": "string", "required": false, "notes": "Optional category filter. Empty or omitted -> no category filter. Non-empty -> term filter on field category (exact). Index missing field or no matching docs -> empty overall, not an error." },
+          { "name": "category", "type": "string", "required": false, "enum": ["crypto_price", "macro", "policy", "sports", "all"], "notes": "Empty or omitted -> no category filter. Non-empty and not 'all' -> term filter on field category (exact). 'all' -> no category filter. Index missing field or no matching docs -> empty overall, not an error." },
           { "name": "status", "type": "string", "required": false, "default": "active", "enum": ["active", "closed", "resolved", "all"], "notes": "Empty or omitted -> treated as 'active' before query. 'all' -> no status filter. Otherwise term filter on field status (exact)." }
         ]
       },
       "logic": [
-        "Validate: limit in 1..100 after normalize (default 20); date_utc must be YYYY-MM-DD when set; each venue in whitelist; status must be empty (then default active) or allowed enum.",
+        "Validate: limit in 1..100 after normalize (default 20); date_utc must be YYYY-MM-DD when set; each venue in whitelist (polymarket/predict_fun); category must be empty or one of allowed enums; status must be empty (then default active) or allowed enum.",
         "OpenSearch bool filter: term rank_type=volume_delta; range on part_date for the UTC calendar day; optional terms on venue; optional term on category when set and not 'all'; optional term on status when not 'all'.",
         "Sort: volume_delta_usd_today desc, rank_no asc. Size = limit.",
         "Map _source to RankingItem; event_name prefers event_name else market_title; market_name similar; parse excluded_reasons_json to excluded_reasons (invalid JSON -> []).",
-        "Response: overall = ordered hits; by_venue groups by venue (keys include polymarket, predict_fun); generated_at = max(calc_time) from hits else UTC now; duration_ms; partial/source_data_status/excluded_reasons aggregated per implementation.",
+        "Response: overall = ordered hits; by_venue groups by venue (default keys include polymarket, predict_fun; additional keys appear only when present in hits); generated_at = max(calc_time) from hits else UTC now; duration_ms; partial/source_data_status/excluded_reasons aggregated per implementation.",
         "Do not drop hits for null volume_delta_usd_today on this rank_type (all matching docs returned up to limit)."
       ],
       "errors": [
-        { "code": "invalid_param", "when": "date_utc not YYYY-MM-DD; venue not in whitelist; status not in allowed set when non-empty" },
+        { "code": "invalid_param", "when": "date_utc not YYYY-MM-DD; venue not in whitelist; category/status not in allowed set when non-empty" },
         { "code": "invalid_size", "when": "limit > 100" },
         { "code": "opensearch_query_failed", "when": "OpenSearch query fails" },
         { "code": "not_implemented", "when": "opensearch.predictionRankIndex unset or prediction service not wired (placeholder tool)" }
@@ -280,7 +312,7 @@
           { "name": "date_utc", "type": "string", "required": false, "default": "today_utc (UTC YYYY-MM-DD)", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "notes": "Empty or omitted -> current UTC date." },
           { "name": "limit", "type": "integer", "required": false, "default": 20, "max": 100, "notes": "OpenSearch size; values <=0 normalized to 20." },
           { "name": "venue", "type": "string[]", "required": false, "enum": ["polymarket", "predict_fun"], "notes": "Each element must be allowed; empty or omitted -> no venue filter. Multiple values -> terms filter (exact)." },
-          { "name": "category", "type": "string", "required": false, "notes": "Same semantics as volume_delta tool: empty/omit -> no filter; non-empty -> term category." },
+          { "name": "category", "type": "string", "required": false, "enum": ["crypto_price", "macro", "policy", "sports", "all"], "notes": "Same semantics as volume_delta tool: empty/omit -> no filter; non-empty not 'all' -> term category; 'all' -> no filter." },
           { "name": "status", "type": "string", "required": false, "default": "active", "enum": ["active", "closed", "resolved", "all"], "notes": "Same semantics as volume_delta tool: empty -> active; 'all' -> no status filter." }
         ]
       },
@@ -292,7 +324,7 @@
         "Response shape same family as volume_delta (overall, by_venue, generated_at, duration_ms, partial, etc.)."
       ],
       "errors": [
-        { "code": "invalid_param", "when": "date_utc not YYYY-MM-DD; venue not in whitelist; status not in allowed set when non-empty" },
+        { "code": "invalid_param", "when": "date_utc not YYYY-MM-DD; venue not in whitelist; category/status not in allowed set when non-empty" },
         { "code": "invalid_size", "when": "limit > 100" },
         { "code": "opensearch_query_failed", "when": "OpenSearch query fails" },
         { "code": "not_implemented", "when": "opensearch.predictionRankIndex unset or prediction service not wired (placeholder tool)" }

@@ -27,6 +27,7 @@ func TestNewsBaselineInputSchemaCriticalFields(t *testing.T) {
 		"news_feed_search_news":                {"query", "coin", "platform", "platform_type", "start_time", "end_time", "similarity_score", "top_total_score"},
 		"news_feed_get_exchange_announcements": {"announcement_type", "coin", "platform", "from", "to"},
 		"news_events_get_latest_events":        {"event_type", "cursor", "start_time", "end_time"},
+		"news_events_explain_market_move":      {"query", "coin", "time_range", "mode", "lang"},
 		"news_feed_search_x":                   {"allowed_handles", "excluded_handles", "enable_image_understanding", "enable_video_understanding", "platform_type", "time_range"},
 	}
 	for tool, fields := range cases {
@@ -103,6 +104,11 @@ func TestNewsBaselineBoundKeywordsForCLIHelp(t *testing.T) {
 	venueItems := pred["properties"].(map[string]interface{})["venue"].(map[string]interface{})["items"].(map[string]interface{})
 	if len(venueItems["enum"].([]interface{})) != 2 {
 		t.Fatalf("venue enum: got %#v", venueItems["enum"])
+	}
+	cat := pred["properties"].(map[string]interface{})["category"].(map[string]interface{})
+	catEnums, ok := cat["enum"].([]interface{})
+	if !ok || len(catEnums) != 5 {
+		t.Fatalf("prediction category enum: got %#v", cat["enum"])
 	}
 }
 

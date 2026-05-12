@@ -67,8 +67,16 @@ func RunToolCall(cmd *cobra.Command, p *output.Printer, svc ToolCaller, name str
 		})
 	}
 	arguments = toolargs.NormalizeForTool(name, arguments)
+	if err := toolargs.ValidateForTool(name, arguments); err != nil {
+		return FailAfterPrintError(p, &output.GateError{
+			Status:  400,
+			Label:   "INVALID_ARGUMENTS",
+			Message: err.Error(),
+		})
+	}
 	if tool, _, derr := svc.DescribeTool(cmd.Context(), name); derr == nil && tool != nil {
-		if missing := toolschema.MissingRequiredArguments(arguments, tool.InputSchema); len(missing) > 0 {
+		schema := InputSchemaForMissingRequiredCheck(backend, name, tool.InputSchema)
+		if missing := toolschema.MissingRequiredArguments(arguments, schema); len(missing) > 0 {
 			return FailAfterPrintError(p, &output.GateError{
 				Status:  400,
 				Label:   "INVALID_ARGUMENTS",

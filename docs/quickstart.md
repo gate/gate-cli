@@ -341,11 +341,11 @@ gate-cli cex futures position list --format json | jq '.[].contract'
 
 ## Intel (`info` & `news`)
 
-Market intelligence and news are shipped as **38** MCP-style CLI tools (**30** `info`, **8** `news`). Invoke a capability as `gate-cli info <group> <tool>` or `gate-cli news <group> <tool>` with **flat flags** for arguments (add `--format json` for scripts and agents).
+Market intelligence and news are shipped as **41** MCP-style CLI tools (**30** `info`, **11** `news`). Invoke a capability as `gate-cli info <group> <tool>` or `gate-cli news <group> <tool>` with **flat flags** for arguments (add `--format json` for scripts and agents).
 
 **`info` groups:** `coin`, `marketsnapshot`, `markettrend`, `onchain`, `platformmetrics`, `marketdetail`, `macro`, `compliance`.
 
-**`news` groups:** `feed` (search across sources, web research, sentiment, exchange announcements) and `events` (latest events and per-event detail).
+**`news` groups:** `feed` (search across sources, web research, sentiment, exchange announcements), `events` (latest events and per-event detail), and `prediction` (prediction-market venue rankings; backend may be a placeholder when OpenSearch is not configured).
 
 List tool ids: `gate-cli info list`, `gate-cli news list`. Flags and env vars: `gate-cli info -h`, `gate-cli news -h`.
 
@@ -357,7 +357,7 @@ gate-cli info marketsnapshot get-market-snapshot --symbol BTC_USDT --format json
 gate-cli news feed search-news --query bitcoin --format json   # alias: search → search-news
 ```
 
-One minimal example per tool (all 38) is in the repository **README.md**.
+One minimal example per tool (all 41) is in the repository **README.md**.
 
 ---
 

@@ -90,6 +90,13 @@ var NewsBaselineInputSchemas = map[string]map[string]interface{}{
 	"news_events_get_event_detail": newsObj(map[string]interface{}{
 		"event_id": newsEventID("event_id"),
 	}, "event_id"),
+	"news_events_explain_market_move": newsObj(map[string]interface{}{
+		"query":      newsStr("query; user question, e.g. why an asset moved"),
+		"coin":       newsStr("coin; target symbol (normalized upstream)"),
+		"time_range": newsStrEnum("time_range", "2h", "30m", "1h", "2h", "4h", "24h"),
+		"mode":       newsStrEnum("mode", "auto", "auto", "price_move", "event_impact"),
+		"lang":       newsStrEnum("lang", "zh", "zh", "en"),
+	}, "query", "coin"),
 	"news_prediction_get_volume_delta_ranking":   newsPredictionRankingProps(),
 	"news_prediction_get_fastest_rising_ranking": newsPredictionRankingProps(),
 }
@@ -255,7 +262,7 @@ func newsPredictionRankingProps() map[string]interface{} {
 		"date_utc": newsDateUTCOptional("date_utc; UTC YYYY-MM-DD; omit for today UTC"),
 		"limit":    newsIntDefaultMax("limit", 20, 100),
 		"venue":    newsArrVenuePolymarketOpinionPredictFun("venue"),
-		"category": newsStr("category"),
+		"category": newsStrEnum("category", "", "crypto_price", "macro", "policy", "sports", "all"),
 		"status":   newsStrEnum("status", "active", "active", "closed", "resolved", "all"),
 	})
 }

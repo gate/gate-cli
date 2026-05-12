@@ -119,8 +119,10 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 		"lang":    infoStrEnum("lang", "en", "en", "cn", "tw", "ja", "kr"),
 	}, "chain"),
 	"info_platformmetrics_get_platform_info": infoObj(map[string]interface{}{
-		"platform_name": infoStr("platform_name"),
-		"scope":         infoStrEnum("scope", "basic", "basic", "with_chain_breakdown", "full", "detailed"),
+		"platform_name":            infoStr("platform_name"),
+		"scope":                    infoStrEnum("scope", "basic", "basic", "with_chain_breakdown", "full", "detailed"),
+		"include_oi_symbol_detail": infoBool("include_oi_symbol_detail; scope=full only; adds competition_metrics.oi_symbol_detail when CEX index configured"),
+		"oi_symbol_limit":          infoIntDefaultMax("oi_symbol_limit; with include_oi_symbol_detail; omit or <=0 -> 20 server-side", 20, 100),
 	}, "platform_name"),
 	"info_platformmetrics_search_platforms": infoObj(map[string]interface{}{
 		"platform_type": infoStr("platform_type"),
@@ -166,11 +168,13 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 		"granularity":   infoStrEnum("granularity", "day", "day", "week", "month", "quarter"),
 		"start_date":    infoStr("start_date"),
 		"end_date":      infoStr("end_date"),
-	}, "platform_name"),
+	}),
 	"info_platformmetrics_get_exchange_reserves": infoObj(map[string]interface{}{
-		"exchange": infoStr("exchange"),
-		"asset":    infoStr("asset"),
-		"period":   infoStrEnum("period", "", "24h", "7d"),
+		"exchange":        infoStr("exchange; empty -> all-exchange rollup"),
+		"asset":           infoStrEnum("asset", "", "", "BTC", "ETH", "USDT", "USDC"),
+		"scope":           infoStrEnum("scope", "basic", "basic", "full"),
+		"include_history": infoBool("include_history; true only with scope=full"),
+		"history_window":  infoStrEnum("history_window", "", "", "quarter"),
 	}),
 	"info_platformmetrics_get_liquidation_heatmap": infoObj(map[string]interface{}{
 		"symbol":   infoStr("symbol"),

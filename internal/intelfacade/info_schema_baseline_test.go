@@ -85,6 +85,12 @@ func TestInfoBaselineIntegerBoundsMatchSpecDoc(t *testing.T) {
 	if kp["maximum"].(float64) != 2000 || kp["default"].(float64) != 100 {
 		t.Fatalf("marketdetail kline limit bounds: %#v", kp)
 	}
+
+	pi := InfoBaselineInputSchema("info_platformmetrics_get_platform_info")
+	oiLim := pi["properties"].(map[string]interface{})["oi_symbol_limit"].(map[string]interface{})
+	if oiLim["maximum"].(float64) != 100 || oiLim["default"].(float64) != 20 {
+		t.Fatalf("platform_info oi_symbol_limit bounds: %#v", oiLim)
+	}
 }
 
 func TestInfoBaselineInputSchemaDeepCopyIsolation(t *testing.T) {

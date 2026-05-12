@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [v0.7.2] - 2026-05-12
+
+### Summary
+
+Intel surface bump: **`gate-cli news`** gains one new MCP leaf (`news events explain-market-move`), taking the baseline to **41** tools (**30** `info` + **11** `news`). Also realigns the bundled MCP wire specs and `internal/intelfacade` baseline schemas for `info platformmetrics` (`get-platform-info` / `get-exchange-reserves` shape changes), adds a pre-`tools/call` static check for `info platformmetrics get-platform-history`, and fixes a stale top-level `required` array leaking from the gateway into XOR / `conditional_required` tools. SDK unchanged (`gateapi-go/v7 v7.2.78`); no `cex` command changes. **1 new command + static argument validation + MCP spec/baseline sync + 1 fix.**
+
+### Added — Intel (`gate-cli news`)
+
+- **`gate-cli news events explain-market-move`** — new MCP leaf (`news_events_explain_market_move`): synthesizes market-move evidence (Tavily search + internal event pool). Requires `--query` and `--coin`; optional `--time-range`, `--mode`, `--lang`. Baseline tool count is now **41** (30 `info` + 11 `news`); README, both quickstarts, and the module tables updated to match (e.g. `news events` group description now mentions "market-move evidence synthesis").
+
+### Changed — Intel MCP wire specs & baseline schemas
+
+- **`info platformmetrics get-platform-info` / `get-exchange-reserves`** — bundled `internal/mcpspec/bundled/info-mcp-tools-inputs-logic.json` and the `internal/intelfacade` baseline JSON schemas updated to the new wire shapes: `get-platform-info` adds optional `include_oi_symbol_detail` / `oi_symbol_limit` plus richer merge logic; `get-exchange-reserves` replaces `period` with `scope` / `include_history` / `history_window` and a closed `asset` enum. README examples updated (`--scope full --include-oi-symbol-detail --oi-symbol-limit 20`, `--scope full --include-history --asset BTC`).
+- **News baseline** — `news_prediction_get_*_ranking` flat-flag schema: `category` now uses the same closed enum as `specs/mcp/news-tools-args-and-logic.json`; `news_events_explain_market_move` Tavily `days` logic line aligned with `time_range` normalization (no stray `7d` branch).
+
+### Added — Static argument validation
+
+- **`internal/toolargs` + `internal/intelcmd`** — `info_platformmetrics_get_platform_history` is now validated before `tools/call`: `platform_name` and `exchange_slug` must not both be empty (matching the MCP spec `conditional_required`), returning **400 + INVALID_ARGUMENTS** locally instead of a gateway round-trip.
+
+### Fixed
+
+- **`internal/intelcmd`** — when merging static JSON Schema baselines into a cached `tools/list` input schema (and again before `MissingRequiredArguments` on `info` / `news` invoke), drop a stale top-level **`required`** array if the committed baseline intentionally omits `required` — so XOR / `conditional_required` tools such as `info_platformmetrics_get_platform_history` are not blocked by an outdated `required: ["platform_name"]` from the gateway when the caller supplies **`exchange_slug`** only.
+
+### Tests
+
+- `internal/intelcmd/merge_baseline_test.go`, `internal/intelfacade/info_schema_baseline_test.go`, `internal/intelfacade/news_schema_baseline_test.go`, `internal/intelfacade/inventory_test.go`, `internal/toolargs/validate_test.go` — cover the new `explain-market-move` leaf and the 41-tool baseline, the stale-`required` drop, the `platformmetrics` spec changes, and the `get-platform-history` XOR check.
+
+### Unchanged
+
+- `gateapi-go/v7 v7.2.78` (no SDK bump); the `v0.7.1` tag itself only trims a redundant line from `go.sum`.
+- No `cex` command, flag, output-format, or exit-code changes; trading ↔ Intel auth isolation unchanged.
+
 ## [v0.7.0] - 2026-05-06
 
 ### Summary

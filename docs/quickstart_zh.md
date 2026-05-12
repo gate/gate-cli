@@ -342,11 +342,11 @@ gate-cli cex futures position list --format json | jq '.[].contract'
 
 ## Intel（`info` / `news`）
 
-市场情报与资讯以 **38** 个 MCP 风格 CLI 工具提供（**30** 个 `info`，**8** 个 `news`）。调用方式为 `gate-cli info <分组> <子命令>` 或 `gate-cli news <分组> <子命令>`，参数以**平铺 flag** 为主（脚本/Agent 建议加 `--format json`）。
+市场情报与资讯以 **41** 个 MCP 风格 CLI 工具提供（**30** 个 `info`，**11** 个 `news`）。调用方式为 `gate-cli info <分组> <子命令>` 或 `gate-cli news <分组> <子命令>`，参数以**平铺 flag** 为主（脚本/Agent 建议加 `--format json`）。
 
 **`info` 分组：** `coin`、`marketsnapshot`、`markettrend`、`onchain`、`platformmetrics`、`marketdetail`、`macro`、`compliance`。
 
-**`news` 分组：** `feed`（多源检索、网页研究、情绪、交易所公告）、`events`（最新事件与单条事件详情）。
+**`news` 分组：** `feed`（多源检索、网页研究、情绪、交易所公告）、`events`（最新事件与单条事件详情）、`prediction`（预测市场排名类工具；未配置 OpenSearch 时后端可能为占位实现）。
 
 列出工具名：`gate-cli info list`、`gate-cli news list`。参数与环境变量：`gate-cli info -h`、`gate-cli news -h`。
 
@@ -358,7 +358,7 @@ gate-cli info marketsnapshot get-market-snapshot --symbol BTC_USDT --format json
 gate-cli news feed search-news --query bitcoin --format json   # 别名：search → search-news
 ```
 
-全部 **38** 个工具各一条最小示例见仓库根目录 **README.md**。
+全部 **41** 个工具各一条最小示例见仓库根目录 **README.md**。
 
 ---
 
