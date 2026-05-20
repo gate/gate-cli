@@ -136,6 +136,30 @@ func TestNewsEachLeafRegistersAllBaselineFlags(t *testing.T) {
 	}
 }
 
+func TestNewsSearchEventsStatusFlagNoDefault(t *testing.T) {
+	oldLoader := newsSchemaLoader
+	newsSchemaLoader = func() map[string]toolschema.ToolSummary { return map[string]toolschema.ToolSummary{} }
+	t.Cleanup(func() { newsSchemaLoader = oldLoader })
+
+	cmd := &cobra.Command{Use: "news"}
+	orig := Cmd
+	Cmd = cmd
+	t.Cleanup(func() { Cmd = orig })
+	buildNewsAliases()
+
+	leafCmd, _, err := cmd.Find([]string{"prediction", "search-events"})
+	if err != nil {
+		t.Fatalf("find prediction/search-events: %v", err)
+	}
+	fl := leafCmd.Flags().Lookup("status")
+	if fl == nil {
+		t.Fatal("missing --status flag")
+	}
+	if fl.DefValue != "" {
+		t.Fatalf("status DefValue: want empty got %q", fl.DefValue)
+	}
+}
+
 func TestNewsEachLeafRegistersAllSpecParams(t *testing.T) {
 	doc, err := mcpspec.NewsToolsArgs()
 	if err != nil {

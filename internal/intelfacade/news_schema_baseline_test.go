@@ -28,6 +28,9 @@ func TestNewsBaselineInputSchemaCriticalFields(t *testing.T) {
 		"news_feed_get_exchange_announcements": {"announcement_type", "coin", "platform", "from", "to"},
 		"news_events_get_latest_events":        {"event_type", "cursor", "start_time", "end_time"},
 		"news_events_explain_market_move":      {"query", "coin", "time_range", "mode", "lang"},
+		"news_prediction_get_market_orderbook": {"venue", "market_id", "depth", "mode", "granularity", "page_token"},
+		"news_prediction_search_events":        {"query", "coin", "category", "status", "venue", "sort_by", "limit", "page_token", "with_markets"},
+		"news_prediction_get_event_signal":     {"event_ref", "window", "venue", "include_markets", "include_orderbook_summary"},
 		"news_feed_search_x":                   {"allowed_handles", "excluded_handles", "enable_image_understanding", "enable_video_understanding", "platform_type", "time_range"},
 	}
 	for tool, fields := range cases {
@@ -62,8 +65,8 @@ func TestNewsBaselineInputSchemaCriticalFields(t *testing.T) {
 	web := NewsBaselineInputSchema("news_feed_web_search")
 	wProps := web["properties"].(map[string]interface{})
 	wLang := wProps["lang"].(map[string]interface{})
-	if def, _ := wLang["default"].(string); def != "en" {
-		t.Fatalf("web_search lang default mismatch: want en got %q", def)
+	if def, _ := wLang["default"].(string); def != "zh" {
+		t.Fatalf("web_search lang default mismatch: want zh got %q", def)
 	}
 	if enums, ok := wLang["enum"].([]interface{}); !ok || len(enums) != 3 {
 		t.Fatalf("web_search lang enum mismatch: %#v", wLang["enum"])
@@ -96,6 +99,17 @@ func TestNewsBaselineBoundKeywordsForCLIHelp(t *testing.T) {
 		t.Fatalf("allowed_handles maxItems: got %#v", ah["maxItems"])
 	}
 
+	searchEv := NewsBaselineInputSchema("news_prediction_search_events")
+	props := searchEv["properties"].(map[string]interface{})
+	st := props["status"].(map[string]interface{})
+	if _, has := st["default"]; has {
+		t.Fatalf("search_events status must not set CLI/json default (MCP applies omit policy): %#v", st["default"])
+	}
+	sb := props["sort_by"].(map[string]interface{})
+	if def, _ := sb["default"].(string); def != "recently_listed" {
+		t.Fatalf("search_events sort_by default: want recently_listed got %q", def)
+	}
+
 	pred := NewsBaselineInputSchema("news_prediction_get_volume_delta_ranking")
 	plim := pred["properties"].(map[string]interface{})["limit"].(map[string]interface{})
 	if plim["default"].(float64) != 20 || plim["maximum"].(float64) != 100 {
@@ -106,9 +120,11 @@ func TestNewsBaselineBoundKeywordsForCLIHelp(t *testing.T) {
 		t.Fatalf("venue enum: got %#v", venueItems["enum"])
 	}
 	cat := pred["properties"].(map[string]interface{})["category"].(map[string]interface{})
-	catEnums, ok := cat["enum"].([]interface{})
-	if !ok || len(catEnums) != 5 {
-		t.Fatalf("prediction category enum: got %#v", cat["enum"])
+	if _, hasEnum := cat["enum"]; hasEnum {
+		t.Fatalf("prediction category must be free-form string (no enum): got %#v", cat)
+	}
+	if cat["type"] != "string" {
+		t.Fatalf("prediction category type: got %#v", cat["type"])
 	}
 }
 

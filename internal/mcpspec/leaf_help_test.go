@@ -30,7 +30,7 @@ func TestInfoLeafLongAppendCoinInfo_fullParams(t *testing.T) {
 func TestNewsLeafLongAppendSearchNews_defaultCompact(t *testing.T) {
 	t.Setenv("GATE_INTEL_LEAF_HELP", "")
 	s := NewsLeafLongAppend("news_feed_search_news")
-	if !strings.Contains(s, "Search platform news") {
+	if !strings.Contains(s, "platform news index") {
 		t.Fatalf("missing description: %s", s)
 	}
 	if strings.Contains(s, "Parameters:") {

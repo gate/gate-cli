@@ -41,10 +41,19 @@ const (
 
 func setupRootForExecute() {
 	intelcmd.SilenceCommandTree(rootCmd)
+	// FlagErrorFunc 仅装到 Intel 子树（info/news/preflight/doctor/migrate）。
+	// SilenceCommandTree 历史上覆盖整树（含 cex/config），但本轮 flexBool 修复
+	// 限定在 Intel 域，按 intel-guardrails 规则不得改动其他域的错误打印行为。
+	for _, sub := range []*cobra.Command{info.Cmd, news.Cmd, preflight.Cmd, doctor.Cmd, migrate.Cmd} {
+		intelcmd.InstallFlagErrorHook(sub)
+	}
 }
 
 func Execute() {
 	setupRootForExecute()
+	if newArgs, ok := intelcmd.RewriteFlexBoolSpaceArgs(rootCmd, os.Args[1:]); ok {
+		rootCmd.SetArgs(newArgs)
+	}
 	if err := rootCmd.Execute(); err != nil {
 		var codedErr *exitcode.Error
 		if errors.As(err, &codedErr) {

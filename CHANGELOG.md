@@ -4,6 +4,41 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [v0.7.3] - 2026-05-13
+
+### Summary
+
+Intel-only **`flexBool`** fix: schema-derived boolean flags on `info` / `news` leaves now use `NoOptDefVal="true"` so bare `--flag` means **true** without swallowing the next argv token (for example `--with-indicators` then `--timeframe 4h`). Legacy spaced invocations `--flag true|false` are rewritten to `--flag=value` **before** Cobra parses, so old scripts keep working. **Flag error diagnostics** for `info`, `news`, `preflight`, `doctor`, and `migrate` print to stderr via a scoped `FlagErrorFunc`; **`cex` / `config`** parsing and error-print behavior are unchanged (Intel guardrail).
+
+### Changed — Intel boolean flags (`flexBool`)
+
+- **`internal/toolschema`** — JSON-schema `boolean` fields registered with `ApplyInputSchemaFlags` set `NoOptDefVal="true"` on the underlying `pflag` flag; documented interaction with argv rewriting. Exported **`FlexBoolTypeName`** so `internal/intelcmd` can detect flexBool flags via `Value.Type()` without string drift.
+- **`specs/mcp/news-tools-args-and-logic.json`** (version **2026-05-20-rev2**) & **`internal/mcpspec/bundled/news-tools-args-and-logic.json`** — resync: `[Read]` descriptions, events OS errors as client `internal`, ranking `category` free-form + limit rules, prediction tool logic/errors; `get-event_signal` errors table drops duplicate `opensearch_query_failed` client row.
+- **`internal/intelfacade/news_schema_baseline.go`** — flat-flag descriptions aligned with the new spec (feed/events/prediction), ranking `category` back to free-form string, search-events `status` without CLI/json default (wire omit → MCP coin-only `all`), orderbook `market_id` venue semantics, event-signal `include_orderbook_summary` deprecated.
+
+### Added
+
+- **`internal/intelcmd.RewriteFlexBoolSpaceArgs`** — For the resolved leaf command only, collapses `--<flexBool-long-flag> <bool-literal>` into `--<flag>=<literal>` when the next token is a boolean literal (`true` | `false` | `1` | `0` | `t` | `f`, case-insensitive); ignores `--` terminator, non-flexBool flags, and native `bool` flags. Wired from **`cmd/root.go`** via `SetArgs` when any rewrite occurs.
+- **`internal/intelcmd.InstallFlagErrorHook`** — Recursively installs `FlagErrorFunc` on Intel subtrees so pflag parse errors are visible on stderr while `SilenceErrors` still suppresses duplicate Cobra banners.
+- **Intel / `gate-cli news prediction`** — register three News MCP tools from `specs/mcp/news-tools-args-and-logic.json`: `news_prediction_get_market_orderbook` (`get-market-orderbook`), `news_prediction_search_events` (`search-events`), and `news_prediction_get_event_signal` (`get-event-signal`). Baseline count is now **44** (30 `info` + 14 `news`).
+
+### Fixed
+
+- **Bare flexBool + following flag** — Previously, combining `NoOptDefVal` with spaced values could mis-parse; bare `--with-indicators` followed by `--timeframe` now resolves correctly (see `cmd/info/aliases_flag_wiring_test.go`).
+- **`internal/toolargs`** — CLI pre-check before MCP `tools/call` for News tools with strict or conditional required inputs: `search-ugc` (`query` or `coin`), `web-search` (`query`), `explain-market-move` (`query` + `coin`), `get-event-detail` (`event_id`), `search-events` (`query`, `coin`, or `category`), `get-market-orderbook` (`venue` + `market_id`), `get-event-signal` (`event_ref`). Prediction leaves also validate enums/ranges locally (`venue`, `category`, `status`, `sort_by`, `limit`, `depth`, `event_ref` shape, `window`, optional `venue[]` vs `event_ref`).
+- **`internal/intelfacade/news_schema_baseline.go`** — align `news_feed_web_search` `lang` default (`zh`), `news_feed_search_x` `days` default (`1`), prediction `limit` minimum (`1`), and `search-events` `sort_by` default (`recently_listed`) with `news-tools-args-and-logic.json`.
+- **`specs/qc/news-cli-commands.md`** & **`specs/qc/info-news-command-checklist.md`** — document `news prediction` leaves and `explain-market-move`.
+
+### Tests
+
+- **`internal/intelcmd/argv_rewrite_test.go`** — rewriter edge cases (equals form, `--`, unknown subcommand, native bool untouched, end-to-end parse).
+- **`cmd/info/aliases_flag_wiring_test.go`** — `markettrend get-kline` flexBool wiring, bare flag, `=false`, and bool-then-next-flag ordering.
+
+### Unchanged
+
+- **`gateapi-go/v7 v7.2.78`** — no SDK bump.
+- Tool inventory remains **41** (30 `info` + 11 `news`); no new MCP leaves in this release.
+
 ## [v0.7.2] - 2026-05-12
 
 ### Summary

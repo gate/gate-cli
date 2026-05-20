@@ -163,6 +163,29 @@ func TestMergeFromCommand_ArgsFileRelativeUnderCwd(t *testing.T) {
 	assert.Equal(t, float64(2), got["k"])
 }
 
+func TestMergeFromCommand_SearchEventsOmitsStatusWhenFlagUnset(t *testing.T) {
+	schema := map[string]interface{}{
+		"properties": map[string]interface{}{
+			"coin":   map[string]interface{}{"type": "string", "description": "coin"},
+			"status": map[string]interface{}{"type": "string", "description": "status", "enum": []interface{}{"active", "all"}},
+		},
+	}
+	cmd := &cobra.Command{Use: "news"}
+	cmd.Flags().String("params", "", "")
+	cmd.Flags().String("args-json", "", "")
+	cmd.Flags().String("args-file", "", "")
+	toolschema.ApplyInputSchemaFlags(cmd, schema)
+	require.NoError(t, cmd.Flags().Parse([]string{"--coin", "BTC"}))
+
+	got, err := MergeFromCommand(cmd, MergeOptions{ReservedFlags: map[string]struct{}{
+		"params": {}, "args-json": {}, "args-file": {},
+	}})
+	require.NoError(t, err)
+	assert.Equal(t, "BTC", got["coin"])
+	_, hasStatus := got["status"]
+	assert.False(t, hasStatus, "unset --status must not appear in MCP arguments")
+}
+
 func TestMergeFromCommand_ArgsFileRejectsParentEscape(t *testing.T) {
 	dir := t.TempDir()
 	parent := filepath.Dir(dir)

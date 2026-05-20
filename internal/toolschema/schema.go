@@ -227,10 +227,15 @@ func ApplyInputSchemaFlags(cmd *cobra.Command, schemaAny interface{}) {
 			def, _ := spec["default"].(bool)
 			fb := newFlexBool(def)
 			cmd.Flags().Var(fb, flagName, desc)
-			// Do not set NoOptDefVal: pflag treats it as "optional value" and will
-			// never consume the next argv token, so "--flag true" leaves "true" as
-			// a positional (Cobra reports unknown subcommand). Use "--flag=true" or
-			// "--flag true" with flexBool (non-native bool) instead.
+			// Set NoOptDefVal="true" so bare "--flag" means true (standard cobra/pflag
+			// boolean ergonomics) and "--flag=true|false" still works. The spaced form
+			// "--flag true|false" would be dropped by pflag once NoOptDefVal is set;
+			// gate-cli compensates by rewriting it to "--flag=value" at the argv layer
+			// (internal/intelcmd.RewriteFlexBoolSpaceArgs), keeping legacy scripts working.
+			fl := cmd.Flags().Lookup(flagName)
+			if fl != nil {
+				fl.NoOptDefVal = "true"
+			}
 		case "integer":
 			def := 0
 			if v, ok := coerceIntDefault(spec["default"]); ok {
