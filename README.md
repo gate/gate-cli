@@ -82,7 +82,7 @@ API keys and secrets for **trading** are stored per profile (for example `gate-c
   - **marketsnapshot** — Single-symbol snapshots, batch snapshots, and cross-asset market overview.
   - **markettrend** — OHLC-style klines, historical indicator series, and packaged technical analysis.
   - **onchain** — Address balances and activity, transaction detail, and token-level on-chain metrics.
-  - **platformmetrics** — Protocol and CEX analytics: platform directory, DeFi overview, stablecoins, bridges, order-book depth, yield pools, TVL/volume history, reserves, and liquidation heatmaps.
+  - **platformmetrics** — Protocol and CEX analytics: platform directory, DeFi overview, stablecoins (optional `scope=full` + `sections=issuance_flow` for supply flows), bridges, order-book depth, yield pools, TVL/volume history, reserves, and liquidation heatmaps.
   - **marketdetail** — Live order book, recent trades, and klines for Gate trading symbols (spot/futures/etc.).
   - **macro** — Macro indicators, economic calendar, and condensed macro summaries.
   - **compliance** — Token security and risk screening for a given chain.
@@ -198,7 +198,7 @@ gate-cli info onchain get-token-onchain --token USDT --chain eth --format json
 gate-cli info platformmetrics get-platform-info --platform-name uniswap --scope full --include-oi-symbol-detail --oi-symbol-limit 20 --format json
 gate-cli info platformmetrics search-platforms --format json
 gate-cli info platformmetrics get-defi-overview --format json
-gate-cli info platformmetrics get-stablecoin-info --format json
+gate-cli info platformmetrics get-stablecoin-info --scope full --sections '["issuance_flow"]' --start-date 2026-04-01 --end-date 2026-05-01 --format json
 gate-cli info platformmetrics get-bridge-metrics --format json
 gate-cli info platformmetrics get-cex-orderbook-depth --symbol BTC_USDT --format json
 gate-cli info platformmetrics get-yield-pools --format json

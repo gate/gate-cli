@@ -91,6 +91,18 @@ func TestInfoBaselineIntegerBoundsMatchSpecDoc(t *testing.T) {
 	if oiLim["maximum"].(float64) != 100 || oiLim["default"].(float64) != 20 {
 		t.Fatalf("platform_info oi_symbol_limit bounds: %#v", oiLim)
 	}
+
+	stable := InfoBaselineInputSchema("info_platformmetrics_get_stablecoin_info")
+	sp := stable["properties"].(map[string]interface{})
+	for _, key := range []string{"scope", "sections", "start_date", "end_date"} {
+		if _, ok := sp[key]; !ok {
+			t.Fatalf("stablecoin_info missing field %q", key)
+		}
+	}
+	lim := sp["limit"].(map[string]interface{})
+	if lim["maximum"].(float64) != 400 || lim["default"].(float64) != 10 {
+		t.Fatalf("stablecoin_info limit bounds: %#v", lim)
+	}
 }
 
 func TestInfoBaselineInputSchemaDeepCopyIsolation(t *testing.T) {

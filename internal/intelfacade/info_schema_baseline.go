@@ -50,8 +50,6 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 		"start_time": infoStr("start_time"),
 		"end_time":   infoStr("end_time"),
 		"limit":      infoIntDefaultMax("limit", 100, 500),
-		"source":     infoStrEnum("source", "spot", "alpha", "spot", "future", "fx", "futures"),
-		"quote":      infoStr("quote"),
 	}, "symbol", "indicators", "timeframe"),
 	"info_markettrend_get_technical_analysis": infoObj(map[string]interface{}{
 		"symbol":     infoStr("symbol"),
@@ -135,9 +133,13 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 		"category": infoStrEnum("category", "all", "all", "defi", "de-fi", "cex", "perp", "spot", "stablecoin", "dex", "dexs", "dexes", "lending", "cdp", "yield", "bridge", "derivatives", "yield aggregator"),
 	}),
 	"info_platformmetrics_get_stablecoin_info": infoObj(map[string]interface{}{
-		"symbol": infoStr("symbol"),
-		"chain":  infoStr("chain"),
-		"limit":  infoIntDefaultMax("limit", 20, 100),
+		"symbol":     infoStr("symbol"),
+		"chain":      infoStr("chain"),
+		"limit":      infoIntDefaultMax("limit", 10, 400),
+		"scope":      infoStrEnum("scope", "basic", "basic", "full"),
+		"sections":   infoArrStr("sections; only issuance_flow; requires scope=full"),
+		"start_date": infoStr("start_date; UTC YYYY-MM-DD; scope=full and sections=issuance_flow"),
+		"end_date":   infoStr("end_date; UTC YYYY-MM-DD; capped to today"),
 	}),
 	"info_platformmetrics_get_bridge_metrics": infoObj(map[string]interface{}{
 		"bridge_name": infoStr("bridge_name"),

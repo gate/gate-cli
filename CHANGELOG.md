@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+## [v0.7.4] - 2026-05-21
+
+### Summary
+
+Intel-only patch that hardens **`info platformmetrics`** input validation and resyncs the bundled MCP spec to **schema 1.1**. `get-stablecoin-info` now accepts `scope` / `sections` / `start_date` / `end_date` for stablecoin issuance-flow queries (limit default **10**, max **400**); the CLI also pre-checks `get-stablecoin-info`, `get-exchange-reserves`, and `get-platform-info` arguments before the MCP `tools/call`, so invalid inputs return **400 + INVALID_ARGUMENTS** locally instead of a gateway round-trip (`limit<=0` defers to the server default — no false 400). SDK unchanged (`gateapi-go/v7 v7.2.78`); tool inventory stays **44** (30 `info` + 14 `news`); no `cex` command changes.
+
+### Fixed
+
+- **`internal/toolargs`** — CLI pre-check before MCP `tools/call` for `info platformmetrics`: **get-stablecoin-info** (`sections`/`scope`/`dates`/`symbol`/`limit`); **get-exchange-reserves** (`include_history` + `history_window` + closed `asset`); **get-platform-info** (`include_oi_symbol_detail` + `oi_symbol_limit` vs `scope`). `limit<=0` defers to server default (no false 400).
+
+### Changed
+
+- **`specs/mcp/info-mcp-tools-inputs-logic.json`** (schema **1.1**) & **`internal/mcpspec/bundled/info-mcp-tools-inputs-logic.json`** — resync: `get-stablecoin-info` adds `scope` / `sections` / `start_date` / `end_date` and issuance-flow logic; limit default **10** max **400**. Five **placeholder** tools remain in the MCP spec document only (not in the shipped **30** `info` baseline).
+- **`internal/intelfacade/info_schema_baseline.go`** — flat flags for `info platformmetrics get-stablecoin-info` aligned with the new wire shape; drop stale `source`/`quote` on `get-indicator-history` (not in MCP spec).
+- **`README.md`**, **`docs/quickstart.md`**, **`docs/quickstart_zh.md`** — Intel examples for `get-stablecoin-info` show `scope` / `sections` / date range for issuance-flow queries.
+
+### Unchanged
+
+- **`gateapi-go/v7 v7.2.78`** — no SDK bump.
+- Tool inventory remains **44** (30 `info` + 14 `news`); no new MCP leaves, and no `cex` command, flag, output-format, or exit-code changes; trading ↔ Intel auth isolation unchanged.
+
 ## [v0.7.3] - 2026-05-13
 
 ### Summary

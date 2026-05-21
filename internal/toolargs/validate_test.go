@@ -2,8 +2,181 @@ package toolargs
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 )
+
+func TestValidateForTool_StablecoinSectionsRequireFullScope(t *testing.T) {
+	t.Parallel()
+	err := ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":    "basic",
+		"sections": []string{"issuance_flow"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "scope=full") {
+		t.Fatalf("expected sections_requires_full_scope style error, got %v", err)
+	}
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":    "full",
+		"sections": []string{"issuance_flow"},
+	}) != nil {
+		t.Fatal("expected nil for full + issuance_flow")
+	}
+}
+
+func TestValidateForTool_StablecoinRejectsUnknownSection(t *testing.T) {
+	t.Parallel()
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":    "full",
+		"sections": []string{"holders"},
+	}) == nil {
+		t.Fatal("expected error for unknown section")
+	}
+}
+
+func TestValidateForTool_StablecoinSectionsStringForm(t *testing.T) {
+	t.Parallel()
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":    "full",
+		"sections": "issuance_flow",
+	}) != nil {
+		t.Fatal("expected nil for string sections")
+	}
+}
+
+func TestValidateForTool_StablecoinDatesRequireIssuanceFlow(t *testing.T) {
+	t.Parallel()
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":      "full",
+		"start_date": "2026-04-01",
+	}) == nil {
+		t.Fatal("expected error when start_date without sections")
+	}
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":      "basic",
+		"sections":   []string{"issuance_flow"},
+		"start_date": "2026-04-01",
+	}) == nil {
+		t.Fatal("expected error when start_date with basic scope")
+	}
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":      "full",
+		"sections":   []string{"issuance_flow"},
+		"start_date": "2026-04-01",
+		"end_date":   "2026-05-01",
+	}) != nil {
+		t.Fatal("expected nil for full + issuance_flow + dates")
+	}
+}
+
+func TestValidateForTool_StablecoinSymbolWhitelistWithIssuanceFlow(t *testing.T) {
+	t.Parallel()
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":    "full",
+		"sections": []string{"issuance_flow"},
+		"symbol":   "DAI",
+	}) == nil {
+		t.Fatal("expected error for non-USDT/USDC symbol with issuance_flow")
+	}
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":    "full",
+		"sections": []string{"issuance_flow"},
+		"symbol":   "usdt",
+	}) != nil {
+		t.Fatal("expected nil for usdt with issuance_flow")
+	}
+}
+
+func TestValidateForTool_StablecoinRejectsInvalidScopeAndLimit(t *testing.T) {
+	t.Parallel()
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope": "detailed",
+	}) == nil {
+		t.Fatal("expected error for invalid scope")
+	}
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"limit": 500,
+	}) == nil {
+		t.Fatal("expected error when limit > 400")
+	}
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"limit": 0,
+	}) != nil {
+		t.Fatal("expected nil when limit<=0 (server applies default 10)")
+	}
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{}) != nil {
+		t.Fatal("expected nil for empty args (server defaults)")
+	}
+}
+
+func TestValidateForTool_StablecoinSectionsJSONString(t *testing.T) {
+	t.Parallel()
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":    "full",
+		"sections": `["issuance_flow"]`,
+	}) != nil {
+		t.Fatal("expected nil for JSON-array string sections")
+	}
+}
+
+func TestValidateForTool_ExchangeReservesIncludeHistoryRequiresFull(t *testing.T) {
+	t.Parallel()
+	if ValidateForTool("info_platformmetrics_get_exchange_reserves", map[string]interface{}{
+		"scope":           "basic",
+		"include_history": true,
+	}) == nil {
+		t.Fatal("expected error when include_history without full scope")
+	}
+	if ValidateForTool("info_platformmetrics_get_exchange_reserves", map[string]interface{}{
+		"scope":           "full",
+		"include_history": true,
+	}) != nil {
+		t.Fatal("expected nil for full + include_history")
+	}
+}
+
+func TestValidateForTool_ExchangeReservesHistoryWindowRules(t *testing.T) {
+	t.Parallel()
+	if ValidateForTool("info_platformmetrics_get_exchange_reserves", map[string]interface{}{
+		"history_window": "year",
+	}) == nil {
+		t.Fatal("expected error for history_window without include_history")
+	}
+	if ValidateForTool("info_platformmetrics_get_exchange_reserves", map[string]interface{}{
+		"scope":           "full",
+		"include_history": true,
+		"history_window":  "quarter",
+	}) != nil {
+		t.Fatal("expected nil for quarter with include_history")
+	}
+}
+
+func TestValidateForTool_ExchangeReservesAssetEnum(t *testing.T) {
+	t.Parallel()
+	if ValidateForTool("info_platformmetrics_get_exchange_reserves", map[string]interface{}{
+		"asset": "SOL",
+	}) == nil {
+		t.Fatal("expected error for invalid asset")
+	}
+}
+
+func TestValidateForTool_PlatformInfoOIRequiresFullScope(t *testing.T) {
+	t.Parallel()
+	if ValidateForTool("info_platformmetrics_get_platform_info", map[string]interface{}{
+		"platform_name":            "binance",
+		"scope":                    "basic",
+		"include_oi_symbol_detail": true,
+	}) == nil {
+		t.Fatal("expected error when include_oi_symbol_detail without full scope")
+	}
+	if ValidateForTool("info_platformmetrics_get_platform_info", map[string]interface{}{
+		"platform_name":            "binance",
+		"scope":                    "full",
+		"include_oi_symbol_detail": true,
+		"oi_symbol_limit":          150,
+	}) == nil {
+		t.Fatal("expected error when oi_symbol_limit > 100")
+	}
+}
 
 func TestValidateForTool_PlatformHistoryRequiresOneIdentifier(t *testing.T) {
 	t.Parallel()
