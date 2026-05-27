@@ -72,6 +72,30 @@ func TestMergeFromCommand_ArrayJSONToken(t *testing.T) {
 	assert.Equal(t, []string{"rsi", "ema30"}, got["indicators"])
 }
 
+func TestMergeFromCommand_ArraySingleToken(t *testing.T) {
+	cmd := &cobra.Command{Use: "call"}
+	cmd.Flags().String("params", "", "")
+	cmd.Flags().String("args-json", "", "")
+	cmd.Flags().String("args-file", "", "")
+	schema := map[string]interface{}{
+		"properties": map[string]interface{}{
+			"sections": map[string]interface{}{
+				"type":        "array",
+				"description": "sections",
+				"items":       map[string]interface{}{"type": "string"},
+			},
+		},
+	}
+	toolschema.ApplyInputSchemaFlags(cmd, schema)
+	require.NoError(t, cmd.Flags().Parse([]string{"--sections", "usage_structure"}))
+
+	got, err := MergeFromCommand(cmd, MergeOptions{ReservedFlags: map[string]struct{}{
+		"params": {}, "args-json": {}, "args-file": {},
+	}})
+	require.NoError(t, err)
+	assert.Equal(t, []string{"usage_structure"}, got["sections"])
+}
+
 func TestMergeFromCommand_BooleanSpaceSeparatedTrue(t *testing.T) {
 	cmd := &cobra.Command{Use: "call"}
 	cmd.Flags().String("params", "", "")

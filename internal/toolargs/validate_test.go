@@ -21,6 +21,12 @@ func TestValidateForTool_StablecoinSectionsRequireFullScope(t *testing.T) {
 	}) != nil {
 		t.Fatal("expected nil for full + issuance_flow")
 	}
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":    "full",
+		"sections": []string{"usage_structure"},
+	}) != nil {
+		t.Fatal("expected nil for full + usage_structure")
+	}
 }
 
 func TestValidateForTool_StablecoinRejectsUnknownSection(t *testing.T) {
@@ -37,13 +43,13 @@ func TestValidateForTool_StablecoinSectionsStringForm(t *testing.T) {
 	t.Parallel()
 	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
 		"scope":    "full",
-		"sections": "issuance_flow",
+		"sections": "issuance_flow,usage_structure",
 	}) != nil {
-		t.Fatal("expected nil for string sections")
+		t.Fatal("expected nil for comma-separated string sections")
 	}
 }
 
-func TestValidateForTool_StablecoinDatesRequireIssuanceFlow(t *testing.T) {
+func TestValidateForTool_StablecoinDatesRequireExtensionSection(t *testing.T) {
 	t.Parallel()
 	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
 		"scope":      "full",
@@ -66,9 +72,16 @@ func TestValidateForTool_StablecoinDatesRequireIssuanceFlow(t *testing.T) {
 	}) != nil {
 		t.Fatal("expected nil for full + issuance_flow + dates")
 	}
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":      "full",
+		"sections":   []string{"usage_structure"},
+		"start_date": "2026-04-01",
+	}) != nil {
+		t.Fatal("expected nil for full + usage_structure + dates")
+	}
 }
 
-func TestValidateForTool_StablecoinSymbolWhitelistWithIssuanceFlow(t *testing.T) {
+func TestValidateForTool_StablecoinSymbolWhitelistWithExtensionSections(t *testing.T) {
 	t.Parallel()
 	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
 		"scope":    "full",
@@ -83,6 +96,27 @@ func TestValidateForTool_StablecoinSymbolWhitelistWithIssuanceFlow(t *testing.T)
 		"symbol":   "usdt",
 	}) != nil {
 		t.Fatal("expected nil for usdt with issuance_flow")
+	}
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":    "full",
+		"sections": []string{"usage_structure"},
+		"symbol":   "DAI",
+	}) != nil {
+		t.Fatal("expected nil for DAI with usage_structure")
+	}
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":    "full",
+		"sections": []string{"usage_structure"},
+		"symbol":   "EUR",
+	}) == nil {
+		t.Fatal("expected error for unsupported usage_structure symbol")
+	}
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":    "full",
+		"sections": []string{"issuance_flow", "usage_structure"},
+		"symbol":   "DAI",
+	}) == nil {
+		t.Fatal("expected issuance_flow whitelist to apply when both sections are requested")
 	}
 }
 
@@ -112,9 +146,79 @@ func TestValidateForTool_StablecoinSectionsJSONString(t *testing.T) {
 	t.Parallel()
 	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
 		"scope":    "full",
-		"sections": `["issuance_flow"]`,
+		"sections": `["issuance_flow","usage_structure"]`,
 	}) != nil {
 		t.Fatal("expected nil for JSON-array string sections")
+	}
+}
+
+func TestValidateForTool_StablecoinExtensionChainWhitelist(t *testing.T) {
+	t.Parallel()
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":    "full",
+		"sections": []string{"usage_structure"},
+		"chain":    "eth",
+	}) != nil {
+		t.Fatal("expected nil for extension chain alias")
+	}
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":    "full",
+		"sections": []string{"usage_structure"},
+		"chain":    "moonbeam",
+	}) == nil {
+		t.Fatal("expected error for invalid extension chain")
+	}
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope": "basic",
+		"chain": "moonbeam",
+	}) != nil {
+		t.Fatal("expected basic stablecoin chain filtering to defer to server")
+	}
+}
+
+func TestValidateForTool_InstitutionalMetricsEnumsAndBounds(t *testing.T) {
+	t.Parallel()
+	tool := "info_marketsnapshot_get_institutional_metrics"
+	if ValidateForTool(tool, map[string]interface{}{
+		"asset":      "eth",
+		"channel":    "CME",
+		"start_date": "2026-04-01",
+		"end_date":   "2026-05-01",
+		"limit":      30,
+	}) != nil {
+		t.Fatal("expected nil for valid institutional metrics arguments")
+	}
+	if ValidateForTool(tool, map[string]interface{}{"asset": "SOL"}) == nil {
+		t.Fatal("expected error for invalid asset")
+	}
+	if ValidateForTool(tool, map[string]interface{}{"channel": "dex"}) == nil {
+		t.Fatal("expected error for invalid channel")
+	}
+	if ValidateForTool(tool, map[string]interface{}{"limit": 0}) == nil {
+		t.Fatal("expected error for limit below range")
+	}
+	if ValidateForTool(tool, map[string]interface{}{"limit": 367}) == nil {
+		t.Fatal("expected error for limit above range")
+	}
+	if ValidateForTool(tool, map[string]interface{}{"limit": 30.5}) == nil {
+		t.Fatal("expected error for fractional limit")
+	}
+	if ValidateForTool(tool, map[string]interface{}{"limit": "30"}) == nil {
+		t.Fatal("expected error for string limit")
+	}
+}
+
+func TestValidateForTool_InstitutionalMetricsDates(t *testing.T) {
+	t.Parallel()
+	tool := "info_marketsnapshot_get_institutional_metrics"
+	if ValidateForTool(tool, map[string]interface{}{"start_date": "2026/04/01"}) == nil {
+		t.Fatal("expected error for invalid date format")
+	}
+	if ValidateForTool(tool, map[string]interface{}{
+		"start_date": "2026-05-02",
+		"end_date":   "2026-05-01",
+	}) == nil {
+		t.Fatal("expected error for start_date after end_date")
 	}
 }
 
@@ -175,6 +279,34 @@ func TestValidateForTool_PlatformInfoOIRequiresFullScope(t *testing.T) {
 		"oi_symbol_limit":          150,
 	}) == nil {
 		t.Fatal("expected error when oi_symbol_limit > 100")
+	}
+}
+
+func TestValidateForTool_TokenSecurityRequiresTokenXORAddress(t *testing.T) {
+	t.Parallel()
+	if ValidateForTool("info_compliance_check_token_security", map[string]interface{}{
+		"chain": "eth",
+	}) == nil {
+		t.Fatal("expected error when token and address are both empty")
+	}
+	if ValidateForTool("info_compliance_check_token_security", map[string]interface{}{
+		"chain":   "eth",
+		"token":   "USDT",
+		"address": "0xd8dA6BF26964aF9D7eEd9e03E53415dA322193D",
+	}) == nil {
+		t.Fatal("expected error when token and address are both set")
+	}
+	if ValidateForTool("info_compliance_check_token_security", map[string]interface{}{
+		"chain": "eth",
+		"token": "USDT",
+	}) != nil {
+		t.Fatal("expected nil when token is set")
+	}
+	if ValidateForTool("info_compliance_check_token_security", map[string]interface{}{
+		"chain":   "eth",
+		"address": json.Number("12345"),
+	}) != nil {
+		t.Fatal("expected nil when address is a json.Number from decoder UseNumber")
 	}
 }
 

@@ -45,6 +45,25 @@ func TestBuildCLIEnvelopeFallsBackWhenStructuredContentEmpty(t *testing.T) {
 	assert.Len(t, series, 1)
 }
 
+func TestBuildCLIEnvelopeFallsBackWhenStructuredContentAllNull(t *testing.T) {
+	env := BuildCLIEnvelope("info_platformmetrics_get_stablecoin_info", &mcpclient.CallResult{
+		StructuredContent: map[string]interface{}{
+			"symbol":          nil,
+			"usage_structure": map[string]interface{}{"items": nil, "summary": nil},
+		},
+		ContentRaw: []interface{}{map[string]interface{}{"type": "text", "text": `{"symbol":"USDT","usage_structure":{"items":[{"chain":"ethereum"}]}}`}},
+	})
+	assert.Equal(t, "content", env["data_source"])
+	data, ok := env["data"].(map[string]interface{})
+	assert.True(t, ok)
+	assert.Equal(t, "USDT", data["symbol"])
+	usage, ok := data["usage_structure"].(map[string]interface{})
+	assert.True(t, ok)
+	items, ok := usage["items"].([]interface{})
+	assert.True(t, ok)
+	assert.Len(t, items, 1)
+}
+
 func TestBuildCLIEnvelopeNormalizesMultiContent(t *testing.T) {
 	env := BuildCLIEnvelope("tool", &mcpclient.CallResult{
 		ContentRaw: []interface{}{

@@ -341,11 +341,11 @@ gate-cli cex futures position list --format json | jq '.[].contract'
 
 ## Intel (`info` & `news`)
 
-Market intelligence and news are shipped as **41** MCP-style CLI tools (**30** `info`, **11** `news`). Invoke a capability as `gate-cli info <group> <tool>` or `gate-cli news <group> <tool>` with **flat flags** for arguments (add `--format json` for scripts and agents).
+Market intelligence and news are shipped as **45** MCP-style CLI tools (**31** `info`, **14** `news`). Invoke a capability as `gate-cli info <group> <tool>` or `gate-cli news <group> <tool>` with **flat flags** for arguments (add `--format json` for scripts and agents).
 
 **`info` groups:** `coin`, `marketsnapshot`, `markettrend`, `onchain`, `platformmetrics`, `marketdetail`, `macro`, `compliance`.
 
-**`news` groups:** `feed` (search across sources, web research, sentiment, exchange announcements), `events` (latest events and per-event detail), and `prediction` (prediction-market venue rankings; backend may be a placeholder when OpenSearch is not configured).
+**`news` groups:** `feed` (platform news, UGC, X, web research, sentiment, exchange announcements), `events` (latest events, detail by `event_id`, market-move explain), and `prediction` (UTC rankings on `predictionRankIndex`; `search-events` on `dws_prediction_event_signal_hf` with collapse per `pk_id`; `get-event-signal` on `dws_external_event_signal_hf`; live `get-market-orderbook` for polymarket CLOB + predict.fun). CLI pre-check: `search-ugc` and `search-events` need at least one filter flag. Unconfigured OpenSearch indices return `not_implemented`. Leaf `-h` text is bundled from `specs/mcp/news-tools-args-and-logic.json` (version **2026-05-20-rev2**). Prediction commands also run local enum/range checks before MCP.
 
 List tool ids: `gate-cli info list`, `gate-cli news list`. Flags and env vars: `gate-cli info -h`, `gate-cli news -h`.
 
@@ -354,10 +354,12 @@ Optional Intel defaults go under `intel:` in `~/.gate-cli/config.yaml`. Gate tra
 ```bash
 gate-cli info coin get-coin-info --query BTC --format json
 gate-cli info marketsnapshot get-market-snapshot --symbol BTC_USDT --format json
+gate-cli info marketsnapshot get-institutional-metrics --asset BTC --channel all --limit 30 --format json
+gate-cli info platformmetrics get-stablecoin-info --scope full --sections '["issuance_flow","usage_structure"]' --start-date 2026-04-01 --end-date 2026-05-01 --format json
 gate-cli news feed search-news --query bitcoin --format json   # alias: search → search-news
 ```
 
-One minimal example per tool (all 41) is in the repository **README.md**.
+One minimal example per tool (all 45) is in the repository **README.md**.
 
 ---
 

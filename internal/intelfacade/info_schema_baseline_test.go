@@ -25,13 +25,14 @@ func TestInfoBaselineInputSchemaCoverage(t *testing.T) {
 func TestInfoBaselineInputSchemaCriticalFields(t *testing.T) {
 	t.Parallel()
 	cases := map[string][]string{
-		"info_coin_get_coin_info":                   {"query", "symbol"},
-		"info_markettrend_get_kline":                {"symbol", "timeframe", "with_indicators"},
-		"info_markettrend_get_indicator_history":    {"symbol", "indicators", "timeframe"},
-		"info_marketsnapshot_batch_market_snapshot": {"symbols", "timeframe"},
-		"info_onchain_get_address_transactions":     {"from_address", "to_address", "nonzero_value"},
-		"info_compliance_check_token_security":      {"token", "address", "chain"},
-		"info_marketdetail_get_kline":               {"symbol", "timeframe", "extra"},
+		"info_coin_get_coin_info":                               {"query", "symbol"},
+		"info_markettrend_get_kline":                            {"symbol", "timeframe", "with_indicators"},
+		"info_markettrend_get_indicator_history":                {"symbol", "indicators", "timeframe"},
+		"info_marketsnapshot_batch_market_snapshot":             {"symbols", "timeframe"},
+		"info_marketsnapshot_get_institutional_metrics": {"asset", "channel", "start_date", "end_date", "limit"},
+		"info_onchain_get_address_transactions":                 {"from_address", "to_address", "nonzero_value"},
+		"info_compliance_check_token_security":                  {"token", "address", "chain"},
+		"info_marketdetail_get_kline":                           {"symbol", "timeframe", "extra"},
 	}
 	for tool, fields := range cases {
 		schema := InfoBaselineInputSchema(tool)
@@ -99,9 +100,25 @@ func TestInfoBaselineIntegerBoundsMatchSpecDoc(t *testing.T) {
 			t.Fatalf("stablecoin_info missing field %q", key)
 		}
 	}
+	sections := sp["sections"].(map[string]interface{})
+	enum := sections["enum"].([]interface{})
+	if !reflect.DeepEqual(enum, []interface{}{"issuance_flow", "usage_structure"}) {
+		t.Fatalf("stablecoin_info sections enum mismatch: %#v", enum)
+	}
 	lim := sp["limit"].(map[string]interface{})
 	if lim["maximum"].(float64) != 400 || lim["default"].(float64) != 10 {
 		t.Fatalf("stablecoin_info limit bounds: %#v", lim)
+	}
+
+	icm := InfoBaselineInputSchema("info_marketsnapshot_get_institutional_metrics")
+	icp := icm["properties"].(map[string]interface{})
+	icLimit := icp["limit"].(map[string]interface{})
+	if icLimit["minimum"].(float64) != 1 || icLimit["maximum"].(float64) != 366 || icLimit["default"].(float64) != 30 {
+		t.Fatalf("institutional_metrics limit bounds: %#v", icLimit)
+	}
+	channel := icp["channel"].(map[string]interface{})
+	if !reflect.DeepEqual(channel["enum"].([]interface{}), []interface{}{"all", "etf", "cme", "cftc"}) {
+		t.Fatalf("institutional_metrics channel enum mismatch: %#v", channel["enum"])
 	}
 }
 

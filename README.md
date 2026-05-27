@@ -2,7 +2,7 @@
 
 A command-line interface for the [Gate](https://gate.com) API. Covers spot, futures, delivery, options, margin, unified account, earn, wallet, AI Hub quant strategies, and 15+ more modules.
 
-**Top-level layout:** CEX / trading APIs live under **`gate-cli cex …`** (for example `gate-cli cex spot market ticker --pair BTC_USDT`). Profiles and API credentials use **`gate-cli config …`**. **Intel** (market intelligence) uses **`gate-cli info`** and **`gate-cli news`** (**44** MCP-style tools: 30 + 14). Operational helpers: **`gate-cli doctor`** (local checks), **`gate-cli migrate`** (move legacy MCP provider configs toward CLI-first), **`gate-cli preflight`** (info/news readiness). Shell completion: **`gate-cli completion`**. Designed for developers, quants, and AI agents. For a full walkthrough, see the [English Quick Start](docs/quickstart.md) or [中文快速上手](docs/quickstart_zh.md). Per-release changes are tracked in [CHANGELOG.md](CHANGELOG.md).
+**Top-level layout:** CEX / trading APIs live under **`gate-cli cex …`** (for example `gate-cli cex spot market ticker --pair BTC_USDT`). Profiles and API credentials use **`gate-cli config …`**. **Intel** (market intelligence) uses **`gate-cli info`** and **`gate-cli news`** (**45** MCP-style tools: 31 + 14). Operational helpers: **`gate-cli doctor`** (local checks), **`gate-cli migrate`** (move legacy MCP provider configs toward CLI-first), **`gate-cli preflight`** (info/news readiness). Shell completion: **`gate-cli completion`**. Designed for developers, quants, and AI agents. For a full walkthrough, see the [English Quick Start](docs/quickstart.md) or [中文快速上手](docs/quickstart_zh.md). Per-release changes are tracked in [CHANGELOG.md](CHANGELOG.md).
 
 ## Installation
 
@@ -75,14 +75,14 @@ API keys and secrets for **trading** are stored per profile (for example `gate-c
 - **Credential priority** — `--api-key` flag > env var > config file
 
 ### Intel (Info & News)
-- **Tool count** — **44** MCP-backed capabilities in the CLI baseline: **30** under `gate-cli info`, **14** under `gate-cli news` (grouped as `<domain> <tool>` leaves; counts follow the shipped tool list in the binary)
+- **Tool count** — **45** MCP-backed capabilities in the CLI baseline: **31** under `gate-cli info`, **14** under `gate-cli news` (grouped as `<domain> <tool>` leaves; counts follow the shipped tool list in the binary)
 - **Info** — Each tool is `gate-cli info <group> <tool>` with **flat flags** for inputs. Optional JSON object args: `--params` / `--args-json` / `--args-file` when a field has no flag.
 - **Info command groups** (the `<group>` segment):
   - **coin** — Coin profiles, multi-criteria search, and ranking boards.
-  - **marketsnapshot** — Single-symbol snapshots, batch snapshots, and cross-asset market overview.
+  - **marketsnapshot** — Single-symbol snapshots, batch snapshots, cross-asset market overview, and institutional ETF/CME/CFTC channel metrics.
   - **markettrend** — OHLC-style klines, historical indicator series, and packaged technical analysis.
   - **onchain** — Address balances and activity, transaction detail, and token-level on-chain metrics.
-  - **platformmetrics** — Protocol and CEX analytics: platform directory, DeFi overview, stablecoins (optional `scope=full` + `sections=issuance_flow` for supply flows), bridges, order-book depth, yield pools, TVL/volume history, reserves, and liquidation heatmaps.
+  - **platformmetrics** — Protocol and CEX analytics: platform directory, DeFi overview, stablecoins (optional `scope=full` + `sections=issuance_flow|usage_structure` for supply flows and usage structure), bridges, order-book depth, yield pools, TVL/volume history, reserves, and liquidation heatmaps.
   - **marketdetail** — Live order book, recent trades, and klines for Gate trading symbols (spot/futures/etc.).
   - **macro** — Macro indicators, economic calendar, and condensed macro summaries.
   - **compliance** — Token security and risk screening for a given chain.
@@ -177,10 +177,10 @@ gate-cli cex bot martingale spot --json '{"strategy_type":"spot_martingale","mar
 # JSON output for scripting
 gate-cli cex spot market ticker --pair BTC_USDT --format json | jq '.last'
 
-# Intel — 44 MCP tools (30 info + 14 news); list names: gate-cli info list / gate-cli news list
+# Intel — 45 MCP tools (31 info + 14 news); list names: gate-cli info list / gate-cli news list
 # Below: one minimal example per tool (flat flags; --format json). Arrays use a single JSON token, e.g. --indicators '["rsi"]'.
 
-# Info (30)
+# Info (31)
 # coin — coin profiles, search, rankings
 gate-cli info coin get-coin-info --query BTC --format json
 # marketsnapshot — per-symbol and batch snapshots
@@ -198,7 +198,7 @@ gate-cli info onchain get-token-onchain --token USDT --chain eth --format json
 gate-cli info platformmetrics get-platform-info --platform-name uniswap --scope full --include-oi-symbol-detail --oi-symbol-limit 20 --format json
 gate-cli info platformmetrics search-platforms --format json
 gate-cli info platformmetrics get-defi-overview --format json
-gate-cli info platformmetrics get-stablecoin-info --scope full --sections '["issuance_flow"]' --start-date 2026-04-01 --end-date 2026-05-01 --format json
+gate-cli info platformmetrics get-stablecoin-info --scope full --sections '["issuance_flow","usage_structure"]' --start-date 2026-04-01 --end-date 2026-05-01 --format json
 gate-cli info platformmetrics get-bridge-metrics --format json
 gate-cli info platformmetrics get-cex-orderbook-depth --symbol BTC_USDT --format json
 gate-cli info platformmetrics get-yield-pools --format json
@@ -219,13 +219,14 @@ gate-cli info coin get-coin-rankings --ranking-type popular --format json
 # marketsnapshot — batch snapshot & overview
 gate-cli info marketsnapshot batch-market-snapshot --symbols '["BTC_USDT"]' --format json
 gate-cli info marketsnapshot get-market-overview --format json
+gate-cli info marketsnapshot get-institutional-metrics --asset BTC --channel all --limit 30 --format json
 # compliance — token security / risk
-gate-cli info compliance check-token-security --chain eth --format json
+gate-cli info compliance check-token-security --chain eth --token USDT --format json
 
 # News (14)
 # feed — search, web research, sentiment, announcements (alias: search → search-news)
 gate-cli news feed search-news --query bitcoin --format json
-gate-cli news feed search-ugc --format json
+gate-cli news feed search-ugc --query bitcoin --format json
 gate-cli news feed search-x --format json
 gate-cli news feed web-search --query bitcoin --format json
 gate-cli news feed get-social-sentiment --format json
@@ -272,7 +273,7 @@ gate-cli news prediction get-market-orderbook --venue polymarket --market-id 123
 | square | `gate-cli cex square` | Gate Square |
 | welfare | `gate-cli cex welfare` | Welfare & tasks |
 | config | `gate-cli config` | CLI configuration (profiles, API keys, optional `intel:` block) |
-| info | `gate-cli info` | **30** MCP tools under groups `coin`, `marketsnapshot`, `markettrend`, `onchain`, `platformmetrics`, `marketdetail`, `macro`, `compliance` (`info list`, `info -h`; see Features) |
+| info | `gate-cli info` | **31** MCP tools under groups `coin`, `marketsnapshot`, `markettrend`, `onchain`, `platformmetrics`, `marketdetail`, `macro`, `compliance` (`info list`, `info -h`; see Features) |
 | news | `gate-cli news` | **14** MCP tools under `feed`, `events`, and `prediction` (`news list`, `news -h`; see Features) |
 | doctor | `gate-cli doctor` | CLI + config + connectivity + legacy MCP diagnostics |
 | migrate | `gate-cli migrate` | Migrate provider configs off legacy Gate MCP entries |
@@ -292,7 +293,7 @@ gate-cli news prediction get-market-orderbook --venue polymarket --market-id 123
 
 ## Intel (`info`, `news`)
 
-**44** MCP tools are wired as CLI leaves (30 `info`, 14 `news`). Command-group summaries (English) live under **Intel (Info & News)** in Features. Defaults can live under `intel:` in `~/.gate-cli/config.yaml` alongside `profiles`. **Do not** use trading `GATE_API_KEY` / `--api-key` as the Intel bearer; use the dedicated bearer env vars or `intel` config when your gateway requires auth.
+**45** MCP tools are wired as CLI leaves (31 `info`, 14 `news`). Command-group summaries (English) live under **Intel (Info & News)** in Features. Defaults can live under `intel:` in `~/.gate-cli/config.yaml` alongside `profiles`. **Do not** use trading `GATE_API_KEY` / `--api-key` as the Intel bearer; use the dedicated bearer env vars or `intel` config when your gateway requires auth.
 
 **Common environment variables** (override file when set; full detail in repo `specs/` if present):
 

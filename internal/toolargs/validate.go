@@ -10,8 +10,10 @@ import (
 // Server-side JSON Schema and business validation remain authoritative at runtime.
 //
 // Covered tools (local 400 / INVALID_ARGUMENTS, no MCP round-trip):
+//   - info_compliance_check_token_security: token XOR address
 //   - info_platformmetrics_get_platform_history: platform_name XOR exchange_slug
-//   - info_platformmetrics_get_stablecoin_info: scope/sections/date cross-field rules for issuance_flow
+//   - info_marketsnapshot_get_institutional_metrics: asset/channel/date/limit bounds
+//   - info_platformmetrics_get_stablecoin_info: scope/sections/date cross-field rules for extension sections
 //   - info_platformmetrics_get_exchange_reserves: include_history/history_window/asset vs scope
 //   - info_platformmetrics_get_platform_info: include_oi_symbol_detail/oi_symbol_limit vs scope
 //   - news_feed_search_ugc, news_feed_web_search
@@ -22,10 +24,21 @@ func ValidateForTool(toolName string, arguments map[string]interface{}) error {
 		arguments = map[string]interface{}{}
 	}
 	switch toolName {
+	case "info_compliance_check_token_security":
+		hasToken := nonEmptyStringArg(arguments, "token")
+		hasAddress := nonEmptyStringArg(arguments, "address")
+		if !hasToken && !hasAddress {
+			return errors.New("missing required fields: provide exactly one of token or address")
+		}
+		if hasToken && hasAddress {
+			return errors.New("invalid arguments: provide exactly one of token or address, not both")
+		}
 	case "info_platformmetrics_get_platform_history":
 		if !nonEmptyStringArg(arguments, "platform_name") && !nonEmptyStringArg(arguments, "exchange_slug") {
 			return errors.New("missing required fields: provide platform_name or exchange_slug (at least one)")
 		}
+	case "info_marketsnapshot_get_institutional_metrics":
+		return validateInfoInstitutionalMetrics(arguments)
 	case "info_platformmetrics_get_stablecoin_info":
 		return validateInfoStablecoinInfo(arguments)
 	case "info_platformmetrics_get_exchange_reserves":

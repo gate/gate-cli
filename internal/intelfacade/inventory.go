@@ -1,6 +1,6 @@
 package intelfacade
 
-// Backend tool baselines aligned with the live Info/News MCP tool lists (Info: 30; News: 14; total 44). Keep in sync with BaselineToolCount tests.
+// Backend tool baselines aligned with the live Info/News MCP tool lists (Info: 31; News: 14; total 45). Keep in sync with BaselineToolCount tests.
 var NewsToolBaseline = []string{
 	"news_feed_search_news",
 	"news_feed_search_ugc",
@@ -48,6 +48,7 @@ var InfoToolBaseline = []string{
 	"info_coin_get_coin_rankings",
 	"info_marketsnapshot_batch_market_snapshot",
 	"info_marketsnapshot_get_market_overview",
+	"info_marketsnapshot_get_institutional_metrics",
 	"info_compliance_check_token_security",
 }
 

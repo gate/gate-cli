@@ -73,6 +73,13 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 		"scope":     infoStrEnum("scope", "basic", "basic", "detailed", "full"),
 	}, "symbols"),
 	"info_marketsnapshot_get_market_overview": infoObj(map[string]interface{}{}),
+	"info_marketsnapshot_get_institutional_metrics": infoObj(map[string]interface{}{
+		"asset":      infoStrEnum("asset; omit -> BTC; all returns BTC and ETH groups", "BTC", "BTC", "ETH", "all"),
+		"start_date": infoStr("start_date; YYYY-MM-DD; omit -> end_date - 30d when available"),
+		"end_date":   infoStr("end_date; YYYY-MM-DD; omit -> latest institutionalChannelIndex part_date"),
+		"channel":    infoStrEnum("channel; channel-specific response nulls unrelated ETF/CME/CFTC fields; cme returns null CME fields with cme_source_not_procured/cme_unavailable status", "all", "all", "etf", "cme", "cftc"),
+		"limit":      infoIntDefaultMinMax("limit; range 1..366", 30, 1, 366),
+	}),
 	"info_onchain_get_address_info": infoObj(map[string]interface{}{
 		"address":              infoStr("address"),
 		"chain":                infoStr("chain"),
@@ -137,9 +144,9 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 		"chain":      infoStr("chain"),
 		"limit":      infoIntDefaultMax("limit", 10, 400),
 		"scope":      infoStrEnum("scope", "basic", "basic", "full"),
-		"sections":   infoArrStr("sections; only issuance_flow; requires scope=full"),
-		"start_date": infoStr("start_date; UTC YYYY-MM-DD; scope=full and sections=issuance_flow"),
-		"end_date":   infoStr("end_date; UTC YYYY-MM-DD; capped to today"),
+		"sections":   infoArrStrEnum("sections; issuance_flow and/or usage_structure; requires scope=full", "issuance_flow", "usage_structure"),
+		"start_date": infoStr("start_date; UTC YYYY-MM-DD; scope=full and sections=issuance_flow or usage_structure"),
+		"end_date":   infoStr("end_date; UTC YYYY-MM-DD; extension window end date"),
 	}),
 	"info_platformmetrics_get_bridge_metrics": infoObj(map[string]interface{}{
 		"bridge_name": infoStr("bridge_name"),
@@ -283,6 +290,16 @@ func infoIntDefaultMax(desc string, def, max int) map[string]interface{} {
 	}
 }
 
+func infoIntDefaultMinMax(desc string, def, min, max int) map[string]interface{} {
+	return map[string]interface{}{
+		"type":        "integer",
+		"description": desc,
+		"default":     float64(def),
+		"minimum":     float64(min),
+		"maximum":     float64(max),
+	}
+}
+
 func infoInt(desc string) map[string]interface{} {
 	return map[string]interface{}{"type": "integer", "description": desc}
 }
@@ -300,6 +317,19 @@ func infoArrStr(desc string) map[string]interface{} {
 		"type":        "array",
 		"description": desc,
 		"items":       map[string]interface{}{"type": "string"},
+	}
+}
+
+func infoArrStrEnum(desc string, enum ...string) map[string]interface{} {
+	ev := make([]interface{}, len(enum))
+	for i, s := range enum {
+		ev[i] = s
+	}
+	return map[string]interface{}{
+		"type":        "array",
+		"description": desc,
+		"items":       map[string]interface{}{"type": "string"},
+		"enum":        ev,
 	}
 }
 

@@ -40,8 +40,9 @@ func BuildCLIEnvelope(toolName string, result *mcpclient.CallResult) map[string]
 }
 
 func extractData(result *mcpclient.CallResult) (interface{}, string, []string) {
-	// Gateways may attach structuredContent as {} while the real payload is in content[].text.
-	if sc := result.StructuredContent; len(sc) > 0 {
+	// Gateways may attach structuredContent as {} or a schema-shaped object whose
+	// fields are all null while the real payload is in content[].text.
+	if sc := result.StructuredContent; structuredContentHasValue(sc) {
 		return sc, "structured_content", nil
 	}
 	if len(result.ContentRaw) > 0 {
@@ -54,6 +55,29 @@ func extractData(result *mcpclient.CallResult) (interface{}, string, []string) {
 		return result.Raw, "raw", nil
 	}
 	return map[string]interface{}{}, "empty", nil
+}
+
+func structuredContentHasValue(v interface{}) bool {
+	switch x := v.(type) {
+	case nil:
+		return false
+	case map[string]interface{}:
+		for _, item := range x {
+			if structuredContentHasValue(item) {
+				return true
+			}
+		}
+		return false
+	case []interface{}:
+		for _, item := range x {
+			if structuredContentHasValue(item) {
+				return true
+			}
+		}
+		return false
+	default:
+		return true
+	}
 }
 
 func normalizeContentRaw(items []interface{}) (interface{}, []string, bool) {

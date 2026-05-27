@@ -342,11 +342,11 @@ gate-cli cex futures position list --format json | jq '.[].contract'
 
 ## Intel（`info` / `news`）
 
-市场情报与资讯以 **41** 个 MCP 风格 CLI 工具提供（**30** 个 `info`，**11** 个 `news`）。调用方式为 `gate-cli info <分组> <子命令>` 或 `gate-cli news <分组> <子命令>`，参数以**平铺 flag** 为主（脚本/Agent 建议加 `--format json`）。
+市场情报与资讯以 **45** 个 MCP 风格 CLI 工具提供（**31** 个 `info`，**14** 个 `news`）。调用方式为 `gate-cli info <分组> <子命令>` 或 `gate-cli news <分组> <子命令>`，参数以**平铺 flag** 为主（脚本/Agent 建议加 `--format json`）。
 
 **`info` 分组：** `coin`、`marketsnapshot`、`markettrend`、`onchain`、`platformmetrics`、`marketdetail`、`macro`、`compliance`。
 
-**`news` 分组：** `feed`（多源检索、网页研究、情绪、交易所公告）、`events`（最新事件与单条事件详情）、`prediction`（预测市场排名类工具；未配置 OpenSearch 时后端可能为占位实现）。
+**`news` 分组：** `feed`（平台资讯、UGC、X、网页研究、情绪、交易所公告）、`events`（最新事件、按 `event_id` 详情、行情异动归因）、`prediction`（UTC 排名 `predictionRankIndex`；`search-events` 检索 `dws_prediction_event_signal_hf` 按 `pk_id` 折叠；`get-event-signal` 读取 `dws_external_event_signal_hf`；`get-market-orderbook` 拉 polymarket CLOB / predict.fun 实时盘口）。CLI 预检：`search-ugc` 与 `search-events` 至少提供一个筛选 flag。未配置 OpenSearch 索引时返回 `not_implemented`。叶子 `-h` 与 `specs/mcp/news-tools-args-and-logic.json`（**2026-05-20-rev2**）一致；prediction 子命令在 MCP 前会做枚举/范围预检。
 
 列出工具名：`gate-cli info list`、`gate-cli news list`。参数与环境变量：`gate-cli info -h`、`gate-cli news -h`。
 
@@ -355,10 +355,12 @@ gate-cli cex futures position list --format json | jq '.[].contract'
 ```bash
 gate-cli info coin get-coin-info --query BTC --format json
 gate-cli info marketsnapshot get-market-snapshot --symbol BTC_USDT --format json
+gate-cli info marketsnapshot get-institutional-metrics --asset BTC --channel all --limit 30 --format json
+gate-cli info platformmetrics get-stablecoin-info --scope full --sections '["issuance_flow","usage_structure"]' --start-date 2026-04-01 --end-date 2026-05-01 --format json
 gate-cli news feed search-news --query bitcoin --format json   # 别名：search → search-news
 ```
 
-全部 **41** 个工具各一条最小示例见仓库根目录 **README.md**。
+全部 **45** 个工具各一条最小示例见仓库根目录 **README.md**。
 
 ---
 

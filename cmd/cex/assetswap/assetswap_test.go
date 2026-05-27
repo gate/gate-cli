@@ -68,7 +68,6 @@ func silenceStdout(t *testing.T) {
 		_ = devNull.Close()
 	})
 }
-
 var _ = io.Discard // keep the io import useful for future drain helpers
 
 const cobraBashCompOneRequiredFlag = "cobra_annotation_bash_completion_one_required_flag"

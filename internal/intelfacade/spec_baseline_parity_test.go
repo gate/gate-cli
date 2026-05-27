@@ -11,6 +11,14 @@ var infoBaselineExtraSpecKeys = map[string]map[string]struct{}{
 	"info_coin_get_coin_info": {"symbol": {}},
 }
 
+var infoSpecOnlyTools = map[string]struct{}{
+	"info_onchain_get_smart_money":              {},
+	"info_onchain_get_entity_profile":           {},
+	"info_onchain_trace_fund_flow":              {},
+	"info_compliance_check_address_risk":        {},
+	"info_compliance_search_regulatory_updates": {},
+}
+
 // TestInfoBaselineCoversSpecInputFields ensures every spec input field for inventory
 // tools has a matching baseline property so cobra -h lists the flag (CR-815).
 func TestInfoBaselineCoversSpecInputFields(t *testing.T) {
@@ -102,6 +110,29 @@ func TestInfoSpecExtraToolsDocumented(t *testing.T) {
 	}
 	root := doc.(map[string]interface{})
 	raw := root["tools"].([]interface{})
+	meta, ok := root["meta"].(map[string]interface{})
+	if !ok {
+		t.Fatal("spec missing meta object")
+	}
+	if got, _ := meta["total_tools"].(float64); int(got) != len(raw) {
+		t.Fatalf("meta.total_tools=%v want %d", meta["total_tools"], len(raw))
+	}
+	if got, _ := meta["cli_baseline_tools"].(float64); int(got) != len(InfoToolBaseline) {
+		t.Fatalf("meta.cli_baseline_tools=%v want %d", meta["cli_baseline_tools"], len(InfoToolBaseline))
+	}
+	specOnlyRaw, ok := meta["spec_only_tools"].([]interface{})
+	if !ok {
+		t.Fatal("spec meta missing spec_only_tools array")
+	}
+	if len(specOnlyRaw) != len(infoSpecOnlyTools) {
+		t.Fatalf("spec_only_tools count=%d want %d", len(specOnlyRaw), len(infoSpecOnlyTools))
+	}
+	for _, item := range specOnlyRaw {
+		name, _ := item.(string)
+		if _, ok := infoSpecOnlyTools[name]; !ok {
+			t.Fatalf("unexpected spec_only_tools entry %q", name)
+		}
+	}
 	specTools := make(map[string]struct{}, len(raw))
 	for _, item := range raw {
 		tm := item.(map[string]interface{})
@@ -109,7 +140,7 @@ func TestInfoSpecExtraToolsDocumented(t *testing.T) {
 			specTools[n] = struct{}{}
 		}
 	}
-	var missingInInventory []string
+	seenSpecOnly := map[string]struct{}{}
 	for name := range specTools {
 		found := false
 		for _, inv := range InfoToolBaseline {
@@ -119,10 +150,15 @@ func TestInfoSpecExtraToolsDocumented(t *testing.T) {
 			}
 		}
 		if !found {
-			missingInInventory = append(missingInInventory, name)
+			if _, ok := infoSpecOnlyTools[name]; !ok {
+				t.Fatalf("spec documents tool %q not in InfoToolBaseline and not in spec-only allowlist", name)
+			}
+			seenSpecOnly[name] = struct{}{}
 		}
 	}
-	if len(missingInInventory) > 0 {
-		t.Logf("spec documents tools not in InfoToolBaseline (no CLI leaf -h): %v", missingInInventory)
+	for name := range infoSpecOnlyTools {
+		if _, ok := seenSpecOnly[name]; !ok {
+			t.Fatalf("spec-only allowlist tool %q not present in spec tools", name)
+		}
 	}
 }

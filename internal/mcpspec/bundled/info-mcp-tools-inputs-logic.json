@@ -4,9 +4,17 @@
     "source_repo": "gate/mcp-server",
     "purpose": "MCP Tool 入参契约清单，供 coin-mcp-cli / 外部 QC CLI 在启动或交互时生成参数模板、校验必填与枚举、展示 logic 摘要；不替代 MCP ListTools 的 JSON Schema（运行时以 mcphost 注册为准）。",
     "consumer": "CLI 读取本文件后按 tool_name 定位条目，结合 fields/required/conditional_required 构造请求体；调用仍走 MCP HTTP（如 scripts/curl-*.sh）或 coin-mcp-cli 子命令。",
-    "scope": "与 internal/mcphost/toolnames.go 的 RegisteredToolNames 一一对应（当前 35 个）；news-mcp-server、docs-mcp-server 工具不在此文件。",
+    "scope": "描述 Info MCP 工具入参（当前 36 个 spec 条目）：其中 31 个是 gate-cli info 已发布 baseline leaf，5 个 domain=placeholder 为 spec-only/未发布 CLI leaf；news-mcp-server、docs-mcp-server 工具不在此文件。",
     "maintenance": "本目录 specs/QC/ 默认 .gitignore，本地维护；新增/改 Tool 须同步：toolnames.go 注册 → 本 JSON 增改 tools[] → total_tools 与条目数一致 → 跑 go test 相关领域包。logic 字段写服务端真实路由（mcphost → 领域 Fetcher），便于 CLI 排错。",
-    "total_tools": 35,
+    "total_tools": 36,
+    "cli_baseline_tools": 31,
+    "spec_only_tools": [
+      "info_onchain_get_smart_money",
+      "info_onchain_get_entity_profile",
+      "info_onchain_trace_fund_flow",
+      "info_compliance_check_address_risk",
+      "info_compliance_search_regulatory_updates"
+    ],
     "tool_entry_keys": {
       "tool_name": "MCP 工具名，与 ToolName* 常量一致",
       "domain": "实现包/占位：coin|cointrend|snapshot|address|transaction|onchain|platformmetrics|macro|marketdetail|tokensecurity|placeholder",
@@ -24,7 +32,7 @@
     "enum_note": "多数 Request struct 无 jsonschema enum；闭集来自各领域 validate*。空字符串通常表示服务端默认。",
     "items_enum_note": "string[] 的 items_enum 表示元素级闭集（若服务端校验）。",
     "common_values_note": "common_values 为常见示例，未知值可能仍被接受（如 ES 指标名、platform_type）。",
-    "placeholder_note": "domain=placeholder 的工具调用固定返回 errs.CodeNotImplemented；CLI 可灰显或标注未实现。",
+    "placeholder_note": "domain=placeholder 的工具调用固定返回 errs.CodeNotImplemented；这些工具保留在 MCP spec 文档中供上游对齐，不属于 gate-cli info 的 31 个已发布 baseline leaf。",
     "response_note": "本文件主要描述入参与校验；出参字段见各 Tool 的 Go Response struct 或 docs/openapi/mcp-tool-curl.md。"
   },
   "tools": [
@@ -175,6 +183,20 @@
       "logic": "mcphost tools_snapshot -> snapshot.Service.GetMarketOverview; if market_stats index configured use single-index path, else parallel aggregate CoinGecko + project info + BTC price."
     },
     {
+      "tool_name": "info_marketsnapshot_get_institutional_metrics",
+      "domain": "snapshot",
+      "request_type": "snapshot.InstitutionalChannelMetricsRequest",
+      "required": [],
+      "fields": [
+        { "name": "asset", "type": "string", "required": false, "enum": ["BTC", "ETH", "all"], "enum_note": "case-insensitive after trim; omit -> BTC; all returns BTC and ETH groups; invalid -> invalid_param" },
+        { "name": "start_date", "type": "string", "required": false, "enum_note": "YYYY-MM-DD; omit -> end_date - 30d when end_date/latest exists; invalid date -> invalid_param" },
+        { "name": "end_date", "type": "string", "required": false, "enum_note": "YYYY-MM-DD; omit -> latest part_date from institutionalChannelIndex; invalid date -> invalid_param" },
+        { "name": "channel", "type": "string", "required": false, "enum": ["all", "etf", "cme", "cftc"], "enum_note": "case-insensitive after trim; omit -> all; channel-specific response nulls unrelated fields and recomputes point data_status; CME Daily Bulletin PDF is not a production source, so channel=cme returns cme_* fields null with cme_source_not_procured/cme_unavailable status" },
+        { "name": "limit", "type": "int", "required": false, "enum_note": "default 30; valid range 1..366; invalid -> invalid_param" }
+      ],
+      "logic": "mcphost tools_snapshot -> snapshot.Service.GetInstitutionalChannelMetrics; requires snapshot service plus OpenSearch endpoint/client and snapshot.institutionalChannelIndex else snapshot_not_configured. Normalizes asset BTC|ETH|all, channel all|etf|cme|cftc, dates as YYYY-MM-DD, rejects start_date>end_date. Fetches latest part_date when end_date omitted, then queries dwd_external_asset_etf_cme_cftc_df by asset/date sorted part_date desc with size=limit; source_fields intentionally exclude CME fields because CME Daily Bulletin free PDF is not a production data source. asset=all runs BTC and ETH separately; response echoes asset/channel/start_date/end_date, total=sum ES totals, count=sum returned series length, assets[].latest=first series point, data_status aggregates ok|partial|missing. ETF and CFTC weekly fields continue; cme_volume/cme_oi/cme_oi_change and CME underlying fields are forced null even if stale index values exist, and all/cme point status uses cme_source_not_procured or cme_unavailable rather than cme_parse_failed/cme_missing. Channel filters null unrelated ETF/CME/CFTC fields; empty latest index returns missing with assets=[]."
+    },
+    {
       "tool_name": "info_onchain_get_address_info",
       "domain": "address",
       "request_type": "address.AddressInfoRequest",
@@ -310,15 +332,15 @@
       "request_type": "platformmetrics.GetStablecoinInfoRequest",
       "required": [],
       "fields": [
-        { "name": "symbol", "type": "string", "required": false, "enum_note": "DefiLlama items: any symbol or omit for ranked list; sections=issuance_flow only: whitelist USDT|USDC (else unsupported_stablecoin_symbol), omit defaults USDT+USDC, top-level echo USDT,USDC" },
-        { "name": "chain", "type": "string", "required": false, "enum_note": "all (default) or ethereum|omni|tron|solana|bsc|arbitrum|optimism|polygon|avalanche; issuance_flow chain=all aggregates cross-chain + chain_breakdown[]" },
+        { "name": "symbol", "type": "string", "required": false, "enum_note": "Basic DefiLlama items: any symbol or omit for ranked list; sections=issuance_flow whitelist USDT|USDC (omit defaults USDT+USDC); sections=usage_structure whitelist USDT|USDC|DAI|FDUSD|PYUSD (omit defaults all five); unsupported extension symbol -> unsupported_stablecoin_symbol" },
+        { "name": "chain", "type": "string", "required": false, "enum_note": "Basic: empty/all means no chain filter; single-chain filters by chain_circulating keys. Extension sections: all (default) or ethereum|omni|tron|solana|bsc|arbitrum|optimism|polygon|avalanche; aliases include eth/sol/bnb/arb/op/matic/avax; invalid extension chain -> invalid_chain" },
         { "name": "limit", "type": "int64", "required": false, "enum_note": "default 10 max 400; single row when symbol set" },
         { "name": "scope", "type": "string", "required": false, "enum": ["basic", "full"], "enum_note": "default basic; invalid scope -> invalid_param" },
-        { "name": "sections", "type": "string|string[]", "required": false, "enum_note": "only issuance_flow; requires scope=full (else sections_requires_full_scope); unknown section -> invalid_sections" },
-        { "name": "start_date", "type": "string", "required": false, "enum_note": "UTC YYYY-MM-DD; only with scope=full+sections=issuance_flow else invalid_param; default last 30 calendar days inclusive" },
-        { "name": "end_date", "type": "string", "required": false, "enum_note": "UTC YYYY-MM-DD; capped to today; window >366d truncates start with range_truncated=true on response" }
+        { "name": "sections", "type": "string|string[]", "required": false, "enum": ["issuance_flow", "usage_structure"], "enum_note": "Comma string or array; requires scope=full (else sections_requires_full_scope); can request one or both sections; unknown section -> invalid_sections" },
+        { "name": "start_date", "type": "string", "required": false, "enum_note": "UTC YYYY-MM-DD; only with scope=full and sections=issuance_flow or usage_structure else invalid_param; default last 30 calendar days inclusive" },
+        { "name": "end_date", "type": "string", "required": false, "enum_note": "UTC YYYY-MM-DD; issuance_flow caps future dates to today; usage_structure defaults to latest data date when omitted; window >366d truncates start with range_truncated=true" }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.GetStablecoinInfo; items from stablecoinInfo (DefiLlama); scope=full+sections=issuance_flow queries stablecoinIssuanceFlow index (CryptoQuant DWD) via ES by_asset terms + by_date date_histogram agg (empty agg -> hit scan fallback); response adds issuance_flows[] (summary/series/chain_breakdown when chain=all), echoes scope/start_date/end_date, range_truncated when window clipped; issuance_flow ES/index errors degrade (items kept, quality_note on flows); nil fetcher returns requires_open_search."
+      "logic": "mcphost tools_platformmetrics -> fetcher.GetStablecoinInfo; validates scope basic|full and sections issuance_flow|usage_structure, rejects sections without scope=full and date params without extension sections. Base items query stablecoinInfo recent snapshots sorted by total_circulating desc; chain filter is applied in Go by parsing chain_circulating (list without chain returns chain_circulating=null, list with chain returns requested chain peggedUSD, detail without chain returns top5+_other_chains_*, detail with chain returns requested chain). scope=full+sections=issuance_flow queries stablecoinIssuanceFlow via ES by_asset terms + by_date date_histogram agg (empty agg -> hit scan fallback) and adds issuance_flows[] with summary/series/chain_breakdown when chain=all; issuance_flow index/query errors degrade to placeholder flow blocks with quality_note. scope=full+sections=usage_structure queries stablecoinRealUsage, resolves latest/default date window, and adds usage_structure{window_start,window_end,items[]} with adjusted_transfer_volume (entity_adjusted first, adjusted fallback), bot_share (derived from entity_adjusted/transfer_volume first, bot_share fallback), retail_transfer_change, stablecoin_trade_volume, reference fields, data_status, missing_fields, row_count; missing usage index or query errors degrade to placeholder usage items. range_truncated=true when any extension window is clipped; nil fetcher returns requires_open_search; missing stablecoinInfo index returns not_implemented."
     },
     {
       "tool_name": "info_platformmetrics_get_bridge_metrics",

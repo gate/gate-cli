@@ -56,8 +56,9 @@ func loadInfoToolSchemas() map[string]toolschema.ToolSummary {
 }
 
 var infoBusinessAliases = map[string][]string{
-	"info_coin_get_coin_info":                 {"coin-info"},
-	"info_marketsnapshot_get_market_overview": {"overview", "market-overview"},
-	"info_markettrend_get_technical_analysis": {"ta", "trend-analysis"},
-	"info_compliance_check_token_security":    {"token-risk"},
+	"info_coin_get_coin_info":                       {"coin-info"},
+	"info_marketsnapshot_get_market_overview":       {"overview", "market-overview"},
+	"info_marketsnapshot_get_institutional_metrics": {"institutional-metrics", "institutional"},
+	"info_markettrend_get_technical_analysis":       {"ta", "trend-analysis"},
+	"info_compliance_check_token_security":          {"token-risk"},
 }
