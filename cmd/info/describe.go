@@ -4,17 +4,17 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/gate/gate-cli/internal/intelcmd"
-	"github.com/gate/gate-cli/internal/intelfacade"
 )
 
 var describeCmd = &cobra.Command{
-	Use:   "describe --name <tool-name>",
-	Short: "Describe one Info capability",
-	RunE:  runInfoDescribe,
+	Use:     "describe --name <tool-name-or-command>",
+	Short:   "Describe one Info capability",
+	Example: "  gate-cli info describe --name \"info coin get-coin-info\" --format json",
+	RunE:    runInfoDescribe,
 }
 
 func init() {
-	describeCmd.Flags().String("name", "", "Info tool name")
+	describeCmd.Flags().String("name", "", "Info MCP tool name or CLI command (e.g. info coin get-coin-info)")
 	_ = describeCmd.MarkFlagRequired("name")
 	Cmd.AddCommand(describeCmd)
 }
@@ -30,12 +30,10 @@ func runInfoDescribe(cmd *cobra.Command, args []string) error {
 	}
 
 	name, _ := cmd.Flags().GetString("name")
+	name = intelcmd.ResolveMCPToolName("info", name)
 	tool, httpResp, err := svc.DescribeTool(cmd.Context(), name)
 	if err != nil {
 		return intelcmd.FailDescribeTransport(p, err, httpResp, "info", name)
 	}
-	if p.IsJSON() {
-		return p.Print(tool)
-	}
-	return p.WritePretty(intelfacade.DescribePrettyText(tool))
+	return intelcmd.RenderDescribeTool(p, "info", tool)
 }

@@ -75,6 +75,8 @@ func ParseError(err error, httpResp *http.Response, method, url, toolName string
 		}
 	}
 
+	out.ErrorType = output.ClassifyCLIError(out.Status, out.Label, out.Message)
+	output.FillAgentErrorConvergence(out)
 	return out
 }
 

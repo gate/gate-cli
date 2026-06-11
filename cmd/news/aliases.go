@@ -55,8 +55,9 @@ func loadNewsToolSchemas() map[string]toolschema.ToolSummary {
 }
 
 var newsBusinessAliases = map[string][]string{
-	"news_feed_search_news":                {"search"},
+	"news_feed_search_news":                {"search", "search-news"},
 	"news_events_get_latest_events":        {"latest-events"},
+	"news_events_explain_market_move":      {"explain-market-move"},
 	"news_feed_get_social_sentiment":       {"sentiment"},
 	"news_feed_get_exchange_announcements": {"announcements"},
 	"news_events_get_event_detail":         {"event-detail"},

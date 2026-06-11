@@ -2,9 +2,11 @@ package doctor
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/spf13/cobra"
 
+	"github.com/gate/gate-cli/internal/cmdhint"
 	"github.com/gate/gate-cli/internal/cmdutil"
 	"github.com/gate/gate-cli/internal/exitcode"
 	"github.com/gate/gate-cli/internal/migration"
@@ -49,13 +51,31 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 		NewsURL: newsURL,
 	})
 
-	if err := p.Print(report); err != nil {
-		return exitcode.New(exitcode.RenderOrInternal, err)
+	payload := interface{}(report)
+	if p.IsJSON() && cmdhint.AgentModeEnabled() {
+		payload = map[string]interface{}{
+			"status":                report.Status,
+			"summary":               report.Summary,
+			"checks":                report.Checks,
+			"recommended_actions":   report.RecommendedActions,
+			"suggested_next_action": cmdhint.AgentDoctorNextAction(report.Status),
+			"agent_resolve_hint":    cmdhint.AgentResolveHint("intel doctor"),
+		}
+	}
+	if report.Status == "fail" {
+		ge := &output.GateError{Status: 422, Label: "DOCTOR_FAILED", Message: doctorFailMessage(report)}
+		output.FillAgentErrorConvergence(ge)
+		if cmdhint.AgentModeEnabled() {
+			ge.SuggestedNextAction = cmdhint.AgentDoctorNextAction(report.Status)
+		} else if err := p.Print(payload); err != nil {
+			return exitcode.New(exitcode.RenderOrInternal, err)
+		}
+		p.PrintError(ge)
+		return exitcode.New(migration.DoctorExitCode(report), errors.New("doctor failed"))
 	}
 
-	if report.Status == "fail" {
-		p.PrintError(&output.GateError{Status: 422, Label: "DOCTOR_FAILED", Message: "doctor checks failed"})
-		return exitcode.New(migration.DoctorExitCode(report), errors.New("doctor failed"))
+	if err := p.Print(payload); err != nil {
+		return exitcode.New(exitcode.RenderOrInternal, err)
 	}
 	if report.Status == "warn" {
 		return exitcode.New(migration.DoctorExitCode(report), nil)
@@ -63,3 +83,17 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+func doctorFailMessage(report migration.DoctorReport) string {
+	for _, c := range report.Checks {
+		if strings.TrimSpace(c.Status) != "fail" {
+			continue
+		}
+		if msg := strings.TrimSpace(c.Message); msg != "" {
+			return "doctor checks failed: " + msg
+		}
+		if id := strings.TrimSpace(c.ID); id != "" {
+			return "doctor checks failed: " + id
+		}
+	}
+	return "doctor checks failed"
+}

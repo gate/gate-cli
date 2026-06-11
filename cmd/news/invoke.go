@@ -10,15 +10,16 @@ import (
 )
 
 var invokeCmd = &cobra.Command{
-	Use:     "invoke --name <tool-name> [flags]",
-	Short:   "Run one News capability by tool name (flat flags when --name is on the command line)",
+	Use:     "invoke --name <tool-name-or-command> [flags]",
+	Short:   "Run one News capability (MCP wire name or CLI command path)",
+	Example: "  gate-cli news invoke --name \"news feed search-news\" --coin BTC --format json\n  gate-cli news invoke --name news_feed_search_news --coin BTC --format json",
 	Hidden:  true,
 	Aliases: []string{"call"},
 	RunE:    runNewsInvoke,
 }
 
 func init() {
-	invokeCmd.Flags().String("name", "", "News tool name")
+	invokeCmd.Flags().String("name", "", "News MCP tool name or CLI command (e.g. news feed search-news)")
 	invokeCmd.Flags().String("params", "", "JSON object arguments (fallback)")
 	invokeCmd.Flags().String("args-json", "", "JSON object arguments (alias of --params)")
 	invokeCmd.Flags().String("args-file", "", "Path to JSON file containing arguments object")
@@ -41,6 +42,7 @@ func runNewsInvoke(cmd *cobra.Command, args []string) error {
 func runNewsCallByName(cmd *cobra.Command, name string, reserved map[string]struct{}) error {
 	p := getPrinter(cmd)
 	maxOutputBytes, _ := cmd.Root().PersistentFlags().GetInt64("max-output-bytes")
+	name = intelcmd.ResolveMCPToolName("news", name)
 	svc, err := newNewsService(cmd)
 	if err != nil {
 		return intelcmd.FailIntelClientInit(p, err, "news", "invoke", name)

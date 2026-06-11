@@ -126,6 +126,7 @@ func leafHelpOmitForMode(mode string) bool {
 
 func formatInfoToolLong(tm map[string]interface{}, omitParamDetails bool) string {
 	var b strings.Builder
+	appendInfoToolDescription(&b, tm)
 	if v, ok := tm["domain"].(string); ok && strings.TrimSpace(v) != "" {
 		fmt.Fprintf(&b, "Domain: %s\n", strings.TrimSpace(v))
 	}
@@ -158,7 +159,40 @@ func formatInfoToolLong(tm map[string]interface{}, omitParamDetails bool) string
 		b.WriteString("Logic:\n")
 		b.WriteString(formatInfoLogicLong(logic))
 	}
+	if errs, ok := tm["errors"].([]interface{}); ok && len(errs) > 0 {
+		b.WriteString("\nErrors:\n")
+		for _, e := range errs {
+			if em, ok := e.(map[string]interface{}); ok {
+				code, _ := em["code"].(string)
+				when, _ := em["when"].(string)
+				if code != "" || when != "" {
+					fmt.Fprintf(&b, "- %s: %s\n", code, when)
+					continue
+				}
+			}
+			fmt.Fprintf(&b, "- %v\n", e)
+		}
+	}
+	appendResponseFieldsLong(&b, tm)
 	return strings.TrimSpace(b.String())
+}
+
+// appendInfoToolDescription prints English description from the embedded (shipped) spec.
+func appendInfoToolDescription(b *strings.Builder, tm map[string]interface{}) {
+	if d, _ := tm["description"].(string); strings.TrimSpace(d) != "" {
+		fmt.Fprintf(b, "%s\n\n", strings.TrimSpace(d))
+	}
+}
+
+func appendResponseFieldsLong(b *strings.Builder, tm map[string]interface{}) {
+	if rf, ok := tm["response_fields"].([]interface{}); ok && len(rf) > 0 {
+		b.WriteString("\nResponse fields (JSON):\n")
+		for _, x := range rf {
+			if s, ok := x.(string); ok && strings.TrimSpace(s) != "" {
+				fmt.Fprintf(b, "- %s\n", strings.TrimSpace(s))
+			}
+		}
+	}
 }
 
 func formatInfoFieldLong(fm map[string]interface{}) string {

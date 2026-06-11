@@ -53,26 +53,35 @@ type RequestInfo struct {
 
 // GateError is a unified error representation for all Gate API errors.
 type GateError struct {
-	Status      int          `json:"status"`
-	Label       string       `json:"label,omitempty"`
-	Message     string       `json:"message"`
-	TraceID     string       `json:"trace_id,omitempty"`
-	RequestID   string       `json:"request_id,omitempty"`
-	ToolName    string       `json:"tool_name,omitempty"`
-	JSONRPCCode *int         `json:"jsonrpc_code,omitempty"`
-	Request     *RequestInfo `json:"request,omitempty"`
+	Status              int          `json:"status"`
+	ErrorType           string       `json:"error_type,omitempty"`
+	Label               string       `json:"label,omitempty"`
+	Message             string       `json:"message"`
+	Retryable           bool         `json:"retryable"`
+	SuggestedNextAction string       `json:"suggested_next_action,omitempty"`
+	TraceID             string       `json:"trace_id,omitempty"`
+	RequestID           string       `json:"request_id,omitempty"`
+	ToolName            string       `json:"tool_name,omitempty"`
+	JSONRPCCode         *int         `json:"jsonrpc_code,omitempty"`
+	Request             *RequestInfo `json:"request,omitempty"`
 }
 
 // Printer writes structured output to stdout and errors to stderr.
 type Printer struct {
-	out    io.Writer
-	errOut io.Writer
-	format Format
+	out            io.Writer
+	errOut         io.Writer
+	format         Format
+	maxOutputBytes int64
 }
 
 // New creates a Printer that writes errors to os.Stderr.
 func New(out io.Writer, format Format) *Printer {
 	return &Printer{out: out, errOut: os.Stderr, format: format}
+}
+
+// NewWithLimit creates a Printer that truncates oversized successful Print payloads.
+func NewWithLimit(out io.Writer, format Format, maxOutputBytes int64) *Printer {
+	return &Printer{out: out, errOut: os.Stderr, format: format, maxOutputBytes: maxOutputBytes}
 }
 
 // NewWithStderr creates a Printer with custom stderr writer (useful for testing).
@@ -99,6 +108,11 @@ func (p *Printer) Format() Format {
 // JSON mode uses compact encoding (single line, plus trailing newline) for piping and jq.
 // Pretty/table mode uses indented JSON for readability.
 func (p *Printer) Print(data interface{}) error {
+	if p.maxOutputBytes > 0 {
+		if trimmed, truncated := TruncateDataIfNeeded(data, p.maxOutputBytes); truncated {
+			data = trimmed
+		}
+	}
 	var b []byte
 	var err error
 	if p.format == FormatJSON {
@@ -177,6 +191,7 @@ func (p *Printer) PrintError(gateErr *GateError) {
 			Message: "unknown error",
 		}
 	}
+	FillAgentErrorConvergence(gateErr)
 	if p.format == FormatJSON {
 		out := map[string]interface{}{"error": gateErr}
 		b, _ := json.Marshal(out)
@@ -188,7 +203,11 @@ func (p *Printer) PrintError(gateErr *GateError) {
 	if label == "" {
 		label = http.StatusText(gateErr.Status)
 	}
-	_, _ = fmt.Fprintf(p.errOut, "Error [%d %s]: %s\n", gateErr.Status, label, gateErr.Message)
+	if gateErr.ErrorType != "" {
+		_, _ = fmt.Fprintf(p.errOut, "Error [%d %s] (%s): %s\n", gateErr.Status, label, gateErr.ErrorType, gateErr.Message)
+	} else {
+		_, _ = fmt.Fprintf(p.errOut, "Error [%d %s]: %s\n", gateErr.Status, label, gateErr.Message)
+	}
 	if gateErr.TraceID != "" {
 		_, _ = fmt.Fprintf(p.errOut, "Trace ID: %s\n", gateErr.TraceID)
 	}
@@ -203,5 +222,8 @@ func (p *Printer) PrintError(gateErr *GateError) {
 	}
 	if gateErr.Request != nil {
 		_, _ = fmt.Fprintf(p.errOut, "Request: %s %s\n", gateErr.Request.Method, gateErr.Request.URL)
+	}
+	if gateErr.SuggestedNextAction != "" {
+		_, _ = fmt.Fprintf(p.errOut, "Next: %s\n", gateErr.SuggestedNextAction)
 	}
 }

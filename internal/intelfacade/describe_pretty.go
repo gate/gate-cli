@@ -19,7 +19,7 @@ func DescribePrettyText(tool *ToolSummary) string {
 		b.WriteString(d)
 		b.WriteByte('\n')
 	}
-	if paramBlock := formatParameterSummary(tool); paramBlock != "" {
+	if paramBlock := FormatParameterSummary(tool); paramBlock != "" {
 		b.WriteString("\nParameters\n\n")
 		b.WriteString(paramBlock)
 		b.WriteByte('\n')
@@ -30,7 +30,8 @@ func DescribePrettyText(tool *ToolSummary) string {
 	return b.String()
 }
 
-func formatParameterSummary(tool *ToolSummary) string {
+// FormatParameterSummary renders required/optional parameter names for pretty describe output.
+func FormatParameterSummary(tool *ToolSummary) string {
 	if !tool.HasInputSchema || tool.InputSchema == nil {
 		return ""
 	}

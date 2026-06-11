@@ -10,7 +10,7 @@ func NormalizeForTool(toolName string, arguments map[string]interface{}) map[str
 	}
 	rules := aliasRules[toolName]
 	if len(rules) == 0 {
-		return arguments
+		return normalizeNoAlias(toolName, arguments)
 	}
 	out := make(map[string]interface{}, len(arguments))
 	for k, v := range arguments {
@@ -30,7 +30,12 @@ func NormalizeForTool(toolName string, arguments map[string]interface{}) map[str
 		}
 		delete(out, rule.FromKey)
 	}
-	return out
+	return applyAgentArgumentDefaults(toolName, out)
+}
+
+// Without alias rules, still apply agent defaults for known tools.
+func normalizeNoAlias(toolName string, arguments map[string]interface{}) map[string]interface{} {
+	return applyAgentArgumentDefaults(toolName, arguments)
 }
 
 type argAliasRule struct {

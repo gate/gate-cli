@@ -1,10 +1,12 @@
 package toolargs
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 )
 
 var (
@@ -28,6 +30,9 @@ var (
 	eventSignalWindows = map[string]struct{}{
 		"1h": {}, "24h": {}, "7d": {},
 	}
+	predictionRankingStatus = map[string]struct{}{
+		"active": {}, "closed": {}, "resolved": {}, "all": {},
+	}
 )
 
 func validateNewsPredictionOrderbook(arguments map[string]interface{}) error {
@@ -41,6 +46,45 @@ func validateNewsPredictionOrderbook(arguments map[string]interface{}) error {
 	if depth, ok := intArg(arguments, "depth"); ok {
 		if depth < 1 || depth > 20 {
 			return errors.New("invalid arguments: depth must be between 1 and 20")
+		}
+	}
+	mode := strings.TrimSpace(strings.ToLower(stringArg(arguments, "mode")))
+	if mode == "history" {
+		return errors.New("invalid arguments: mode history is not supported")
+	}
+	if mode != "" && mode != "current" {
+		return fmt.Errorf("invalid arguments: mode must be current (got %q)", stringArg(arguments, "mode"))
+	}
+	for _, key := range []string{"granularity", "start_time", "end_time", "page_token"} {
+		if nonEmptyStringArg(arguments, key) {
+			return fmt.Errorf("invalid arguments: %s is not supported", key)
+		}
+	}
+	return nil
+}
+
+func validateNewsPredictionRanking(arguments map[string]interface{}) error {
+	if date := strings.TrimSpace(stringArg(arguments, "date_utc")); date != "" {
+		if _, err := time.Parse("2006-01-02", date); err != nil {
+			return errInvalidArgumentsf("date_utc must be YYYY-MM-DD (got %q)", date)
+		}
+	}
+	for _, v := range stringSliceArg(arguments, "venue") {
+		if v == "" {
+			continue
+		}
+		if !predictionVenueAllowed(v) {
+			return fmt.Errorf("invalid arguments: venue must be polymarket or predict_fun (got %q)", v)
+		}
+	}
+	if st := strings.TrimSpace(strings.ToLower(stringArg(arguments, "status"))); st != "" {
+		if _, ok := predictionRankingStatus[st]; !ok {
+			return fmt.Errorf("invalid arguments: status must be active, closed, resolved, or all (got %q)", stringArg(arguments, "status"))
+		}
+	}
+	if limit, ok := intArg(arguments, "limit"); ok {
+		if limit < 1 || limit > 100 {
+			return errors.New("invalid arguments: limit must be between 1 and 100")
 		}
 	}
 	return nil
@@ -77,6 +121,31 @@ func validateNewsPredictionSearchEvents(arguments map[string]interface{}) error 
 		if limit < 1 || limit > 100 {
 			return errors.New("invalid arguments: limit must be between 1 and 100")
 		}
+	}
+	if err := validateSearchEventsPageToken(arguments); err != nil {
+		return err
+	}
+	return nil
+}
+
+func validateSearchEventsPageToken(arguments map[string]interface{}) error {
+	raw := strings.TrimSpace(stringArg(arguments, "page_token"))
+	if raw == "" {
+		return nil
+	}
+	decoded, err := base64.StdEncoding.DecodeString(raw)
+	if err != nil {
+		return errInvalidArguments("page_token must be valid base64 JSON")
+	}
+	var payload map[string]interface{}
+	if err := json.Unmarshal(decoded, &payload); err != nil {
+		return errInvalidArguments("page_token must be valid base64 JSON")
+	}
+	tokenSort, _ := payload["sort_by"].(string)
+	tokenSort = strings.TrimSpace(tokenSort)
+	reqSort := strings.TrimSpace(stringArg(arguments, "sort_by"))
+	if tokenSort != "" && reqSort != "" && !strings.EqualFold(tokenSort, reqSort) {
+		return errInvalidArgumentsf("page_token sort_by %q does not match request sort_by %q", tokenSort, reqSort)
 	}
 	return nil
 }

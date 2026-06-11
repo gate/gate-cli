@@ -2,7 +2,7 @@
 
 A command-line interface for the [Gate](https://gate.com) API. Covers spot, futures, delivery, options, margin, unified account, earn, wallet, AI Hub quant strategies, and 15+ more modules.
 
-**Top-level layout:** CEX / trading APIs live under **`gate-cli cex …`** (for example `gate-cli cex spot market ticker --pair BTC_USDT`). Profiles and API credentials use **`gate-cli config …`**. **Intel** (market intelligence) uses **`gate-cli info`** and **`gate-cli news`** (**45** MCP-style tools: 31 + 14). Operational helpers: **`gate-cli doctor`** (local checks), **`gate-cli migrate`** (move legacy MCP provider configs toward CLI-first), **`gate-cli preflight`** (info/news readiness). Shell completion: **`gate-cli completion`**. Designed for developers, quants, and AI agents. For a full walkthrough, see the [English Quick Start](docs/quickstart.md) or [中文快速上手](docs/quickstart_zh.md). Per-release changes are tracked in [CHANGELOG.md](CHANGELOG.md).
+**Top-level layout:** CEX / trading APIs live under **`gate-cli cex …`** (for example `gate-cli cex spot market ticker --pair BTC_USDT`). Profiles and API credentials use **`gate-cli config …`**. **Intel** (market intelligence) uses **`gate-cli info`** and **`gate-cli news`** (**46** MCP-style tools: 32 + 14) plus deterministic top-level shortcut flows such as `gate-cli info +coin-overview` / `gate-cli news +brief`. Operational helpers: **`gate-cli doctor`** (local checks), **`gate-cli migrate`** (move legacy MCP provider configs toward CLI-first), **`gate-cli preflight`** (info/news readiness). Shell completion: **`gate-cli completion`**. Designed for developers, quants, and automation. For a full walkthrough, see the [English Quick Start](docs/quickstart.md) or [中文快速上手](docs/quickstart_zh.md). Per-release changes are tracked in [CHANGELOG.md](CHANGELOG.md).
 
 ## Installation
 
@@ -75,23 +75,23 @@ API keys and secrets for **trading** are stored per profile (for example `gate-c
 - **Credential priority** — `--api-key` flag > env var > config file
 
 ### Intel (Info & News)
-- **Tool count** — **45** MCP-backed capabilities in the CLI baseline: **31** under `gate-cli info`, **14** under `gate-cli news` (grouped as `<domain> <tool>` leaves; counts follow the shipped tool list in the binary)
+- **Tool count** — **46** MCP-backed capabilities in the CLI baseline: **32** under `gate-cli info`, **14** under `gate-cli news` (grouped as `<domain> <tool>` leaves; counts follow the shipped tool list in the binary)
 - **Info** — Each tool is `gate-cli info <group> <tool>` with **flat flags** for inputs. Optional JSON object args: `--params` / `--args-json` / `--args-file` when a field has no flag.
 - **Info command groups** (the `<group>` segment):
   - **coin** — Coin profiles, multi-criteria search, and ranking boards.
   - **marketsnapshot** — Single-symbol snapshots, batch snapshots, cross-asset market overview, and institutional ETF/CME/CFTC channel metrics.
   - **markettrend** — OHLC-style klines, historical indicator series, and packaged technical analysis.
   - **onchain** — Address balances and activity, transaction detail, and token-level on-chain metrics.
-  - **platformmetrics** — Protocol and CEX analytics: platform directory, DeFi overview, stablecoins (optional `scope=full` + `sections=issuance_flow|usage_structure` for supply flows and usage structure), bridges, order-book depth, yield pools, TVL/volume history, reserves, and liquidation heatmaps.
+  - **platformmetrics** — Protocol and CEX analytics: platform directory, DeFi overview, stablecoins (optional `scope=full` + `sections=issuance_flow|usage_structure` for supply flows and usage structure), bridges, order-book depth, yield pools, TVL/volume history, reserves, liquidation heatmaps, and chain activity (phase-1: Ethereum staking metrics).
   - **marketdetail** — Live order book, recent trades, and klines for Gate trading symbols (spot/futures/etc.).
   - **macro** — Macro indicators, economic calendar, and condensed macro summaries.
   - **compliance** — Token security and risk screening for a given chain.
 - **News** — Same pattern: `gate-cli news <group> <tool>` plus flat flags.
 - **News command groups**:
-  - **feed** — Platform news index (`search-news`), UGC (`search-ugc`; needs `--query` or `--coin`), X/Twitter (`search-x`), open-web synthesis (`web-search`), social sentiment, and exchange announcements. Tool routing hints are in each leaf’s `-h` (from `specs/mcp/news-tools-args-and-logic.json`).
+  - **feed** — Platform news index (`search-news`), UGC (`search-ugc`; needs `--query` or `--coin`), X/Twitter (`search-x`; needs `--query` for xAI), open-web synthesis (`web-search`), social sentiment, and exchange announcements. Tool routing hints: each leaf’s `-h` or `gate-cli news mcp-spec` (embedded English `description`; not `specs/mcp/`).
   - **events** — Filtered event list with `event_id`, single-event detail, and market-move evidence (`explain-market-move`; Tavily + internal event pool).
   - **prediction** — UTC daily rankings (`get-volume-delta-ranking`, `get-fastest-rising-ranking`; `predictionRankIndex`; `category` is a free-form rank-index term, not a closed enum). Event discovery: `search-events` on **`dws_prediction_event_signal_hf`** (collapse per `pk_id`; default `sort_by=recently_listed`; at least one of `--query`, `--coin`, `--category`). Per-event snapshot: `get-event-signal` on **`dws_external_event_signal_hf`** (`depth_summary` null in mapper—use `get-market-orderbook` for live CLOB). Live book: `get-market-orderbook` (`--venue` + `--market-id`; polymarket uses `predictionMarketIndex` + CLOB; predict.fun uses official numeric `market_id` and may return partial when API key missing). Unconfigured indices → `not_implemented`. See `gate-cli news prediction -h`.
-- **Discovery** — `gate-cli info list`, `gate-cli news list` to print tool names; `gate-cli info -h` and `gate-cli news -h` for groups, flags, and env vars
+- **Discovery** — `gate-cli info list`, `gate-cli news list` to print tool names; `gate-cli info -h` and `gate-cli news -h` for groups, flags, env vars, and top-level `+shortcut` commands
 - **Schema booleans (`flexBool`)** — On `info` / `news` leaves, JSON boolean fields are exposed as flags that accept **`--flag`** (means true), **`--flag=false`**, or the legacy spaced form **`--flag false`**. The CLI normalizes spaced boolean literals before parsing so the next token (e.g. another flag) is not consumed by mistake. **`cex` / `config`** keep standard pflag `bool` behavior; this path is scoped to Intel commands only.
 
 ### CLI diagnostics & migration
@@ -177,10 +177,10 @@ gate-cli cex bot martingale spot --json '{"strategy_type":"spot_martingale","mar
 # JSON output for scripting
 gate-cli cex spot market ticker --pair BTC_USDT --format json | jq '.last'
 
-# Intel — 45 MCP tools (31 info + 14 news); list names: gate-cli info list / gate-cli news list
+# Intel — 46 MCP tools (32 info + 14 news); list names: gate-cli info list / gate-cli news list
 # Below: one minimal example per tool (flat flags; --format json). Arrays use a single JSON token, e.g. --indicators '["rsi"]'.
 
-# Info (31)
+# Info (32)
 # coin — coin profiles, search, rankings
 gate-cli info coin get-coin-info --query BTC --format json
 # marketsnapshot — per-symbol and batch snapshots
@@ -191,6 +191,7 @@ gate-cli info markettrend get-indicator-history --symbol BTC_USDT --timeframe 1h
 gate-cli info markettrend get-technical-analysis --symbol BTC_USDT --format json
 # onchain — addresses, transactions, token metrics
 gate-cli info onchain get-address-info --address 0xd8dA6BF26964aF9D7eEd9e03E53415dA322193D --chain eth --format json
+gate-cli info onchain get-address-info --address 0xd8dA6BF26964aF9D7eEd9e03E53415dA322193D --chain optimism --format pretty
 gate-cli info onchain get-address-transactions --address 0xd8dA6BF26964aF9D7eEd9e03E53415dA322193D --format json
 gate-cli info onchain get-transaction --tx-hash 0x88df016429689c079f1b2ea6911a4055630eac127461fbce8dcb82e83bdb12b4 --format json
 gate-cli info onchain get-token-onchain --token USDT --chain eth --format json
@@ -205,6 +206,7 @@ gate-cli info platformmetrics get-yield-pools --format json
 gate-cli info platformmetrics get-platform-history --platform-name uniswap --format json
 gate-cli info platformmetrics get-exchange-reserves --scope full --include-history --asset BTC --format json
 gate-cli info platformmetrics get-liquidation-heatmap --symbol BTC_USDT --format json
+gate-cli info platformmetrics get-chain-activity --metric-group staking --lookback 30d --format json
 # marketdetail — live book, trades, klines (Gate symbols)
 gate-cli info marketdetail get-orderbook --symbol BTC_USDT --format json
 gate-cli info marketdetail get-recent-trades --symbol BTC_USDT --format json
@@ -227,7 +229,7 @@ gate-cli info compliance check-token-security --chain eth --token USDT --format 
 # feed — search, web research, sentiment, announcements (alias: search → search-news)
 gate-cli news feed search-news --query bitcoin --format json
 gate-cli news feed search-ugc --query bitcoin --format json
-gate-cli news feed search-x --format json
+gate-cli news feed search-x --query bitcoin --coin BTC --time-range 7d --lang en --format json
 gate-cli news feed web-search --query bitcoin --format json
 gate-cli news feed get-social-sentiment --format json
 gate-cli news feed get-exchange-announcements --format json
@@ -273,7 +275,7 @@ gate-cli news prediction get-market-orderbook --venue polymarket --market-id 123
 | square | `gate-cli cex square` | Gate Square |
 | welfare | `gate-cli cex welfare` | Welfare & tasks |
 | config | `gate-cli config` | CLI configuration (profiles, API keys, optional `intel:` block) |
-| info | `gate-cli info` | **31** MCP tools under groups `coin`, `marketsnapshot`, `markettrend`, `onchain`, `platformmetrics`, `marketdetail`, `macro`, `compliance` (`info list`, `info -h`; see Features) |
+| info | `gate-cli info` | **32** MCP tools under groups `coin`, `marketsnapshot`, `markettrend`, `onchain`, `platformmetrics`, `marketdetail`, `macro`, `compliance` (`info list`, top-level `+shortcut`, `info -h`; see Features) |
 | news | `gate-cli news` | **14** MCP tools under `feed`, `events`, and `prediction` (`news list`, `news -h`; see Features) |
 | doctor | `gate-cli doctor` | CLI + config + connectivity + legacy MCP diagnostics |
 | migrate | `gate-cli migrate` | Migrate provider configs off legacy Gate MCP entries |
@@ -287,13 +289,13 @@ gate-cli news prediction get-market-orderbook --venue polymarket --market-id 123
 | `--profile` | `default` | Config profile to use |
 | `--api-key` | — | Gate API key for **trading** (overrides env and config file; not used as Intel bearer) |
 | `--api-secret` | — | Gate API secret for **trading** (overrides env and config file) |
-| `--max-output-bytes` | `0` | Cap **printed** bytes for `info` / `news` tool output (`0` = unlimited; env `GATE_MAX_OUTPUT_BYTES`) |
+| `--max-output-bytes` | `0` | Cap **printed** stdout for any command (`0` = unlimited; env `GATE_MAX_OUTPUT_BYTES`) |
 | `--verbose` | `false` | Print low-level Intel backend transport lines to stderr (`info` / `news`), prefixed `[verbose]`; stdout JSON unchanged |
 | `--debug` | `false` | HTTP debug for Gate **trading** clients; for `info` / `news`, Intel transport logs use `[debug]` on stderr (wins over `--verbose` when both are set) |
 
 ## Intel (`info`, `news`)
 
-**45** MCP tools are wired as CLI leaves (31 `info`, 14 `news`). Command-group summaries (English) live under **Intel (Info & News)** in Features. Defaults can live under `intel:` in `~/.gate-cli/config.yaml` alongside `profiles`. **Do not** use trading `GATE_API_KEY` / `--api-key` as the Intel bearer; use the dedicated bearer env vars or `intel` config when your gateway requires auth.
+**46** MCP tools are wired as CLI leaves (32 `info`, 14 `news`). Command-group summaries (English) live under **Intel (Info & News)** in Features. Defaults can live under `intel:` in `~/.gate-cli/config.yaml` alongside `profiles`. **Do not** use trading `GATE_API_KEY` / `--api-key` as the Intel bearer; use the dedicated bearer env vars or `intel` config when your gateway requires auth.
 
 **Common environment variables** (override file when set; full detail in repo `specs/` if present):
 
@@ -307,7 +309,7 @@ gate-cli news prediction get-market-orderbook --venue polymarket --market-id 123
 | `GATE_INTEL_MAX_RESPONSE_BYTES` | Max **HTTP response body** read for Intel JSON-RPC (default 16 MiB); distinct from `--max-output-bytes`, which only limits **stdout** |
 | `GATE_MAX_OUTPUT_BYTES` | Default for `--max-output-bytes` when the flag is omitted |
 | `GATE_INTEL_REFRESH_SCHEMA` | Set to `1` to force a one-off schema refresh (leaf flags / help) |
-| `GATE_INTEL_LEAF_HELP` | `full` or `detailed` appends long MCP-spec text to leaf `--help` |
+| `GATE_INTEL_LEAF_HELP` | `full` or `detailed` appends MCP-spec per-field notes to leaf `--help`. English `description` is shown on info/news leaf `-h` from the embedded bundled spec |
 
 Entry points: `gate-cli info list` / `gate-cli news list`, and `gate-cli info -h` / `gate-cli news -h`. Additional precedence and security notes may live under [`specs/README.md`](specs/README.md) / `specs/intel-config-and-security.md` depending on your checkout.
 

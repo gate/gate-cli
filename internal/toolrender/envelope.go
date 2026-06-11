@@ -8,12 +8,11 @@ import (
 )
 
 // BuildCLIEnvelope normalizes a tool call result for stable JSON output.
-// This is used by info/news commands to keep CLI contract consistent.
+// MCP wire tool names are kept internal; user stdout omits protocol wrapper fields.
 func BuildCLIEnvelope(toolName string, result *mcpclient.CallResult) map[string]interface{} {
 	if result == nil {
 		return map[string]interface{}{
 			"status":      "error",
-			"tool_name":   toolName,
 			"is_error":    true,
 			"data_source": "empty",
 			"data":        map[string]interface{}{},
@@ -25,7 +24,6 @@ func BuildCLIEnvelope(toolName string, result *mcpclient.CallResult) map[string]
 	data, source, warnings := extractData(result)
 	payload := map[string]interface{}{
 		"status":      "success",
-		"tool_name":   toolName,
 		"is_error":    result.IsError,
 		"data_source": source,
 		"data":        data,
@@ -36,6 +34,7 @@ func BuildCLIEnvelope(toolName string, result *mcpclient.CallResult) map[string]
 	if meta := mergeMeta(result.Meta, warnings); meta != nil {
 		payload["meta"] = meta
 	}
+	AppendResultMeta(toolName, payload)
 	return payload
 }
 

@@ -31,6 +31,14 @@ func TestDefaultMaxOutputBytes(t *testing.T) {
 			t.Fatalf("expected 0, got %d", got)
 		}
 	})
+
+	t.Run("explicit env overrides agent env", func(t *testing.T) {
+		t.Setenv("GATE_MAX_OUTPUT_BYTES", "4096")
+		t.Setenv("GATE_CLI_AGENT", "1")
+		if got := defaultMaxOutputBytes(); got != 4096 {
+			t.Fatalf("expected 4096, got %d", got)
+		}
+	})
 }
 
 func TestNormalizeMaxOutputBytesFlagNegativeClampsToZero(t *testing.T) {

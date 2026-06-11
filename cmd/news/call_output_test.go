@@ -34,6 +34,17 @@ func (f *fakeNewsCallService) CallTool(ctx context.Context, name string, argumen
 	return f.result, f.callHTTP, nil
 }
 
+func newsCallTestCmd() *cobra.Command {
+	root := &cobra.Command{Use: "gate-cli"}
+	root.PersistentFlags().Int64("max-output-bytes", 0, "")
+	cmd := &cobra.Command{Use: "call"}
+	cmd.Flags().String("params", "", "")
+	cmd.Flags().String("args-json", `{"coin":"BTC"}`, "")
+	cmd.Flags().String("args-file", "", "")
+	root.AddCommand(cmd)
+	return cmd
+}
+
 func TestRunNewsCall_JSONEnvelope(t *testing.T) {
 	oldFactory, oldPrinter := newNewsService, getPrinter
 	t.Cleanup(func() { newNewsService = oldFactory; getPrinter = oldPrinter })
@@ -48,10 +59,7 @@ func TestRunNewsCall_JSONEnvelope(t *testing.T) {
 	getPrinter = func(cmd *cobra.Command) *output.Printer {
 		return output.NewWithStderr(&out, &errOut, output.FormatJSON)
 	}
-	cmd := &cobra.Command{Use: "call"}
-	cmd.Flags().String("params", "", "")
-	cmd.Flags().String("args-json", "", "")
-	cmd.Flags().String("args-file", "", "")
+	cmd := newsCallTestCmd()
 	require.NoError(t, runNewsCallByName(cmd, "news_feed_search_news", map[string]struct{}{}))
 	assert.NotContains(t, out.String(), "tool_name")
 	assert.NotContains(t, out.String(), "data_source")
@@ -74,10 +82,7 @@ func TestRunNewsCall_IsErrorPrintsStderrOnly(t *testing.T) {
 	getPrinter = func(cmd *cobra.Command) *output.Printer {
 		return output.NewWithStderr(&out, &errOut, output.FormatJSON)
 	}
-	cmd := &cobra.Command{Use: "call"}
-	cmd.Flags().String("params", "", "")
-	cmd.Flags().String("args-json", "", "")
-	cmd.Flags().String("args-file", "", "")
+	cmd := newsCallTestCmd()
 
 	err := runNewsCallByName(cmd, "news_feed_search_news", map[string]struct{}{})
 	require.Error(t, err)
@@ -88,7 +93,8 @@ func TestRunNewsCall_IsErrorPrintsStderrOnly(t *testing.T) {
 	assert.Empty(t, out.String())
 	assert.Contains(t, errOut.String(), `"error":`)
 	assert.Contains(t, errOut.String(), `"label":"INTEL_RESULT_ERROR"`)
-	assert.Contains(t, errOut.String(), `"tool_name":"news_feed_search_news"`)
+	assert.NotContains(t, errOut.String(), `"tool_name"`)
+	assert.Contains(t, errOut.String(), `"url":"news feed search-news"`)
 }
 
 func TestRunNewsCall_IsErrorUnaffectedByMaxOutputBytes(t *testing.T) {
@@ -111,7 +117,7 @@ func TestRunNewsCall_IsErrorUnaffectedByMaxOutputBytes(t *testing.T) {
 	root.PersistentFlags().Int64("max-output-bytes", 8, "")
 	cmd := &cobra.Command{Use: "call"}
 	cmd.Flags().String("params", "", "")
-	cmd.Flags().String("args-json", "", "")
+	cmd.Flags().String("args-json", `{"coin":"BTC"}`, "")
 	cmd.Flags().String("args-file", "", "")
 	root.AddCommand(cmd)
 
@@ -140,10 +146,7 @@ func TestRunNewsCall_PrettyIsErrorPrintsReadableStderrOnly(t *testing.T) {
 	getPrinter = func(cmd *cobra.Command) *output.Printer {
 		return output.NewWithStderr(&out, &errOut, output.FormatPretty)
 	}
-	cmd := &cobra.Command{Use: "call"}
-	cmd.Flags().String("params", "", "")
-	cmd.Flags().String("args-json", "", "")
-	cmd.Flags().String("args-file", "", "")
+	cmd := newsCallTestCmd()
 
 	err := runNewsCallByName(cmd, "news_feed_search_news", map[string]struct{}{})
 	require.Error(t, err)
@@ -151,8 +154,10 @@ func TestRunNewsCall_PrettyIsErrorPrintsReadableStderrOnly(t *testing.T) {
 	require.True(t, errors.As(err, &coded))
 	assert.Equal(t, 1, coded.Code)
 	assert.Empty(t, out.String())
-	assert.Contains(t, errOut.String(), "Error [502 INTEL_RESULT_ERROR]: tool returned isError=true")
-	assert.Contains(t, errOut.String(), "Tool: news_feed_search_news")
+	assert.Contains(t, errOut.String(), "INTEL_RESULT_ERROR")
+	assert.Contains(t, errOut.String(), "tool returned isError=true")
+	assert.NotContains(t, errOut.String(), "Tool: news_feed_search_news")
+	assert.Contains(t, errOut.String(), "Request: POST news feed search-news")
 }
 
 func TestRunNewsCall_IsErrorIncludesTraceIDJSON(t *testing.T) {
@@ -173,10 +178,7 @@ func TestRunNewsCall_IsErrorIncludesTraceIDJSON(t *testing.T) {
 	getPrinter = func(cmd *cobra.Command) *output.Printer {
 		return output.NewWithStderr(&out, &errOut, output.FormatJSON)
 	}
-	cmd := &cobra.Command{Use: "call"}
-	cmd.Flags().String("params", "", "")
-	cmd.Flags().String("args-json", "", "")
-	cmd.Flags().String("args-file", "", "")
+	cmd := newsCallTestCmd()
 
 	err := runNewsCallByName(cmd, "news_feed_search_news", map[string]struct{}{})
 	require.Error(t, err)

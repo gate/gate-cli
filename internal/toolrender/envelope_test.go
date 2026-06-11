@@ -13,7 +13,6 @@ func TestBuildCLIEnvelopeParsesTextJSON(t *testing.T) {
 		ContentRaw: []interface{}{map[string]interface{}{"type": "text", "text": `{"ok":true}`}},
 	})
 	assert.Equal(t, "success", env["status"])
-	assert.Equal(t, "news_feed_search_news", env["tool_name"])
 	assert.Equal(t, false, env["is_error"])
 	assert.Equal(t, "content", env["data_source"])
 	data, ok := env["data"].(map[string]interface{})

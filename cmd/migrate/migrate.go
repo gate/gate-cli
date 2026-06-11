@@ -2,9 +2,11 @@ package migrate
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/spf13/cobra"
 
+	"github.com/gate/gate-cli/internal/cmdhint"
 	"github.com/gate/gate-cli/internal/cmdutil"
 	"github.com/gate/gate-cli/internal/exitcode"
 	"github.com/gate/gate-cli/internal/migration"
@@ -41,7 +43,7 @@ func runMigrate(cmd *cobra.Command, args []string) error {
 	backupDir, _ := cmd.Flags().GetString("backup-dir")
 
 	if err := migration.ValidateMode(apply, dryRun); err != nil {
-		p.PrintError(&output.GateError{Status: 400, Label: "INVALID_ARGUMENTS", Message: err.Error()})
+		p.PrintError(output.InvalidArgsError(err.Error()))
 		return exitcode.New(exitcode.RenderOrInternal, err)
 	}
 	if apply && !yes {
@@ -55,20 +57,56 @@ func runMigrate(cmd *cobra.Command, args []string) error {
 		BackupDir:   backupDir,
 	})
 	if err != nil {
-		p.PrintError(&output.GateError{Status: 500, Label: "MIGRATE_FAILED", Message: err.Error()})
+		ge := &output.GateError{Status: 500, Label: "MIGRATE_FAILED", Message: err.Error()}
+		output.FillAgentErrorConvergence(ge)
+		p.PrintError(ge)
 		return exitcode.New(exitcode.RenderOrInternal, errors.New("migrate failed"))
 	}
 
-	if err := p.Print(report); err != nil {
-		return exitcode.New(exitcode.RenderOrInternal, err)
+	payload := interface{}(report)
+	if p.IsJSON() && cmdhint.AgentModeEnabled() {
+		payload = map[string]interface{}{
+			"mode":                  report.Mode,
+			"status":                report.Status,
+			"providers":             report.Providers,
+			"recommended_next_step": report.RecommendedNextStep,
+			"suggested_next_action": cmdhint.AgentMigrateNextAction(report.Status),
+			"agent_resolve_hint":    cmdhint.AgentResolveHint("intel migrate"),
+		}
 	}
 
 	if report.Status == "fail" {
-		p.PrintError(&output.GateError{Status: 422, Label: "MIGRATE_FAILED", Message: "migrate completed with failures"})
+		ge := &output.GateError{Status: 422, Label: "MIGRATE_FAILED", Message: migrateFailMessage(report)}
+		output.FillAgentErrorConvergence(ge)
+		if cmdhint.AgentModeEnabled() {
+			ge.SuggestedNextAction = cmdhint.AgentMigrateNextAction(report.Status)
+		} else if err := p.Print(payload); err != nil {
+			return exitcode.New(exitcode.RenderOrInternal, err)
+		}
+		p.PrintError(ge)
 		return exitcode.New(migration.MigrateExitCode(report), errors.New("migrate report failed"))
+	}
+
+	if err := p.Print(payload); err != nil {
+		return exitcode.New(exitcode.RenderOrInternal, err)
 	}
 	if report.Status == "warn" {
 		return exitcode.New(migration.MigrateExitCode(report), nil)
 	}
 	return nil
+}
+
+func migrateFailMessage(report migration.MigrateReport) string {
+	for _, pr := range report.Providers {
+		if strings.TrimSpace(pr.Status) != "fail" {
+			continue
+		}
+		if msg := strings.TrimSpace(pr.ManualPatch); msg != "" {
+			return "migrate failed: " + msg
+		}
+		if id := strings.TrimSpace(pr.ProviderID); id != "" {
+			return "migrate failed: provider " + id
+		}
+	}
+	return "migrate completed with failures"
 }

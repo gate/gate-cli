@@ -75,7 +75,8 @@ func TestRunNewsListJSON(t *testing.T) {
 
 	err := runNewsList(cmd, nil)
 	require.NoError(t, err)
-	assert.Contains(t, out.String(), "news_feed_search_news")
+	assert.Contains(t, out.String(), "news feed search-news")
+	assert.NotContains(t, out.String(), "news_feed_search_news")
 	assert.Empty(t, errOut.String())
 }
 
@@ -107,7 +108,8 @@ func TestRunNewsListSaveCacheFailureIgnored(t *testing.T) {
 
 	err := runNewsList(cmd, nil)
 	require.NoError(t, err)
-	assert.Contains(t, out.String(), "news_feed_search_news")
+	assert.Contains(t, out.String(), "news feed search-news")
+	assert.NotContains(t, out.String(), "news_feed_search_news")
 	assert.Empty(t, errOut.String())
 }
 
@@ -173,7 +175,8 @@ func TestRunNewsListPrettySegmented(t *testing.T) {
 
 	require.NoError(t, runNewsList(cmd, nil))
 	assert.Contains(t, out.String(), "Capabilities")
-	assert.Contains(t, out.String(), "news_feed_search_news")
+	assert.Contains(t, out.String(), "news feed search-news")
+	assert.NotContains(t, out.String(), "news_feed_search_news")
 	assert.NotContains(t, out.String(), "HasInputSchema")
 	assert.Empty(t, errOut.String())
 }
@@ -206,6 +209,7 @@ func TestRunNewsListTableColumns(t *testing.T) {
 
 	require.NoError(t, runNewsList(cmd, nil))
 	assert.Contains(t, out.String(), "Accepts parameters")
-	assert.Contains(t, out.String(), "news_feed_search_news")
+	assert.Contains(t, out.String(), "news feed search-news")
+	assert.NotContains(t, out.String(), "news_feed_search_news")
 	assert.Empty(t, errOut.String())
 }

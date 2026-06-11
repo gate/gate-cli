@@ -47,7 +47,8 @@ func TestRunNewsDescribeJSON(t *testing.T) {
 	cmd.Flags().String("name", "", "")
 	_ = cmd.Flags().Set("name", "news_feed_search_news")
 	require.NoError(t, runNewsDescribe(cmd, nil))
-	assert.Contains(t, out.String(), "news_feed_search_news")
+	assert.Contains(t, out.String(), `"command":"news feed search-news"`)
+	assert.NotContains(t, out.String(), "news_feed_search_news")
 }
 
 func TestRunNewsDescribePrettySections(t *testing.T) {
@@ -78,6 +79,8 @@ func TestRunNewsDescribePrettySections(t *testing.T) {
 	_ = cmd.Flags().Set("name", "news_feed_search_news")
 	require.NoError(t, runNewsDescribe(cmd, nil))
 	assert.Contains(t, out.String(), "Overview")
+	assert.Contains(t, out.String(), "news feed search-news")
+	assert.NotContains(t, out.String(), "news_feed_search_news")
 	assert.Contains(t, out.String(), "Parameters")
 	assert.Contains(t, out.String(), "coin")
 	assert.NotContains(t, out.String(), "input_schema")

@@ -14,6 +14,9 @@ func TestInfoLeafLongAppendCoinInfo_defaultCompact(t *testing.T) {
 	if !strings.Contains(s, "Required fields (JSON):") || !strings.Contains(s, "query") {
 		t.Fatalf("expected required JSON line: %s", s)
 	}
+	if !strings.Contains(s, "[Read]") || !strings.Contains(s, "get_coin_rankings") {
+		t.Fatalf("expected English description from spec: %s", s)
+	}
 	if !strings.Contains(s, "Logic:") || !strings.Contains(s, "coinSearcher") {
 		t.Fatalf("expected logic from spec: %s", s)
 	}
@@ -24,6 +27,14 @@ func TestInfoLeafLongAppendCoinInfo_fullParams(t *testing.T) {
 	s := InfoLeafLongAppend("info_coin_get_coin_info")
 	if !strings.Contains(s, "Parameters:") || !strings.Contains(s, "query") {
 		t.Fatalf("full mode should list parameters: %s", s)
+	}
+}
+
+func TestInfoLeafLongAppendInstitutionalMetrics_routingDescription(t *testing.T) {
+	t.Setenv("GATE_INTEL_LEAF_HELP", "")
+	s := InfoLeafLongAppend("info_marketsnapshot_get_institutional_metrics")
+	if !strings.Contains(s, "ETF/CFTC") || !strings.Contains(s, "get_market_snapshot") {
+		t.Fatalf("expected institutional routing description: %s", s)
 	}
 }
 
@@ -38,6 +49,31 @@ func TestNewsLeafLongAppendSearchNews_defaultCompact(t *testing.T) {
 	}
 	if !strings.Contains(s, "Logic:") || !strings.Contains(s, "time_range") {
 		t.Fatalf("expected logic mentioning time window: %s", s)
+	}
+}
+
+func TestInfoLeafLongAppendOnchainAddressInfo_ErrorsSection(t *testing.T) {
+	t.Setenv("GATE_INTEL_LEAF_HELP", "")
+	s := InfoLeafLongAppend("info_onchain_get_address_info")
+	if !strings.Contains(s, "Errors:") || !strings.Contains(s, "invalid_chain") {
+		t.Fatalf("expected onchain NE errors in help: %s", s)
+	}
+	if !strings.Contains(s, "asset_summary") {
+		t.Fatalf("expected updated logic mentioning asset_summary: %s", s)
+	}
+	if !strings.Contains(s, "Response fields") || !strings.Contains(s, "multi_chain_token_balances") {
+		t.Fatalf("expected response_fields in help: %s", s)
+	}
+}
+
+func TestInfoLeafLongAppendAddressTransactions_ErrorsAndResponse(t *testing.T) {
+	t.Setenv("GATE_INTEL_LEAF_HELP", "")
+	s := InfoLeafLongAppend("info_onchain_get_address_transactions")
+	if !strings.Contains(s, "partial_upstream_response") {
+		t.Fatalf("expected partial_upstream_response in help: %s", s)
+	}
+	if !strings.Contains(s, "Response fields") || !strings.Contains(s, "items") {
+		t.Fatalf("expected response_fields in help: %s", s)
 	}
 }
 

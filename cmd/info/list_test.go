@@ -75,7 +75,8 @@ func TestRunInfoListJSON(t *testing.T) {
 
 	err := runInfoList(cmd, nil)
 	require.NoError(t, err)
-	assert.Contains(t, out.String(), "info_coin_get_coin_info")
+	assert.Contains(t, out.String(), `"command":"info coin get-coin-info"`)
+	assert.NotContains(t, out.String(), "info_coin_get_coin_info")
 	assert.Empty(t, errOut.String())
 }
 
@@ -107,7 +108,8 @@ func TestRunInfoListSaveCacheFailureIgnored(t *testing.T) {
 
 	err := runInfoList(cmd, nil)
 	require.NoError(t, err)
-	assert.Contains(t, out.String(), "info_coin_get_coin_info")
+	assert.Contains(t, out.String(), `"command":"info coin get-coin-info"`)
+	assert.NotContains(t, out.String(), "info_coin_get_coin_info")
 	assert.Empty(t, errOut.String())
 }
 
@@ -173,7 +175,8 @@ func TestRunInfoListPrettySegmented(t *testing.T) {
 
 	require.NoError(t, runInfoList(cmd, nil))
 	assert.Contains(t, out.String(), "Capabilities")
-	assert.Contains(t, out.String(), "info_coin_get_coin_info")
+	assert.Contains(t, out.String(), "info coin get-coin-info")
+	assert.NotContains(t, out.String(), "info_coin_get_coin_info")
 	assert.Contains(t, out.String(), "Accepts parameters: yes")
 	assert.NotContains(t, out.String(), "HasInputSchema")
 	assert.Empty(t, errOut.String())
@@ -207,6 +210,7 @@ func TestRunInfoListTableColumns(t *testing.T) {
 
 	require.NoError(t, runInfoList(cmd, nil))
 	assert.Contains(t, out.String(), "Accepts parameters")
-	assert.Contains(t, out.String(), "info_coin_get_coin_info")
+	assert.Contains(t, out.String(), "info coin get-coin-info")
+	assert.NotContains(t, out.String(), "info_coin_get_coin_info")
 	assert.Empty(t, errOut.String())
 }

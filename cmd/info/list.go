@@ -33,7 +33,7 @@ func runInfoList(cmd *cobra.Command, args []string) error {
 	}
 	_ = saveInfoSchemaCache("info", toInfoSchemaSummaries(items))
 
-	return intelcmd.RenderToolList(p, items)
+	return intelcmd.RenderToolList(p, "info", items)
 }
 
 func toInfoSchemaSummaries(items []intelfacade.ToolSummary) []toolschema.ToolSummary {

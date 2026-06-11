@@ -12,6 +12,7 @@ func TestNewsCommandStructure(t *testing.T) {
 		subCmds[c.Name()] = true
 	}
 	assert.True(t, subCmds["list"], "missing news list subcommand")
+	assert.True(t, subCmds["+brief"], "missing news +brief subcommand")
 	assert.True(t, subCmds["verify-schema"], "missing news verify-schema subcommand")
 	for _, c := range Cmd.Commands() {
 		if c.Name() == "invoke" {

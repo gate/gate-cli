@@ -6,6 +6,12 @@ import "github.com/spf13/cobra"
 var Cmd = &cobra.Command{
 	Use:   "news",
 	Short: "News and market intelligence commands",
+	Long: `News and market intelligence commands.
+
+Agent shortcuts (+ prefix): +brief, +event-explain, +community-scan.
+
+Discovery: gate-cli news list --format table (CLI command paths, not MCP wire names).
+Describe: gate-cli news describe --name "news feed search-news" (CLI path or MCP wire name).`,
 }
 
 func init() {

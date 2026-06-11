@@ -33,7 +33,7 @@ var (
 	newsParseErr   error
 )
 
-// InfoInputsLogic returns the parsed Info MCP inputs/spec document (same shape as specs/mcp/info-mcp-tools-inputs-logic.json).
+// InfoInputsLogic returns the parsed Info MCP inputs/spec document embedded in release binaries (internal/mcpspec/bundled).
 func InfoInputsLogic() (interface{}, error) {
 	infoParsedOnce.Do(func() {
 		infoParseErr = json.Unmarshal(infoInputsLogicJSON, &infoParsed)

@@ -36,18 +36,30 @@ func GateErrorForIntelToolIsError(toolName string, httpResp *http.Response, resu
 	if msg == "" {
 		msg = "tool returned isError=true"
 	}
+	code := resolveIntelToolErrorCode(msg, result)
+	if toolName == "info_onchain_get_address_transactions" && code == mcpCodePartialUpstreamResponse {
+		msg = "上游返回 total 但未返回可解析交易列表；请使用 --format json 查看详情，或通过 --debug / trace_id 排查"
+	}
 	status, label := gateErrorMetaForIntelToolIsError(msg, result)
 	ge := &output.GateError{
-		Status:   status,
-		Label:    label,
-		Message:  msg,
-		ToolName: toolName,
+		Status:  status,
+		Label:   label,
+		Message: msg,
 	}
+	ge.ErrorType = output.ClassifyCLIError(status, label, msg)
+	output.FillAgentErrorConvergence(ge)
 	if httpResp != nil && httpResp.Header != nil {
 		if tid := strings.TrimSpace(httpResp.Header.Get("x-gate-trace-id")); tid != "" {
 			ge.TraceID = tid
 		}
 	}
+	return ge
+}
+
+// GateErrorForIntelToolIsErrorLeaf is GateErrorForIntelToolIsError with user-facing command path (no MCP tool_name).
+func GateErrorForIntelToolIsErrorLeaf(backend, toolName string, httpResp *http.Response, result *mcpclient.CallResult) *output.GateError {
+	ge := GateErrorForIntelToolIsError(toolName, httpResp, result)
+	SanitizeUserFacingGateError(ge, backend, "", toolName)
 	return ge
 }
 
@@ -57,50 +69,42 @@ func RunToolCall(cmd *cobra.Command, p *output.Printer, svc ToolCaller, name str
 	if p.IsTable() {
 		return FailLeafUnsupportedTable(p, backend)
 	}
+	name = ResolveMCPToolName(backend, name)
 
 	arguments, err := toolargs.MergeFromCommand(cmd, toolargs.MergeOptions{ReservedFlags: reserved})
 	if err != nil {
-		return FailAfterPrintError(p, &output.GateError{
-			Status:  400,
-			Label:   "INVALID_ARGUMENTS",
-			Message: err.Error(),
-		})
+		return FailAfterPrintError(p, output.InvalidArgsError(err.Error()))
 	}
 	arguments = toolargs.NormalizeForTool(name, arguments)
 	if err := toolargs.ValidateForTool(name, arguments); err != nil {
-		return FailAfterPrintError(p, &output.GateError{
-			Status:  400,
-			Label:   "INVALID_ARGUMENTS",
-			Message: err.Error(),
-		})
+		return FailAfterPrintError(p, output.InvalidArgsError(err.Error()))
 	}
 	if tool, _, derr := svc.DescribeTool(cmd.Context(), name); derr == nil && tool != nil {
 		schema := InputSchemaForMissingRequiredCheck(backend, name, tool.InputSchema)
 		if missing := toolschema.MissingRequiredArguments(arguments, schema); len(missing) > 0 {
-			return FailAfterPrintError(p, &output.GateError{
-				Status:  400,
-				Label:   "INVALID_ARGUMENTS",
-				Message: "missing required fields: " + strings.Join(missing, ", "),
-			})
+			return FailAfterPrintError(p, output.InvalidArgsError("missing required fields: "+strings.Join(missing, ", ")))
 		}
 	}
 
 	result, httpResp, err := svc.CallTool(cmd.Context(), name, arguments)
 	if err != nil {
-		return FailAfterPrintError(p, mcpclient.ParseError(err, httpResp, "POST", invokePath(backend), name))
+		ge := mcpclient.ParseError(err, httpResp, "POST", invokePath(backend), "")
+		SanitizeUserFacingGateError(ge, backend, "", name)
+		return FailAfterPrintError(p, ge)
 	}
 	if result == nil {
-		return FailAfterPrintError(p, &output.GateError{
-			Status:   502,
-			Label:    "INTEL_PROTOCOL_ERROR",
-			Message:  "tool returned empty response",
-			ToolName: name,
-		})
+		ge := &output.GateError{
+			Status:  502,
+			Label:   "INTEL_PROTOCOL_ERROR",
+			Message: "tool returned empty response",
+		}
+		SanitizeUserFacingGateError(ge, backend, "", name)
+		return FailAfterPrintError(p, ge)
 	}
 	if result.IsError {
-		return FailAfterPrintError(p, GateErrorForIntelToolIsError(name, httpResp, result))
+		return FailAfterPrintError(p, GateErrorForIntelToolIsErrorLeaf(backend, name, httpResp, result))
 	}
-	return toolrender.RenderCallResult(p, name, result, maxOutputBytes)
+	return toolrender.RenderCallResult(p, backend, name, result, maxOutputBytes)
 }
 
 // FailListTransport maps list endpoint failures to stderr + exit 1.
@@ -110,10 +114,14 @@ func FailListTransport(p *output.Printer, err error, httpResp *http.Response, ba
 
 // FailDescribeTransport maps describe endpoint failures to stderr + exit 1.
 func FailDescribeTransport(p *output.Printer, err error, httpResp *http.Response, backend, toolName string) error {
-	return FailAfterPrintError(p, mcpclient.ParseError(err, httpResp, "POST", backend+"/describe", toolName))
+	ge := mcpclient.ParseError(err, httpResp, "POST", backend+"/describe", "")
+	SanitizeUserFacingGateError(ge, backend, "", toolName)
+	return FailAfterPrintError(p, ge)
 }
 
 // FailIntelClientInit maps MCP client construction failures (before list/describe/invoke RPC).
 func FailIntelClientInit(p *output.Printer, err error, backend, segment, toolName string) error {
-	return FailAfterPrintError(p, mcpclient.ParseError(err, nil, "POST", backend+"/"+segment, toolName))
+	ge := mcpclient.ParseError(err, nil, "POST", backend+"/"+segment, "")
+	SanitizeUserFacingGateError(ge, backend, "", toolName)
+	return FailAfterPrintError(p, ge)
 }

@@ -10,9 +10,9 @@ import (
 var mcpSpecCmd = &cobra.Command{
 	Use:   "mcp-spec",
 	Short: "Print embedded Info MCP inputs/spec JSON (offline, for agents and LLMs)",
-	Long: "Outputs the same document as specs/mcp/info-mcp-tools-inputs-logic.json bundled in the binary: " +
-		"tool names, fields, enums, default/max bounds, and logic text. No MCP network call; use with --format json or pretty. " +
-		"When specs change, copy into internal/mcpspec/bundled/ so tests and embed stay in sync.",
+	Long: "Prints the embedded Info MCP inputs/spec JSON shipped inside gate-cli (English description per tool, fields, logic). " +
+		"No MCP network call; use --format json or pretty. Leaf -h reads description from this same embedded document. " +
+		"Maintainers sync logic/fields from gate/mcp-server into internal/mcpspec/bundled/; routing descriptions are updated via scripts/patch-info-spec-descriptions.py (not from specs/mcp/, which is local QC only and not part of releases).",
 	Args: cobra.NoArgs,
 	RunE: runInfoMCPSpec,
 }

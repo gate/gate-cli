@@ -16,8 +16,18 @@ import (
 
 // GetPrinter returns an output.Printer configured from the --format flag.
 func GetPrinter(cmd *cobra.Command) *output.Printer {
+	return output.NewWithLimit(os.Stdout, getFormat(cmd), GetMaxOutputBytes(cmd))
+}
+
+// GetMaxOutputBytes reads the root --max-output-bytes flag (0 = unlimited).
+func GetMaxOutputBytes(cmd *cobra.Command) int64 {
+	maxOut, _ := cmd.Root().PersistentFlags().GetInt64("max-output-bytes")
+	return maxOut
+}
+
+func getFormat(cmd *cobra.Command) output.Format {
 	format, _ := cmd.Root().PersistentFlags().GetString("format")
-	return output.New(os.Stdout, output.ParseFormat(format))
+	return output.ParseFormat(format)
 }
 
 // IntelMCPTransportDiag reports whether info/news MCP clients should emit RPC transport

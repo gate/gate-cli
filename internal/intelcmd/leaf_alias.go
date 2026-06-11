@@ -4,6 +4,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+
+	"github.com/gate/gate-cli/internal/cmdhint"
 )
 
 // AnnotationIntelToolName is the cobra.Command.Annotations key holding the MCP tool name
@@ -28,14 +30,19 @@ func NewLeafAliasCommand(cfg LeafAliasConfig) *cobra.Command {
 	if len(parts) >= 2 {
 		group = parts[1]
 	}
-	long := "MCP tool " + cfg.ToolName + ". Prefer flat flags below; --params, --args-json, and --args-file are JSON fallbacks for uncommon fields.\n" +
-		"Per-field notes in this help: set GATE_INTEL_LEAF_HELP=full (default omits the Parameters block to avoid duplicating flag lines)."
-	if strings.TrimSpace(cfg.LongAppend) != "" {
-		long = long + "\n\n---\n\n" + strings.TrimSpace(cfg.LongAppend)
+	var long string
+	if cmdhint.AgentModeEnabled() {
+		long = "Shortcut " + cfg.Use + ". Use flags below; discovery: gate-cli agent-search --domain " + cfg.BackendCLI + ". Full spec help: GATE_INTEL_LEAF_HELP=full."
+	} else {
+		long = "Intel command " + cfg.BackendCLI + " " + group + " " + cfg.Use + ". Prefer flat flags below; --params, --args-json, and --args-file are JSON fallbacks for uncommon fields.\n" +
+			"Per-field notes in this help: set GATE_INTEL_LEAF_HELP=full (default omits the Parameters block to avoid duplicating flag lines)."
+		if strings.TrimSpace(cfg.LongAppend) != "" {
+			long = long + "\n\n---\n\n" + strings.TrimSpace(cfg.LongAppend)
+		}
 	}
 	cmd := &cobra.Command{
 		Use:   cfg.Use,
-		Short: "Shortcut for " + cfg.ToolName,
+		Short: cfg.BackendCLI + " " + group + " " + cfg.Use,
 		Long:  long,
 		Example: "  gate-cli " + cfg.BackendCLI + " " + group + " " + cfg.Use + " --format json\n" +
 			"  gate-cli " + cfg.BackendCLI + " " + group + " " + cfg.Use + " --params '{\"key\":\"value\"}'",

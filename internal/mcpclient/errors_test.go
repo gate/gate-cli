@@ -32,6 +32,17 @@ func TestSanitizeUserErrorMessage_ResponseTooLargeHint(t *testing.T) {
 	}
 }
 
+func TestParseError_AgentConvergenceFields(t *testing.T) {
+	err := &Error{Kind: ErrorKindTransport, Err: errors.New("timeout")}
+	ge := ParseError(err, &http.Response{StatusCode: 504}, "POST", "info/invoke", "info_coin_get_coin_info")
+	if ge.ErrorType == "" || ge.SuggestedNextAction == "" {
+		t.Fatalf("expected convergence fields, got %#v", ge)
+	}
+	if ge.Retryable {
+		t.Fatal("NETWORK_ERROR class transport should not be retryable for blind retry")
+	}
+}
+
 func TestParseError_ResponseTooLargeLabel(t *testing.T) {
 	err := &Error{Kind: ErrorKindTransport, Err: errors.New("response body exceeded 16777216 bytes")}
 	ge := ParseError(err, &http.Response{StatusCode: 502}, "POST", "news/invoke", "x")

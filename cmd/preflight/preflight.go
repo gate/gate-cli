@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/gate/gate-cli/internal/cmdhint"
 	"github.com/gate/gate-cli/internal/cmdutil"
 	"github.com/gate/gate-cli/internal/exitcode"
 	"github.com/gate/gate-cli/internal/migration"
@@ -36,11 +37,34 @@ func runPreflight(cmd *cobra.Command, args []string) error {
 		FallbackEnabled: fallbackEnabled,
 		Version:         version.Version,
 	})
-	if err := p.Print(result); err != nil {
-		return exitcode.New(exitcode.RenderOrInternal, err)
+	payload := interface{}(result)
+	if p.IsJSON() && cmdhint.AgentModeEnabled() {
+		payload = map[string]interface{}{
+			"route":                 result.Route,
+			"action_code":           result.ActionCode,
+			"cli_installed":         result.CLIInstalled,
+			"legacy_mcp_detected":   result.LegacyMCPDetected,
+			"blocking_reason":       result.BlockingReason,
+			"user_message":          result.UserMessage,
+			"suggested_next_action": cmdhint.AgentPreflightNextAction(result.Route),
+			"agent_resolve_hint":    cmdhint.AgentResolveHint("intel preflight"),
+		}
 	}
 	if result.Route == "BLOCK" {
+		ge := &output.GateError{
+			Status:  422,
+			Label:   "PREFLIGHT_BLOCKED",
+			Message: result.UserMessage,
+		}
+		output.FillAgentErrorConvergence(ge)
+		if cmdhint.AgentModeEnabled() {
+			ge.SuggestedNextAction = cmdhint.AgentPreflightNextAction(result.Route)
+		}
+		p.PrintError(ge)
 		return exitcode.New(exitcode.Failure, errors.New("preflight blocked"))
+	}
+	if err := p.Print(payload); err != nil {
+		return exitcode.New(exitcode.RenderOrInternal, err)
 	}
 	return nil
 }

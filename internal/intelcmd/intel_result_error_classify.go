@@ -20,8 +20,17 @@ func gateErrorMetaForIntelToolIsError(msg string, result *mcpclient.CallResult) 
 	if status, ok := intelToolIsErrorClientHTTPStatus(result); ok {
 		return status, "INVALID_ARGUMENTS"
 	}
-	if code := extractIntelToolErrorCode(result); isIntelToolClientArgumentCode(code) {
-		return 400, "INVALID_ARGUMENTS"
+	code := resolveIntelToolErrorCode(msg, result)
+	if code != "" {
+		if isOnchainClientArgumentCode(code) {
+			return 400, gateErrorLabelForCode(code)
+		}
+		if isIntelToolClientArgumentCode(code) {
+			return 400, "INVALID_ARGUMENTS"
+		}
+		if isOnchainUpstreamErrorCode(code) {
+			return 502, gateErrorLabelForCode(code)
+		}
 	}
 	if intelToolIsErrorLikelyClientArgs(msg, result) {
 		return 400, "INVALID_ARGUMENTS"
@@ -139,6 +148,7 @@ func intelToolIsErrorLikelyClientArgs(msg string, result *mcpclient.CallResult) 
 	if msg != "" {
 		for _, sub := range []string{
 			"参数不合法", "非法参数", "无效参数", "缺少必填", "未知参数", "仅支持",
+			"无效或不受支持", "address 格式无效",
 		} {
 			if strings.Contains(msg, sub) {
 				return true

@@ -16,7 +16,7 @@ func TestRenderCallResult_JSONMode(t *testing.T) {
 	var errOut bytes.Buffer
 	p := output.NewWithStderr(&out, &errOut, output.FormatJSON)
 
-	err := RenderCallResult(p, "news_feed_search_news", &mcpclient.CallResult{
+	err := RenderCallResult(p, "news", "news_feed_search_news", &mcpclient.CallResult{
 		ContentRaw: []interface{}{
 			map[string]interface{}{"type": "text", "text": `{"ok":true}`},
 		},
@@ -32,7 +32,7 @@ func TestRenderCallResult_PrettyModeUsesSegmentedBusinessOutput(t *testing.T) {
 	var errOut bytes.Buffer
 	p := output.NewWithStderr(&out, &errOut, output.FormatPretty)
 
-	err := RenderCallResult(p, "info_coin_get_coin_info", &mcpclient.CallResult{
+	err := RenderCallResult(p, "info", "info_coin_get_coin_info", &mcpclient.CallResult{
 		Raw: map[string]interface{}{"v": 1},
 	}, 0)
 	require.NoError(t, err)
@@ -47,7 +47,7 @@ func TestRenderCallResult_PrettyModeNotesSectionForParseWarnings(t *testing.T) {
 	var errOut bytes.Buffer
 	p := output.NewWithStderr(&out, &errOut, output.FormatPretty)
 
-	err := RenderCallResult(p, "tool", &mcpclient.CallResult{
+	err := RenderCallResult(p, "", "tool", &mcpclient.CallResult{
 		ContentRaw: []interface{}{
 			map[string]interface{}{"type": "text", "text": `{"a":1}`},
 			map[string]interface{}{"type": "text", "text": "plain"},

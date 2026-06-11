@@ -12,6 +12,7 @@ func TestInfoCommandStructure(t *testing.T) {
 		subCmds[c.Name()] = true
 	}
 	assert.True(t, subCmds["list"], "missing info list subcommand")
+	assert.True(t, subCmds["+coin-overview"], "missing info +coin-overview subcommand")
 	assert.True(t, subCmds["verify-schema"], "missing info verify-schema subcommand")
 	for _, c := range Cmd.Commands() {
 		if c.Name() == "invoke" {

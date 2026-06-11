@@ -1,0 +1,17 @@
+{
+  "address": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+  "chain": "solana",
+  "token_balances": [
+    {
+      "symbol": "SOL",
+      "token_account": "TokenAcct11111111111111111111111111111111",
+      "mint_account": "So11111111111111111111111111111111111111112",
+      "token_address": "So11111111111111111111111111111111111111112",
+      "amount": "1.5",
+      "value_usd": "200",
+      "value_percent": "80",
+      "total_value_usd": "200"
+    }
+  ],
+  "duration_ms": 10
+}

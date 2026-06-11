@@ -4,7 +4,7 @@ import "sync"
 
 // InfoBaselineInputSchemas are static JSON-Schema-shaped objects: the stable source for CLI flat flags.
 // MCP tools/list may add additional flags (non-colliding) on top; --params / --args-json remain JSON fallback.
-// Enum/default/bounds mirror specs/mcp/info-mcp-tools-inputs-logic.json for flat-flag help (LLM-facing hints).
+// Enum/default/bounds mirror the embedded Intel MCP spec (internal/mcpspec/bundled) for flat-flag help.
 var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 	"info_coin_get_coin_info": infoObj(map[string]interface{}{
 		"query":      infoStr("query"),
@@ -26,7 +26,7 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 		"offset":         infoIntDefaultMax("offset", 0, 100000),
 	}),
 	"info_coin_get_coin_rankings": infoObj(map[string]interface{}{
-		"ranking_type":    infoStrEnum("ranking_type", "", "popular", "top_gainers", "top_losers", "twitter_hot", "airdrop", "new_listing"),
+		"ranking_type":    infoStrEnum("ranking_type", "", "popular", "top_gainers", "top_losers", "twitter_hot", "airdrop", "new_listing", "market_pulse_hot"),
 		"time_range":      infoStrEnum("time_range", "", "1h", "24h", "7d"),
 		"limit":           infoIntDefaultMax("limit", 50, 100),
 		"listing_query":   infoStr("listing_query"),
@@ -37,8 +37,8 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 		"symbol":          infoStr("symbol"),
 		"timeframe":       infoStrEnum("timeframe", "", "1m", "5m", "15m", "1h", "4h", "1d"),
 		"period":          infoStrEnum("period", "24h", "1h", "4h", "24h", "7d", "3d", "5d", "10d", "all"),
-		"size":            infoIntDefaultMax("size", 100, 2000),
-		"limit":           infoIntDefaultMax("limit", 100, 2000),
+		"size":            infoIntDefaultMax("size; agent default 200, max 500 to limit stdout", 200, 500),
+		"limit":           infoIntDefaultMax("limit; agent default 200, max 500 to limit stdout", 200, 500),
 		"start_time":      infoStr("start_time"),
 		"end_time":        infoStr("end_time"),
 		"with_indicators": infoBool("with_indicators"),
@@ -66,7 +66,7 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 		"scope":               infoStrEnum("scope", "basic", "basic", "detailed", "full"),
 	}, "symbol"),
 	"info_marketsnapshot_batch_market_snapshot": infoObj(map[string]interface{}{
-		"symbols":   infoArrStrMaxItems("symbols", 20),
+		"symbols":   infoArrStrMaxItems("symbols (max 20 pairs)", 20),
 		"timeframe": infoStrEnum("timeframe", "1h", "15m", "1h", "4h", "1d"),
 		"source":    infoStrEnum("source", "spot", "alpha", "spot", "future", "fx", "futures"),
 		"quote":     infoStr("quote"),
@@ -82,7 +82,7 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 	}),
 	"info_onchain_get_address_info": infoObj(map[string]interface{}{
 		"address":              infoStr("address"),
-		"chain":                infoStr("chain"),
+		"chain":                infoStr("chain; aliases: eth, op→optimism, avax|avalanche-c→avalanche, bera|berachain→bera, polygon|matic, zksync, blast, gatelayer, linea, unichain, btc|bitcoin, sol|solana, trx|tron; invalid → invalid_chain"),
 		"scope":                infoStrEnum("scope", "basic", "basic", "with_defi", "with_counterparties", "with_pnl", "full", "detailed"),
 		"min_value_usd":        infoNum("min_value_usd"),
 		"include_upstream_raw": infoBool("include_upstream_raw"),
@@ -90,7 +90,7 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 	}, "address"),
 	"info_onchain_get_address_transactions": infoObj(map[string]interface{}{
 		"address":              infoStr("address"),
-		"chain":                infoStr("chain"),
+		"chain":                infoStr("chain; same aliases as get_address_info; BTC uses bitcoin/btc slug"),
 		"min_value_usd":        infoNum("min_value_usd"),
 		"tx_type":              infoStrEnum("tx_type", "all", "transfer", "contract_call", "token_transfer", "all"),
 		"time_range":           infoStrEnum("time_range", "", "1h", "24h", "1d", "7d", "30d", "90d"),
@@ -117,9 +117,9 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 		"upstream_raw_mode":    infoStrEnum("upstream_raw_mode", "off", "off", "lite", "full"),
 	}, "token"),
 	"info_compliance_check_token_security": infoObj(map[string]interface{}{
-		"token":   infoStr("token"),
-		"address": infoStr("address"),
-		"chain":   infoStr("chain"),
+		"token":   infoStr("token symbol; exactly one of token or address (not both)"),
+		"address": infoStr("contract address; exactly one of token or address (not both)"),
+		"chain":   infoStr("chain (required)"),
 		"scope":   infoStrEnum("scope", "basic", "basic", "full"),
 		"lang":    infoStrEnum("lang", "en", "en", "cn", "tw", "ja", "kr"),
 	}, "chain"),
@@ -140,8 +140,8 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 		"category": infoStrEnum("category", "all", "all", "defi", "de-fi", "cex", "perp", "spot", "stablecoin", "dex", "dexs", "dexes", "lending", "cdp", "yield", "bridge", "derivatives", "yield aggregator"),
 	}),
 	"info_platformmetrics_get_stablecoin_info": infoObj(map[string]interface{}{
-		"symbol":     infoStr("symbol"),
-		"chain":      infoStr("chain"),
+		"symbol":     infoStr("symbol; issuance_flow: USDT|USDC; usage_structure: USDT|USDC|DAI|FDUSD|PYUSD; omit for ranked list"),
+		"chain":      infoStr("chain; basic: filter chain_circulating; extension sections: ethereum|tron|... or aliases eth/sol/arb"),
 		"limit":      infoIntDefaultMax("limit", 10, 400),
 		"scope":      infoStrEnum("scope", "basic", "basic", "full"),
 		"sections":   infoArrStrEnum("sections; issuance_flow and/or usage_structure; requires scope=full", "issuance_flow", "usage_structure"),
@@ -155,11 +155,11 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 		"limit":       infoIntDefaultMax("limit", 20, 100),
 	}),
 	"info_platformmetrics_get_cex_orderbook_depth": infoObj(map[string]interface{}{
-		"symbol":      infoStr("symbol"),
+		"symbol":      infoStr("symbol (required); aggregated CEX depth, not Gate marketdetail orderbook"),
 		"market_type": infoStrEnum("market_type", "perp", "spot", "perp", "perps", "futures", "future"),
-		"exchange":    infoStr("exchange"),
-		"data_scope":  infoStrEnum("data_scope", "", "exchange", "market"),
-		"limit":       infoIntDefaultMax("limit", 20, 100),
+		"exchange":    infoStr("exchange filter"),
+		"data_scope":  infoStrEnum("data_scope; omit picks exchange index when exchange set else market", "", "exchange", "market"),
+		"limit":       infoIntDefaultMax("limit; depth rows, default 20 max 100", 20, 100),
 	}, "symbol"),
 	"info_platformmetrics_get_yield_pools": infoObj(map[string]interface{}{
 		"project":     infoStr("project"),
@@ -169,6 +169,7 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 		"sort_by":     infoStrEnum("sort_by", "apy", "apy", "tvl_usd"),
 		"limit":       infoIntDefaultMax("limit", 20, 100),
 		"min_tvl_usd": infoNum("min_tvl_usd"),
+		"scope":       infoStrEnum("scope", "basic", "basic", "full"),
 	}),
 	"info_platformmetrics_get_platform_history": infoObj(map[string]interface{}{
 		"platform_name": infoStr("platform_name"),
@@ -190,6 +191,13 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 		"exchange": infoStr("exchange"),
 		"range":    infoStr("range"),
 	}, "symbol"),
+	"info_platformmetrics_get_chain_activity": infoObj(map[string]interface{}{
+		"metric_group": infoStrEnum("metric_group; phase-1 staking only (required)", "", "staking"),
+		"chain":        infoStr("chain; omit defaults to ethereum; staking allows eth|ethereum aliases"),
+		"start_date":   infoStr("start_date; UTC YYYY-MM-DD"),
+		"end_date":     infoStr("end_date; UTC YYYY-MM-DD"),
+		"lookback":     infoStrEnum("lookback when start_date empty; ignored when both dates set", "30d", "30d", "90d", "1y"),
+	}, "metric_group"),
 	"info_macro_get_macro_indicator": infoObj(map[string]interface{}{
 		"mode":         infoStrEnum("mode", "latest", "latest", "timeseries"),
 		"indicator":    infoStr("indicator"),
@@ -229,7 +237,7 @@ var InfoBaselineInputSchemas = map[string]map[string]interface{}{
 		"timeframe":   infoStr("timeframe"),
 		"start_time":  infoInt("start_time"),
 		"end_time":    infoInt("end_time"),
-		"limit":       infoIntDefaultMax("limit", 100, 2000),
+		"limit":       infoIntDefaultMax("limit; agent default 200, max 500", 200, 500),
 		"settle":      infoStr("settle"),
 		"extra":       infoObjAny("extra"),
 	}, "symbol", "timeframe"),
@@ -239,7 +247,7 @@ func infoStr(desc string) map[string]interface{} {
 	return map[string]interface{}{"type": "string", "description": desc}
 }
 
-// infoStrEnum builds a string field with enum (and optional default) for CLI flag usage; values follow specs/mcp/info-mcp-tools-inputs-logic.json.
+// infoStrEnum builds a string field with enum (and optional default) for CLI flag usage; values follow the embedded bundled Intel spec.
 func infoStrEnum(desc, defaultVal string, enum ...string) map[string]interface{} {
 	ev := make([]interface{}, len(enum))
 	for i, s := range enum {
@@ -268,7 +276,7 @@ func infoArrStrMaxItems(desc string, maxItems int) map[string]interface{} {
 func infoArrStrIndicatorHints(desc string) map[string]interface{} {
 	return map[string]interface{}{
 		"type":        "array",
-		"description": desc + " (required); ES _source names e.g. rsi, macd, close_price; not a closed server enum — see specs/mcp/info-mcp-tools-inputs-logic.json",
+		"description": desc + " (required); ES _source names e.g. rsi, macd, close_price; not a closed server enum — see gate-cli info mcp-spec",
 		"items":       map[string]interface{}{"type": "string"},
 	}
 }

@@ -91,6 +91,7 @@ func TestErrorJSONGateStandard(t *testing.T) {
 			Body:   `{"currency_pair":"INVALID"}`,
 		},
 	}
+	gateErr.ErrorType = "INVALID_ARGS"
 	p.PrintError(gateErr)
 
 	var result map[string]interface{}
@@ -98,6 +99,9 @@ func TestErrorJSONGateStandard(t *testing.T) {
 	require.NoError(t, err)
 	errObj := result["error"].(map[string]interface{})
 	assert.Equal(t, float64(400), errObj["status"])
+	assert.Equal(t, "INVALID_ARGS", errObj["error_type"])
+	assert.Equal(t, true, errObj["retryable"])
+	assert.NotEmpty(t, errObj["suggested_next_action"])
 	assert.Equal(t, "INVALID_PARAM_VALUE", errObj["label"])
 	assert.Equal(t, "abc123", errObj["trace_id"])
 	assert.Equal(t, "req-1", errObj["request_id"])

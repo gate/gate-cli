@@ -335,8 +335,20 @@ func TestValidateForTool_PlatformHistoryRequiresOneIdentifier(t *testing.T) {
 	}) != nil {
 		t.Fatal("expected nil when exchange_slug is json.Number from decoder UseNumber")
 	}
-	if ValidateForTool("info_coin_get_coin_info", map[string]interface{}{}) != nil {
-		t.Fatal("expected no static validation for unrelated tool")
+	if err := ValidateForTool("info_coin_get_coin_info", map[string]interface{}{}); err == nil {
+		t.Fatal("expected error when query and symbol are both empty")
+	}
+	if ValidateForTool("info_coin_get_coin_info", map[string]interface{}{"symbol": "BTC"}) != nil {
+		t.Fatal("expected nil when symbol set")
+	}
+	if err := ValidateForTool("info_marketsnapshot_get_market_snapshot", map[string]interface{}{}); err == nil {
+		t.Fatal("expected error when symbol missing")
+	}
+	if err := ValidateForTool("news_feed_get_exchange_announcements", map[string]interface{}{}); err == nil {
+		t.Fatal("expected error when no filter fields set")
+	}
+	if ValidateForTool("news_feed_get_exchange_announcements", map[string]interface{}{"coin": "BTC"}) != nil {
+		t.Fatal("expected nil when coin set")
 	}
 }
 
@@ -505,5 +517,286 @@ func TestValidateForTool_EventSignalAcceptsCaseInsensitiveWindow(t *testing.T) {
 		"window":    "7D",
 	}) != nil {
 		t.Fatal("expected nil for case-insensitive window")
+	}
+}
+
+func TestValidateForTool_SearchXRejectsBothHandleLists(t *testing.T) {
+	t.Parallel()
+	err := ValidateForTool("news_feed_search_x", map[string]interface{}{
+		"query":            "btc",
+		"allowed_handles":  []string{"a"},
+		"excluded_handles": []string{"b"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "allowed_handles") {
+		t.Fatalf("expected handles conflict error, got %v", err)
+	}
+}
+
+func TestValidateForTool_SearchXRejectsInvalidTimeRange(t *testing.T) {
+	t.Parallel()
+	if ValidateForTool("news_feed_search_x", map[string]interface{}{
+		"query": "btc", "time_range": "14d",
+	}) == nil {
+		t.Fatal("expected error for 14d time_range")
+	}
+}
+
+func TestValidateForTool_OrderbookRejectsUnsupportedParams(t *testing.T) {
+	t.Parallel()
+	base := map[string]interface{}{"venue": "polymarket", "market_id": "1"}
+	cases := []map[string]interface{}{
+		{"granularity": "1m"},
+		{"start_time": "2026-01-01"},
+		{"page_token": "x"},
+		{"mode": "history"},
+	}
+	for _, extra := range cases {
+		args := make(map[string]interface{}, len(base)+len(extra))
+		for k, v := range base {
+			args[k] = v
+		}
+		for k, v := range extra {
+			args[k] = v
+		}
+		if ValidateForTool("news_prediction_get_market_orderbook", args) == nil {
+			t.Fatalf("expected error for extra %#v", extra)
+		}
+	}
+}
+
+func TestValidateForTool_BatchMarketSnapshotSymbolsBounds(t *testing.T) {
+	t.Parallel()
+	if ValidateForTool("info_marketsnapshot_batch_market_snapshot", map[string]interface{}{}) == nil {
+		t.Fatal("expected error when symbols missing")
+	}
+	syms := make([]string, 21)
+	for i := range syms {
+		syms[i] = "BTC_USDT"
+	}
+	if ValidateForTool("info_marketsnapshot_batch_market_snapshot", map[string]interface{}{
+		"symbols": syms,
+	}) == nil {
+		t.Fatal("expected error when symbols > 20")
+	}
+	if ValidateForTool("info_marketsnapshot_batch_market_snapshot", map[string]interface{}{
+		"symbols": []string{"BTC_USDT"},
+	}) != nil {
+		t.Fatal("expected nil for one symbol")
+	}
+}
+
+func TestValidateForTool_LatestEventsTimeRangeRules(t *testing.T) {
+	t.Parallel()
+	if ValidateForTool("news_events_get_latest_events", map[string]interface{}{
+		"time_range": "7d", "start_time": "2026-01-01",
+	}) == nil {
+		t.Fatal("expected error when time_range mixed with start_time")
+	}
+	if ValidateForTool("news_events_get_latest_events", map[string]interface{}{
+		"limit": 101,
+	}) == nil {
+		t.Fatal("expected error when limit > 100")
+	}
+}
+
+func TestValidateForTool_PredictionRankingDateAndLimit(t *testing.T) {
+	t.Parallel()
+	tool := "news_prediction_get_volume_delta_ranking"
+	if ValidateForTool(tool, map[string]interface{}{"date_utc": "2026/04/01"}) == nil {
+		t.Fatal("expected error for bad date_utc")
+	}
+	if ValidateForTool(tool, map[string]interface{}{"status": "open"}) == nil {
+		t.Fatal("expected error for bad status")
+	}
+	if ValidateForTool(tool, map[string]interface{}{"venue": []string{"bad"}}) == nil {
+		t.Fatal("expected error for bad venue")
+	}
+	if ValidateForTool(tool, map[string]interface{}{"limit": 0}) == nil {
+		t.Fatal("expected error for limit < 1")
+	}
+}
+
+func TestValidateForTool_SearchUGCEnumAndLimit(t *testing.T) {
+	t.Parallel()
+	if ValidateForTool("news_feed_search_ugc", map[string]interface{}{
+		"query": "x", "platform": "twitter",
+	}) == nil {
+		t.Fatal("expected error for bad platform")
+	}
+	if ValidateForTool("news_feed_search_ugc", map[string]interface{}{
+		"coin": "BTC", "limit": 51,
+	}) == nil {
+		t.Fatal("expected error when limit > 50")
+	}
+}
+
+func TestValidateForTool_WebSearchLimitAndTimeRange(t *testing.T) {
+	t.Parallel()
+	if ValidateForTool("news_feed_web_search", map[string]interface{}{
+		"query": "btc", "limit": 11,
+	}) == nil {
+		t.Fatal("expected error when limit > 10")
+	}
+	if ValidateForTool("news_feed_web_search", map[string]interface{}{
+		"query": "btc", "time_range": "all",
+	}) == nil {
+		t.Fatal("expected error for invalid time_range")
+	}
+}
+
+func TestValidateForTool_CoinRankingsMarketPulseHot(t *testing.T) {
+	t.Parallel()
+	tool := "info_coin_get_coin_rankings"
+	if err := ValidateForTool(tool, map[string]interface{}{
+		"ranking_type": "market_pulse_hot",
+	}); err != nil {
+		t.Fatalf("expected valid market_pulse_hot, got %v", err)
+	}
+	if ValidateForTool(tool, map[string]interface{}{
+		"ranking_type": "not_a_board",
+	}) == nil {
+		t.Fatal("expected error for unsupported ranking_type")
+	}
+}
+
+func TestValidateForTool_CoinRankingsCrossFieldRules(t *testing.T) {
+	t.Parallel()
+	tool := "info_coin_get_coin_rankings"
+	if ValidateForTool(tool, map[string]interface{}{
+		"ranking_type": "popular",
+		"time_range":   "24h",
+	}) == nil {
+		t.Fatal("expected error when time_range set for non-movers ranking_type")
+	}
+	if err := ValidateForTool(tool, map[string]interface{}{
+		"ranking_type": "top_gainers",
+		"time_range":   "24h",
+	}); err != nil {
+		t.Fatalf("expected valid gainers+time_range, got %v", err)
+	}
+	if ValidateForTool(tool, map[string]interface{}{
+		"ranking_type":  "popular",
+		"listing_query": "btc",
+	}) == nil {
+		t.Fatal("expected error when listing_query set for non-new_listing")
+	}
+}
+
+func TestValidateForTool_EconomicCalendarOptionalDates(t *testing.T) {
+	t.Parallel()
+	tool := "info_macro_get_economic_calendar"
+	if err := ValidateForTool(tool, map[string]interface{}{}); err != nil {
+		t.Fatalf("expected zero-arg calendar call, got %v", err)
+	}
+	if ValidateForTool(tool, map[string]interface{}{
+		"start_date": "2026-05-02",
+		"end_date":   "2026-05-01",
+	}) == nil {
+		t.Fatal("expected error when start_date after end_date")
+	}
+	if err := ValidateForTool(tool, map[string]interface{}{
+		"start_date": "2026-04-01",
+	}); err != nil {
+		t.Fatalf("expected valid start_date only, got %v", err)
+	}
+}
+
+func TestValidateForTool_YieldPoolsScope(t *testing.T) {
+	t.Parallel()
+	tool := "info_platformmetrics_get_yield_pools"
+	if err := ValidateForTool(tool, map[string]interface{}{
+		"scope": "full",
+	}); err != nil {
+		t.Fatalf("expected valid scope=full, got %v", err)
+	}
+	if ValidateForTool(tool, map[string]interface{}{
+		"scope": "detailed",
+	}) == nil {
+		t.Fatal("expected error for invalid scope")
+	}
+}
+
+func TestValidateForTool_CexOrderbookDepthRequiresSymbol(t *testing.T) {
+	t.Parallel()
+	if ValidateForTool("info_platformmetrics_get_cex_orderbook_depth", map[string]interface{}{}) == nil {
+		t.Fatal("expected error when symbol missing")
+	}
+	if ValidateForTool("info_platformmetrics_get_cex_orderbook_depth", map[string]interface{}{
+		"symbol": "BTC_USDT", "market_type": "swap",
+	}) == nil {
+		t.Fatal("expected error for bad market_type")
+	}
+	if ValidateForTool("info_platformmetrics_get_cex_orderbook_depth", map[string]interface{}{
+		"symbol": "BTC_USDT", "limit": 101,
+	}) == nil {
+		t.Fatal("expected error when limit > 100")
+	}
+}
+
+func TestValidateForTool_ChainActivity(t *testing.T) {
+	t.Parallel()
+	tool := "info_platformmetrics_get_chain_activity"
+	if ValidateForTool(tool, map[string]interface{}{}) == nil {
+		t.Fatal("expected error when metric_group missing")
+	}
+	if ValidateForTool(tool, map[string]interface{}{
+		"metric_group": "fees",
+	}) == nil {
+		t.Fatal("expected error for unsupported metric_group")
+	}
+	if ValidateForTool(tool, map[string]interface{}{
+		"metric_group": "staking", "chain": "solana",
+	}) == nil {
+		t.Fatal("expected error for unsupported chain on staking")
+	}
+	if ValidateForTool(tool, map[string]interface{}{
+		"metric_group": "staking", "lookback": "7d",
+	}) == nil {
+		t.Fatal("expected error for invalid lookback")
+	}
+	if ValidateForTool(tool, map[string]interface{}{
+		"metric_group": "staking",
+		"start_date":   "2026-05-02",
+		"end_date":     "2026-05-01",
+	}) == nil {
+		t.Fatal("expected error when start_date after end_date")
+	}
+	if ValidateForTool(tool, map[string]interface{}{
+		"metric_group": "staking",
+		"start_date":   "2026/04/01",
+	}) == nil {
+		t.Fatal("expected error for invalid start_date format")
+	}
+	if err := ValidateForTool(tool, map[string]interface{}{
+		"metric_group": "staking", "chain": "eth", "lookback": "90d",
+	}); err != nil {
+		t.Fatalf("expected valid args, got %v", err)
+	}
+	if err := ValidateForTool(tool, map[string]interface{}{
+		"metric_group": "staking",
+		"start_date":   "2026-04-01",
+	}); err != nil {
+		t.Fatalf("expected valid args with start_date only, got %v", err)
+	}
+}
+
+func TestValidateForTool_SearchEventsPageToken(t *testing.T) {
+	t.Parallel()
+	tool := "news_prediction_search_events"
+	if ValidateForTool(tool, map[string]interface{}{
+		"coin": "BTC", "page_token": "not-valid-base64!!!",
+	}) == nil {
+		t.Fatal("expected error for invalid page_token")
+	}
+	tokenOK := "eyJzb3J0X2J5Ijoidm9sdW1lIn0=" // {"sort_by":"volume"}
+	if ValidateForTool(tool, map[string]interface{}{
+		"coin": "BTC", "page_token": tokenOK, "sort_by": "recently_listed",
+	}) == nil {
+		t.Fatal("expected error for sort_by mismatch with page_token")
+	}
+	if ValidateForTool(tool, map[string]interface{}{
+		"coin": "BTC", "page_token": tokenOK, "sort_by": "volume",
+	}) != nil {
+		t.Fatal("expected nil when page_token sort_by matches request")
 	}
 }

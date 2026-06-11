@@ -18,6 +18,8 @@ import (
 	"github.com/gate/gate-cli/cmd/migrate"
 	"github.com/gate/gate-cli/cmd/news"
 	"github.com/gate/gate-cli/cmd/preflight"
+	"github.com/gate/gate-cli/internal/agentfeature"
+	"github.com/gate/gate-cli/internal/cmdhint"
 	"github.com/gate/gate-cli/internal/exitcode"
 	"github.com/gate/gate-cli/internal/intelcmd"
 	"github.com/gate/gate-cli/internal/version"
@@ -30,6 +32,7 @@ var rootCmd = &cobra.Command{
 	Version: version.Version,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		emitFormatCompatNotice(cmd)
+		applyDefaultMaxOutputBytesIfUnset(cmd)
 		normalizeMaxOutputBytesFlag(cmd)
 	},
 }
@@ -41,20 +44,36 @@ const (
 
 func setupRootForExecute() {
 	intelcmd.SilenceCommandTree(rootCmd)
-	// FlagErrorFunc 仅装到 Intel 子树（info/news/preflight/doctor/migrate）。
-	// SilenceCommandTree 历史上覆盖整树（含 cex/config），但本轮 flexBool 修复
-	// 限定在 Intel 域，按 intel-guardrails 规则不得改动其他域的错误打印行为。
-	for _, sub := range []*cobra.Command{info.Cmd, news.Cmd, preflight.Cmd, doctor.Cmd, migrate.Cmd} {
-		intelcmd.InstallFlagErrorHook(sub)
-	}
+	// Print flag/parse errors to stderr for the full tree (cex/config included) so agents
+	// see diagnostics instead of a silent exit when SilenceErrors is enabled.
+	intelcmd.InstallFlagErrorHook(rootCmd)
 }
 
 func Execute() {
 	setupRootForExecute()
+	if agentfeature.RuntimeActive() && cmdhint.ShouldBlockParentHelp(os.Args) {
+		d := &cmdhint.Diagnostic{
+			Blocked:             true,
+			Reason:              "HELP_CRAWL_FORBIDDEN",
+			ErrorType:           "COMMAND_NOT_FOUND",
+			SuggestedNextAction: agentfeature.DiscoveryResolveOrLeavesAction(),
+			Retryable:           false,
+			Message:             "help disabled on parent commands in agent mode",
+		}
+		cmdhint.PrintDiagnosticWithArgv(os.Stderr, d, os.Args)
+		os.Exit(1)
+	}
 	if newArgs, ok := intelcmd.RewriteFlexBoolSpaceArgs(rootCmd, os.Args[1:]); ok {
 		rootCmd.SetArgs(newArgs)
 	}
 	if err := rootCmd.Execute(); err != nil {
+		d := cmdhint.SuggestFromError(os.Args, err, rootCmd)
+		msg := err.Error()
+		if d != nil && strings.TrimSpace(d.Message) != "" {
+			msg = d.Message
+		}
+		intelcmd.EmitExecuteErrorEnvelope(os.Stderr, rootCmd, os.Args, err, msg)
+		cmdhint.PrintDiagnosticWithArgv(os.Stderr, d, os.Args)
 		var codedErr *exitcode.Error
 		if errors.As(err, &codedErr) {
 			os.Exit(codedErr.Code)
@@ -76,7 +95,7 @@ func init() {
 	rootCmd.PersistentFlags().String("profile", "default", "Config profile to use")
 	rootCmd.PersistentFlags().Bool("debug", false, "Print HTTP debug summary (no auth headers/body)")
 	rootCmd.PersistentFlags().Bool("verbose", false, "Print Intel MCP transport lines to stderr (info/news); does not change stdout JSON shape")
-	rootCmd.PersistentFlags().Int64("max-output-bytes", defaultMaxOutputBytes(), "Maximum bytes for info/news tool command output (0 means unlimited; env: GATE_MAX_OUTPUT_BYTES)")
+	rootCmd.PersistentFlags().Int64("max-output-bytes", defaultMaxOutputBytes(), "Maximum bytes for JSON/pretty stdout payload (0 means unlimited; env: GATE_MAX_OUTPUT_BYTES)")
 	rootCmd.PersistentFlags().String("api-key", "", "Gate API key (overrides config file and GATE_API_KEY env)")
 	rootCmd.PersistentFlags().String("api-secret", "", "Gate API secret (overrides config file and GATE_API_SECRET env)")
 
@@ -89,17 +108,42 @@ func init() {
 	rootCmd.AddCommand(migrate.Cmd)
 }
 
+// Root returns the gate-cli root command tree (for agent discovery tests).
+func Root() *cobra.Command {
+	return rootCmd
+}
+
 func defaultMaxOutputBytes() int64 {
 	raw := strings.TrimSpace(os.Getenv("GATE_MAX_OUTPUT_BYTES"))
-	if raw == "" {
-		return 0
+	if raw != "" {
+		v, err := strconv.ParseInt(raw, 10, 64)
+		if err != nil || v < 0 {
+			_, _ = fmt.Fprintf(os.Stderr, "Warning: invalid GATE_MAX_OUTPUT_BYTES=%q; fallback to unlimited output\n", raw)
+			return 0
+		}
+		return v
 	}
-	v, err := strconv.ParseInt(raw, 10, 64)
-	if err != nil || v < 0 {
-		_, _ = fmt.Fprintf(os.Stderr, "Warning: invalid GATE_MAX_OUTPUT_BYTES=%q; fallback to unlimited output\n", raw)
-		return 0
+	return agentfeature.DefaultMaxOutputWhenUnset()
+}
+
+// applyDefaultMaxOutputBytesIfUnset applies agent/runtime defaults at execute time (not only at init).
+func applyDefaultMaxOutputBytesIfUnset(cmd *cobra.Command) {
+	if cmd == nil {
+		return
 	}
-	return v
+	root := cmd.Root()
+	f := root.PersistentFlags().Lookup("max-output-bytes")
+	if f == nil || f.Changed {
+		return
+	}
+	if strings.TrimSpace(os.Getenv("GATE_MAX_OUTPUT_BYTES")) != "" {
+		return
+	}
+	def := agentfeature.DefaultMaxOutputWhenUnset()
+	if def <= 0 {
+		return
+	}
+	_ = root.PersistentFlags().Set("max-output-bytes", strconv.FormatInt(def, 10))
 }
 
 // normalizeMaxOutputBytesFlag enforces a non-negative --max-output-bytes (CR-107).
