@@ -180,12 +180,12 @@ func shouldSkipAgentLeafEnrich(d *Diagnostic) bool {
 }
 
 var leafQueryAliases = map[string][]string{
-	"latest":       {"events", "latest", "get-latest-events"},
-	"sentiment":    {"social", "sentiment"},
-	"security":     {"token-risk", "compliance", "check-token-security"},
+	"latest":     {"events", "latest", "get-latest-events"},
+	"sentiment":  {"social", "sentiment"},
+	"security":   {"token-risk", "compliance", "check-token-security"},
 	"announcement": {"exchange", "announcements"},
-	"ugc":          {"community", "search-ugc"},
-	"投票":           {"events", "explain"},
+	"ugc":        {"community", "search-ugc"},
+	"投票":         {"events", "explain"},
 }
 
 func expandLeafQueryTokens(tokens []string) []string {
@@ -228,11 +228,11 @@ func leafIntentBoost(intent string, tokens []string) int {
 }
 
 var leafIntentBoosts = map[string][]string{
-	"news_latest_events":            {"latest", "events"},
-	"news_search_news":              {"news", "search"},
-	"news_brief":                    {"brief", "summary"},
-	"news_social_sentiment":         {"sentiment"},
-	"news_search_ugc":               {"ugc", "community", "reddit"},
+	"news_latest_events":     {"latest", "events"},
+	"news_search_news":       {"news", "search"},
+	"news_brief":             {"brief", "summary"},
+	"news_social_sentiment":  {"sentiment"},
+	"news_search_ugc":        {"ugc", "community", "reddit"},
 	"info_market_overview_tool":     {"overview", "market"},
 	"info_token_security":           {"security", "risk"},
 	"info_token_risk_by_address":    {"security", "risk", "address", "contract"},

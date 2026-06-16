@@ -1,7 +1,6 @@
 package migrate
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -9,6 +8,7 @@ import (
 	"github.com/gate/gate-cli/internal/cmdhint"
 	"github.com/gate/gate-cli/internal/cmdutil"
 	"github.com/gate/gate-cli/internal/exitcode"
+	"github.com/gate/gate-cli/internal/intelcmd"
 	"github.com/gate/gate-cli/internal/migration"
 	"github.com/gate/gate-cli/internal/output"
 )
@@ -34,7 +34,7 @@ func runMigrate(cmd *cobra.Command, args []string) error {
 	p := cmdutil.GetPrinter(cmd)
 	if p.IsTable() {
 		p.PrintError(output.UnsupportedTableFormatError())
-		return exitcode.New(exitcode.RenderOrInternal, errors.New("unsupported format"))
+		return exitcode.New(exitcode.RenderOrInternal, intelcmd.ErrSilenced)
 	}
 	dryRun, _ := cmd.Flags().GetBool("dry-run")
 	apply, _ := cmd.Flags().GetBool("apply")
@@ -44,11 +44,11 @@ func runMigrate(cmd *cobra.Command, args []string) error {
 
 	if err := migration.ValidateMode(apply, dryRun); err != nil {
 		p.PrintError(output.InvalidArgsError(err.Error()))
-		return exitcode.New(exitcode.RenderOrInternal, err)
+		return exitcode.New(exitcode.RenderOrInternal, intelcmd.ErrSilenced)
 	}
 	if apply && !yes {
 		p.PrintError(&output.GateError{Status: 400, Label: "CONFIRMATION_REQUIRED", Message: "use --yes with --apply to run non-interactive migration"})
-		return exitcode.New(exitcode.RenderOrInternal, errors.New("confirmation required"))
+		return exitcode.New(exitcode.RenderOrInternal, intelcmd.ErrSilenced)
 	}
 
 	report, err := migration.RunMigrate(migration.MigrateOptions{
@@ -60,7 +60,7 @@ func runMigrate(cmd *cobra.Command, args []string) error {
 		ge := &output.GateError{Status: 500, Label: "MIGRATE_FAILED", Message: err.Error()}
 		output.FillAgentErrorConvergence(ge)
 		p.PrintError(ge)
-		return exitcode.New(exitcode.RenderOrInternal, errors.New("migrate failed"))
+		return exitcode.New(exitcode.RenderOrInternal, intelcmd.ErrSilenced)
 	}
 
 	payload := interface{}(report)
@@ -84,7 +84,7 @@ func runMigrate(cmd *cobra.Command, args []string) error {
 			return exitcode.New(exitcode.RenderOrInternal, err)
 		}
 		p.PrintError(ge)
-		return exitcode.New(migration.MigrateExitCode(report), errors.New("migrate report failed"))
+		return exitcode.New(migration.MigrateExitCode(report), intelcmd.ErrSilenced)
 	}
 
 	if err := p.Print(payload); err != nil {

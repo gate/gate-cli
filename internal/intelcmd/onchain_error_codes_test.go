@@ -42,6 +42,6 @@ func TestGateErrorForIntelToolIsError_PartialUpstreamFriendlyMessage(t *testing.
 	})
 	assert.Equal(t, 502, ge.Status)
 	assert.Equal(t, "PARTIAL_UPSTREAM_RESPONSE", ge.Label)
-	assert.Contains(t, ge.Message, "上游返回 total")
+	assert.Contains(t, ge.Message, "upstream returned total")
 	assert.NotContains(t, ge.Message, "暂无交易")
 }

@@ -38,7 +38,7 @@ func GateErrorForIntelToolIsError(toolName string, httpResp *http.Response, resu
 	}
 	code := resolveIntelToolErrorCode(msg, result)
 	if toolName == "info_onchain_get_address_transactions" && code == mcpCodePartialUpstreamResponse {
-		msg = "上游返回 total 但未返回可解析交易列表；请使用 --format json 查看详情，或通过 --debug / trace_id 排查"
+		msg = "upstream returned total but no parseable transaction list; use --format json for details or --debug / trace_id for support"
 	}
 	status, label := gateErrorMetaForIntelToolIsError(msg, result)
 	ge := &output.GateError{

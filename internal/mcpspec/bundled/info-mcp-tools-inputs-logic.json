@@ -1363,52 +1363,20 @@
       "request_type": "platformmetrics.GetExchangeReservesRequest",
       "required": [],
       "fields": [
-        {
-          "name": "exchange",
-          "type": "string",
-          "required": false,
-          "enum_note": "empty -> all-exchange rollup (mustBoolAllExchangeExchangeName); non-empty expands exchange name terms for ES match"
-        },
-        {
-          "name": "asset",
-          "type": "string",
-          "required": false,
-          "enum": [
-            "BTC",
-            "ETH",
-            "USDT",
-            "USDC"
-          ],
-          "enum_note": "empty = no asset filter; other values -> invalid_param"
-        },
-        {
-          "name": "scope",
-          "type": "string",
-          "required": false,
-          "enum": [
-            "basic",
-            "full"
-          ],
-          "enum_note": "omit -> basic; full merges por from exchangeReservesPOR index when configured; invalid scope -> invalid_param"
-        },
-        {
-          "name": "include_history",
-          "type": "bool",
-          "required": false,
-          "enum_note": "default false; true only with scope=full else invalid_param; attaches precomputed PoR comparison fields, not raw snapshots"
-        },
-        {
-          "name": "history_window",
-          "type": "string",
-          "required": false,
-          "enum": [
-            "quarter"
-          ],
-          "enum_note": "only when include_history=true; omit defaults to quarter; other values -> invalid_param"
-        }
+        { "name": "exchange", "type": "string", "required": false, "enum_note": "empty -> all-exchange rollup (mustBoolAllExchangeExchangeName); non-empty expands exchange name terms for ES match" },
+        { "name": "asset", "type": "string", "required": false, "enum": ["BTC", "ETH", "USDT", "USDC"], "enum_note": "omit defaults to BTC; other values -> invalid_param" },
+        { "name": "scope", "type": "string", "required": false, "enum": ["basic", "full"], "enum_note": "omit -> basic; full merges por from exchangeReservesPOR index when configured + optionally flows/events; invalid scope -> invalid_param" },
+        { "name": "include_history", "type": "bool", "required": false, "enum_note": "default false; true only with scope=full else invalid_param; attaches precomputed PoR comparison fields, not raw snapshots" },
+        { "name": "history_window", "type": "string", "required": false, "enum": ["quarter"], "enum_note": "only when include_history=true; omit defaults to quarter; other values -> invalid_param" },
+        { "name": "include_flows", "type": "bool", "required": false, "enum_note": "scope=full only; true returns flows.series[] (daily inflow/outflow/netflow in native+USD); requires exchangeFlow index configured else not_implemented; omit defaults to false" },
+        { "name": "include_events", "type": "bool", "required": false, "enum_note": "scope=full only; true returns events[] (large_flow events with threshold/rolling_30d_std); requires exchangeFlow index; omit defaults to false" },
+        { "name": "start_date", "type": "string", "required": false, "enum_note": "YYYY-MM-DD; only when include_flows=true or include_events=true; omit defaults to end_date - 30d; invalid date -> invalid_param" },
+        { "name": "end_date", "type": "string", "required": false, "enum_note": "YYYY-MM-DD; only when include_flows=true or include_events=true; omit defaults to today; invalid date -> invalid_param" },
+        { "name": "event_type", "type": "string", "required": false, "enum": ["all", "large_flow"], "enum_note": "only when include_events=true; all returns all events (large_flow_event=true+false); large_flow filters large_flow_event=true only; omit defaults to all" },
+        { "name": "limit", "type": "int", "required": false, "enum_note": "only when include_flows=true or include_events=true; max flow rows; default 100, max 400" }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.GetExchangeReserves; searches exchangeReserves (no default snapshot_time range; latest via sort); scope=full and POR index set runs second query on POR index and enrichExchangeReservesItemsWithPOR; requires exchangeReserves index else not_implemented; nil fetcher returns requires_open_search.",
-      "description": "[Read] Exchange reserve balances (optional asset filter); scope=full + include_history for PoR comparison. Not stablecoin chain breakdown -> get_stablecoin_info."
+      "logic": "mcphost tools_platformmetrics -> fetcher.GetExchangeReserves; searches exchangeReserves (no default snapshot_time range; latest via sort); scope=full and POR index set runs second query on POR index and enrichExchangeReservesItemsWithPOR. scope=full + include_flows=true queries exchangeFlow index (dwd_external_exchange_net_flow_di) via fetchExchangeFlow and returns flows.series[] (ExchangeFlowPoint per day). scope=full + include_events=true returns events[] (large_flow_event=true or all, with threshold_usd/rolling_30d_std_usd). asset defaults to BTC. requires exchangeReserves index else not_implemented; nil fetcher returns requires_open_search.",
+      "description": "[Read] Exchange reserve balances (optional asset filter); scope=full for PoR, flows (daily netflow), and large-flow events. Not stablecoin chain breakdown -> get_stablecoin_info."
     },
     {
       "tool_name": "info_platformmetrics_get_liquidation_heatmap",
@@ -1447,83 +1415,27 @@
         "metric_group"
       ],
       "fields": [
-        {
-          "name": "metric_group",
-          "type": "string",
-          "required": true,
-          "enum": [
-            "staking"
-          ],
-          "enum_note": "phase-1 only staking implemented; other values -> not_implemented"
-        },
-        {
-          "name": "chain",
-          "type": "string",
-          "required": false,
-          "common_values": [
-            "ethereum",
-            "eth"
-          ],
-          "enum_note": "omit or empty -> normalized_chain=ethereum; only eth|ethereum allowed for staking; other chains -> unsupported_chain_for_metric_group"
-        },
-        {
-          "name": "start_date",
-          "type": "string",
-          "required": false,
-          "enum_note": "UTC YYYY-MM-DD; with end_date defines inclusive window (ES gte + lt end+1d); start only -> single ES gte query, end from newest hit; span >400d or start-only beyond cap -> range_truncated=true and start_date adjusted to effective oldest returned date; future dates capped to today with start_date_capped"
-        },
-        {
-          "name": "end_date",
-          "type": "string",
-          "required": false,
-          "enum_note": "UTC YYYY-MM-DD; with start_date defines window; omit with start empty and end set -> end anchors lookback window; omit with start only -> derived from newest hit; both dates empty -> ignored (uses lookback-only path); future capped to today with end_date_capped"
-        },
-        {
-          "name": "lookback",
-          "type": "string",
-          "required": false,
-          "enum": [
-            "30d",
-            "90d",
-            "1y"
-          ],
-          "enum_note": "when start_date empty: default 30d for lookback-only or end-anchored window; invalid -> invalid_param; ignored when both start_date and end_date set"
-        }
+        { "name": "metric_group", "type": "string", "required": true, "enum": ["staking", "l2", "btc_l2"], "enum_note": "phase-1 supported groups; staking=Ethereum beacon daily, l2=L2 ops daily (growthepie+L2Beat), btc_l2=BTC L2 protocol ecosystem; other values -> not_implemented" },
+        { "name": "chain", "type": "string", "required": false, "common_values": ["ethereum", "eth", "base", "arbitrum", "optimism", "linea", "zksync_era", "blast", "btc"], "enum_note": "staking: only eth|ethereum allowed (others -> unsupported_chain); l2: supports base/arbitrum/optimism/linea/zksync_era/blast or empty for all chains; btc_l2: empty defaults to btc (only btc allowed)" },
+        { "name": "project", "type": "string", "required": false, "enum_note": "btc_l2 only: filter by project_key; empty returns whitelist (stacks|rootstock|merlin|bob|bitlayer). Non-whitelist project returns data_status=not_in_scope" },
+        { "name": "start_date", "type": "string", "required": false, "enum_note": "UTC YYYY-MM-DD; with end_date defines inclusive window (ES gte + lt end+1d); start only -> single ES gte query, end from newest hit; span >400d or start-only beyond cap -> range_truncated=true and start_date adjusted to effective oldest returned date; future dates capped to today with start_date_capped" },
+        { "name": "end_date", "type": "string", "required": false, "enum_note": "UTC YYYY-MM-DD; with start_date defines window; omit with start empty and end set -> end anchors lookback window; omit with start only -> derived from newest hit; both dates empty -> ignored (uses lookback-only path); future capped to today with end_date_capped" },
+        { "name": "lookback", "type": "string", "required": false, "enum": ["30d", "90d", "1y"], "enum_note": "when start_date empty: default 30d for lookback-only or end-anchored window; invalid -> invalid_param; ignored when both start_date and end_date set" },
+        { "name": "granularity", "type": "string", "required": false, "enum": ["day"], "enum_note": "l2 only: day (default); hour or minute returns unsupported_granularity; ignored for staking/btc_l2" },
+        { "name": "limit", "type": "int", "required": false, "enum_note": "l2 only: max series rows returned; 0 means no extra cap beyond date window; ignored for staking/btc_l2" }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.GetChainActivity (GAP-012); metric_group=staking queries platformmetrics.indices.ethStakingNetworkDaily (dwd_external_beaconcha_in_staking_data_di). staking_metrics.series[] implements full PRD shape (incl. eth_supply, staking_apr_7d, entry_wait_days, exit_wait_days from index). no start/end -> one ES query size=lookback days sorted part_date desc then calendar trim; explicit window -> part_date range gte + lt(end+1d); start-only -> gte start size 400 desc, range_truncated when ES total>400 or 400 hits with oldest date>start; maps validator_total->validator_active, entry/exit_queue_eth with validator_estimate=eth/32 (never exposes *_validator_count); staking_rate from index or derived as total_value_staked_eth/eth_supply*100 when rate missing; per-row missing_fields + data_status ok|partial|missing|quality_warning; root data_status aggregates series; 2025-05-07..2025-05-21 rows quality_warning with quality_note=validatorqueue_pectra_queue_unit_issue; explicit window >400d truncates with range_truncated=true; missing index -> not_implemented; nil fetcher -> requires_open_search.",
+      "logic": "mcphost tools_platformmetrics -> fetcher.GetChainActivity (GAP-012/GAP-009/GAP-0xx). Routes by metric_group: staking->getChainActivityStaking queries platformmetrics.indices.ethStakingNetworkDaily (dwd_external_beaconcha_in_staking_data_di); l2->getChainActivityL2 queries l2Metrics index (dwd_external_l2_metrics_daily_di); btc_l2->getChainActivityBtcL2 queries btcProtocol index (dwd_external_btc_protocol_di). staking: series[].validator_active/entry_queue_eth/exit_queue_eth/eth_supply/staking_rate/staking_apr_7d/entry_wait_days/exit_wait_days with validator_estimate=eth/32; per-row missing_fields+data_status; 2025-05-07..2025-05-21 rows quality_warning; explicit window >400d truncates. l2: series[] per chain with tps_avg_1d/active_addresses_1d/blob_cost_usd_1d/sequencer_revenue_usd_1d/stage_label/tvl_usd/data_source; tx_count/l1_fee_usd not provided this phase; granularity=day required. btc_l2: items[] with project_key/project_name/category/main_chain/tvl_usd/protocol_count/tx_count_1d/active_addresses_1d/bridge_volume_24h_usd/source_refs; project whitelist stacks|rootstock|merlin|bob|bitlayer; missing_required_fields when tvl_usd/protocol_count/tx_count_1d nil; data_status=complete when 3 required fields non-nil. nil fetcher -> requires_open_search.",
       "errors": [
-        {
-          "code": "invalid_param",
-          "when": "metric_group empty, bad YYYY-MM-DD, invalid lookback, or start_date after end_date"
-        },
-        {
-          "code": "not_implemented",
-          "when": "metric_group != staking or ethStakingNetworkDaily index unset"
-        },
-        {
-          "code": "unsupported_chain_for_metric_group",
-          "when": "metric_group=staking and chain not eth|ethereum"
-        },
-        {
-          "code": "requires_open_search",
-          "when": "platformmetrics fetcher or OpenSearch client nil"
-        }
+        { "code": "invalid_param", "when": "metric_group empty, bad YYYY-MM-DD, invalid lookback, or start_date after end_date" },
+        { "code": "not_implemented", "when": "metric_group not in staking|l2|btc_l2 or target index unset" },
+        { "code": "unsupported_chain_for_metric_group", "when": "staking and chain not eth|ethereum; l2 and chain not in supported list; btc_l2 and chain not btc" },
+        { "code": "unsupported_granularity", "when": "l2 granularity not day" },
+        { "code": "requires_open_search", "when": "platformmetrics fetcher or OpenSearch client nil" }
       ],
       "response_fields": [
-        "chain",
-        "metric_group",
-        "normalized_chain",
-        "start_date",
-        "end_date",
-        "lookback",
-        "total",
-        "count",
-        "staking_metrics.series",
-        "data_status",
-        "range_truncated",
-        "end_date_capped",
-        "start_date_capped",
-        "duration_ms"
+        "chain", "metric_group", "normalized_chain", "start_date", "end_date", "lookback", "granularity", "total", "count",
+        "staking_metrics.series", "l2_metrics.series", "btc_l2_metrics.items",
+        "data_status", "range_truncated", "end_date_capped", "start_date_capped", "duration_ms"
       ],
       "series_fields": [
         "date",
@@ -1542,14 +1454,14 @@
         "data_status",
         "quality_note"
       ],
-      "series_fields_note": "eth_supply / staking_apr_7d / entry_wait_days / exit_wait_days 已 MCP 出参（映射 ES _source）；索引缺失时写入 missing_fields，不再使用 shelved_fields。",
+      "series_fields_note": "eth_supply / staking_apr_7d / entry_wait_days / exit_wait_days mapped from ES _source; missing index writes missing_fields. l2: tx_count/l1_fee_usd not provided this phase. btc_l2: protocol_count is int64, other values float64/int64.",
       "cli": {
         "binary": "coin-mcp-cli",
         "subcommand": "platformmetrics",
         "request_type": "chain-activity",
         "example": "coin-mcp-cli platformmetrics --request_type chain-activity --metric_group staking --chain ethereum --lookback 30d"
       },
-      "description": "[Read] Chain-level activity metrics (phase-1: Ethereum staking validator counts and entry/exit queues). DeFi platform context -> get_platform_info."
+      "description": "[Read] Chain-level activity metrics (staking=Ethereum beacon, l2=daily ops, btc_l2=BTC L2 protocol ecosystem). DeFi platform context -> get_platform_info."
     },
     {
       "tool_name": "info_macro_get_macro_indicator",

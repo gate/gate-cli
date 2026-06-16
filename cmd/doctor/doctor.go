@@ -1,7 +1,6 @@
 package doctor
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -9,6 +8,7 @@ import (
 	"github.com/gate/gate-cli/internal/cmdhint"
 	"github.com/gate/gate-cli/internal/cmdutil"
 	"github.com/gate/gate-cli/internal/exitcode"
+	"github.com/gate/gate-cli/internal/intelcmd"
 	"github.com/gate/gate-cli/internal/migration"
 	"github.com/gate/gate-cli/internal/output"
 )
@@ -31,7 +31,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	p := cmdutil.GetPrinter(cmd)
 	if p.IsTable() {
 		p.PrintError(output.UnsupportedTableFormatError())
-		return exitcode.New(exitcode.RenderOrInternal, errors.New("unsupported format"))
+		return exitcode.New(exitcode.RenderOrInternal, intelcmd.ErrSilenced)
 	}
 	checkRaw, _ := cmd.Flags().GetString("check")
 	strict, _ := cmd.Flags().GetBool("strict")
@@ -40,7 +40,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	infoURL, newsURL, err := cmdutil.IntelMCPBaseURLs(cmd)
 	if err != nil {
 		p.PrintError(&output.GateError{Status: 500, Label: "CONFIG_ERROR", Message: err.Error()})
-		return exitcode.New(exitcode.RenderOrInternal, err)
+		return exitcode.New(exitcode.RenderOrInternal, intelcmd.ErrSilenced)
 	}
 
 	report := migration.BuildDoctorReport(migration.DoctorOptions{
@@ -71,7 +71,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 			return exitcode.New(exitcode.RenderOrInternal, err)
 		}
 		p.PrintError(ge)
-		return exitcode.New(migration.DoctorExitCode(report), errors.New("doctor failed"))
+		return exitcode.New(migration.DoctorExitCode(report), intelcmd.ErrSilenced)
 	}
 
 	if err := p.Print(payload); err != nil {

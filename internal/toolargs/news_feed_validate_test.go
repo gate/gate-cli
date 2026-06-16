@@ -23,6 +23,22 @@ func TestValidateForTool_SearchNewsLimit(t *testing.T) {
 	}
 }
 
+func TestValidateForTool_SocialSentimentTimeRange(t *testing.T) {
+	t.Parallel()
+	if err := ValidateForTool("news_feed_get_social_sentiment", map[string]interface{}{
+		"coin":       "BTC",
+		"time_range": "30d",
+	}); err == nil {
+		t.Fatal("expected sentiment time_range to reject 30d")
+	}
+	if err := ValidateForTool("news_feed_get_social_sentiment", map[string]interface{}{
+		"coin":       "BTC",
+		"time_range": "7d",
+	}); err != nil {
+		t.Fatalf("unexpected: %v", err)
+	}
+}
+
 func TestValidateForTool_ExplainMarketMoveTimeRange(t *testing.T) {
 	t.Parallel()
 	if err := ValidateForTool("news_events_explain_market_move", map[string]interface{}{

@@ -3,6 +3,7 @@ package intelcmd
 import (
 	"bytes"
 	"errors"
+	"os"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -62,4 +63,15 @@ func TestEmitExecuteErrorEnvelopeSkipsSilenced(t *testing.T) {
 func TestResolveOutputFormatFromArgv(t *testing.T) {
 	assert.Equal(t, output.FormatJSON, resolveOutputFormatFromArgv(nil, []string{"gate-cli", "info", "describe", "--format", "json"}))
 	assert.Equal(t, output.FormatJSON, resolveOutputFormatFromArgv(nil, []string{"gate-cli", "info", "describe", "--format=json"}))
+	root := &cobra.Command{Use: "gate-cli"}
+	root.PersistentFlags().String("format", "pretty", "")
+	assert.Equal(t, output.FormatPretty, resolveOutputFormatFromArgv(root, []string{"gate-cli", "info", "list"}))
+}
+
+func TestResolveOutputFormatAgentEnv(t *testing.T) {
+	t.Setenv("GATE_CLI_AGENT", "true")
+	t.Cleanup(func() { _ = os.Unsetenv("GATE_CLI_AGENT") })
+	root := &cobra.Command{Use: "gate-cli"}
+	root.PersistentFlags().String("format", "pretty", "")
+	assert.Equal(t, output.FormatJSON, resolveOutputFormatFromArgv(root, []string{"gate-cli", "info", "list"}))
 }

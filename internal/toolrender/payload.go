@@ -15,7 +15,7 @@ func RenderIntelPayload(p *output.Printer, commandPath string, data interface{},
 		"status": "success",
 		"data":   data,
 	}
-	AppendResultMeta(commandPath, envelope)
+	AppendResultMeta(MetaToolName(commandPath), envelope)
 	dataJSON, err := json.Marshal(envelope["data"])
 	if err != nil {
 		return err

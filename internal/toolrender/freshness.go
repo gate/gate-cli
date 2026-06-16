@@ -17,7 +17,7 @@ var freshnessTimeKeys = []string{
 
 // AppendFreshnessMeta adds meta.freshness_hints for time-sensitive Intel tools (news).
 func AppendFreshnessMeta(toolName string, envelope map[string]interface{}) {
-	if envelope == nil || !strings.HasPrefix(toolName, "news_") {
+	if envelope == nil || !isNewsFreshnessTool(toolName) {
 		return
 	}
 	meta, _ := envelope["meta"].(map[string]interface{})
@@ -34,7 +34,7 @@ func AppendFreshnessMeta(toolName string, envelope map[string]interface{}) {
 	if statusCLI != "" {
 		meta["freshness_status_cli"] = statusCLI
 	}
-	hints := collectFreshnessHints(envelope["data"])
+	hints := hintsFromSummary(summary)
 	if len(hints) == 0 {
 		if statusCLI == "" || statusCLI == "unknown" {
 			if summary == nil {
@@ -83,57 +83,22 @@ func freshnessStatusCLI(summary map[string]interface{}) string {
 	return ""
 }
 
-func collectFreshnessHints(data interface{}) []string {
-	times := collectTimestamps(data, 32)
-	if len(times) == 0 {
+func hintsFromSummary(summary map[string]interface{}) []string {
+	if summary == nil {
 		return nil
 	}
-	now := time.Now().UTC()
-	newest := times[0]
-	oldest := times[0]
-	for _, ts := range times[1:] {
-		if ts.After(newest) {
-			newest = ts
-		}
-		if ts.Before(oldest) {
-			oldest = ts
-		}
-	}
 	var hints []string
-	if age := now.Sub(newest); age > freshnessStaleAfter {
-		hints = append(hints, fmt.Sprintf("newest item is older than 48h (~%dh); do not describe as «latest» without web verification", int(age.Hours())))
+	if stale, ok := summary["newest_is_stale"].(bool); ok && stale {
+		msg := "newest item is older than 48h"
+		if hours, ok := summary["newest_age_hours"].(int); ok {
+			msg = fmt.Sprintf("newest item is older than 48h (~%dh)", hours)
+		}
+		hints = append(hints, msg+"; do not describe as «latest» without web verification")
 	}
-	if len(times) > 1 && now.Sub(oldest) > 7*24*time.Hour {
+	if span, ok := summary["span_over_7d"].(bool); ok && span {
 		hints = append(hints, "payload spans more than 7 days; confirm time_range matches the user question")
 	}
 	return hints
-}
-
-func collectTimestamps(v interface{}, max int) []time.Time {
-	var out []time.Time
-	var walk func(interface{})
-	walk = func(node interface{}) {
-		if len(out) >= max {
-			return
-		}
-		switch x := node.(type) {
-		case map[string]interface{}:
-			for k, item := range x {
-				if isFreshnessKey(k) {
-					if ts, ok := parseTimeValue(item); ok {
-						out = append(out, ts)
-					}
-				}
-				walk(item)
-			}
-		case []interface{}:
-			for _, item := range x {
-				walk(item)
-			}
-		}
-	}
-	walk(v)
-	return out
 }
 
 func isFreshnessKey(key string) bool {
@@ -152,6 +117,11 @@ func parseTimeValue(v interface{}) (time.Time, bool) {
 		s := strings.TrimSpace(x)
 		if s == "" {
 			return time.Time{}, false
+		}
+		if isAllDigits(s) {
+			if n, err := parseInt64Digits(s); err == nil {
+				return unixToTime(n)
+			}
 		}
 		for _, layout := range []string{
 			time.RFC3339,
@@ -173,12 +143,33 @@ func parseTimeValue(v interface{}) (time.Time, bool) {
 	return time.Time{}, false
 }
 
-func unixToTime(sec int64) (time.Time, bool) {
+func unixToTime(raw int64) (time.Time, bool) {
+	sec := raw
 	if sec <= 0 {
 		return time.Time{}, false
 	}
-	if sec > 1_000_000_000_000 {
-		sec = sec / 1000
+	for sec > 1_000_000_000_000 {
+		sec /= 1000
 	}
 	return time.Unix(sec, 0).UTC(), true
+}
+
+func isAllDigits(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+func parseInt64Digits(s string) (int64, error) {
+	var n int64
+	for _, r := range s {
+		n = n*10 + int64(r-'0')
+	}
+	return n, nil
 }

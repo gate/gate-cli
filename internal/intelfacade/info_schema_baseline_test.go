@@ -25,15 +25,15 @@ func TestInfoBaselineInputSchemaCoverage(t *testing.T) {
 func TestInfoBaselineInputSchemaCriticalFields(t *testing.T) {
 	t.Parallel()
 	cases := map[string][]string{
-		"info_coin_get_coin_info":                       {"query", "symbol"},
-		"info_markettrend_get_kline":                    {"symbol", "timeframe", "with_indicators"},
-		"info_markettrend_get_indicator_history":        {"symbol", "indicators", "timeframe"},
-		"info_marketsnapshot_batch_market_snapshot":     {"symbols", "timeframe"},
+		"info_coin_get_coin_info":                               {"query", "symbol"},
+		"info_markettrend_get_kline":                            {"symbol", "timeframe", "with_indicators"},
+		"info_markettrend_get_indicator_history":                {"symbol", "indicators", "timeframe"},
+		"info_marketsnapshot_batch_market_snapshot":             {"symbols", "timeframe"},
 		"info_marketsnapshot_get_institutional_metrics": {"asset", "channel", "start_date", "end_date", "limit"},
-		"info_platformmetrics_get_chain_activity":       {"metric_group", "chain", "start_date", "end_date", "lookback"},
-		"info_onchain_get_address_transactions":         {"from_address", "to_address", "nonzero_value"},
-		"info_compliance_check_token_security":          {"token", "address", "chain"},
-		"info_marketdetail_get_kline":                   {"symbol", "timeframe", "extra"},
+		"info_platformmetrics_get_chain_activity":               {"metric_group", "chain", "start_date", "end_date", "lookback"},
+		"info_onchain_get_address_transactions":                 {"from_address", "to_address", "nonzero_value"},
+		"info_compliance_check_token_security":                  {"token", "address", "chain"},
+		"info_marketdetail_get_kline":                           {"symbol", "timeframe", "extra"},
 	}
 	for tool, fields := range cases {
 		schema := InfoBaselineInputSchema(tool)

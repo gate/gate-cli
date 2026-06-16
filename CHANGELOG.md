@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [v0.7.7]
+
+### Changed
+
+- **Info/news shortcuts** — multi-tool shortcut chains now run bounded parallel MCP calls with a shared 120s budget (`+coin-overview`, `+market-overview`, `+coin-compare`, `news +brief`, `news +community-scan`), reducing end-to-end latency while preserving partial-result behavior.
+- **Shortcut meta / freshness** — shortcut outputs now normalize pseudo tool names through `toolrender.MetaToolName` (for example `news/+brief` → `news_shortcut_brief`) so news shortcuts receive the same `meta.freshness_summary` / freshness hints as news leaves.
+- **`info platformmetrics get-chain-activity`** — bundled MCP spec and flat-flag schema now support `metric_group=l2` and `metric_group=btc_l2` in addition to staking, including `chain`, `project`, `granularity`, and `limit` semantics. Pretty output renders staking, L2 series, and BTC L2 project payloads separately.
+- **`info platformmetrics get-exchange-reserves`** — bundled spec and baseline schema include `scope=full` flow/event options (`include_flows`, `include_events`, date range, `event_type`, `limit`) aligned with the upstream MCP response shape.
+- **Freshness hints** — news freshness hints are derived from `meta.freshness_summary`, include `span_over_7d`, and parse digit-only timestamp strings / high-precision Unix timestamps more robustly.
+- **Agent mode detection** — `GATE_CLI_AGENT=true|yes|1` now enables agent JSON defaults, and truthy `GATE_CLI_AGENT` no longer masks richer user-agent detection such as Cursor.
+
+### Fixed
+
+- **`news +brief` / sentiment validation** — `news +brief --time-range` is validated locally (`1h` / `24h` / `7d`), and `news_feed_get_social_sentiment` no longer accepts unsupported `30d`.
+- **`info +address-tracker`** — `--min-value` must be non-negative; zero now omits `min_value_usd` instead of silently forcing `100000`.
+- **Agent command hints** — wrong-path corrections only trigger on unknown-command errors, preserve flag tails, avoid suggesting a path that is already correct, and use positionals instead of raw argv text.
+- **`doctor` / `migrate` / `preflight` errors** — already-printed `GateError` cases return `ErrSilenced` so Cobra does not emit duplicate error text.
+- **Execute-error format selection** — fallback error envelopes respect an explicitly changed `--format`; default root flag values no longer force pretty output in agent mode.
+- **Pretty rendering safety** — on-chain pretty output sanitizes control characters from string fields before writing terminal text.
+- **Intel upstream partial errors** — `info_onchain_get_address_transactions` partial-upstream message is now English and keeps the same `PARTIAL_UPSTREAM_RESPONSE` contract.
+
+### Added
+
+- **Shortcut orchestration helper** — `internal/intelcmd.RunParallel` and `WithShortcutBudget` provide bounded parallelism and timeout control for composed Intel shortcuts.
+- **Toolrender helpers/tests** — `MetaToolName` and terminal-text sanitization helpers centralize shortcut meta naming and safe pretty rendering.
+
 ## [v0.7.6]
 
 ### Changed
@@ -37,14 +63,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **PRD checklist** — `gate-ai-agent-cli-integration.md` § CLI 实现清单.
 - **`toolargs` (batch 2)** — `get_indicator_history`, `marketdetail` orderbook/trades, `search_coins`, `search_platforms` pre-MCP validation.
 - **`preflight` BLOCK** contract test (stderr-only, no stdout).
-- **`release.yaml`** — runs `agent-validate` before goreleaser.
+- **`release.yaml`** — runs `go test ./...` before goreleaser.
 - **`toolargs` (batch 3)** — onchain 4、macro 2、platformmetrics 5（含 `get-chain-activity`）、`get_coin_rankings`；**46/46** baseline 均有预检。
 - **`agent-index`** — `leaves[]` with `match_source` / `is_shortcut`; agent `agent_resolve_hint`.
 - **Intel MCP errors** — `ParseError` and `GateErrorForIntelToolIsError` call `FillAgentErrorConvergence` (`retryable`, `suggested_next_action`).
 - **PRD appendix** — `GateAI CLI 调用成本与稳定性优化 PRD.md` §附录 A 与 `gate-ai-agent-cli-integration.md` 对读。
 - **Path aliases** — info `kline`/`coinanalysis`, news `search-news`/`explain-market-move` cobra aliases; stderr path fixes for `news search`, `info coin analysis`, etc.
 - **`agent-leaves`** — **27** curated intents (institutional metrics, batch snapshot, exchange announcements, event detail, prediction, …).
-- **`.github/workflows/ci.yaml`** — `test-intel-scope.sh`, `TestAgentValidate`, and `gate-cli agent-validate` on push/PR.
+- **Local Intel test script** — `./scripts/test-intel-scope.sh` for scoped `go test` / `go vet` during iteration (not wired in CI by default).
 - **`gate-cli agent-leaves`** — JSON index of trace-backed high-frequency leaf commands for GateAI agents (replaces root `--help` crawl for the first batch).
 - **`gate-cli agent-search --query`** — keyword search over runnable leaf commands (P1 discovery fallback); optional **`--domain`** (`cex` / `info` / `news` / `config`, aliases `trading` / `intel`) and query synonym expansion (e.g. `redeem` → `records`).
 - **`gate-cli agent-index`** — export full runnable leaf catalog (`count`, `leaves`, `commands`) for offline Skill indexing; optional **`--domain`** filter.

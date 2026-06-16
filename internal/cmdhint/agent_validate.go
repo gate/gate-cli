@@ -16,10 +16,10 @@ type ShortcutPathMismatch struct {
 
 // AgentValidateReport is the combined CI report for MCP catalog + shortcuts.
 type AgentValidateReport struct {
-	OK         bool                    `json:"ok"`
-	MCP        MCPValidateSection      `json:"mcp_catalog"`
+	OK         bool                   `json:"ok"`
+	MCP        MCPValidateSection     `json:"mcp_catalog"`
 	Shortcuts  ShortcutValidateSection `json:"shortcuts"`
-	TotalCount int                     `json:"count"`
+	TotalCount int                    `json:"count"`
 }
 
 // MCPValidateSection holds baseline MCP path validation results.

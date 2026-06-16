@@ -44,6 +44,9 @@ func buildFreshnessSummary(data interface{}) map[string]interface{} {
 		} else {
 			summary["newest_is_stale"] = false
 		}
+		if len(st.Timestamps) > 1 && time.Now().UTC().Sub(oldest) > 7*24*time.Hour {
+			summary["span_over_7d"] = true
+		}
 	}
 	return summary
 }

@@ -165,10 +165,6 @@ func SuggestFromError(argv []string, err error, root *cobra.Command) *Diagnostic
 	if d := suggestAuthError(argv, msg); d != nil {
 		return augmentDiagnostic(d, argv)
 	}
-	if d := suggestPathCorrection(argv); d != nil {
-		d.Message = msg
-		return augmentDiagnostic(d, argv)
-	}
 	if strings.Contains(lower, "help_crawl_forbidden") || strings.Contains(lower, "help disabled on parent") {
 		return augmentDiagnostic(&Diagnostic{
 			Blocked:             true,
@@ -180,6 +176,10 @@ func SuggestFromError(argv []string, err error, root *cobra.Command) *Diagnostic
 		}, argv)
 	}
 	if strings.Contains(lower, "unknown command") {
+		if d := suggestPathCorrection(argv, msg); d != nil {
+			d.Message = msg
+			return augmentDiagnostic(d, argv)
+		}
 		if d := SuggestTopLevel(argv); d != nil {
 			return augmentDiagnostic(d, argv)
 		}
@@ -225,30 +225,86 @@ func suggestAuthError(argv []string, msg string) *Diagnostic {
 	}
 }
 
-func suggestPathCorrection(argv []string) *Diagnostic {
-	if len(argv) < 2 {
+func suggestPathCorrection(argv []string, msg string) *Diagnostic {
+	if len(argv) < 2 || !strings.Contains(strings.ToLower(msg), "unknown command") {
 		return nil
 	}
-	tail := strings.ToLower(strings.Join(argv[1:], " "))
+	positionals := nonFlagPositionals(argv)
+	if len(positionals) == 0 {
+		return nil
+	}
+	joined := strings.Join(positionals, " ")
+	joinedLower := strings.ToLower(joined)
 	for _, pc := range pathCorrections {
-		if strings.Contains(tail, pc.wrong) {
-			if strings.HasPrefix(pc.wrong, "earn") && strings.Contains(tail, "cex earn") {
-				continue
-			}
-			suggested := strings.Replace(tail, pc.wrong, pc.fix, 1)
-			return &Diagnostic{
-				Blocked:             true,
-				Reason:              "wrong_command_path",
-				ErrorType:           "COMMAND_NOT_FOUND",
-				Original:            strings.Join(argv[1:], " "),
-				Suggested:           cliBinaryName + " " + suggested,
-				SuggestedNextAction: "use the corrected grouped leaf command",
-				Retryable:           false,
-				Message:             "command path should use grouped leaves under cex/info/news",
-			}
+		fixLower := strings.ToLower(pc.fix)
+		if strings.Contains(joinedLower, fixLower) {
+			continue
+		}
+		if !strings.Contains(joinedLower, pc.wrong) {
+			continue
+		}
+		if strings.HasPrefix(pc.wrong, "earn") && strings.Contains(joinedLower, "cex earn") {
+			continue
+		}
+		corrected := replacePathSegment(joined, pc.wrong, pc.fix)
+		if corrected == "" {
+			continue
+		}
+		suggested := cliBinaryName + " " + corrected
+		if flags := flagTailFromArgv(argv); flags != "" {
+			suggested += " " + flags
+		}
+		return &Diagnostic{
+			Blocked:             true,
+			Reason:              "wrong_command_path",
+			ErrorType:           "COMMAND_NOT_FOUND",
+			Original:            strings.Join(argv[1:], " "),
+			Suggested:           suggested,
+			SuggestedNextAction: "use the corrected grouped leaf command",
+			Retryable:           false,
+			Message:             "command path should use grouped leaves under cex/info/news",
 		}
 	}
 	return nil
+}
+
+func replacePathSegment(joined, wrong, fix string) string {
+	joinedLower := strings.ToLower(joined)
+	i := strings.Index(joinedLower, wrong)
+	if i < 0 {
+		return ""
+	}
+	return joined[:i] + fix + joined[i+len(wrong):]
+}
+
+func flagTailFromArgv(argv []string) string {
+	for i := 1; i < len(argv); i++ {
+		if strings.HasPrefix(argv[i], "-") {
+			return strings.Join(argv[i:], " ")
+		}
+	}
+	return ""
+}
+
+func nonFlagPositionals(args []string) []string {
+	var out []string
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		if a == "--" {
+			break
+		}
+		if strings.HasPrefix(a, "-") {
+			if strings.Contains(a, "=") {
+				continue
+			}
+			if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
+				i++
+			}
+			continue
+		}
+		out = append(out, a)
+	}
+	return out
 }
 
 func suggestUnknownCommand(argv []string, msg string, root *cobra.Command) *Diagnostic {

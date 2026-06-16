@@ -51,27 +51,3 @@ func argsContainHelp(args []string) bool {
 	}
 	return false
 }
-
-func nonFlagPositionals(args []string) []string {
-	var out []string
-	for i := 0; i < len(args); i++ {
-		a := args[i]
-		if a == "--" {
-			break
-		}
-		if strings.HasPrefix(a, "-") {
-			if strings.Contains(a, "=") {
-				continue
-			}
-			if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") && !strings.Contains(a, "=") {
-				// skip value for -flag value pairs (not --flag=value)
-				if len(a) == 2 || (len(a) > 2 && a[1] != '-') {
-					i++
-				}
-			}
-			continue
-		}
-		out = append(out, a)
-	}
-	return out
-}

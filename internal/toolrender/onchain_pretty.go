@@ -32,10 +32,10 @@ func formatAddressInfoPretty(data map[string]interface{}) string {
 	if addr != "" || chain != "" {
 		b.WriteString("Address Profile\n\n")
 		if addr != "" {
-			fmt.Fprintf(&b, "  address: %s\n", addr)
+			fmt.Fprintf(&b, "  address: %s\n", sanitizeTerminalText(addr))
 		}
 		if chain != "" {
-			fmt.Fprintf(&b, "  chain: %s\n", chain)
+			fmt.Fprintf(&b, "  chain: %s\n", sanitizeTerminalText(chain))
 		}
 		if dc := stringSliceField(data, "detected_chains"); len(dc) > 0 {
 			fmt.Fprintf(&b, "  detected_chains: %s\n", strings.Join(dc, ", "))
@@ -297,7 +297,7 @@ func writeKV(b *strings.Builder, prefix, key, val string) {
 	if val == "" {
 		return
 	}
-	fmt.Fprintf(b, "%s%s: %s\n", prefix, key, val)
+	fmt.Fprintf(b, "%s%s: %s\n", prefix, key, sanitizeTerminalText(val))
 }
 
 func stringField(m map[string]interface{}, key string) string {

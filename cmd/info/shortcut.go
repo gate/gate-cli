@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync"
 
 	"github.com/spf13/cobra"
 
@@ -44,23 +45,40 @@ func newInfoCoinOverviewCmd() *cobra.Command {
 					return nil, err
 				}
 				out := map[string]interface{}{
-					"summary":         map[string]interface{}{"symbol": symbol, "partial": false},
+					"summary":         map[string]interface{}{"symbol": symbol},
 					"basic_info":      coin,
 					"market_snapshot": map[string]interface{}{},
 					"technical_view":  map[string]interface{}{},
 					"risk_flags":      []interface{}{},
 				}
 				var missing []string
-				if v, err := callMarketSnapshotForShortcut(ctx, svc, symbol); err == nil {
-					out["market_snapshot"] = v
-				} else {
-					missing = append(missing, "market_snapshot")
-				}
-				if v, err := callInfoShortcutTool(ctx, svc, "info_markettrend_get_technical_analysis", map[string]interface{}{"symbol": symbol}); err == nil {
-					out["technical_view"] = v
-				} else {
-					missing = append(missing, "technical_view")
-				}
+				var mu sync.Mutex
+				_ = intelcmd.RunParallel(intelcmd.DefaultShortcutParallelism, []func() error{
+					func() error {
+						if v, err := callMarketSnapshotForShortcut(ctx, svc, symbol); err == nil {
+							mu.Lock()
+							out["market_snapshot"] = v
+							mu.Unlock()
+						} else {
+							mu.Lock()
+							missing = append(missing, "market_snapshot")
+							mu.Unlock()
+						}
+						return nil
+					},
+					func() error {
+						if v, err := callInfoShortcutTool(ctx, svc, "info_markettrend_get_technical_analysis", map[string]interface{}{"symbol": symbol}); err == nil {
+							mu.Lock()
+							out["technical_view"] = v
+							mu.Unlock()
+						} else {
+							mu.Lock()
+							missing = append(missing, "technical_view")
+							mu.Unlock()
+						}
+						return nil
+					},
+				})
 				if len(missing) > 0 {
 					out["partial"] = true
 					out["missing_sections"] = missing
@@ -80,6 +98,9 @@ func newInfoMarketOverviewCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			rawBench, _ := cmd.Flags().GetString("benchmark")
 			benchmarks := splitCSVOrDefault(rawBench, []string{"BTC", "ETH", "SOL"})
+			if len(benchmarks) > 5 {
+				benchmarks = benchmarks[:5]
+			}
 			return runInfoShortcut(cmd, "info/+market-overview", func(ctx context.Context, svc infoService) (map[string]interface{}, error) {
 				summary, err := callInfoShortcutTool(ctx, svc, "info_marketsnapshot_get_market_overview", map[string]interface{}{})
 				if err != nil {
@@ -95,21 +116,36 @@ func newInfoMarketOverviewCmd() *cobra.Command {
 					"missing_sections":     []string{},
 				}
 				var snapshots []interface{}
-				for _, symbol := range benchmarks {
-					if v, err := callMarketSnapshotForShortcut(ctx, svc, symbol); err == nil {
-						snapshots = append(snapshots, map[string]interface{}{"symbol": symbol, "data": v})
-					}
-				}
-				out["benchmark_snapshots"] = snapshots
 				var anchors []interface{}
-				for i, symbol := range benchmarks {
-					if i >= 2 {
-						break
-					}
-					if v, err := callInfoShortcutTool(ctx, svc, "info_markettrend_get_technical_analysis", map[string]interface{}{"symbol": symbol}); err == nil {
-						anchors = append(anchors, map[string]interface{}{"symbol": symbol, "data": v})
-					}
+				var mu sync.Mutex
+				snapshotTasks := make([]func() error, 0, len(benchmarks))
+				for _, symbol := range benchmarks {
+					symbol := symbol
+					snapshotTasks = append(snapshotTasks, func() error {
+						if v, err := callMarketSnapshotForShortcut(ctx, svc, symbol); err == nil {
+							mu.Lock()
+							snapshots = append(snapshots, map[string]interface{}{"symbol": symbol, "data": v})
+							mu.Unlock()
+						}
+						return nil
+					})
 				}
+				_ = intelcmd.RunParallel(intelcmd.DefaultShortcutParallelism, snapshotTasks)
+				out["benchmark_snapshots"] = snapshots
+				anchorLimit := minInt(2, len(benchmarks))
+				anchorTasks := make([]func() error, 0, anchorLimit)
+				for i := 0; i < anchorLimit; i++ {
+					symbol := benchmarks[i]
+					anchorTasks = append(anchorTasks, func() error {
+						if v, err := callInfoShortcutTool(ctx, svc, "info_markettrend_get_technical_analysis", map[string]interface{}{"symbol": symbol}); err == nil {
+							mu.Lock()
+							anchors = append(anchors, map[string]interface{}{"symbol": symbol, "data": v})
+							mu.Unlock()
+						}
+						return nil
+					})
+				}
+				_ = intelcmd.RunParallel(intelcmd.DefaultShortcutParallelism, anchorTasks)
 				out["trend_anchor"] = anchors
 				var missing []string
 				if len(snapshots) < len(benchmarks) {
@@ -149,18 +185,36 @@ func newInfoCoinCompareCmd() *cobra.Command {
 				for _, symbol := range symbols {
 					row := map[string]interface{}{"symbol": symbol}
 					okCount := 0
-					if v, err := callCoinInfoForShortcut(ctx, svc, symbol); err == nil {
-						row["basic_info"] = v
-						okCount++
-					}
-					if v, err := callMarketSnapshotForShortcut(ctx, svc, symbol); err == nil {
-						row["market_snapshot"] = v
-						okCount++
-					}
-					if v, err := callInfoShortcutTool(ctx, svc, "info_markettrend_get_technical_analysis", map[string]interface{}{"symbol": symbol}); err == nil {
-						row["technical_view"] = v
-						okCount++
-					}
+					var rowMu sync.Mutex
+					_ = intelcmd.RunParallel(intelcmd.DefaultShortcutParallelism, []func() error{
+						func() error {
+							if v, err := callCoinInfoForShortcut(ctx, svc, symbol); err == nil {
+								rowMu.Lock()
+								row["basic_info"] = v
+								okCount++
+								rowMu.Unlock()
+							}
+							return nil
+						},
+						func() error {
+							if v, err := callMarketSnapshotForShortcut(ctx, svc, symbol); err == nil {
+								rowMu.Lock()
+								row["market_snapshot"] = v
+								okCount++
+								rowMu.Unlock()
+							}
+							return nil
+						},
+						func() error {
+							if v, err := callInfoShortcutTool(ctx, svc, "info_markettrend_get_technical_analysis", map[string]interface{}{"symbol": symbol}); err == nil {
+								rowMu.Lock()
+								row["technical_view"] = v
+								okCount++
+								rowMu.Unlock()
+							}
+							return nil
+						},
+					})
 					if okCount >= 2 {
 						matrix = append(matrix, row)
 					} else {
@@ -305,8 +359,8 @@ func newInfoAddressTrackerCmd() *cobra.Command {
 				return err
 			}
 			minValue, _ := cmd.Flags().GetFloat64("min-value")
-			if minValue <= 0 {
-				minValue = 100000
+			if minValue < 0 {
+				return intelcmd.FailAfterPrintError(getPrinter(cmd), output.InvalidArgsError("min-value must be non-negative"))
 			}
 			return runInfoShortcut(cmd, "info/+address-tracker", func(ctx context.Context, svc infoService) (map[string]interface{}, error) {
 				profile, err := callInfoShortcutTool(ctx, svc, "info_onchain_get_address_info", map[string]interface{}{
@@ -326,11 +380,14 @@ func newInfoAddressTrackerCmd() *cobra.Command {
 					"watch_items":           []interface{}{},
 					"coverage_note":         "partial: trace_fund_flow unavailable",
 				}
-				if recent, err := callInfoShortcutTool(ctx, svc, "info_onchain_get_address_transactions", map[string]interface{}{
-					"address":       address,
-					"chain":         chain,
-					"min_value_usd": minValue,
-				}); err == nil {
+				txArgs := map[string]interface{}{
+					"address": address,
+					"chain":   chain,
+				}
+				if minValue > 0 {
+					txArgs["min_value_usd"] = minValue
+				}
+				if recent, err := callInfoShortcutTool(ctx, svc, "info_onchain_get_address_transactions", txArgs); err == nil {
 					out["recent_activity"] = recent
 				} else {
 					out["recent_activity_unavailable"] = true
@@ -418,7 +475,9 @@ func runInfoShortcut(cmd *cobra.Command, path string, runner func(ctx context.Co
 	if err != nil {
 		return intelcmd.FailIntelClientInit(p, err, "info", "shortcut", "")
 	}
-	out, err := runner(cmd.Context(), svc)
+	ctx, cancel := intelcmd.WithShortcutBudget(cmd.Context())
+	defer cancel()
+	out, err := runner(ctx, svc)
 	if err != nil {
 		ge := intelcmd.GateErrorFromShortcutErr(err, path)
 		output.FillAgentErrorConvergence(ge)

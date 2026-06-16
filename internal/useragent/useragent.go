@@ -40,8 +40,8 @@ var knownDetectors = []detector{
 
 // Detect identifies the calling environment from environment variables.
 func Detect() AgentInfo {
-	// Priority 1: explicit override
-	if name := os.Getenv("GATE_CLI_AGENT"); name != "" {
+	// Priority 1: explicit override (skip agent-mode truthy values; those enable JSON defaults, not UA names).
+	if name := os.Getenv("GATE_CLI_AGENT"); name != "" && !isAgentModeTruthy(name) {
 		return AgentInfo{
 			Name:  name,
 			Extra: envOrDefault("GATE_CLI_AGENT_VERSION", "-"),
@@ -109,6 +109,15 @@ func ExtractCmdPath(commandPath string) string {
 		return strings.Join(parts[2:], "/")
 	}
 	return strings.Join(parts[1:], "/")
+}
+
+func isAgentModeTruthy(v string) bool {
+	switch strings.TrimSpace(strings.ToLower(v)) {
+	case "1", "true", "yes":
+		return true
+	default:
+		return false
+	}
 }
 
 func envOrDefault(key, fallback string) string {

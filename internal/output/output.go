@@ -108,23 +108,25 @@ func (p *Printer) Format() Format {
 // JSON mode uses compact encoding (single line, plus trailing newline) for piping and jq.
 // Pretty/table mode uses indented JSON for readability.
 func (p *Printer) Print(data interface{}) error {
+	toPrint := data
 	if p.maxOutputBytes > 0 {
 		if trimmed, truncated := TruncateDataIfNeeded(data, p.maxOutputBytes); truncated {
-			data = trimmed
+			toPrint = trimmed
 		}
 	}
-	var b []byte
-	var err error
-	if p.format == FormatJSON {
-		b, err = json.Marshal(data)
-	} else {
-		b, err = json.MarshalIndent(data, "", "  ")
-	}
+	b, err := p.marshalData(toPrint)
 	if err != nil {
 		return err
 	}
 	_, err = fmt.Fprintln(p.out, string(b))
 	return err
+}
+
+func (p *Printer) marshalData(data interface{}) ([]byte, error) {
+	if p.format == FormatJSON {
+		return json.Marshal(data)
+	}
+	return json.MarshalIndent(data, "", "  ")
 }
 
 // WritePretty writes human-oriented text to stdout (for --format pretty or --format table).

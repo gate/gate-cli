@@ -71,7 +71,7 @@ func (errUnknownFlag) Error() string { return `unknown flag: --bad` }
 
 func TestSuggestPathCorrectionNewsExplain(t *testing.T) {
 	t.Parallel()
-	d := suggestPathCorrection([]string{"gate-cli", "news", "explain-market-move", "--coin", "BTC"})
+	d := suggestPathCorrection([]string{"gate-cli", "news", "explain-market-move", "--coin", "BTC"}, `unknown command "explain-market-move" for "gate-cli news"`)
 	if d == nil || !strings.Contains(d.Suggested, "news events explain-market-move") {
 		t.Fatalf("got %#v", d)
 	}
@@ -79,7 +79,7 @@ func TestSuggestPathCorrectionNewsExplain(t *testing.T) {
 
 func TestSuggestPathCorrectionNewsFeedExplain(t *testing.T) {
 	t.Parallel()
-	d := suggestPathCorrection([]string{"gate-cli", "news", "feed", "explain-market-move", "--coin", "BTC"})
+	d := suggestPathCorrection([]string{"gate-cli", "news", "feed", "explain-market-move", "--coin", "BTC"}, `unknown command "explain-market-move" for "gate-cli news feed"`)
 	if d == nil || !strings.Contains(d.Suggested, "news events explain-market-move") {
 		t.Fatalf("got %#v", d)
 	}
@@ -103,7 +103,7 @@ func TestSuggestFlagCorrectionNewsSymbol(t *testing.T) {
 
 func TestSuggestPathCorrectionNewsSearch(t *testing.T) {
 	t.Parallel()
-	d := suggestPathCorrection([]string{"gate-cli", "news", "search", "--coin", "BTC"})
+	d := suggestPathCorrection([]string{"gate-cli", "news", "search", "--coin", "BTC"}, `unknown command "search" for "gate-cli news"`)
 	if d == nil || !strings.Contains(d.Suggested, "news feed search-news") {
 		t.Fatalf("got %#v", d)
 	}

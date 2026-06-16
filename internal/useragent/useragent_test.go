@@ -64,6 +64,12 @@ func TestDetect(t *testing.T) {
 			wantExtra: "-",
 		},
 		{
+			name:      "agent mode truthy skips UA override",
+			envs:      map[string]string{"GATE_CLI_AGENT": "1", "CURSOR_AGENT": "1"},
+			wantName:  "cursor",
+			wantExtra: "-",
+		},
+		{
 			name:      "Claude Code CLI",
 			envs:      map[string]string{"CLAUDECODE": "1", "CLAUDE_CODE_ENTRYPOINT": "cli"},
 			wantName:  "claude-code",

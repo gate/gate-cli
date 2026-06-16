@@ -23,9 +23,9 @@ func TestResolveTokenAddressAndChainItemsChainArray(t *testing.T) {
 	coin := map[string]interface{}{
 		"items": []interface{}{
 			map[string]interface{}{
-				"symbol":           "USDT",
-				"contract_address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
-				"chain":            []interface{}{"Ethereum", "BNB Chain"},
+				"symbol":            "USDT",
+				"contract_address":  "0xdac17f958d2ee523a2206206994597c13d831ec7",
+				"chain":             []interface{}{"Ethereum", "BNB Chain"},
 			},
 		},
 	}

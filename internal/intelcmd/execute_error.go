@@ -3,11 +3,11 @@ package intelcmd
 import (
 	"errors"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 
+	"github.com/gate/gate-cli/internal/agentfeature"
 	"github.com/gate/gate-cli/internal/output"
 )
 
@@ -39,8 +39,8 @@ func EmitExecuteErrorEnvelope(w io.Writer, root *cobra.Command, argv []string, e
 
 func resolveOutputFormatFromArgv(root *cobra.Command, argv []string) output.Format {
 	if root != nil {
-		if raw, err := root.PersistentFlags().GetString("format"); err == nil && strings.TrimSpace(raw) != "" {
-			return output.ParseFormat(raw)
+		if f := root.PersistentFlags().Lookup("format"); f != nil && f.Changed {
+			return output.ParseFormat(f.Value.String())
 		}
 	}
 	for i := 0; i < len(argv); i++ {
@@ -52,7 +52,7 @@ func resolveOutputFormatFromArgv(root *cobra.Command, argv []string) output.Form
 			return output.ParseFormat(strings.TrimPrefix(a, "--format="))
 		}
 	}
-	if strings.TrimSpace(os.Getenv("GATE_CLI_AGENT")) == "1" || strings.TrimSpace(os.Getenv("GATE_AI_AGENT")) == "1" {
+	if agentfeature.RuntimeEnvEnabled() {
 		return output.FormatJSON
 	}
 	return output.FormatPretty

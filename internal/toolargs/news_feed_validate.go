@@ -9,6 +9,10 @@ var searchNewsTimeRanges = map[string]struct{}{
 	"1h": {}, "24h": {}, "7d": {}, "30d": {},
 }
 
+var sentimentTimeRanges = map[string]struct{}{
+	"1h": {}, "24h": {}, "7d": {},
+}
+
 var searchXTimeRanges = map[string]struct{}{
 	"1h": {}, "24h": {}, "7d": {},
 }
@@ -144,8 +148,8 @@ func validateNewsFeedExchangeAnnouncements(arguments map[string]interface{}) err
 
 func validateNewsFeedSocialSentiment(arguments map[string]interface{}) error {
 	if tr := strings.TrimSpace(strings.ToLower(stringArg(arguments, "time_range"))); tr != "" {
-		if _, ok := searchNewsTimeRanges[tr]; !ok {
-			return errInvalidArgumentsf("time_range must be 1h, 24h, 7d, or 30d (got %q)", stringArg(arguments, "time_range"))
+		if _, ok := sentimentTimeRanges[tr]; !ok {
+			return errInvalidArgumentsf("time_range must be 1h, 24h, or 7d (got %q)", stringArg(arguments, "time_range"))
 		}
 	}
 	return nil

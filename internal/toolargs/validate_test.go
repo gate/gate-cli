@@ -523,9 +523,9 @@ func TestValidateForTool_EventSignalAcceptsCaseInsensitiveWindow(t *testing.T) {
 func TestValidateForTool_SearchXRejectsBothHandleLists(t *testing.T) {
 	t.Parallel()
 	err := ValidateForTool("news_feed_search_x", map[string]interface{}{
-		"query":            "btc",
-		"allowed_handles":  []string{"a"},
-		"excluded_handles": []string{"b"},
+		"query":             "btc",
+		"allowed_handles":   []string{"a"},
+		"excluded_handles":  []string{"b"},
 	})
 	if err == nil || !strings.Contains(err.Error(), "allowed_handles") {
 		t.Fatalf("expected handles conflict error, got %v", err)
@@ -675,7 +675,7 @@ func TestValidateForTool_CoinRankingsCrossFieldRules(t *testing.T) {
 		t.Fatalf("expected valid gainers+time_range, got %v", err)
 	}
 	if ValidateForTool(tool, map[string]interface{}{
-		"ranking_type":  "popular",
+		"ranking_type": "popular",
 		"listing_query": "btc",
 	}) == nil {
 		t.Fatal("expected error when listing_query set for non-new_listing")

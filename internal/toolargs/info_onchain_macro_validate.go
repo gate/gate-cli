@@ -127,6 +127,8 @@ func validateInfoPlatformmetricsLiquidationHeatmap(arguments map[string]interfac
 
 var chainActivityMetricGroups = map[string]struct{}{
 	"staking": {},
+	"l2":      {},
+	"btc_l2":  {},
 }
 
 var chainActivityLookbacks = map[string]struct{}{
@@ -140,6 +142,20 @@ var chainActivityStakingChains = map[string]struct{}{
 	"ethereum": {},
 }
 
+var chainActivityL2Chains = map[string]struct{}{
+	"base":       {},
+	"arbitrum":   {},
+	"optimism":   {},
+	"linea":      {},
+	"zksync_era": {},
+	"zksync":     {},
+	"blast":      {},
+}
+
+var chainActivityBtcL2Chains = map[string]struct{}{
+	"btc": {},
+}
+
 func validateInfoPlatformmetricsChainActivity(arguments map[string]interface{}) error {
 	mg := strings.TrimSpace(strings.ToLower(stringArg(arguments, "metric_group")))
 	if mg == "" {
@@ -149,9 +165,18 @@ func validateInfoPlatformmetricsChainActivity(arguments map[string]interface{}) 
 		return errInvalidArgumentsf("metric_group is not supported (got %q)", stringArg(arguments, "metric_group"))
 	}
 	if chain := strings.TrimSpace(strings.ToLower(stringArg(arguments, "chain"))); chain != "" {
-		if mg == "staking" {
+		switch mg {
+		case "staking":
 			if _, ok := chainActivityStakingChains[chain]; !ok {
 				return errInvalidArgumentsf("chain must be eth or ethereum for metric_group=staking (got %q)", stringArg(arguments, "chain"))
+			}
+		case "l2":
+			if _, ok := chainActivityL2Chains[chain]; !ok {
+				return errInvalidArgumentsf("chain %q is not supported for metric_group=l2; supported: base, arbitrum, optimism, linea, zksync_era (alias: zksync), blast", stringArg(arguments, "chain"))
+			}
+		case "btc_l2":
+			if _, ok := chainActivityBtcL2Chains[chain]; !ok {
+				return errInvalidArgumentsf("chain must be btc for metric_group=btc_l2 (got %q)", stringArg(arguments, "chain"))
 			}
 		}
 	}
