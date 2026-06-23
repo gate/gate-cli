@@ -248,3 +248,28 @@ func intArg(arguments map[string]interface{}, key string) (int, bool) {
 		return 0, false
 	}
 }
+
+func floatArg(arguments map[string]interface{}, key string) (float64, bool) {
+	v, ok := arguments[key]
+	if !ok || v == nil {
+		return 0, false
+	}
+	switch n := v.(type) {
+	case float64:
+		return n, true
+	case float32:
+		return float64(n), true
+	case int:
+		return float64(n), true
+	case int64:
+		return float64(n), true
+	case json.Number:
+		f, err := n.Float64()
+		if err != nil {
+			return 0, true
+		}
+		return f, true
+	default:
+		return 0, false
+	}
+}

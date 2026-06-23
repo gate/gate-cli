@@ -176,6 +176,96 @@ func TestValidateForTool_StablecoinExtensionChainWhitelist(t *testing.T) {
 	}
 }
 
+func TestValidateForTool_StablecoinDepegEvents(t *testing.T) {
+	t.Parallel()
+	// depeg_events with full scope should pass
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":    "full",
+		"sections": []string{"depeg_events"},
+	}) != nil {
+		t.Fatal("expected nil for full + depeg_events")
+	}
+	// depeg_events with basic scope should fail
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":    "basic",
+		"sections": []string{"depeg_events"},
+	}) == nil {
+		t.Fatal("expected error for basic + depeg_events")
+	}
+	// depeg_events with min_deviation in range should pass
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":         "full",
+		"sections":      []string{"depeg_events"},
+		"min_deviation": 0.005,
+	}) != nil {
+		t.Fatal("expected nil for depeg_events with valid min_deviation")
+	}
+	// min_deviation below range should fail
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":         "full",
+		"sections":      []string{"depeg_events"},
+		"min_deviation": 0.0005,
+	}) == nil {
+		t.Fatal("expected error for min_deviation below 0.001")
+	}
+	// min_deviation above range should fail
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":         "full",
+		"sections":      []string{"depeg_events"},
+		"min_deviation": 0.3,
+	}) == nil {
+		t.Fatal("expected error for min_deviation above 0.2")
+	}
+	// valid review_status should pass
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":         "full",
+		"sections":      []string{"depeg_events"},
+		"review_status": "approved",
+	}) != nil {
+		t.Fatal("expected nil for depeg_events with valid review_status")
+	}
+	// invalid review_status should fail
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":         "full",
+		"sections":      []string{"depeg_events"},
+		"review_status": "invalid",
+	}) == nil {
+		t.Fatal("expected error for invalid review_status")
+	}
+	// min_deviation without depeg_events should fail
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":         "full",
+		"sections":      []string{"usage_structure"},
+		"min_deviation": 0.005,
+	}) == nil {
+		t.Fatal("expected error for min_deviation without depeg_events section")
+	}
+	// review_status without depeg_events should fail
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":         "full",
+		"sections":      []string{"usage_structure"},
+		"review_status": "approved",
+	}) == nil {
+		t.Fatal("expected error for review_status without depeg_events section")
+	}
+	// depeg_events with dates should pass
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":      "full",
+		"sections":   []string{"depeg_events"},
+		"start_date": "2020-01-01",
+		"end_date":   "2026-06-01",
+	}) != nil {
+		t.Fatal("expected nil for depeg_events + dates")
+	}
+	// depeg_events combined with other sections should pass
+	if ValidateForTool("info_platformmetrics_get_stablecoin_info", map[string]interface{}{
+		"scope":    "full",
+		"sections": []string{"issuance_flow", "depeg_events"},
+	}) != nil {
+		t.Fatal("expected nil for issuance_flow + depeg_events")
+	}
+}
+
 func TestValidateForTool_InstitutionalMetricsEnumsAndBounds(t *testing.T) {
 	t.Parallel()
 	tool := "info_marketsnapshot_get_institutional_metrics"

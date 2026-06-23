@@ -19,14 +19,17 @@ func validateInfoStablecoinInfo(arguments map[string]interface{}) error {
 		}
 		hasIssuanceFlow := false
 		hasUsageStructure := false
+		hasDepegEvents := false
 		for _, sec := range sections {
 			switch strings.ToLower(strings.TrimSpace(sec)) {
 			case "issuance_flow":
 				hasIssuanceFlow = true
 			case "usage_structure":
 				hasUsageStructure = true
+			case "depeg_events":
+				hasDepegEvents = true
 			default:
-				return errInvalidArgumentsf("sections must be issuance_flow or usage_structure (got %q)", sec)
+				return errInvalidArgumentsf("sections must be issuance_flow, usage_structure, or depeg_events (got %q)", sec)
 			}
 		}
 		if sym := strings.TrimSpace(stringArg(arguments, "symbol")); sym != "" {
@@ -41,11 +44,30 @@ func validateInfoStablecoinInfo(arguments map[string]interface{}) error {
 		if chain := strings.TrimSpace(stringArg(arguments, "chain")); chain != "" && !stablecoinExtensionChainAllowed(chain) {
 			return errInvalidArgumentsf("chain is invalid for stablecoin extension sections (got %q)", chain)
 		}
+		if hasDepegEvents {
+			if v, ok := floatArg(arguments, "min_deviation"); ok && (v < 0.001 || v > 0.2) {
+				return errInvalidArguments("min_deviation must be between 0.001 and 0.2")
+			}
+			if v := strings.TrimSpace(stringArg(arguments, "review_status")); v != "" {
+				switch strings.ToLower(v) {
+				case "candidate", "approved", "rejected":
+				default:
+					return errInvalidArgumentsf("review_status must be candidate, approved, or rejected (got %q)", v)
+				}
+			}
+		} else {
+			if _, ok := floatArg(arguments, "min_deviation"); ok {
+				return errInvalidArguments("min_deviation requires sections=depeg_events")
+			}
+			if v := strings.TrimSpace(stringArg(arguments, "review_status")); v != "" {
+				return errInvalidArguments("review_status requires sections=depeg_events")
+			}
+		}
 	}
 
 	if nonEmptyStringArg(arguments, "start_date") || nonEmptyStringArg(arguments, "end_date") {
 		if scope != "full" || !stablecoinSectionsHasExtension(sections) {
-			return errInvalidArguments("start_date and end_date require scope=full and sections=issuance_flow or usage_structure")
+			return errInvalidArguments("start_date and end_date require scope=full and sections=issuance_flow, usage_structure, or depeg_events")
 		}
 	}
 
@@ -72,7 +94,7 @@ func stablecoinSectionsArg(arguments map[string]interface{}) []string {
 func stablecoinSectionsHasExtension(sections []string) bool {
 	for _, sec := range sections {
 		switch strings.ToLower(strings.TrimSpace(sec)) {
-		case "issuance_flow", "usage_structure":
+		case "issuance_flow", "usage_structure", "depeg_events":
 			return true
 		}
 	}

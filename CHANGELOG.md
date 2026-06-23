@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [v0.7.8]
+
+### Changed
+
+- **`info platformmetrics get-stablecoin-info`** — flat-flag schema and bundled MCP spec now support `sections=depeg_events` alongside `issuance_flow` and `usage_structure`. The depeg section documents symbol filtering by `depeg_asset`, default date window behavior, and returned `depeg_events[]` semantics.
+- **Stablecoin depeg filters** — add `min_deviation` (`0.001`-`0.2`, depeg-only) and `review_status` (`candidate` / `approved` / `rejected`, depeg-only) to the baseline schema and bundled spec.
+- **Bundled Info MCP spec** — resync snapshot `scope=full` derivatives behavior, DeFi overview category notes, and chain-activity field notes with the current upstream MCP logic.
+
+### Fixed
+
+- **`internal/toolargs` stablecoin validation** — local pre-MCP checks now accept `depeg_events`, allow date windows for that extension section, reject depeg-only filters when the section is absent, and validate `min_deviation` / `review_status` before calling MCP.
+
+### Tests
+
+- **`internal/toolargs`** — added coverage for stablecoin `depeg_events` scope requirements, valid/invalid depeg filters, date windows, and mixed-section requests.
+
 ## [v0.7.7]
 
 ### Changed

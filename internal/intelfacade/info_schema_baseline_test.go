@@ -109,7 +109,7 @@ func TestInfoBaselineIntegerBoundsMatchSpecDoc(t *testing.T) {
 	}
 	sections := sp["sections"].(map[string]interface{})
 	enum := sections["enum"].([]interface{})
-	if !reflect.DeepEqual(enum, []interface{}{"issuance_flow", "usage_structure"}) {
+	if !reflect.DeepEqual(enum, []interface{}{"issuance_flow", "usage_structure", "depeg_events"}) {
 		t.Fatalf("stablecoin_info sections enum mismatch: %#v", enum)
 	}
 	lim := sp["limit"].(map[string]interface{})

@@ -482,10 +482,10 @@
             "detailed",
             "full"
           ],
-          "enum_note": "omit -> basic"
+          "enum_note": "omit -> basic; scope=full merges Coinglass derivatives + institutional_channel_summary + market_pulse; scope=detailed 不再返回 derivatives（与 basic 行为一致）"
         }
       ],
-      "logic": "mcphost tools_snapshot -> snapshot.Service.GetSnapshot; scope detailed|full merges Coinglass derivatives when platformmetrics.coinglassCoinDerivatives index configured; if snapshot service nil returns snapshot_not_configured.",
+      "logic": "mcphost tools_snapshot -> snapshot.Service.GetSnapshot; scope=full fetches Coinglass derivatives from platformmetrics.indices.snapshotCoinglassDerivatives (dwd_external_coinglass_coin_derivatives_hf) via fetchCoinglassDerivativesDoc, field remap: funding_rate_oi_weighted→funding_rate, open_interest_usd→open_interest, long_short_ratio_global→long_short_ratio, time fields (snapshot_time, etl_time) stripped, sort by part_hour desc. scope=full also fetches institutional_channel_summary for BTC/ETH and market_pulse. scope=detailed|basic no longer fetches derivatives. if snapshot service nil returns snapshot_not_configured.",
       "description": "[Read] Single-pair market snapshot (price, kline, optional Coinglass derivatives). Batch symbols -> batch_market_snapshot; macro venue flow -> get_institutional_metrics."
     },
     {
@@ -540,10 +540,10 @@
             "detailed",
             "full"
           ],
-          "enum_note": "omit -> basic"
+          "enum_note": "omit -> basic; scope=full adds derivatives per symbol (Coinglass via snapshotCoinglassDerivatives index); scope=detailed no longer returns derivatives"
         }
       ],
-      "logic": "mcphost tools_snapshot -> snapshot.Service.BatchMarketSnapshot; validates symbols(max 20), timeframe/scope/source then msearch kline and enrich realtime/project_info.",
+      "logic": "mcphost tools_snapshot -> snapshot.Service.BatchMarketSnapshot; validates symbols(max 20), timeframe/scope/source then msearch kline and enrich realtime/project_info. scope=full fetches Coinglass derivatives per symbol via fetchCoinglassDerivativesDoc (index: platformmetrics.indices.snapshotCoinglassDerivatives, field remap same as get_market_snapshot). scope=detailed|basic skip derivatives fetch. empty derivatives returns {} per symbol.",
       "description": "[Read] Batch market snapshots for up to 20 symbols. One symbol -> get_market_snapshot."
     },
     {
@@ -1068,24 +1068,24 @@
           "enum": [
             "all",
             "defi",
-            "de-fi",
-            "cex",
-            "perp",
             "spot",
-            "stablecoin"
+            "perp",
+            "stablecoin",
+            "bridge"
           ],
           "common_values": [
+            "de-fi",
+            "cex",
             "dex",
             "dexs",
             "dexes",
             "lending",
             "cdp",
             "yield",
-            "bridge",
             "derivatives",
             "yield aggregator"
           ],
-          "enum_note": "omit -> all; known values are case-insensitive; unknown strings are allowed and passed through as platform_type filter (no hard reject)"
+          "enum_note": "omit -> all; primary values match jsonschema_description; de-fi/cex/dex/dexs/dexes/lending/cdp/yield/derivatives are alias-expanded by normalizeDefiOverviewCategory; unknown strings are passed through as platform_type filter (no hard reject)"
         }
       ],
       "logic": "mcphost tools_platformmetrics -> fetcher.GetDefiOverview; optional cex_perps_volume_* from cexExchangeDerivativesVolume index, exchange_usdt_reserve_total from exchange_reserves USDT sum; nil fetcher returns requires_open_search.",
@@ -1101,7 +1101,7 @@
           "name": "symbol",
           "type": "string",
           "required": false,
-          "enum_note": "Basic DefiLlama items: any symbol or omit for ranked list; sections=issuance_flow whitelist USDT|USDC (omit defaults USDT+USDC); sections=usage_structure whitelist USDT|USDC|DAI|FDUSD|PYUSD (omit defaults all five); unsupported extension symbol -> unsupported_stablecoin_symbol"
+          "enum_note": "Basic DefiLlama items: any symbol or omit for ranked list; sections=issuance_flow whitelist USDT|USDC (omit defaults USDT+USDC); sections=usage_structure whitelist USDT|USDC|DAI|FDUSD|PYUSD (omit defaults all five); sections=depeg_events filters by depeg_asset.keyword (case-insensitive uppercased, omit = all assets); unsupported extension symbol -> unsupported_stablecoin_symbol"
         },
         {
           "name": "chain",
@@ -1131,25 +1131,43 @@
           "required": false,
           "enum": [
             "issuance_flow",
-            "usage_structure"
+            "usage_structure",
+            "depeg_events"
           ],
-          "enum_note": "Comma string or array; requires scope=full (else sections_requires_full_scope); can request one or both sections; unknown section -> invalid_sections"
+          "enum_note": "Comma string or array; requires scope=full (else sections_requires_full_scope); can request one or more sections; unknown section -> invalid_sections"
         },
         {
           "name": "start_date",
           "type": "string",
           "required": false,
-          "enum_note": "UTC YYYY-MM-DD; only with scope=full and sections=issuance_flow or usage_structure else invalid_param; default last 30 calendar days inclusive"
+          "enum_note": "UTC YYYY-MM-DD; only with scope=full and sections set else invalid_param; issuance_flow/usage_structure: default last 30 calendar days inclusive; depeg_events: default 2020-01-01 to today"
         },
         {
           "name": "end_date",
           "type": "string",
           "required": false,
-          "enum_note": "UTC YYYY-MM-DD; issuance_flow caps future dates to today; usage_structure defaults to latest data date when omitted; window >366d truncates start with range_truncated=true"
+          "enum_note": "UTC YYYY-MM-DD; issuance_flow caps future dates to today; usage_structure defaults to latest data date when omitted; depeg_events defaults to today; window >366d truncates start with range_truncated=true"
+        },
+        {
+          "name": "min_deviation",
+          "type": "float64",
+          "required": false,
+          "enum_note": "depeg_events only: filter rows where max_deviation >= this value; range 0.001-0.2, default 0.005"
+        },
+        {
+          "name": "review_status",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "candidate",
+            "approved",
+            "rejected"
+          ],
+          "enum_note": "depeg_events only: filter by review_status; default approved; invalid value -> invalid_review_status"
         }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.GetStablecoinInfo; validates scope basic|full and sections issuance_flow|usage_structure, rejects sections without scope=full and date params without extension sections. Base items query stablecoinInfo recent snapshots sorted by total_circulating desc; chain filter is applied in Go by parsing chain_circulating (list without chain returns chain_circulating=null, list with chain returns requested chain peggedUSD, detail without chain returns top5+_other_chains_*, detail with chain returns requested chain). scope=full+sections=issuance_flow queries stablecoinIssuanceFlow via ES by_asset terms + by_date date_histogram agg (empty agg -> hit scan fallback) and adds issuance_flows[] with summary/series/chain_breakdown when chain=all; issuance_flow index/query errors degrade to placeholder flow blocks with quality_note. scope=full+sections=usage_structure queries stablecoinRealUsage, resolves latest/default date window, and adds usage_structure{window_start,window_end,items[]} with adjusted_transfer_volume (entity_adjusted first, adjusted fallback), bot_share (derived from entity_adjusted/transfer_volume first, bot_share fallback), retail_transfer_change, stablecoin_trade_volume, reference fields, data_status, missing_fields, row_count; missing usage index or query errors degrade to placeholder usage items. range_truncated=true when any extension window is clipped; nil fetcher returns requires_open_search; missing stablecoinInfo index returns not_implemented.",
-      "description": "[Read] Stablecoin circulation and chain breakdown; scope=full + sections issuance_flow|usage_structure for supply/usage analytics. DeFi category overview -> get_defi_overview."
+      "logic": "mcphost tools_platformmetrics -> fetcher.GetStablecoinInfo; validates scope basic|full and sections issuance_flow|usage_structure|depeg_events, rejects sections without scope=full and date params without extension sections. Base items query stablecoinInfo recent snapshots sorted by total_circulating desc; chain filter is applied in Go by parsing chain_circulating (list without chain returns chain_circulating=null, list with chain returns requested chain peggedUSD, detail without chain returns top5+_other_chains_*, detail with chain returns requested chain). scope=full+sections=issuance_flow queries stablecoinIssuanceFlow via ES by_asset terms + by_date date_histogram agg (empty agg -> hit scan fallback) and adds issuance_flows[] with summary/series/chain_breakdown when chain=all; issuance_flow index/query errors degrade to placeholder flow blocks with quality_note. scope=full+sections=usage_structure queries stablecoinRealUsage, resolves latest/default date window, and adds usage_structure{window_start,window_end,items[]} with adjusted_transfer_volume (entity_adjusted first, adjusted fallback), bot_share (derived from entity_adjusted/transfer_volume first, bot_share fallback), retail_transfer_change, stablecoin_trade_volume, reference fields, data_status, missing_fields, row_count; missing usage index or query errors degrade to placeholder usage items. scope=full+sections=depeg_events queries stablecoinDepeg index, filters by depeg_asset (symbol uppercased) and optional review_status (default approved) and min_deviation (max_deviation >= min_deviation, default 0.005); returns depeg_events[] with asset/date/price/deviation values, sorted by max_deviation desc or date desc. range_truncated=true when any extension window is clipped; nil fetcher returns requires_open_search; missing stablecoinInfo index returns not_implemented.",
+      "description": "[Read] Stablecoin circulation and chain breakdown; scope=full + sections issuance_flow|usage_structure|depeg_events for supply, usage, and depeg analytics. DeFi category overview -> get_defi_overview."
     },
     {
       "tool_name": "info_platformmetrics_get_bridge_metrics",
@@ -1424,7 +1442,7 @@
         { "name": "granularity", "type": "string", "required": false, "enum": ["day"], "enum_note": "l2 only: day (default); hour or minute returns unsupported_granularity; ignored for staking/btc_l2" },
         { "name": "limit", "type": "int", "required": false, "enum_note": "l2 only: max series rows returned; 0 means no extra cap beyond date window; ignored for staking/btc_l2" }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.GetChainActivity (GAP-012/GAP-009/GAP-0xx). Routes by metric_group: staking->getChainActivityStaking queries platformmetrics.indices.ethStakingNetworkDaily (dwd_external_beaconcha_in_staking_data_di); l2->getChainActivityL2 queries l2Metrics index (dwd_external_l2_metrics_daily_di); btc_l2->getChainActivityBtcL2 queries btcProtocol index (dwd_external_btc_protocol_di). staking: series[].validator_active/entry_queue_eth/exit_queue_eth/eth_supply/staking_rate/staking_apr_7d/entry_wait_days/exit_wait_days with validator_estimate=eth/32; per-row missing_fields+data_status; 2025-05-07..2025-05-21 rows quality_warning; explicit window >400d truncates. l2: series[] per chain with tps_avg_1d/active_addresses_1d/blob_cost_usd_1d/sequencer_revenue_usd_1d/stage_label/tvl_usd/data_source; tx_count/l1_fee_usd not provided this phase; granularity=day required. btc_l2: items[] with project_key/project_name/category/main_chain/tvl_usd/protocol_count/tx_count_1d/active_addresses_1d/bridge_volume_24h_usd/source_refs; project whitelist stacks|rootstock|merlin|bob|bitlayer; missing_required_fields when tvl_usd/protocol_count/tx_count_1d nil; data_status=complete when 3 required fields non-nil. nil fetcher -> requires_open_search.",
+      "logic": "mcphost tools_platformmetrics -> fetcher.GetChainActivity (GAP-012/GAP-009/GAP-0xx). Routes by metric_group: staking->getChainActivityStaking queries platformmetrics.indices.ethStakingNetworkDaily (dwd_external_beaconcha_in_staking_data_di); l2->getChainActivityL2 queries l2Metrics index (dwd_external_l2_metrics_daily_di); btc_l2->getChainActivityBtcL2 queries btcProtocol index (dwd_external_btc_protocol_di). staking: series[].validator_active/entry_queue_eth/exit_queue_eth/eth_supply/staking_rate/staking_apr_7d/entry_wait_days/exit_wait_days with validator_estimate=eth/32; per-row missing_fields+data_status; 2025-05-07..2025-05-21 rows quality_warning; explicit window >400d truncates. l2: series[] per chain with tps_avg_1d/active_addresses_1d/blob_cost_usd_1d/sequencer_revenue_usd_1d/stage_label/tvl_usd/data_source; tx_count/l1_fee_usd 本期不提供; granularity=day required. btc_l2: items[] with project_key/project_name/category/main_chain/tvl_usd/protocol_count/tx_count_1d/active_addresses_1d/bridge_volume_24h_usd/source_refs; project whitelist stacks|rootstock|merlin|bob|bitlayer; missing_required_fields when tvl_usd/protocol_count/tx_count_1d nil; data_status=complete when 3 required fields non-nil. nil fetcher -> requires_open_search.",
       "errors": [
         { "code": "invalid_param", "when": "metric_group empty, bad YYYY-MM-DD, invalid lookback, or start_date after end_date" },
         { "code": "not_implemented", "when": "metric_group not in staking|l2|btc_l2 or target index unset" },
@@ -1454,7 +1472,7 @@
         "data_status",
         "quality_note"
       ],
-      "series_fields_note": "eth_supply / staking_apr_7d / entry_wait_days / exit_wait_days mapped from ES _source; missing index writes missing_fields. l2: tx_count/l1_fee_usd not provided this phase. btc_l2: protocol_count is int64, other values float64/int64.",
+      "series_fields_note": "eth_supply / staking_apr_7d / entry_wait_days / exit_wait_days mapped from ES _source; missing index writes missing_fields. l2: tx_count/l1_fee_usd 本期不提供. btc_l2: protocol_count is int64, other values float64/int64.",
       "cli": {
         "binary": "coin-mcp-cli",
         "subcommand": "platformmetrics",
