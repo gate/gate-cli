@@ -4,52 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [v0.7.8]
+## [v0.7.9]
 
 ### Changed
 
-- **`info platformmetrics get-stablecoin-info`** — flat-flag schema and bundled MCP spec now support `sections=depeg_events` alongside `issuance_flow` and `usage_structure`. The depeg section documents symbol filtering by `depeg_asset`, default date window behavior, and returned `depeg_events[]` semantics.
-- **Stablecoin depeg filters** — add `min_deviation` (`0.001`-`0.2`, depeg-only) and `review_status` (`candidate` / `approved` / `rejected`, depeg-only) to the baseline schema and bundled spec.
-- **Bundled Info MCP spec** — resync snapshot `scope=full` derivatives behavior, DeFi overview category notes, and chain-activity field notes with the current upstream MCP logic.
-
-### Fixed
-
-- **`internal/toolargs` stablecoin validation** — local pre-MCP checks now accept `depeg_events`, allow date windows for that extension section, reject depeg-only filters when the section is absent, and validate `min_deviation` / `review_status` before calling MCP.
-
-### Tests
-
-- **`internal/toolargs`** — added coverage for stablecoin `depeg_events` scope requirements, valid/invalid depeg filters, date windows, and mixed-section requests.
-
-## [v0.7.7]
-
-### Changed
-
-- **Info/news shortcuts** — multi-tool shortcut chains now run bounded parallel MCP calls with a shared 120s budget (`+coin-overview`, `+market-overview`, `+coin-compare`, `news +brief`, `news +community-scan`), reducing end-to-end latency while preserving partial-result behavior.
-- **Shortcut meta / freshness** — shortcut outputs now normalize pseudo tool names through `toolrender.MetaToolName` (for example `news/+brief` → `news_shortcut_brief`) so news shortcuts receive the same `meta.freshness_summary` / freshness hints as news leaves.
-- **`info platformmetrics get-chain-activity`** — bundled MCP spec and flat-flag schema now support `metric_group=l2` and `metric_group=btc_l2` in addition to staking, including `chain`, `project`, `granularity`, and `limit` semantics. Pretty output renders staking, L2 series, and BTC L2 project payloads separately.
-- **`info platformmetrics get-exchange-reserves`** — bundled spec and baseline schema include `scope=full` flow/event options (`include_flows`, `include_events`, date range, `event_type`, `limit`) aligned with the upstream MCP response shape.
-- **Freshness hints** — news freshness hints are derived from `meta.freshness_summary`, include `span_over_7d`, and parse digit-only timestamp strings / high-precision Unix timestamps more robustly.
-- **Agent mode detection** — `GATE_CLI_AGENT=true|yes|1` now enables agent JSON defaults, and truthy `GATE_CLI_AGENT` no longer masks richer user-agent detection such as Cursor.
-
-### Fixed
-
-- **`news +brief` / sentiment validation** — `news +brief --time-range` is validated locally (`1h` / `24h` / `7d`), and `news_feed_get_social_sentiment` no longer accepts unsupported `30d`.
-- **`info +address-tracker`** — `--min-value` must be non-negative; zero now omits `min_value_usd` instead of silently forcing `100000`.
-- **Agent command hints** — wrong-path corrections only trigger on unknown-command errors, preserve flag tails, avoid suggesting a path that is already correct, and use positionals instead of raw argv text.
-- **`doctor` / `migrate` / `preflight` errors** — already-printed `GateError` cases return `ErrSilenced` so Cobra does not emit duplicate error text.
-- **Execute-error format selection** — fallback error envelopes respect an explicitly changed `--format`; default root flag values no longer force pretty output in agent mode.
-- **Pretty rendering safety** — on-chain pretty output sanitizes control characters from string fields before writing terminal text.
-- **Intel upstream partial errors** — `info_onchain_get_address_transactions` partial-upstream message is now English and keeps the same `PARTIAL_UPSTREAM_RESPONSE` contract.
-
-### Added
-
-- **Shortcut orchestration helper** — `internal/intelcmd.RunParallel` and `WithShortcutBudget` provide bounded parallelism and timeout control for composed Intel shortcuts.
-- **Toolrender helpers/tests** — `MetaToolName` and terminal-text sanitization helpers centralize shortcut meta naming and safe pretty rendering.
-
-## [v0.7.6]
-
-### Changed
-
+- **News MCP baseline expansion** — News grows from **14** to **18** tools (**50** Intel tools total: 32 info + 18 news). The bundled MCP spec, CLI inventory, agent catalog/validation, README, and quick-start guides now include 24h mention bursts, 4h hot topics, and stored market-move report get/list queries.
+- **News argument guardrails** — The four new leaves validate required symbols/coins, fixed windows (`24h` mention burst and `4h` hot topics), supported social platforms, hot-topic limits, market-report time ranges, and report-list limits before calling MCP. Report time filters accept ISO 8601 or `YYYY-MM-DD HH:MM:SS`; timezone-less values are interpreted as UTC0.
 - **`toolargs` spec alignment** — `info macro get-economic-calendar` no longer requires both dates (zero-arg matches MCP default window); `info coin get-coin-rankings` rejects `time_range` unless `top_gainers`/`top_losers` and `listing_*` unless `new_listing`; `info platformmetrics get-defi-overview` stops rejecting unknown `category` (server pass-through).
 - **Info MCP spec resync** — `specs/mcp/info-mcp-tools-inputs-logic.json` → `internal/mcpspec/bundled/`: logic/fields parity across all 37 tools; `info coin get-coin-rankings` adds `market_pulse_hot` to `--ranking-type`; `info platformmetrics get-yield-pools` adds `--scope` (`basic`|`full`). `toolargs` pre-checks updated for both enums.
 - **`info platformmetrics get-chain-activity` MCP spec** — resync `specs/mcp/info-mcp-tools-inputs-logic.json` and bundled logic with upstream GAP-012: `staking_metrics.series[]` now documents full PRD fields (`eth_supply`, `staking_apr_7d`, `entry_wait_days`, `exit_wait_days`); removes `shelved_fields`; adds `errors` / `response_fields` / `series_fields` metadata. CLI flags and `toolargs` pre-check unchanged (pass-through response). **`--format pretty`** now renders staking query context, latest snapshot, and recent series (including the four enriched fields when present).
@@ -67,6 +27,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **News social-insight tools** — `news feed get-mention-burst` and `news feed get-hot-topics`, with short aliases `mention-burst` and `hot-topics`.
+- **Stored market-move reports** — `news events get-market-move-report` (aliases `market-move-report`, `get-report`) and `news events list-market-move-reports` (aliases `market-move-reports`, `report-list`). Top-level path corrections guide misplaced report commands to the `news events` group, and `--coin` is corrected to the required `--symbol` flag.
 - **Info shortcuts (partial on-chain)** — `+address-tracker` (`get-address-info` + `get-address-transactions`; `fund_flow_unavailable` until `trace-fund-flow` ships) and `+token-onchain` (`get-token-onchain`; `smart_money_unavailable` until `get-smart-money` ships). `+address-risk` remains deferred (`check-address-risk` not in baseline). **10** info/news shortcuts total for `agent-validate`.
 - **`gate-cli info platformmetrics get-chain-activity`** — new intel leaf for `info_platformmetrics_get_chain_activity` (phase-1: Ethereum staking network activity — validator counts, entry/exit queues). Required `--metric-group staking`; optional `--chain` (eth/ethereum, default ethereum), `--start-date` / `--end-date` (UTC YYYY-MM-DD), `--lookback` (`30d`|`90d`|`1y`, default `30d` when dates omitted). Baseline **32** `info` + **14** `news` = **46** MCP tools total.
 - **`specs/0413/intel-mcp-appendix-e-tool-catalog.md`** — E.1/E.2 对齐当前 **46** 叶 baseline（info **32** + news **14**）；E.2 新增 `get-cex-orderbook-depth`、`get-institutional-metrics`、`get-chain-activity`；占位 tool 移至 E.3。

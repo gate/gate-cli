@@ -160,6 +160,49 @@ func TestNewsSearchEventsStatusFlagNoDefault(t *testing.T) {
 	}
 }
 
+func TestNewsSocialInsightLeavesExposeStaticFlags(t *testing.T) {
+	for _, tc := range []struct {
+		leaf  string
+		flags []string
+	}{
+		{leaf: "get-mention-burst", flags: []string{"coin", "window", "platforms"}},
+		{leaf: "get-hot-topics", flags: []string{"coin", "window", "limit", "platforms"}},
+	} {
+		leafCmd, _, err := Cmd.Find([]string{"feed", tc.leaf})
+		if err != nil || leafCmd == nil {
+			t.Fatalf("find feed/%s: %v", tc.leaf, err)
+		}
+		for _, flag := range tc.flags {
+			if leafCmd.Flags().Lookup(flag) == nil {
+				t.Errorf("feed/%s missing --%s", tc.leaf, flag)
+			}
+		}
+	}
+}
+
+func TestNewsMarketMoveReportLeavesExposeStaticFlags(t *testing.T) {
+	for _, tc := range []struct {
+		leaf  string
+		flags []string
+	}{
+		{leaf: "get-market-move-report", flags: []string{"symbol", "report-id", "event-id"}},
+		{leaf: "list-market-move-reports", flags: []string{"symbol", "start-time", "end-time", "limit"}},
+	} {
+		leafCmd, _, err := Cmd.Find([]string{"events", tc.leaf})
+		if err != nil || leafCmd == nil {
+			t.Fatalf("find events/%s: %v", tc.leaf, err)
+		}
+		for _, flag := range tc.flags {
+			if leafCmd.Flags().Lookup(flag) == nil {
+				t.Errorf("events/%s missing --%s", tc.leaf, flag)
+			}
+		}
+		if leafCmd.Flags().Lookup("is-make-new") != nil {
+			t.Errorf("events/%s must not expose --is-make-new", tc.leaf)
+		}
+	}
+}
+
 func TestNewsEachLeafRegistersAllSpecParams(t *testing.T) {
 	doc, err := mcpspec.NewsToolsArgs()
 	if err != nil {

@@ -25,12 +25,14 @@ import (
 //   - news_feed_web_search: query, time_range, limit max 10
 //   - news_events_get_latest_events: time_range vs start/end, limit max
 //   - news_events_get_event_detail, news_events_explain_market_move
+//   - news_events_get_market_move_report, news_events_list_market_move_reports
 //   - news_prediction_get_volume_delta_ranking, get_fastest_rising_ranking: date_utc, venue, status, limit
 //   - news_prediction_search_events, get_market_orderbook, get_event_signal
 //   - info_coin_get_coin_info: query or symbol; size/limit caps
 //   - info_marketsnapshot_get_market_snapshot: symbol required
 //   - news_feed_get_exchange_announcements: at least one filter; limit max 100
 //   - news_feed_get_social_sentiment: time_range enum
+//   - news_feed_get_mention_burst, news_feed_get_hot_topics: coin, fixed window, platform enum, topic limit
 //   - info_markettrend_get_indicator_history, info_marketdetail_get_orderbook/recent_trades
 //   - info_coin_search_coins, info_platformmetrics_search_platforms
 //   - info_onchain_* (address/tx_hash/token), info_macro_* (indicator, calendar dates)
@@ -121,6 +123,10 @@ func ValidateForTool(toolName string, arguments map[string]interface{}) error {
 		return validateNewsFeedExchangeAnnouncements(arguments)
 	case "news_feed_get_social_sentiment":
 		return validateNewsFeedSocialSentiment(arguments)
+	case "news_feed_get_mention_burst":
+		return validateNewsFeedMentionBurst(arguments)
+	case "news_feed_get_hot_topics":
+		return validateNewsFeedHotTopics(arguments)
 	case "news_events_get_latest_events":
 		return validateNewsEventsGetLatestEvents(arguments)
 	case "news_events_get_event_detail":
@@ -129,6 +135,10 @@ func ValidateForTool(toolName string, arguments map[string]interface{}) error {
 		}
 	case "news_events_explain_market_move":
 		return validateNewsEventsExplainMarketMove(arguments)
+	case "news_events_get_market_move_report":
+		return validateNewsEventsGetMarketMoveReport(arguments)
+	case "news_events_list_market_move_reports":
+		return validateNewsEventsListMarketMoveReports(arguments)
 	case "news_prediction_get_volume_delta_ranking", "news_prediction_get_fastest_rising_ranking":
 		return validateNewsPredictionRanking(arguments)
 	case "news_prediction_search_events":

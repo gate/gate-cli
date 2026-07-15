@@ -36,7 +36,7 @@ func TestBaselineToolLeafIntentUsesCLIPath(t *testing.T) {
 
 func TestBaselineMCPCatalogCount(t *testing.T) {
 	t.Parallel()
-	if len(BaselineMCPCatalog()) != 46 {
-		t.Fatalf("want 46 baseline tools, got %d", len(BaselineMCPCatalog()))
+	if len(BaselineMCPCatalog()) != 50 {
+		t.Fatalf("want 50 baseline tools, got %d", len(BaselineMCPCatalog()))
 	}
 }

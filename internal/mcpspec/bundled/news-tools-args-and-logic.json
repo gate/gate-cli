@@ -1,10 +1,12 @@
 {
-  "version": "2026-05-20-rev2",
+  "version": "2026-07-13",
   "source_of_truth": [
     "internal/mcphost/toolnames.go",
     "internal/mcphost/tools_news_feed.go",
+    "internal/mcphost/tools_social_insights.go",
     "internal/mcphost/tools_event.go",
     "internal/mcphost/tools_explain_market_move.go",
+    "internal/mcphost/tools_market_move_reports.go",
     "internal/mcphost/tools_prediction.go",
     "internal/mcphost/tools_placeholder.go",
     "internal/event/types.go",
@@ -212,6 +214,51 @@
       ]
     },
     {
+      "name": "news_feed_get_mention_burst",
+      "category": "news_feed",
+      "description": "[Read] Get a coin's 24h multi-platform social mention burst signal, growth, sentiment direction, platform breakdown, and display eligibility. For general sentiment ratios and sample tweets use get_social_sentiment; for individual social discussions use search_ugc.",
+      "input_rules": {
+        "required_policy": "coin is required",
+        "params": [
+          { "name": "coin", "type": "string", "required": true, "notes": "Trimmed and normalized to uppercase. No coin-dictionary validation is performed; unknown or no-data tickers may return an empty result with hide_reason=no_data." },
+          { "name": "window", "type": "string", "required": false, "default": "24h", "enum": ["24h"] },
+          { "name": "platforms", "type": "string", "required": false, "default": "all", "notes": "Comma-separated. Supported: all, gate_square, binance_square, twitter, telegram, youtube, reddit, discord. all cannot be combined with another platform." }
+        ]
+      },
+      "logic": [
+        "Normalize coin, window, and platforms, then call news_feed_get_mention_burst through the News MCP backend.",
+        "Return current and previous mention counts, weighted growth, sentiment direction, display color, and per-platform breakdown.",
+        "hide_reason explains no_data, insufficient_baseline, insufficient_sample, or not_burst; nullable numeric fields are preserved."
+      ],
+      "errors": [
+        { "code": "invalid_param", "when": "coin is empty, window is not 24h, or platforms contains an unsupported value" },
+        { "code": "internal", "when": "the upstream social API call fails" }
+      ]
+    },
+    {
+      "name": "news_feed_get_hot_topics",
+      "category": "news_feed",
+      "description": "[Read] Get the top 2-4 social discussion themes for one coin over the latest 4h, including direction, influence, sentiment, platforms, and representative evidence posts. For arbitrary social search use search_ugc; for X/Twitter-only narrative research use search_x.",
+      "input_rules": {
+        "required_policy": "coin is required",
+        "params": [
+          { "name": "coin", "type": "string", "required": true, "notes": "Trimmed and normalized to uppercase. No coin-dictionary validation is performed; unknown or no-data tickers may return an empty result with hide_reason=no_data." },
+          { "name": "window", "type": "string", "required": false, "default": "4h", "enum": ["4h"] },
+          { "name": "limit", "type": "integer", "required": false, "default": 4, "min": 2, "max": 4 },
+          { "name": "platforms", "type": "string", "required": false, "default": "all", "notes": "Comma-separated. Supported: all, gate_square, binance_square, twitter, telegram, youtube, reddit, discord. all cannot be combined with another platform." }
+        ]
+      },
+      "logic": [
+        "Normalize coin, fixed 4h window, topic limit, and platforms, then call news_feed_get_hot_topics through the News MCP backend.",
+        "Return qualified themes with direction, titles, summary, influence, sentiment, platforms, and representative evidence posts.",
+        "Fewer than two qualified themes produces an empty topics array and a hide_reason from the MCP service."
+      ],
+      "errors": [
+        { "code": "invalid_param", "when": "coin is empty, window is not 4h, limit is outside 2-4, or platforms contains an unsupported value" },
+        { "code": "internal", "when": "the upstream social API call fails" }
+      ]
+    },
+    {
       "name": "news_events_get_latest_events",
       "category": "news_events",
       "description": "[Read] Filtered event list or timeline; each row includes event_id. One event_id detail -> get_event_detail. Headline/news feed -> search_news.",
@@ -289,6 +336,54 @@
         { "code": "invalid_param", "when": "query is empty after trim" },
         { "code": "missing_coin", "when": "coin is empty after trim" },
         { "code": "internal", "when": "ExplainMarketMove returns error (current implementation usually returns success with partial empty slices)" }
+      ]
+    },
+    {
+      "name": "news_events_get_market_move_report",
+      "category": "news_events",
+      "description": "[Read] Query a stored market-move attribution report by symbol, optional report_id, or optional event_id. Lookup priority is report_id > event_id > latest report for symbol. Returned event/report timestamps are UTC0 unless the field name ends in _utc8. This tool never requests report regeneration and does not expose is_make_new.",
+      "input_rules": {
+        "required_policy": "symbol is required",
+        "params": [
+          { "name": "symbol", "type": "string", "required": true, "max_length": 20, "notes": "Trimmed and normalized to uppercase by the MCP service." },
+          { "name": "report_id", "type": "string", "required": false, "notes": "Exact stored-report lookup; takes priority over event_id." },
+          { "name": "event_id", "type": "string", "required": false, "notes": "Returns the latest report for this event when report_id is omitted. Omit both IDs for the latest symbol report." }
+        ]
+      },
+      "logic": [
+        "Validate symbol and call service-ai-pe POST /api/v1/market-move-attribution/get-report without authentication.",
+        "The request body contains only symbol and non-empty report_id/event_id. is_make_new is not a schema field, CLI flag, or forwarded API parameter.",
+        "Return the stored report status, Markdown report_info, evidence summary, market-move fields, and timestamps. event_time, window_start, window_end, created_at, generated_at, updated_at, and display_expire_time are UTC0 strings without a timezone suffix; window_start_utc8 and window_end_utc8 carry an explicit +08:00 offset. JSON-string evidence from older storage rows is decoded into the same structured evidence object. Lookup priority is report_id > event_id > symbol."
+      ],
+      "errors": [
+        { "code": "invalid_param", "when": "symbol is empty or longer than 20 characters; CLI JSON fallback explicitly includes is_make_new" },
+        { "code": "config_load_failed", "when": "api.peUrl is empty" },
+        { "code": "internal", "when": "service-ai-pe request, response decoding, or business response fails" }
+      ]
+    },
+    {
+      "name": "news_events_list_market_move_reports",
+      "category": "news_events",
+      "description": "[Read] List stored market-move attribution reports for one symbol, filtering by an inclusive UTC0 updated_at range and sorting results by event_time descending. Reports may be updated after their market event, so updated_at can be later than event_time. Timezone-less inputs are UTC0; inputs with an explicit offset are converted to UTC0 before the read-only service-ai-pe query.",
+      "input_rules": {
+        "required_policy": "symbol, start_time, and end_time are required",
+        "params": [
+          { "name": "symbol", "type": "string", "required": true, "max_length": 20, "notes": "Trimmed and normalized to uppercase by the MCP service." },
+          { "name": "start_time", "type": "string", "required": true, "notes": "Inclusive lower bound for report updated_at in UTC0; ISO 8601 or YYYY-MM-DD HH:MM:SS. No timezone means UTC0; an explicit offset is converted to UTC0." },
+          { "name": "end_time", "type": "string", "required": true, "notes": "Inclusive upper bound for report updated_at in UTC0; ISO 8601 or YYYY-MM-DD HH:MM:SS. No timezone means UTC0; an explicit offset is converted to UTC0; cannot precede start_time." },
+          { "name": "limit", "type": "integer", "required": false, "default": 20, "min": 0, "max": 100, "notes": "0 has the same behavior as omitted and defaults to 20; nonzero values must be 1-100." }
+        ]
+      },
+      "logic": [
+        "Validate symbol, parse both updated_at bounds, interpret timezone-less values as UTC0, convert explicit offsets to UTC0, require start_time <= end_time, and normalize omitted or zero limit to 20.",
+        "Call service-ai-pe POST /api/v1/market-move-attribution/report-list without authentication; no report-generation parameter is exposed or sent.",
+        "Filter inclusively by updated_at, then return status (ready/generating/not_found/failed), trace_id, reports ordered by event_time DESC, and duration_ms. Because reports can be updated one or more times after generation, updated_at may be later than event_time; event_time does not indicate whether a row falls inside the requested filter window."
+      ],
+      "errors": [
+        { "code": "invalid_param", "when": "required input is missing, datetime is invalid, start_time > end_time, or CLI JSON fallback includes is_make_new" },
+        { "code": "invalid_size", "when": "limit is negative or greater than 100" },
+        { "code": "config_load_failed", "when": "api.peUrl is empty" },
+        { "code": "internal", "when": "service-ai-pe request, response decoding, or business response fails" }
       ]
     },
     {

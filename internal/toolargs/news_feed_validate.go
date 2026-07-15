@@ -3,6 +3,8 @@ package toolargs
 import (
 	"errors"
 	"strings"
+	"time"
+	"unicode/utf8"
 )
 
 var searchNewsTimeRanges = map[string]struct{}{
@@ -41,6 +43,10 @@ var (
 	webSearchTimeRanges = map[string]struct{}{
 		"1h": {}, "24h": {}, "7d": {}, "30d": {},
 	}
+	socialInsightPlatforms = map[string]struct{}{
+		"all": {}, "gate_square": {}, "binance_square": {}, "twitter": {},
+		"telegram": {}, "youtube": {}, "reddit": {}, "discord": {},
+	}
 )
 
 func validateNewsFeedSearchNews(arguments map[string]interface{}) error {
@@ -68,6 +74,75 @@ func validateNewsEventsExplainMarketMove(arguments map[string]interface{}) error
 		}
 	}
 	return nil
+}
+
+func validateNewsEventsGetMarketMoveReport(arguments map[string]interface{}) error {
+	if _, exists := arguments["is_make_new"]; exists {
+		return errInvalidArguments("is_make_new is not supported by the read-only MCP/CLI tool")
+	}
+	return validateMarketMoveReportSymbol(arguments)
+}
+
+func validateNewsEventsListMarketMoveReports(arguments map[string]interface{}) error {
+	if err := validateMarketMoveReportSymbol(arguments); err != nil {
+		return err
+	}
+	if _, exists := arguments["is_make_new"]; exists {
+		return errInvalidArguments("is_make_new is not supported by the read-only MCP/CLI tool")
+	}
+	if missing := missingRequiredStringArgs(arguments, "start_time", "end_time"); len(missing) > 0 {
+		return errors.New("missing required fields: " + strings.Join(missing, ", "))
+	}
+	start, err := parseMarketMoveReportTime(stringArg(arguments, "start_time"))
+	if err != nil {
+		return errInvalidArguments("start_time (updated_at lower bound) must be an ISO 8601 or YYYY-MM-DD HH:MM:SS UTC0 time")
+	}
+	end, err := parseMarketMoveReportTime(stringArg(arguments, "end_time"))
+	if err != nil {
+		return errInvalidArguments("end_time (updated_at upper bound) must be an ISO 8601 or YYYY-MM-DD HH:MM:SS UTC0 time")
+	}
+	if start.After(end) {
+		return errInvalidArguments("start_time must not be after end_time for updated_at filtering")
+	}
+	if limit, ok := intArg(arguments, "limit"); ok && (limit < 0 || limit > 100) {
+		return errInvalidArgumentsf("limit must be 0 (default 20) or between 1 and 100 (got %d)", limit)
+	}
+	return nil
+}
+
+func validateMarketMoveReportSymbol(arguments map[string]interface{}) error {
+	symbol := strings.TrimSpace(stringArg(arguments, "symbol"))
+	if symbol == "" {
+		return errors.New("missing required field: symbol")
+	}
+	if utf8.RuneCountInString(symbol) > 20 {
+		return errInvalidArguments("symbol must contain at most 20 characters")
+	}
+	return nil
+}
+
+func parseMarketMoveReportTime(raw string) (time.Time, error) {
+	raw = strings.TrimSpace(raw)
+	for _, layout := range []string{
+		time.RFC3339Nano,
+		"2006-01-02 15:04:05Z07:00",
+		"2006-01-02T15:04:05",
+		"2006-01-02 15:04:05",
+	} {
+		var (
+			parsed time.Time
+			err    error
+		)
+		if layout == "2006-01-02T15:04:05" || layout == "2006-01-02 15:04:05" {
+			parsed, err = time.ParseInLocation(layout, raw, time.UTC)
+		} else {
+			parsed, err = time.Parse(layout, raw)
+		}
+		if err == nil {
+			return parsed, nil
+		}
+	}
+	return time.Time{}, errors.New("unsupported datetime")
 }
 
 func validateNewsFeedSearchX(arguments map[string]interface{}) error {
@@ -151,6 +226,51 @@ func validateNewsFeedSocialSentiment(arguments map[string]interface{}) error {
 		if _, ok := sentimentTimeRanges[tr]; !ok {
 			return errInvalidArgumentsf("time_range must be 1h, 24h, or 7d (got %q)", stringArg(arguments, "time_range"))
 		}
+	}
+	return nil
+}
+
+func validateNewsFeedMentionBurst(arguments map[string]interface{}) error {
+	if !nonEmptyStringArg(arguments, "coin") {
+		return errors.New("missing required field: coin")
+	}
+	if window := strings.TrimSpace(strings.ToLower(stringArg(arguments, "window"))); window != "" && window != "24h" {
+		return errInvalidArgumentsf("window only supports 24h (got %q)", stringArg(arguments, "window"))
+	}
+	return validateSocialInsightPlatforms(arguments)
+}
+
+func validateNewsFeedHotTopics(arguments map[string]interface{}) error {
+	if !nonEmptyStringArg(arguments, "coin") {
+		return errors.New("missing required field: coin")
+	}
+	if window := strings.TrimSpace(strings.ToLower(stringArg(arguments, "window"))); window != "" && window != "4h" {
+		return errInvalidArgumentsf("window only supports 4h (got %q)", stringArg(arguments, "window"))
+	}
+	if limit, ok := intArg(arguments, "limit"); ok && (limit < 2 || limit > 4) {
+		return errInvalidArgumentsf("limit must be between 2 and 4 (got %d)", limit)
+	}
+	return validateSocialInsightPlatforms(arguments)
+}
+
+func validateSocialInsightPlatforms(arguments map[string]interface{}) error {
+	raw := strings.ReplaceAll(stringArg(arguments, "platforms"), "，", ",")
+	if strings.TrimSpace(raw) == "" {
+		return nil
+	}
+	seen := map[string]struct{}{}
+	for _, part := range strings.Split(raw, ",") {
+		platform := strings.TrimSpace(strings.ToLower(part))
+		if platform == "" {
+			continue
+		}
+		if _, ok := socialInsightPlatforms[platform]; !ok {
+			return errInvalidArgumentsf("unsupported platform %q", platform)
+		}
+		seen[platform] = struct{}{}
+	}
+	if _, hasAll := seen["all"]; hasAll && len(seen) > 1 {
+		return errInvalidArguments("all cannot be combined with another platform")
 	}
 	return nil
 }

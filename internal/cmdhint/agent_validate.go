@@ -16,10 +16,10 @@ type ShortcutPathMismatch struct {
 
 // AgentValidateReport is the combined CI report for MCP catalog + shortcuts.
 type AgentValidateReport struct {
-	OK         bool                   `json:"ok"`
-	MCP        MCPValidateSection     `json:"mcp_catalog"`
+	OK         bool                    `json:"ok"`
+	MCP        MCPValidateSection      `json:"mcp_catalog"`
 	Shortcuts  ShortcutValidateSection `json:"shortcuts"`
-	TotalCount int                    `json:"count"`
+	TotalCount int                     `json:"count"`
 }
 
 // MCPValidateSection holds baseline MCP path validation results.
@@ -36,7 +36,7 @@ type ShortcutValidateSection struct {
 	Mismatches []ShortcutPathMismatch `json:"mismatches"`
 }
 
-// ValidateAgentDiscovery checks MCP catalog (46) and info/news shortcuts (10) against root.
+// ValidateAgentDiscovery checks MCP catalog (50) and info/news shortcuts (10) against root.
 func ValidateAgentDiscovery(root *cobra.Command) AgentValidateReport {
 	mcp := ValidateMCPCatalogAgainstTree(root)
 	shortcuts := ValidateShortcutsAgainstTree(root)

@@ -101,6 +101,14 @@ func TestSuggestFlagCorrectionNewsSymbol(t *testing.T) {
 	}
 }
 
+func TestSuggestFlagCorrectionMarketMoveReportUsesSymbol(t *testing.T) {
+	t.Parallel()
+	got := suggestFlagCorrection([]string{"gate-cli", "news", "events", "get-market-move-report", "--coin", "TAIKO"})
+	if !strings.Contains(got, "--symbol TAIKO") {
+		t.Fatalf("got %q", got)
+	}
+}
+
 func TestSuggestPathCorrectionNewsSearch(t *testing.T) {
 	t.Parallel()
 	d := suggestPathCorrection([]string{"gate-cli", "news", "search", "--coin", "BTC"}, `unknown command "search" for "gate-cli news"`)

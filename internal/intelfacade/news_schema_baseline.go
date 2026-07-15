@@ -78,6 +78,17 @@ var NewsBaselineInputSchemas = map[string]map[string]interface{}{
 		"coin":       newsStrDefault("coin", "BTC"),
 		"time_range": newsStrEnum("time_range", "24h", "1h", "24h", "7d"),
 	}),
+	"news_feed_get_mention_burst": newsObj(map[string]interface{}{
+		"coin":      newsStr("coin; required; trimmed and normalized to uppercase; no dictionary validation; unknown/no-data tickers may return hide_reason=no_data"),
+		"window":    newsStrEnum("window; only 24h is currently supported", "24h", "24h"),
+		"platforms": newsStrDefault("platforms; comma-separated: all, gate_square, binance_square, twitter, telegram, youtube, reddit, discord; all cannot be combined", "all"),
+	}, "coin"),
+	"news_feed_get_hot_topics": newsObj(map[string]interface{}{
+		"coin":      newsStr("coin; required; trimmed and normalized to uppercase; no dictionary validation; unknown/no-data tickers may return hide_reason=no_data"),
+		"window":    newsStrEnum("window; only 4h is currently supported", "4h", "4h"),
+		"limit":     newsIntDefaultMinMax("limit; number of qualified topics", 4, 2, 4),
+		"platforms": newsStrDefault("platforms; comma-separated: all, gate_square, binance_square, twitter, telegram, youtube, reddit, discord; all cannot be combined", "all"),
+	}, "coin"),
 	"news_events_get_latest_events": newsObj(map[string]interface{}{
 		"event_type": newsStr("event_type; all or empty -> no type filter"),
 		"coin":       newsStr("coin; comma-separated; expanded for related_coins/symbols"),
@@ -97,6 +108,17 @@ var NewsBaselineInputSchemas = map[string]map[string]interface{}{
 		"mode":       newsStrEnum("mode", "auto", "auto", "price_move", "event_impact"),
 		"lang":       newsStrEnum("lang", "zh", "zh", "en"),
 	}, "query", "coin"),
+	"news_events_get_market_move_report": newsObj(map[string]interface{}{
+		"symbol":    newsStringMaxLength("symbol; required; 1-20 characters; normalized to uppercase upstream", 20),
+		"report_id": newsStr("report_id; optional exact report lookup; takes priority over event_id"),
+		"event_id":  newsStr("event_id; optional event lookup; omit both IDs to get latest report for symbol"),
+	}, "symbol"),
+	"news_events_list_market_move_reports": newsObj(map[string]interface{}{
+		"symbol":     newsStringMaxLength("symbol; required; 1-20 characters; normalized to uppercase upstream", 20),
+		"start_time": newsStr("start_time; required inclusive lower bound for report updated_at in UTC0; ISO8601 or YYYY-MM-DD HH:MM:SS; no timezone means UTC0; explicit offsets are converted to UTC0 by MCP"),
+		"end_time":   newsStr("end_time; required inclusive upper bound for report updated_at in UTC0; no timezone means UTC0; explicit offsets are converted to UTC0 by MCP; must not precede start_time"),
+		"limit":      newsIntDefaultMinMax("limit; omitted or 0 -> 20; otherwise maximum reports in range 1-100", 20, 0, 100),
+	}, "symbol", "start_time", "end_time"),
 	"news_prediction_get_volume_delta_ranking":   newsPredictionRankingProps(),
 	"news_prediction_get_fastest_rising_ranking": newsPredictionRankingProps(),
 	"news_prediction_get_market_orderbook": newsObj(map[string]interface{}{
@@ -131,6 +153,14 @@ var NewsBaselineInputSchemas = map[string]map[string]interface{}{
 
 func newsStr(desc string) map[string]interface{} {
 	return map[string]interface{}{"type": "string", "description": desc}
+}
+
+func newsStringMaxLength(desc string, max int) map[string]interface{} {
+	return map[string]interface{}{
+		"type":        "string",
+		"description": desc,
+		"maxLength":   float64(max),
+	}
 }
 
 // newsStrEnum builds a string field with enum (and optional default) for CLI flag usage; values follow specs/mcp/news-tools-args-and-logic.json.

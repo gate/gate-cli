@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -74,6 +75,46 @@ func TestBundledMatchesSpecs(t *testing.T) {
 		}
 		if string(a) != string(b) {
 			t.Fatalf("bundled out of sync with spec; cp specs/mcp/*.json internal/mcpspec/bundled/ — compare %s vs %s", p.spec, p.bundled)
+		}
+	}
+}
+
+func TestBundledSocialInsightCoinSemantics(t *testing.T) {
+	t.Parallel()
+	doc, err := NewsToolsArgs()
+	if err != nil {
+		t.Fatal(err)
+	}
+	root := doc.(map[string]interface{})
+	wanted := map[string]bool{
+		"news_feed_get_mention_burst": false,
+		"news_feed_get_hot_topics":    false,
+	}
+	for _, rawTool := range root["tools"].([]interface{}) {
+		tool := rawTool.(map[string]interface{})
+		name, _ := tool["name"].(string)
+		if _, ok := wanted[name]; !ok {
+			continue
+		}
+		wanted[name] = true
+		inputRules := tool["input_rules"].(map[string]interface{})
+		for _, rawParam := range inputRules["params"].([]interface{}) {
+			param := rawParam.(map[string]interface{})
+			if param["name"] != "coin" {
+				continue
+			}
+			notes, _ := param["notes"].(string)
+			if strings.Contains(strings.ToLower(notes), "validated by") || strings.Contains(strings.ToLower(notes), "recognized by") {
+				t.Errorf("%s coin notes overstate validation: %q", name, notes)
+			}
+			if !strings.Contains(notes, "hide_reason=no_data") {
+				t.Errorf("%s coin notes miss unknown/no-data behavior: %q", name, notes)
+			}
+		}
+	}
+	for name, found := range wanted {
+		if !found {
+			t.Errorf("bundled spec missing %s", name)
 		}
 	}
 }

@@ -27,7 +27,7 @@ func TestNewAgentLeavesCmdRegistered(t *testing.T) {
 func TestAgentLeavesPayloadShape(t *testing.T) {
 	t.Parallel()
 	require.Len(t, cmdhint.AgentLeaves, 31)
-	require.Len(t, cmdhint.BaselineMCPCatalog(), 46)
+	require.Len(t, cmdhint.BaselineMCPCatalog(), 50)
 	require.Equal(t, "market_kline", cmdhint.AgentLeaves[0].Intent)
 	require.Contains(t, cmdhint.AgentLeaves[0].Command, "info markettrend get-kline")
 	require.Equal(t, 200, cmdhint.AgentLeaves[0].DefaultLimit)

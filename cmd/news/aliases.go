@@ -60,5 +60,9 @@ var newsBusinessAliases = map[string][]string{
 	"news_events_explain_market_move":      {"explain-market-move"},
 	"news_feed_get_social_sentiment":       {"sentiment"},
 	"news_feed_get_exchange_announcements": {"announcements"},
+	"news_feed_get_mention_burst":          {"mention-burst"},
+	"news_feed_get_hot_topics":             {"hot-topics"},
 	"news_events_get_event_detail":         {"event-detail"},
+	"news_events_get_market_move_report":   {"market-move-report", "get-report"},
+	"news_events_list_market_move_reports": {"market-move-reports", "report-list"},
 }

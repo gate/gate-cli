@@ -2,6 +2,7 @@ package intelfacade
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -26,8 +27,12 @@ func TestNewsBaselineInputSchemaCriticalFields(t *testing.T) {
 	cases := map[string][]string{
 		"news_feed_search_news":                {"query", "coin", "platform", "platform_type", "start_time", "end_time", "similarity_score", "top_total_score"},
 		"news_feed_get_exchange_announcements": {"announcement_type", "coin", "platform", "from", "to"},
+		"news_feed_get_mention_burst":          {"coin", "window", "platforms"},
+		"news_feed_get_hot_topics":             {"coin", "window", "limit", "platforms"},
 		"news_events_get_latest_events":        {"event_type", "cursor", "start_time", "end_time"},
 		"news_events_explain_market_move":      {"query", "coin", "time_range", "mode", "lang"},
+		"news_events_get_market_move_report":   {"symbol", "report_id", "event_id"},
+		"news_events_list_market_move_reports": {"symbol", "start_time", "end_time", "limit"},
 		"news_prediction_get_market_orderbook": {"venue", "market_id", "depth", "mode", "granularity", "page_token"},
 		"news_prediction_search_events":        {"query", "coin", "category", "status", "venue", "sort_by", "limit", "page_token", "with_markets"},
 		"news_prediction_get_event_signal":     {"event_ref", "window", "venue", "include_markets", "include_orderbook_summary"},
@@ -71,6 +76,12 @@ func TestNewsBaselineInputSchemaCriticalFields(t *testing.T) {
 	if enums, ok := wLang["enum"].([]interface{}); !ok || len(enums) != 3 {
 		t.Fatalf("web_search lang enum mismatch: %#v", wLang["enum"])
 	}
+
+	getReport := NewsBaselineInputSchema("news_events_get_market_move_report")
+	getReportProps := getReport["properties"].(map[string]interface{})
+	if _, exists := getReportProps["is_make_new"]; exists {
+		t.Fatal("get_market_move_report must not expose is_make_new")
+	}
 }
 
 func TestNewsBaselineBoundKeywordsForCLIHelp(t *testing.T) {
@@ -110,6 +121,19 @@ func TestNewsBaselineBoundKeywordsForCLIHelp(t *testing.T) {
 		t.Fatalf("search_events sort_by default: want recently_listed got %q", def)
 	}
 
+	reports := NewsBaselineInputSchema("news_events_list_market_move_reports")
+	reportProps := reports["properties"].(map[string]interface{})
+	for _, field := range []string{"start_time", "end_time"} {
+		desc, _ := reportProps[field].(map[string]interface{})["description"].(string)
+		if !strings.Contains(desc, "UTC0") || !strings.Contains(desc, "updated_at") {
+			t.Fatalf("market move report %s semantics: %#v", field, reportProps[field])
+		}
+	}
+	reportLimit := reportProps["limit"].(map[string]interface{})
+	if reportLimit["default"].(float64) != 20 || reportLimit["minimum"].(float64) != 0 || reportLimit["maximum"].(float64) != 100 {
+		t.Fatalf("market move report limit bounds: %#v", reportLimit)
+	}
+
 	pred := NewsBaselineInputSchema("news_prediction_get_volume_delta_ranking")
 	plim := pred["properties"].(map[string]interface{})["limit"].(map[string]interface{})
 	if plim["default"].(float64) != 20 || plim["maximum"].(float64) != 100 {
@@ -125,6 +149,25 @@ func TestNewsBaselineBoundKeywordsForCLIHelp(t *testing.T) {
 	}
 	if cat["type"] != "string" {
 		t.Fatalf("prediction category type: got %#v", cat["type"])
+	}
+
+	hotTopics := NewsBaselineInputSchema("news_feed_get_hot_topics")
+	hotProps := hotTopics["properties"].(map[string]interface{})
+	hotLimit := hotProps["limit"].(map[string]interface{})
+	if hotLimit["default"].(float64) != 4 || hotLimit["minimum"].(float64) != 2 || hotLimit["maximum"].(float64) != 4 {
+		t.Fatalf("hot topics limit bounds: got %#v", hotLimit)
+	}
+	for _, tool := range []string{"news_feed_get_mention_burst", "news_feed_get_hot_topics"} {
+		schema := NewsBaselineInputSchema(tool)
+		coin := schema["properties"].(map[string]interface{})["coin"].(map[string]interface{})
+		description, _ := coin["description"].(string)
+		lower := strings.ToLower(description)
+		if strings.Contains(lower, "validated by") || strings.Contains(lower, "recognized by") {
+			t.Errorf("%s coin description overstates validation: %q", tool, description)
+		}
+		if !strings.Contains(description, "hide_reason=no_data") {
+			t.Errorf("%s coin description misses unknown/no-data behavior: %q", tool, description)
+		}
 	}
 }
 

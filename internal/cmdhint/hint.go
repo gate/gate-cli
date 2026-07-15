@@ -78,6 +78,9 @@ var pathCorrections = []struct {
 	{"info institutional", "info marketsnapshot get-institutional-metrics"},
 	{"news get-event-detail", "news events get-event-detail"},
 	{"news event-detail", "news events get-event-detail"},
+	{"news get-market-move-report", "news events get-market-move-report"},
+	{"news list-market-move-reports", "news events list-market-move-reports"},
+	{"news report-list", "news events list-market-move-reports"},
 	{"news prediction orderbook", "news prediction get-market-orderbook"},
 	{"news orderbook", "news prediction get-market-orderbook"},
 }
@@ -88,6 +91,8 @@ var flagHints = []struct {
 	wrongFlag    string
 	rightFlag    string
 }{
+	{"news events get-market-move-report", "--coin", "--symbol"},
+	{"news events list-market-move-reports", "--coin", "--symbol"},
 	{"news", "--symbol", "--coin"},
 	{"news feed", "--symbol", "--coin"},
 	{"news events", "--symbol", "--coin"},

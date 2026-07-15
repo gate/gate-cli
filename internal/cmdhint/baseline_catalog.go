@@ -8,7 +8,7 @@ import (
 	"github.com/gate/gate-cli/internal/intelfacade"
 )
 
-// BaselineMCPCatalog returns one Leaf per info/news MCP tool in the shipped baseline (46 tools).
+// BaselineMCPCatalog returns one Leaf per info/news MCP tool in the shipped baseline (50 tools).
 // Intent uses CLI path tokens (e.g. coin-get-coin-info), not MCP wire names (info_coin_get_coin_info).
 func BaselineMCPCatalog() []Leaf {
 	names := baselineToolNames()
