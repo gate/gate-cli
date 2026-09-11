@@ -341,13 +341,16 @@ gate-cli cex futures position list --format json | jq '.[].contract'
 
 ## Intel (`info` & `news`)
 
-Market intelligence and news are shipped as **45** MCP-style CLI tools (**31** `info`, **14** `news`). Invoke a capability as `gate-cli info <group> <tool>` or `gate-cli news <group> <tool>` with **flat flags** for arguments (add `--format json` for scripts and agents).
+Market intelligence and news are shipped as **50** MCP-style CLI tools (**32** `info`, **18** `news`). Invoke a capability as `gate-cli info <group> <tool>` or `gate-cli news <group> <tool>` with **flat flags** for arguments (add `--format json` for scripts and agents).
 
 **`info` groups:** `coin`, `marketsnapshot`, `markettrend`, `onchain`, `platformmetrics`, `marketdetail`, `macro`, `compliance`.
 
-**`news` groups:** `feed` (platform news, UGC, X, web research, sentiment, exchange announcements), `events` (latest events, detail by `event_id`, market-move explain), and `prediction` (UTC rankings on `predictionRankIndex`; `search-events` on `dws_prediction_event_signal_hf` with collapse per `pk_id`; `get-event-signal` on `dws_external_event_signal_hf`; live `get-market-orderbook` for polymarket CLOB + predict.fun). CLI pre-check: `search-ugc` and `search-events` need at least one filter flag. Unconfigured OpenSearch indices return `not_implemented`. Leaf `-h` text is bundled from `specs/mcp/news-tools-args-and-logic.json` (version **2026-05-20-rev2**). Prediction commands also run local enum/range checks before MCP.
+**`news` groups:** `feed` (platform news, UGC, X, web research, sentiment, exchange announcements), `events` (latest events, detail by `event_id`, market-move explain, stored market-move report get/list), and `prediction` (UTC rankings on `predictionRankIndex`; `search-events` on `dws_prediction_event_signal_hf` with collapse per `pk_id`; `get-event-signal` on `dws_external_event_signal_hf`; live `get-market-orderbook` for polymarket CLOB + predict.fun). CLI pre-check: `search-ugc` and `search-events` need at least one filter flag. Unconfigured OpenSearch indices return `not_implemented`. Leaf `-h` and `gate-cli news mcp-spec` use the **embedded** spec (English `description` per tool). Prediction commands also run local enum/range checks before MCP.
+
+**`info` help text:** each leaf `-h` starts with an English **`description`** (`[Read]` routing) from the spec embedded in the binary; set `GATE_INTEL_LEAF_HELP=full` for per-field notes. Same document: `gate-cli info mcp-spec --format json`.
 
 List tool ids: `gate-cli info list`, `gate-cli news list`. Flags and env vars: `gate-cli info -h`, `gate-cli news -h`.
+Deterministic shortcut flows: `gate-cli info +coin-overview --symbol BTC` and `gate-cli news +brief --coin BTC`.
 
 Optional Intel defaults go under `intel:` in `~/.gate-cli/config.yaml`. Gate trading `--api-key` / `GATE_API_KEY` are **not** used as the Intel bearer; follow your Intel/MCP backend if a bearer or base URL is required. Env vars, URLs, and timeouts: [`specs/intel-config-and-security.md`](../specs/intel-config-and-security.md).
 
@@ -356,10 +359,27 @@ gate-cli info coin get-coin-info --query BTC --format json
 gate-cli info marketsnapshot get-market-snapshot --symbol BTC_USDT --format json
 gate-cli info marketsnapshot get-institutional-metrics --asset BTC --channel all --limit 30 --format json
 gate-cli info platformmetrics get-stablecoin-info --scope full --sections '["issuance_flow","usage_structure"]' --start-date 2026-04-01 --end-date 2026-05-01 --format json
+gate-cli info platformmetrics get-chain-activity --metric-group staking --lookback 30d --format json
 gate-cli news feed search-news --query bitcoin --format json   # alias: search → search-news
+gate-cli news feed search-x --query bitcoin --time-range 7d --lang en --format json
+gate-cli news events get-market-move-report --symbol TAIKO --report-id _1782973063855 --format json
+gate-cli news events list-market-move-reports --symbol ETH --start-time "2026-07-09 22:00:00" --end-time "2026-07-10 03:15:00" --limit 10 --format json # filters updated_at in UTC0; sorts by event_time DESC; --limit 0 defaults to 20
 ```
 
-One minimal example per tool (all 45) is in the repository **README.md**.
+One minimal example per tool (all 50) is in the repository **README.md**.
+
+### GateAI agent mode
+
+For Gate.AI / Skill runners, set `GATE_CLI_AGENT=1` (bounded stdout, no parent `--help` crawl). Prefer discovery over `--help`:
+
+```bash
+export GATE_CLI_AGENT=1
+gate-cli agent-resolve --query "BTC news brief" --format json
+gate-cli agent-leaves --format json          # 31 curated intents + 50 MCP tools
+gate-cli agent-validate --format json        # CI: baseline MCP paths + 10 shortcuts
+```
+
+Details: [`specs/clidocs/gate-ai-agent-cli-integration.md`](../specs/clidocs/gate-ai-agent-cli-integration.md).
 
 ---
 

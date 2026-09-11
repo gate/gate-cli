@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [v0.8.0]
+
+### Fixed
+
+- **Intel MCP argument isolation** — `info` / `news` leaf commands and hidden `invoke` calls no longer forward CLI-only flags (`--format`, `--profile`, `--debug`, `--verbose`, `--max-output-bytes`, `--api-key`, `--api-secret`, and `--help`) as MCP tool arguments. This prevents strict backends from rejecting calls such as `--format json` and keeps trading credential flags out of MCP argument payloads. Keys explicitly supplied in `--params`, `--args-json`, or `--args-file` remain unchanged.
+
+### Changed
+
+- **English and Chinese quick-start guides** — align the documented inventory with the existing **50** Intel tools (**32** info + **18** news); add staking activity, X search, stored market-move report, and shortcut examples. Clarify embedded-spec help, `GATE_INTEL_LEAF_HELP=full`, and GateAI agent discovery with `agent-resolve`, `agent-leaves`, and `agent-validate`.
+
+### Added
+
+- **MCP argument regression coverage** — tests cover filtering inherited CLI globals, preserving explicitly supplied JSON keys and flat-flag precedence, and reserving `invoke --name` alongside global and JSON fallback flags.
+
 ## [v0.7.9]
 
 ### Changed

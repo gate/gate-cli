@@ -31,12 +31,7 @@ func init() {
 
 func runInfoInvoke(cmd *cobra.Command, args []string) error {
 	name, _ := cmd.Flags().GetString("name")
-	return runInfoCallByName(cmd, name, map[string]struct{}{
-		"name":      {},
-		"params":    {},
-		"args-json": {},
-		"args-file": {},
-	})
+	return runInfoCallByName(cmd, name, intelcmd.ReservedInvokeFlags())
 }
 
 func runInfoCallByName(cmd *cobra.Command, name string, reserved map[string]struct{}) error {

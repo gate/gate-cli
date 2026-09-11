@@ -342,13 +342,16 @@ gate-cli cex futures position list --format json | jq '.[].contract'
 
 ## Intel（`info` / `news`）
 
-市场情报与资讯以 **45** 个 MCP 风格 CLI 工具提供（**31** 个 `info`，**14** 个 `news`）。调用方式为 `gate-cli info <分组> <子命令>` 或 `gate-cli news <分组> <子命令>`，参数以**平铺 flag** 为主（脚本/Agent 建议加 `--format json`）。
+市场情报与资讯以 **50** 个 MCP 风格 CLI 工具提供（**32** 个 `info`，**18** 个 `news`）。调用方式为 `gate-cli info <分组> <子命令>` 或 `gate-cli news <分组> <子命令>`，参数以**平铺 flag** 为主（脚本/Agent 建议加 `--format json`）。
 
 **`info` 分组：** `coin`、`marketsnapshot`、`markettrend`、`onchain`、`platformmetrics`、`marketdetail`、`macro`、`compliance`。
 
-**`news` 分组：** `feed`（平台资讯、UGC、X、网页研究、情绪、交易所公告）、`events`（最新事件、按 `event_id` 详情、行情异动归因）、`prediction`（UTC 排名 `predictionRankIndex`；`search-events` 检索 `dws_prediction_event_signal_hf` 按 `pk_id` 折叠；`get-event-signal` 读取 `dws_external_event_signal_hf`；`get-market-orderbook` 拉 polymarket CLOB / predict.fun 实时盘口）。CLI 预检：`search-ugc` 与 `search-events` 至少提供一个筛选 flag。未配置 OpenSearch 索引时返回 `not_implemented`。叶子 `-h` 与 `specs/mcp/news-tools-args-and-logic.json`（**2026-05-20-rev2**）一致；prediction 子命令在 MCP 前会做枚举/范围预检。
+**`news` 分组：** `feed`（平台资讯、UGC、X、网页研究、情绪、交易所公告）、`events`（最新事件、按 `event_id` 详情、行情异动归因、已存储异动报告查询与列表）、`prediction`（UTC 排名 `predictionRankIndex`；`search-events` 检索 `dws_prediction_event_signal_hf` 按 `pk_id` 折叠；`get-event-signal` 读取 `dws_external_event_signal_hf`；`get-market-orderbook` 拉 polymarket CLOB / predict.fun 实时盘口）。CLI 预检：`search-ugc` 与 `search-events` 至少提供一个筛选 flag。未配置 OpenSearch 索引时返回 `not_implemented`。叶子 `-h` 与 `gate-cli news mcp-spec` 使用**二进制内嵌**英文规格（含 `[Read]` 路由 `description`）；prediction 子命令在 MCP 前会做枚举/范围预检。
+
+**`info` 帮助文案：** 叶子 `-h` 与 `gate-cli info mcp-spec` 均来自**二进制内嵌**英文规格（含 `[Read]` 路由 `description`）；`GATE_INTEL_LEAF_HELP=full` 可看字段说明。仓库内 `specs/mcp/` 为本地 QC，**不随发行版发布**，也不提供上线描述。
 
 列出工具名：`gate-cli info list`、`gate-cli news list`。参数与环境变量：`gate-cli info -h`、`gate-cli news -h`。
+固定 shortcut：`gate-cli info +coin-overview --symbol BTC`、`gate-cli news +brief --coin BTC`。
 
 可选 Intel 默认值写在 `~/.gate-cli/config.yaml` 的 `intel:` 下。现货/合约用的 `--api-key` / `GATE_API_KEY`**不会**作为 Intel 的 Bearer；若后端需要鉴权，请按 Intel/MCP 环境单独配置。环境变量、URL、超时等见 [`specs/intel-config-and-security.md`](../specs/intel-config-and-security.md)。
 
@@ -357,10 +360,27 @@ gate-cli info coin get-coin-info --query BTC --format json
 gate-cli info marketsnapshot get-market-snapshot --symbol BTC_USDT --format json
 gate-cli info marketsnapshot get-institutional-metrics --asset BTC --channel all --limit 30 --format json
 gate-cli info platformmetrics get-stablecoin-info --scope full --sections '["issuance_flow","usage_structure"]' --start-date 2026-04-01 --end-date 2026-05-01 --format json
+gate-cli info platformmetrics get-chain-activity --metric-group staking --lookback 30d --format json
 gate-cli news feed search-news --query bitcoin --format json   # 别名：search → search-news
+gate-cli news feed search-x --query bitcoin --time-range 7d --lang en --format json
+gate-cli news events get-market-move-report --symbol TAIKO --report-id _1782973063855 --format json
+gate-cli news events list-market-move-reports --symbol ETH --start-time "2026-07-09 22:00:00" --end-time "2026-07-10 03:15:00" --limit 10 --format json # 按 UTC0 updated_at 过滤、event_time DESC 排序；--limit 0 默认按 20 处理
 ```
 
-全部 **45** 个工具各一条最小示例见仓库根目录 **README.md**。
+全部 **50** 个工具各一条最小示例见仓库根目录 **README.md**。
+
+### GateAI Agent 模式
+
+供 Gate.AI / Skill 调用：设置 `GATE_CLI_AGENT=1`（限制 stdout、阻止父级 `--help` 爬取）。优先用发现命令代替 `--help`：
+
+```bash
+export GATE_CLI_AGENT=1
+gate-cli agent-resolve --query "BTC 新闻简报" --format json
+gate-cli agent-leaves --format json          # 31 条 curated + 50 个 MCP 工具
+gate-cli agent-validate --format json        # CI：校验 MCP 路径与 10 个 shortcut
+```
+
+说明见 [`specs/clidocs/gate-ai-agent-cli-integration.md`](../specs/clidocs/gate-ai-agent-cli-integration.md)。
 
 ---
 
