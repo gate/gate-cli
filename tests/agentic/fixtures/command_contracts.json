@@ -1,0 +1,7869 @@
+[
+  {
+    "path": "cex account debit-fee get",
+    "use": "get",
+    "flags": []
+  },
+  {
+    "path": "cex account debit-fee set",
+    "use": "set",
+    "flags": [
+      {
+        "name": "enabled",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex account detail",
+    "use": "detail",
+    "flags": []
+  },
+  {
+    "path": "cex account keys",
+    "use": "keys",
+    "flags": []
+  },
+  {
+    "path": "cex account rate-limit",
+    "use": "rate-limit",
+    "flags": []
+  },
+  {
+    "path": "cex account stp add-users",
+    "use": "add-users",
+    "flags": [
+      {
+        "name": "id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "user-ids",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex account stp create",
+    "use": "create",
+    "flags": [
+      {
+        "name": "name",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex account stp list",
+    "use": "list",
+    "flags": [
+      {
+        "name": "name",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex account stp remove-user",
+    "use": "remove-user",
+    "flags": [
+      {
+        "name": "id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "user-id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex account stp users",
+    "use": "users",
+    "flags": [
+      {
+        "name": "id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex alpha account balances",
+    "use": "balances",
+    "flags": []
+  },
+  {
+    "path": "cex alpha account book",
+    "use": "book",
+    "flags": [
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "100"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "1"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex alpha market currencies",
+    "use": "currencies",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "100"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "path": "cex alpha market tickers",
+    "use": "tickers",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "100"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "path": "cex alpha market tokens",
+    "use": "tokens",
+    "flags": [
+      {
+        "name": "address",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "chain",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "1"
+      },
+      {
+        "name": "platform",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex alpha order get",
+    "use": "get",
+    "flags": [
+      {
+        "name": "id",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex alpha order list",
+    "use": "list",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "100"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "1"
+      },
+      {
+        "name": "side",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "status",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex alpha order place",
+    "use": "place",
+    "flags": [
+      {
+        "name": "amount",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "gas-mode",
+        "type": "string",
+        "default": "speed"
+      },
+      {
+        "name": "quote-id",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "side",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "slippage",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex alpha order quote",
+    "use": "quote",
+    "flags": [
+      {
+        "name": "amount",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "gas-mode",
+        "type": "string",
+        "default": "speed"
+      },
+      {
+        "name": "side",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "slippage",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex assetswap assets",
+    "use": "assets",
+    "flags": []
+  },
+  {
+    "path": "cex assetswap config",
+    "use": "config",
+    "flags": []
+  },
+  {
+    "path": "cex assetswap evaluate",
+    "use": "evaluate",
+    "flags": [
+      {
+        "name": "cursor",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "max-value",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "size",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex assetswap order create",
+    "use": "create",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex assetswap order get",
+    "use": "get <order-id>",
+    "flags": []
+  },
+  {
+    "path": "cex assetswap order list",
+    "use": "list",
+    "flags": [
+      {
+        "name": "from",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "order-by",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "size",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "sort-mode",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "status",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "to",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex assetswap order preview",
+    "use": "preview",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex auth login",
+    "use": "login",
+    "flags": [
+      {
+        "name": "force",
+        "type": "bool",
+        "default": "false"
+      },
+      {
+        "name": "manual",
+        "type": "bool",
+        "default": "false"
+      },
+      {
+        "name": "scope",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex auth logout",
+    "use": "logout",
+    "flags": []
+  },
+  {
+    "path": "cex auth refresh",
+    "use": "refresh",
+    "flags": []
+  },
+  {
+    "path": "cex auth status",
+    "use": "status",
+    "flags": []
+  },
+  {
+    "path": "cex bot detail",
+    "use": "detail",
+    "flags": [
+      {
+        "name": "strategy-id",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "strategy-type",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex bot futures-combo create",
+    "use": "create",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex bot grid futures",
+    "use": "futures",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex bot grid infinite",
+    "use": "infinite",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex bot grid margin",
+    "use": "margin",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex bot grid spot",
+    "use": "spot",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex bot martingale contract",
+    "use": "contract",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex bot martingale spot",
+    "use": "spot",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex bot recommend",
+    "use": "recommend",
+    "flags": [
+      {
+        "name": "backtest-apr-gte",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "direction",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "exclude-recommendation-id",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "invest-amount",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "market",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "max-drawdown-lte",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "refresh-recommendation-id",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "scene",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "strategy-type",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex bot running",
+    "use": "running",
+    "flags": [
+      {
+        "name": "market",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "page-size",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "strategy-type",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex bot smart-position create",
+    "use": "create",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex bot stop",
+    "use": "stop",
+    "flags": [
+      {
+        "name": "stop-mode",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "stop-options",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "strategy-id",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "strategy-type",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex delivery account book",
+    "use": "book",
+    "flags": [
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex delivery account get",
+    "use": "get",
+    "flags": []
+  },
+  {
+    "path": "cex delivery market candlesticks",
+    "use": "candlesticks",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "interval",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex delivery market contract",
+    "use": "contract",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex delivery market contracts",
+    "use": "contracts",
+    "flags": []
+  },
+  {
+    "path": "cex delivery market insurance",
+    "use": "insurance",
+    "flags": [
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex delivery market order-book",
+    "use": "order-book",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex delivery market risk-limit-tiers",
+    "use": "risk-limit-tiers",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex delivery market tickers",
+    "use": "tickers",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex delivery market trades",
+    "use": "trades",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex delivery order cancel",
+    "use": "cancel",
+    "flags": [
+      {
+        "name": "id",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex delivery order cancel-all",
+    "use": "cancel-all",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "side",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex delivery order create",
+    "use": "create",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "price",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "size",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "tif",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex delivery order get",
+    "use": "get",
+    "flags": [
+      {
+        "name": "id",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex delivery order list",
+    "use": "list",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "default": "open",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex delivery order my-trades",
+    "use": "my-trades",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex delivery position close",
+    "use": "close",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex delivery position get",
+    "use": "get",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex delivery position liquidates",
+    "use": "liquidates",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex delivery position list",
+    "use": "list",
+    "flags": []
+  },
+  {
+    "path": "cex delivery position settlements",
+    "use": "settlements",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex delivery position update-leverage",
+    "use": "update-leverage",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "leverage",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex delivery position update-margin",
+    "use": "update-margin",
+    "flags": [
+      {
+        "name": "change",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex delivery position update-risk-limit",
+    "use": "update-risk-limit",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "risk-limit",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex delivery price-trigger cancel",
+    "use": "cancel",
+    "flags": [
+      {
+        "name": "id",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex delivery price-trigger cancel-all",
+    "use": "cancel-all",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex delivery price-trigger create",
+    "use": "create",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "order-price",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "size",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "trigger-price",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "trigger-rule",
+        "type": "int32",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex delivery price-trigger get",
+    "use": "get",
+    "flags": [
+      {
+        "name": "id",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex delivery price-trigger list",
+    "use": "list",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "default": "open",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex earn auto-invest add-position",
+    "use": "add-position",
+    "flags": [
+      {
+        "name": "amount",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "plan-id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex earn auto-invest coins",
+    "use": "coins",
+    "flags": [
+      {
+        "name": "plan-money",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex earn auto-invest config",
+    "use": "config",
+    "flags": []
+  },
+  {
+    "path": "cex earn auto-invest create",
+    "use": "create",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex earn auto-invest min-amount",
+    "use": "min-amount",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex earn auto-invest orders",
+    "use": "orders",
+    "flags": [
+      {
+        "name": "plan-id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "record-id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex earn auto-invest plan-detail",
+    "use": "plan-detail",
+    "flags": [
+      {
+        "name": "plan-id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex earn auto-invest plans",
+    "use": "plans",
+    "flags": [
+      {
+        "name": "page",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "page-size",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "default": "Active"
+      }
+    ]
+  },
+  {
+    "path": "cex earn auto-invest records",
+    "use": "records",
+    "flags": [
+      {
+        "name": "page",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "page-size",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "plan-id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex earn auto-invest stop",
+    "use": "stop",
+    "flags": [
+      {
+        "name": "plan-id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex earn auto-invest update",
+    "use": "update",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex earn dual balance",
+    "use": "balance",
+    "flags": []
+  },
+  {
+    "path": "cex earn dual modify-reinvest",
+    "use": "modify-reinvest",
+    "flags": [
+      {
+        "name": "duration",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "order-id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "status",
+        "type": "int32",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex earn dual orders",
+    "use": "orders",
+    "flags": [
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex earn dual place",
+    "use": "place",
+    "flags": [
+      {
+        "name": "amount",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "plan-id",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "text",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex earn dual plans",
+    "use": "plans",
+    "flags": [
+      {
+        "name": "plan-id",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex earn dual recommend",
+    "use": "recommend",
+    "flags": [
+      {
+        "name": "coin",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "history-pids",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "mode",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex earn dual refund",
+    "use": "refund",
+    "flags": [
+      {
+        "name": "order-id",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "req-id",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex earn dual refund-preview",
+    "use": "refund-preview <order-id>",
+    "flags": []
+  },
+  {
+    "path": "cex earn fixed create",
+    "use": "create",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex earn fixed history",
+    "use": "history",
+    "flags": [
+      {
+        "name": "asset",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "business-filter",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "end-at",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "10"
+      },
+      {
+        "name": "order-id",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "1"
+      },
+      {
+        "name": "product-id",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "start-at",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "sub-business",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "path": "cex earn fixed lends",
+    "use": "lends",
+    "flags": [
+      {
+        "name": "asset",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "business-filter",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "10"
+      },
+      {
+        "name": "order-id",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "order-type",
+        "type": "string",
+        "default": "1"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "1"
+      },
+      {
+        "name": "product-id",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "sub-business",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex earn fixed pre-redeem",
+    "use": "pre-redeem",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex earn fixed products",
+    "use": "products",
+    "flags": [
+      {
+        "name": "asset",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "10"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "1"
+      },
+      {
+        "name": "show-status",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "status",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "type",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex earn fixed products-asset",
+    "use": "products-asset",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex earn staking assets",
+    "use": "assets",
+    "flags": [
+      {
+        "name": "coin",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex earn staking awards",
+    "use": "awards",
+    "flags": [
+      {
+        "name": "coin",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "pid",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex earn staking find",
+    "use": "find",
+    "flags": [
+      {
+        "name": "cointype",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex earn staking orders",
+    "use": "orders",
+    "flags": [
+      {
+        "name": "coin",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "pid",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "type",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex earn staking swap",
+    "use": "swap",
+    "flags": [
+      {
+        "name": "amount",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "coin",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "pid",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "side",
+        "type": "int32",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex earn uni change",
+    "use": "change",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex earn uni chart",
+    "use": "chart",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex earn uni currencies",
+    "use": "currencies",
+    "flags": []
+  },
+  {
+    "path": "cex earn uni currency",
+    "use": "currency",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex earn uni interest",
+    "use": "interest",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex earn uni interest-records",
+    "use": "interest-records",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex earn uni interest-status",
+    "use": "interest-status",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex earn uni lend",
+    "use": "lend",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex earn uni lends",
+    "use": "lends",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex earn uni rate",
+    "use": "rate",
+    "flags": []
+  },
+  {
+    "path": "cex earn uni records",
+    "use": "records",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex flash-swap create",
+    "use": "create",
+    "flags": [
+      {
+        "name": "buy-amount",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "buy-currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "preview-id",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "sell-amount",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "sell-currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex flash-swap create-many-to-one",
+    "use": "create-many-to-one",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex flash-swap create-one-to-many",
+    "use": "create-one-to-many",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex flash-swap create-v1",
+    "use": "create-v1",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex flash-swap order",
+    "use": "order",
+    "flags": [
+      {
+        "name": "id",
+        "type": "int32",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex flash-swap orders",
+    "use": "orders",
+    "flags": [
+      {
+        "name": "buy-currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "1"
+      },
+      {
+        "name": "sell-currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "status",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex flash-swap pairs",
+    "use": "pairs",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "path": "cex flash-swap preview",
+    "use": "preview",
+    "flags": [
+      {
+        "name": "buy-amount",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "buy-currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "sell-amount",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "sell-currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex flash-swap preview-many-to-one",
+    "use": "preview-many-to-one",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex flash-swap preview-one-to-many",
+    "use": "preview-one-to-many",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex flash-swap preview-v1",
+    "use": "preview-v1",
+    "flags": [
+      {
+        "name": "buy-amount",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "buy-asset",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "sell-amount",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "sell-asset",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex futures account book",
+    "use": "book",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex futures account dual-mode",
+    "use": "dual-mode",
+    "flags": [
+      {
+        "name": "enable",
+        "type": "bool",
+        "default": "false"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures account fee",
+    "use": "fee",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures account get",
+    "use": "get",
+    "flags": [
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures account position-mode",
+    "use": "position-mode",
+    "flags": [
+      {
+        "name": "mode",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures chase create",
+    "use": "create",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures chase get",
+    "use": "get",
+    "flags": [
+      {
+        "name": "id",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures chase list",
+    "use": "list",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "finished",
+        "type": "bool",
+        "default": "false"
+      },
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "hide-cancel",
+        "type": "bool",
+        "default": "false"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "20"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "1"
+      },
+      {
+        "name": "reduce-only",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      },
+      {
+        "name": "side",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "sort-by",
+        "type": "int32",
+        "default": "1"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex futures chase stop",
+    "use": "stop",
+    "flags": [
+      {
+        "name": "id",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      },
+      {
+        "name": "text",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex futures chase stop-all",
+    "use": "stop-all",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "pos-margin-mode",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures market adl-risk-states",
+    "use": "adl-risk-states",
+    "flags": [
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures market batch-funding-rates",
+    "use": "batch-funding-rates",
+    "flags": [
+      {
+        "name": "contracts",
+        "type": "stringSlice",
+        "default": "[]",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures market candlesticks",
+    "use": "candlesticks",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "interval",
+        "type": "string",
+        "default": "1h"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "100"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures market contract",
+    "use": "contract",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures market contracts",
+    "use": "contracts",
+    "flags": [
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures market contracts-all",
+    "use": "contracts-all",
+    "flags": [
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "100"
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures market funding-rate",
+    "use": "funding-rate",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "20"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures market index-constituents",
+    "use": "index-constituents",
+    "flags": [
+      {
+        "name": "index",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures market insurance",
+    "use": "insurance",
+    "flags": [
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures market liquidations",
+    "use": "liquidations",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures market orderbook",
+    "use": "orderbook",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "depth",
+        "type": "int32",
+        "default": "20"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures market premium",
+    "use": "premium",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "interval",
+        "type": "string",
+        "default": "1h"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "100"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures market risk-limit-table",
+    "use": "risk-limit-table <table-id>",
+    "flags": [
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures market risk-limit-tiers",
+    "use": "risk-limit-tiers",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures market rpi-orderbook",
+    "use": "rpi-orderbook",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "interval",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "20"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      },
+      {
+        "name": "with-id",
+        "type": "bool",
+        "default": "false"
+      }
+    ]
+  },
+  {
+    "path": "cex futures market stats",
+    "use": "stats",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "interval",
+        "type": "string",
+        "default": "1h"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "30"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures market ticker",
+    "use": "ticker",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures market tickers",
+    "use": "tickers",
+    "flags": [
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures market trades",
+    "use": "trades",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "20"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures order add",
+    "use": "add",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "price",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      },
+      {
+        "name": "size",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "text",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex futures order amend",
+    "use": "amend",
+    "flags": [
+      {
+        "name": "id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "price",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      },
+      {
+        "name": "size",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex futures order batch-amend",
+    "use": "batch-amend",
+    "flags": [
+      {
+        "name": "orders-json",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures order batch-cancel",
+    "use": "batch-cancel",
+    "flags": [
+      {
+        "name": "ids",
+        "type": "stringSlice",
+        "default": "[]",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures order batch-create",
+    "use": "batch-create",
+    "flags": [
+      {
+        "name": "orders-json",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures order bbo",
+    "use": "bbo",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "direction",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      },
+      {
+        "name": "size",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex futures order cancel",
+    "use": "cancel",
+    "flags": [
+      {
+        "name": "all",
+        "type": "bool",
+        "default": "false"
+      },
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "id",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures order close",
+    "use": "close",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      },
+      {
+        "name": "side",
+        "type": "string",
+        "default": "long"
+      },
+      {
+        "name": "size",
+        "type": "string",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex futures order countdown-cancel-all",
+    "use": "countdown-cancel-all",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      },
+      {
+        "name": "timeout",
+        "type": "int32",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex futures order get",
+    "use": "get",
+    "flags": [
+      {
+        "name": "id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures order get-by-text",
+    "use": "get-by-text",
+    "flags": [
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      },
+      {
+        "name": "text",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex futures order list",
+    "use": "list",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "20"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "default": "open"
+      }
+    ]
+  },
+  {
+    "path": "cex futures order list-timerange",
+    "use": "list-timerange",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex futures order long",
+    "use": "long",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "price",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      },
+      {
+        "name": "size",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "text",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex futures order my-trades",
+    "use": "my-trades",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures order my-trades-timerange",
+    "use": "my-trades-timerange",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex futures order remove",
+    "use": "remove",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "price",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      },
+      {
+        "name": "size",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "text",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex futures order short",
+    "use": "short",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "price",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      },
+      {
+        "name": "size",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "text",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex futures position adl",
+    "use": "adl",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures position close-history",
+    "use": "close-history",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex futures position get",
+    "use": "get",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures position get-dual",
+    "use": "get-dual",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures position leverage",
+    "use": "leverage",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "dual-side",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "pos-margin-mode",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures position liquidates",
+    "use": "liquidates",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures position list",
+    "use": "list",
+    "flags": [
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures position list-timerange",
+    "use": "list-timerange",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex futures position update-contract-leverage",
+    "use": "update-contract-leverage",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "leverage",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "margin-mode",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures position update-cross-mode",
+    "use": "update-cross-mode",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "mode",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures position update-dual-cross-mode",
+    "use": "update-dual-cross-mode",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "mode",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures position update-dual-leverage",
+    "use": "update-dual-leverage",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "leverage",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures position update-dual-margin",
+    "use": "update-dual-margin",
+    "flags": [
+      {
+        "name": "change",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "dual-side",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures position update-dual-risk-limit",
+    "use": "update-dual-risk-limit",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "risk-limit",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures position update-leverage",
+    "use": "update-leverage",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "cross-leverage-limit",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "leverage",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures position update-margin",
+    "use": "update-margin",
+    "flags": [
+      {
+        "name": "change",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures position update-risk-limit",
+    "use": "update-risk-limit",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "risk-limit",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures price-trigger cancel",
+    "use": "cancel",
+    "flags": [
+      {
+        "name": "id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures price-trigger cancel-all",
+    "use": "cancel-all",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures price-trigger create",
+    "use": "create",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "price",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "price-type",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      },
+      {
+        "name": "size",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "tif",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "trigger-price",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "trigger-rule",
+        "type": "int32",
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "path": "cex futures price-trigger get",
+    "use": "get",
+    "flags": [
+      {
+        "name": "id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures price-trigger list",
+    "use": "list",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "default": "open"
+      }
+    ]
+  },
+  {
+    "path": "cex futures price-trigger update",
+    "use": "update",
+    "flags": [
+      {
+        "name": "body-order-id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "price",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      },
+      {
+        "name": "size",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "trigger-price",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex futures trail create",
+    "use": "create",
+    "flags": [
+      {
+        "name": "activation-price",
+        "type": "string",
+        "default": "0"
+      },
+      {
+        "name": "amount",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "price-offset",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "price-type",
+        "type": "int32",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures trail get",
+    "use": "get",
+    "flags": [
+      {
+        "name": "id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures trail list",
+    "use": "list",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "finished",
+        "type": "bool",
+        "default": "false"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures trail log",
+    "use": "log",
+    "flags": [
+      {
+        "name": "id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures trail stop",
+    "use": "stop",
+    "flags": [
+      {
+        "name": "id",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      },
+      {
+        "name": "text",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex futures trail stop-all",
+    "use": "stop-all",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex futures trail update",
+    "use": "update",
+    "flags": [
+      {
+        "name": "activation-price",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "amount",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "price-offset",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": "usdt"
+      }
+    ]
+  },
+  {
+    "path": "cex margin account book",
+    "use": "book",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex margin account funding",
+    "use": "funding",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex margin account list",
+    "use": "list",
+    "flags": [
+      {
+        "name": "pair",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex margin account transferable",
+    "use": "transferable",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex margin account user-info",
+    "use": "user-info",
+    "flags": [
+      {
+        "name": "pair",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex margin auto-repay get",
+    "use": "get",
+    "flags": []
+  },
+  {
+    "path": "cex margin auto-repay set",
+    "use": "set",
+    "flags": [
+      {
+        "name": "status",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex margin cross loans",
+    "use": "loans",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "status",
+        "type": "int32",
+        "default": "2"
+      }
+    ]
+  },
+  {
+    "path": "cex margin cross repayments",
+    "use": "repayments",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex margin leverage set",
+    "use": "set",
+    "flags": [
+      {
+        "name": "leverage",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex margin tier market",
+    "use": "market",
+    "flags": [
+      {
+        "name": "pair",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex margin tier user",
+    "use": "user",
+    "flags": [
+      {
+        "name": "pair",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex margin uni borrowable",
+    "use": "borrowable",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex margin uni estimate-rate",
+    "use": "estimate-rate",
+    "flags": [
+      {
+        "name": "currencies",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex margin uni interest-records",
+    "use": "interest-records",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex margin uni lend",
+    "use": "lend",
+    "flags": [
+      {
+        "name": "amount",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "default": "margin"
+      }
+    ]
+  },
+  {
+    "path": "cex margin uni loan-records",
+    "use": "loan-records",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex margin uni loans",
+    "use": "loans",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex margin uni pair",
+    "use": "pair",
+    "flags": [
+      {
+        "name": "pair",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex margin uni pairs",
+    "use": "pairs",
+    "flags": []
+  },
+  {
+    "path": "cex mcl collateral",
+    "use": "collateral",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex mcl create",
+    "use": "create",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex mcl currencies",
+    "use": "currencies",
+    "flags": []
+  },
+  {
+    "path": "cex mcl current-rate",
+    "use": "current-rate",
+    "flags": [
+      {
+        "name": "currencies",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "vip-level",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex mcl fix-rate",
+    "use": "fix-rate",
+    "flags": []
+  },
+  {
+    "path": "cex mcl ltv",
+    "use": "ltv",
+    "flags": []
+  },
+  {
+    "path": "cex mcl order",
+    "use": "order",
+    "flags": [
+      {
+        "name": "id",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex mcl orders",
+    "use": "orders",
+    "flags": [
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "order-type",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "sort",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex mcl quota",
+    "use": "quota",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex mcl records",
+    "use": "records",
+    "flags": [
+      {
+        "name": "collateral-currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex mcl repay",
+    "use": "repay",
+    "flags": [
+      {
+        "name": "json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex mcl repay-records",
+    "use": "repay-records",
+    "flags": [
+      {
+        "name": "borrow-currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex options account book",
+    "use": "book",
+    "flags": [
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex options account get",
+    "use": "get",
+    "flags": []
+  },
+  {
+    "path": "cex options account settlements",
+    "use": "settlements",
+    "flags": [
+      {
+        "name": "underlying",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex options market candlesticks",
+    "use": "candlesticks",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "interval",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex options market contract",
+    "use": "contract",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex options market contracts",
+    "use": "contracts",
+    "flags": [
+      {
+        "name": "expiration",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "underlying",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex options market expirations",
+    "use": "expirations",
+    "flags": [
+      {
+        "name": "underlying",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex options market order-book",
+    "use": "order-book",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "interval",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex options market settlement",
+    "use": "settlement",
+    "flags": [
+      {
+        "name": "at",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "underlying",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex options market settlements",
+    "use": "settlements",
+    "flags": [
+      {
+        "name": "underlying",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex options market tickers",
+    "use": "tickers",
+    "flags": [
+      {
+        "name": "underlying",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex options market trades",
+    "use": "trades",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex options market underlying-candlesticks",
+    "use": "underlying-candlesticks",
+    "flags": [
+      {
+        "name": "interval",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "underlying",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex options market underlying-tickers",
+    "use": "underlying-tickers",
+    "flags": [
+      {
+        "name": "underlying",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex options market underlyings",
+    "use": "underlyings",
+    "flags": []
+  },
+  {
+    "path": "cex options mmp get",
+    "use": "get",
+    "flags": [
+      {
+        "name": "underlying",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex options mmp reset",
+    "use": "reset",
+    "flags": [
+      {
+        "name": "underlying",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex options mmp set",
+    "use": "set",
+    "flags": [
+      {
+        "name": "delta-limit",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "frozen-period",
+        "type": "int32",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "qty-limit",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "underlying",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "window",
+        "type": "int32",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex options order amend",
+    "use": "amend",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "price",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "size",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex options order cancel",
+    "use": "cancel",
+    "flags": [
+      {
+        "name": "id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex options order cancel-all",
+    "use": "cancel-all",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "side",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "underlying",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex options order countdown-cancel-all",
+    "use": "countdown-cancel-all",
+    "flags": [
+      {
+        "name": "timeout",
+        "type": "int32",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "underlying",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex options order create",
+    "use": "create",
+    "flags": [
+      {
+        "name": "close",
+        "type": "bool",
+        "default": "false"
+      },
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "mmp",
+        "type": "bool",
+        "default": "false"
+      },
+      {
+        "name": "price",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "reduce-only",
+        "type": "bool",
+        "default": "false"
+      },
+      {
+        "name": "size",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "tif",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex options order get",
+    "use": "get",
+    "flags": [
+      {
+        "name": "id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex options order list",
+    "use": "list",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "default": "open",
+        "required": true
+      },
+      {
+        "name": "underlying",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex options position close",
+    "use": "close",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "underlying",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex options position get",
+    "use": "get",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex options position list",
+    "use": "list",
+    "flags": [
+      {
+        "name": "underlying",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex options position my-trades",
+    "use": "my-trades",
+    "flags": [
+      {
+        "name": "contract",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "underlying",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex rebate agency commissions",
+    "use": "commissions",
+    "flags": [
+      {
+        "name": "commission-type",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "user-id",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex rebate agency transactions",
+    "use": "transactions",
+    "flags": [
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "user-id",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex rebate broker commissions",
+    "use": "commissions",
+    "flags": [
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "user-id",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex rebate broker transactions",
+    "use": "transactions",
+    "flags": [
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "user-id",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex rebate partner agent-data",
+    "use": "agent-data",
+    "flags": [
+      {
+        "name": "business-type",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "end-date",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "start-date",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex rebate partner application",
+    "use": "application",
+    "flags": []
+  },
+  {
+    "path": "cex rebate partner commissions",
+    "use": "commissions",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "user-id",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex rebate partner eligibility",
+    "use": "eligibility",
+    "flags": []
+  },
+  {
+    "path": "cex rebate partner sub-list",
+    "use": "sub-list",
+    "flags": [
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "user-id",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex rebate partner transactions",
+    "use": "transactions",
+    "flags": [
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "user-id",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex rebate sub-relation",
+    "use": "sub-relation",
+    "flags": [
+      {
+        "name": "user-id-list",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex rebate user-info",
+    "use": "user-info",
+    "flags": []
+  },
+  {
+    "path": "cex spot account batch-fee",
+    "use": "batch-fee",
+    "flags": [
+      {
+        "name": "pairs",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex spot account book",
+    "use": "book",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex spot account fee",
+    "use": "fee",
+    "flags": [
+      {
+        "name": "pair",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex spot account get",
+    "use": "get",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex spot account list",
+    "use": "list",
+    "flags": [
+      {
+        "name": "all",
+        "type": "bool",
+        "default": "false"
+      }
+    ]
+  },
+  {
+    "path": "cex spot market candlesticks",
+    "use": "candlesticks",
+    "flags": [
+      {
+        "name": "interval",
+        "type": "string",
+        "default": "1h"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "100"
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex spot market currencies",
+    "use": "currencies",
+    "flags": []
+  },
+  {
+    "path": "cex spot market currency",
+    "use": "currency",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex spot market insurance",
+    "use": "insurance",
+    "flags": [
+      {
+        "name": "business",
+        "type": "string",
+        "default": "margin"
+      },
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex spot market orderbook",
+    "use": "orderbook",
+    "flags": [
+      {
+        "name": "depth",
+        "type": "int32",
+        "default": "20"
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex spot market pair",
+    "use": "pair",
+    "flags": [
+      {
+        "name": "pair",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex spot market pairs",
+    "use": "pairs",
+    "flags": []
+  },
+  {
+    "path": "cex spot market rpi-orderbook",
+    "use": "rpi-orderbook",
+    "flags": [
+      {
+        "name": "interval",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "20"
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "with-id",
+        "type": "bool",
+        "default": "false"
+      }
+    ]
+  },
+  {
+    "path": "cex spot market ticker",
+    "use": "ticker",
+    "flags": [
+      {
+        "name": "pair",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex spot market tickers",
+    "use": "tickers",
+    "flags": []
+  },
+  {
+    "path": "cex spot market time",
+    "use": "time",
+    "flags": []
+  },
+  {
+    "path": "cex spot market trades",
+    "use": "trades",
+    "flags": [
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "20"
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex spot order all-open",
+    "use": "all-open",
+    "flags": [
+      {
+        "name": "account",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex spot order amend",
+    "use": "amend",
+    "flags": [
+      {
+        "name": "account",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "amount",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "price",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "stop-loss-json",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "stop-profit-json",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex spot order batch-amend",
+    "use": "batch-amend",
+    "flags": [
+      {
+        "name": "orders-json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex spot order batch-cancel",
+    "use": "batch-cancel",
+    "flags": [
+      {
+        "name": "orders-json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex spot order batch-create",
+    "use": "batch-create",
+    "flags": [
+      {
+        "name": "orders-json",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex spot order buy",
+    "use": "buy",
+    "flags": [
+      {
+        "name": "account",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "amount",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "auto-borrow",
+        "type": "bool",
+        "default": "false"
+      },
+      {
+        "name": "auto-repay",
+        "type": "bool",
+        "default": "false"
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "price",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "quote",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "stop-loss-json",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "stop-profit-json",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "text",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex spot order cancel",
+    "use": "cancel",
+    "flags": [
+      {
+        "name": "account",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "all",
+        "type": "bool",
+        "default": "false"
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex spot order countdown-cancel-all",
+    "use": "countdown-cancel-all",
+    "flags": [
+      {
+        "name": "pair",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "timeout",
+        "type": "int32",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex spot order cross-liquidate",
+    "use": "cross-liquidate",
+    "flags": [
+      {
+        "name": "amount",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "price",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex spot order get",
+    "use": "get",
+    "flags": [
+      {
+        "name": "account",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex spot order list",
+    "use": "list",
+    "flags": [
+      {
+        "name": "account",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "20"
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "default": "open"
+      }
+    ]
+  },
+  {
+    "path": "cex spot order my-trades",
+    "use": "my-trades",
+    "flags": [
+      {
+        "name": "account",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex spot order sell",
+    "use": "sell",
+    "flags": [
+      {
+        "name": "account",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "amount",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "auto-borrow",
+        "type": "bool",
+        "default": "false"
+      },
+      {
+        "name": "auto-repay",
+        "type": "bool",
+        "default": "false"
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "price",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "stop-loss-json",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "stop-profit-json",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "text",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex spot pov cancel",
+    "use": "cancel",
+    "flags": [
+      {
+        "name": "id",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex spot pov cancel-all",
+    "use": "cancel-all",
+    "flags": [
+      {
+        "name": "pair",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex spot pov create",
+    "use": "create",
+    "flags": [
+      {
+        "name": "amount",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "limit-price",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "participation-rate",
+        "type": "int32",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "side",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "text",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "trigger-price",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "ttl",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex spot pov get",
+    "use": "get",
+    "flags": [
+      {
+        "name": "id",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex spot pov list",
+    "use": "list",
+    "flags": [
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "20"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "1"
+      },
+      {
+        "name": "pair",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "side",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "default": "open"
+      }
+    ]
+  },
+  {
+    "path": "cex spot price-trigger cancel",
+    "use": "cancel",
+    "flags": [
+      {
+        "name": "id",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex spot price-trigger cancel-all",
+    "use": "cancel-all",
+    "flags": [
+      {
+        "name": "market",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex spot price-trigger create",
+    "use": "create",
+    "flags": [
+      {
+        "name": "account",
+        "type": "string",
+        "default": "normal"
+      },
+      {
+        "name": "amount",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "market",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "price",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "side",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "time-in-force",
+        "type": "string",
+        "default": "ioc"
+      },
+      {
+        "name": "trigger-expiration",
+        "type": "int32",
+        "default": "86400"
+      },
+      {
+        "name": "trigger-price",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "trigger-rule",
+        "type": "string",
+        "default": ">="
+      }
+    ]
+  },
+  {
+    "path": "cex spot price-trigger get",
+    "use": "get",
+    "flags": [
+      {
+        "name": "id",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex spot price-trigger list",
+    "use": "list",
+    "flags": [
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "market",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "default": "open"
+      }
+    ]
+  },
+  {
+    "path": "cex square ai-search",
+    "use": "ai-search",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "keyword",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "sort",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "time-range",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex square live-replay",
+    "use": "live-replay",
+    "flags": [
+      {
+        "name": "coin",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "sort",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "tag",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex stock account assets",
+    "use": "assets",
+    "flags": [
+      {
+        "name": "pnl-calc-price",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "pnl-calc-type",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex stock account transactions",
+    "use": "transactions",
+    "flags": [
+      {
+        "name": "begin",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "end",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "1"
+      },
+      {
+        "name": "page-size",
+        "type": "int32",
+        "default": "10"
+      },
+      {
+        "name": "ref-id",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex stock account transfer",
+    "use": "transfer",
+    "flags": [
+      {
+        "name": "asset",
+        "type": "string",
+        "default": "USDT"
+      },
+      {
+        "name": "change",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "ref-id",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex stock market exchanges",
+    "use": "exchanges",
+    "flags": []
+  },
+  {
+    "path": "cex stock market fee-rate",
+    "use": "fee-rate",
+    "flags": []
+  },
+  {
+    "path": "cex stock market orderbook",
+    "use": "orderbook",
+    "flags": [
+      {
+        "name": "symbol",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex stock market symbol",
+    "use": "symbol",
+    "flags": [
+      {
+        "name": "exchange",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "1"
+      },
+      {
+        "name": "page-size",
+        "type": "int32",
+        "default": "10"
+      },
+      {
+        "name": "symbols",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex stock market symbols",
+    "use": "symbols",
+    "flags": [
+      {
+        "name": "exchange",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "1"
+      },
+      {
+        "name": "page-size",
+        "type": "int32",
+        "default": "10"
+      },
+      {
+        "name": "symbols",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "with-desc-i18n",
+        "type": "bool",
+        "default": "false"
+      }
+    ]
+  },
+  {
+    "path": "cex stock order cancel",
+    "use": "cancel",
+    "flags": [
+      {
+        "name": "id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex stock order cancel-all",
+    "use": "cancel-all",
+    "flags": []
+  },
+  {
+    "path": "cex stock order create",
+    "use": "create",
+    "flags": [
+      {
+        "name": "client-order-id",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "price",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "price-type",
+        "type": "string",
+        "default": "market"
+      },
+      {
+        "name": "side",
+        "type": "int32",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "symbol",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "time-in-force",
+        "type": "string",
+        "default": "day"
+      },
+      {
+        "name": "trading-session",
+        "type": "string",
+        "default": "regular"
+      },
+      {
+        "name": "volume",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex stock order history",
+    "use": "history",
+    "flags": [
+      {
+        "name": "begin",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "end",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "order-ids",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "1"
+      },
+      {
+        "name": "page-size",
+        "type": "int32",
+        "default": "10"
+      },
+      {
+        "name": "side",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "symbol",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex stock order list",
+    "use": "list",
+    "flags": [
+      {
+        "name": "symbol",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex stock order update",
+    "use": "update",
+    "flags": [
+      {
+        "name": "id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "price",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "volume",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex stock position close",
+    "use": "close",
+    "flags": [
+      {
+        "name": "close-type",
+        "type": "int32",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "close-volume",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "symbol",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex stock position list",
+    "use": "list",
+    "flags": [
+      {
+        "name": "exchange",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "pnl-calc-price",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "pnl-calc-type",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "symbol",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex tradfi account assets",
+    "use": "assets",
+    "flags": []
+  },
+  {
+    "path": "cex tradfi account info",
+    "use": "info",
+    "flags": []
+  },
+  {
+    "path": "cex tradfi account transactions",
+    "use": "transactions",
+    "flags": [
+      {
+        "name": "begin",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "end",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "1"
+      },
+      {
+        "name": "page-size",
+        "type": "int32",
+        "default": "20"
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex tradfi account transfer",
+    "use": "transfer",
+    "flags": [
+      {
+        "name": "asset",
+        "type": "string",
+        "default": "USDT"
+      },
+      {
+        "name": "change",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex tradfi market categories",
+    "use": "categories",
+    "flags": []
+  },
+  {
+    "path": "cex tradfi market commissions",
+    "use": "commissions",
+    "flags": [
+      {
+        "name": "category-code",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "symbols",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex tradfi market kline",
+    "use": "kline",
+    "flags": [
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "100"
+      },
+      {
+        "name": "symbol",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "default": "1m"
+      }
+    ]
+  },
+  {
+    "path": "cex tradfi market symbol",
+    "use": "symbol",
+    "flags": [
+      {
+        "name": "symbol",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex tradfi market symbols",
+    "use": "symbols",
+    "flags": []
+  },
+  {
+    "path": "cex tradfi market ticker",
+    "use": "ticker",
+    "flags": [
+      {
+        "name": "symbol",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex tradfi order cancel",
+    "use": "cancel",
+    "flags": [
+      {
+        "name": "id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex tradfi order create",
+    "use": "create",
+    "flags": [
+      {
+        "name": "leverage",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "price",
+        "type": "string",
+        "default": "0"
+      },
+      {
+        "name": "price-type",
+        "type": "string",
+        "default": "market"
+      },
+      {
+        "name": "side",
+        "type": "int32",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "sl",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "symbol",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "tp",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "volume",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex tradfi order history",
+    "use": "history",
+    "flags": [
+      {
+        "name": "begin",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "end",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "side",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "symbol",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex tradfi order list",
+    "use": "list",
+    "flags": []
+  },
+  {
+    "path": "cex tradfi order log",
+    "use": "log",
+    "flags": [
+      {
+        "name": "log-id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex tradfi order update",
+    "use": "update",
+    "flags": [
+      {
+        "name": "id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "price",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "sl",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "tp",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex tradfi position close",
+    "use": "close",
+    "flags": [
+      {
+        "name": "close-type",
+        "type": "int32",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "volume",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex tradfi position history",
+    "use": "history",
+    "flags": [
+      {
+        "name": "begin",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "direction",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "end",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "symbol",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex tradfi position list",
+    "use": "list",
+    "flags": []
+  },
+  {
+    "path": "cex tradfi position update",
+    "use": "update",
+    "flags": [
+      {
+        "name": "id",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      },
+      {
+        "name": "sl",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "tp",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex unified account currencies",
+    "use": "currencies",
+    "flags": []
+  },
+  {
+    "path": "cex unified account get",
+    "use": "get",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex unified config collateral",
+    "use": "collateral",
+    "flags": [
+      {
+        "name": "disable",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "enable",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "type",
+        "type": "int32",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex unified config delta-neutral-get",
+    "use": "delta-neutral-get",
+    "flags": []
+  },
+  {
+    "path": "cex unified config delta-neutral-set",
+    "use": "delta-neutral-set",
+    "flags": [
+      {
+        "name": "enabled",
+        "type": "bool",
+        "default": "false",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex unified config discount-tiers",
+    "use": "discount-tiers",
+    "flags": []
+  },
+  {
+    "path": "cex unified config leverage-config",
+    "use": "leverage-config",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex unified config leverage-get",
+    "use": "leverage-get",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex unified config leverage-set",
+    "use": "leverage-set",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "leverage",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex unified config leverage-set-all",
+    "use": "leverage-set-all",
+    "flags": [
+      {
+        "name": "leverage",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex unified config loan-tiers",
+    "use": "loan-tiers",
+    "flags": []
+  },
+  {
+    "path": "cex unified loan create",
+    "use": "create",
+    "flags": [
+      {
+        "name": "amount",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "default": "borrow"
+      }
+    ]
+  },
+  {
+    "path": "cex unified loan history-rate",
+    "use": "history-rate",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "tier",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex unified loan interest",
+    "use": "interest",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex unified loan list",
+    "use": "list",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex unified loan quick-estimate",
+    "use": "quick-estimate",
+    "flags": []
+  },
+  {
+    "path": "cex unified loan quick-repay",
+    "use": "quick-repay",
+    "flags": [
+      {
+        "name": "available-currencies",
+        "type": "stringSlice",
+        "default": "[]",
+        "required": true
+      },
+      {
+        "name": "debt-currencies",
+        "type": "stringSlice",
+        "default": "[]",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex unified loan records",
+    "use": "records",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex unified mode get",
+    "use": "get",
+    "flags": []
+  },
+  {
+    "path": "cex unified mode set",
+    "use": "set",
+    "flags": [
+      {
+        "name": "mode",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex unified query borrowable",
+    "use": "borrowable",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex unified query borrowable-list",
+    "use": "borrowable-list",
+    "flags": [
+      {
+        "name": "currencies",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex unified query estimate-rate",
+    "use": "estimate-rate",
+    "flags": [
+      {
+        "name": "currencies",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex unified query transferable",
+    "use": "transferable",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex unified query transferables",
+    "use": "transferables",
+    "flags": [
+      {
+        "name": "currencies",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex unified risk calculate",
+    "use": "calculate",
+    "flags": [
+      {
+        "name": "input",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex unified risk units",
+    "use": "units",
+    "flags": []
+  },
+  {
+    "path": "cex wallet balance convert-small",
+    "use": "convert-small",
+    "flags": [
+      {
+        "name": "all",
+        "type": "bool",
+        "default": "false"
+      },
+      {
+        "name": "currencies",
+        "type": "stringSlice",
+        "default": "[]"
+      }
+    ]
+  },
+  {
+    "path": "cex wallet balance small",
+    "use": "small",
+    "flags": []
+  },
+  {
+    "path": "cex wallet balance small-history",
+    "use": "small-history",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex wallet balance sub",
+    "use": "sub",
+    "flags": [
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "page",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "sub-uid",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex wallet balance sub-cross-margin",
+    "use": "sub-cross-margin",
+    "flags": [
+      {
+        "name": "sub-uid",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex wallet balance sub-futures",
+    "use": "sub-futures",
+    "flags": [
+      {
+        "name": "settle",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "sub-uid",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex wallet balance sub-margin",
+    "use": "sub-margin",
+    "flags": [
+      {
+        "name": "sub-uid",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex wallet balance total",
+    "use": "total",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex wallet deposit address",
+    "use": "address",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex wallet deposit list",
+    "use": "list",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex wallet deposit push-orders",
+    "use": "push-orders",
+    "flags": [
+      {
+        "name": "from",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "to",
+        "type": "int32",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex wallet deposit saved",
+    "use": "saved",
+    "flags": [
+      {
+        "name": "chain",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "20"
+      }
+    ]
+  },
+  {
+    "path": "cex wallet deposit withdrawals",
+    "use": "withdrawals",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex wallet market chains",
+    "use": "chains",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex wallet market low-cap",
+    "use": "low-cap",
+    "flags": []
+  },
+  {
+    "path": "cex wallet market trade-fee",
+    "use": "trade-fee",
+    "flags": [
+      {
+        "name": "currency-pair",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "settle",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex wallet market withdraw-status",
+    "use": "withdraw-status",
+    "flags": [
+      {
+        "name": "currency",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex wallet transfer create",
+    "use": "create",
+    "flags": [
+      {
+        "name": "amount",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "currency-pair",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "from",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "to",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex wallet transfer status",
+    "use": "status",
+    "flags": [
+      {
+        "name": "client-order-id",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "tx-id",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex wallet transfer sub-list",
+    "use": "sub-list",
+    "flags": [
+      {
+        "name": "from",
+        "type": "int64",
+        "default": "0"
+      },
+      {
+        "name": "limit",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "offset",
+        "type": "int32",
+        "default": "0"
+      },
+      {
+        "name": "sub-uid",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "to",
+        "type": "int64",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "path": "cex wallet transfer sub-to-sub",
+    "use": "sub-to-sub",
+    "flags": [
+      {
+        "name": "amount",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "from-type",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "from-uid",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "to-type",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "to-uid",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex wallet transfer to-sub",
+    "use": "to-sub",
+    "flags": [
+      {
+        "name": "amount",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "direction",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "sub-account",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "sub-account-type",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex withdrawal cancel",
+    "use": "cancel",
+    "flags": [
+      {
+        "name": "id",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "cex withdrawal create",
+    "use": "create",
+    "flags": [
+      {
+        "name": "address",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "amount",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "chain",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "memo",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "cex withdrawal push-order",
+    "use": "push-order",
+    "flags": [
+      {
+        "name": "amount",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "currency",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      {
+        "name": "receive-uid",
+        "type": "int64",
+        "default": "0",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "config check",
+    "use": "check",
+    "flags": []
+  },
+  {
+    "path": "config init",
+    "use": "init",
+    "flags": [
+      {
+        "name": "hide-input",
+        "type": "bool",
+        "default": "false"
+      }
+    ]
+  },
+  {
+    "path": "config list",
+    "use": "list",
+    "flags": [
+      {
+        "name": "show-secrets",
+        "type": "bool",
+        "default": "false"
+      }
+    ]
+  },
+  {
+    "path": "config set",
+    "use": "set <key> <value>",
+    "flags": [
+      {
+        "name": "profile",
+        "type": "string",
+        "default": "default"
+      }
+    ]
+  },
+  {
+    "path": "doctor",
+    "use": "doctor",
+    "flags": [
+      {
+        "name": "check",
+        "type": "string",
+        "default": "all"
+      },
+      {
+        "name": "strict",
+        "type": "bool",
+        "default": "false"
+      }
+    ]
+  },
+  {
+    "path": "migrate",
+    "use": "migrate",
+    "flags": [
+      {
+        "name": "apply",
+        "type": "bool",
+        "default": "false"
+      },
+      {
+        "name": "backup-dir",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "dry-run",
+        "type": "bool",
+        "default": "false"
+      },
+      {
+        "name": "provider",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "yes",
+        "type": "bool",
+        "default": "false"
+      }
+    ]
+  },
+  {
+    "path": "preflight",
+    "use": "preflight",
+    "flags": [
+      {
+        "name": "fallback-enabled",
+        "type": "bool",
+        "default": "true"
+      }
+    ]
+  },
+  {
+    "path": "version",
+    "use": "version",
+    "flags": [
+      {
+        "name": "details",
+        "type": "bool",
+        "default": "false"
+      }
+    ]
+  }
+]

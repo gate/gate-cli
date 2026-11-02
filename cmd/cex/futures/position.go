@@ -166,8 +166,8 @@ func runFuturesPositionList(cmd *cobra.Command, args []string) error {
 
 	positions, httpResp, err := c.FuturesAPI.ListPositions(c.Context(), settle, nil)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/positions", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/positions", "")
 	}
 	if p.IsJSON() {
 		return p.Print(positions)
@@ -199,8 +199,7 @@ func runFuturesPositionGetDual(cmd *cobra.Command, args []string) error {
 
 	positions, httpResp, err := c.FuturesAPI.GetDualModePosition(c.Context(), settle, contract)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/dual_comp/positions/"+contract, ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/dual_comp/positions/"+contract, "")
 	}
 	if p.IsJSON() {
 		if len(positions) == 1 {
@@ -249,8 +248,7 @@ func runFuturesPositionListTimerange(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.ListPositionsTimerange(c.Context(), settle, contract, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/positions/"+contract+"/timerange", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/positions/"+contract+"/timerange", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -278,8 +276,7 @@ func runFuturesPositionLeverage(cmd *cobra.Command, args []string) error {
 	dualSide, _ := cmd.Flags().GetString("dual-side")
 	result, httpResp, err := c.FuturesAPI.GetLeverage(c.Context(), settle, contract, posMarginMode, dualSide)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/positions/"+contract+"/leverage", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/positions/"+contract+"/leverage", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -303,14 +300,20 @@ func runFuturesUpdateDualPositionMargin(cmd *cobra.Command, args []string) error
 	if err := c.RequireAuth(); err != nil {
 		return err
 	}
-	if dualSide == "" && c.IsDualMode(settle) {
-		return fmt.Errorf("--dual-side is required in dual position mode (dual_long or dual_short)")
+	if dualSide == "" {
+		// 自动推断所需的模式查询失败后必须停止，不能继续提交保证金变更。
+		isDual, err := c.IsDualMode(settle)
+		if err != nil {
+			return err
+		}
+		if isDual {
+			return fmt.Errorf("--dual-side is required in dual position mode (dual_long or dual_short)")
+		}
 	}
 
 	result, httpResp, err := c.FuturesAPI.UpdateDualModePositionMargin(c.Context(), settle, contract, change, dualSide)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/dual_comp/positions/"+contract+"/margin", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/dual_comp/positions/"+contract+"/margin", "")
 	}
 	return p.Print(result)
 }
@@ -330,8 +333,7 @@ func runFuturesUpdateDualPositionLeverage(cmd *cobra.Command, args []string) err
 
 	result, httpResp, err := c.FuturesAPI.UpdateDualModePositionLeverage(c.Context(), settle, contract, leverage, nil)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/dual_comp/positions/"+contract+"/leverage", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/dual_comp/positions/"+contract+"/leverage", "")
 	}
 	return p.Print(result)
 }
@@ -352,8 +354,7 @@ func runFuturesUpdateContractPositionLeverage(cmd *cobra.Command, args []string)
 
 	result, httpResp, err := c.FuturesAPI.UpdateContractPositionLeverage(c.Context(), settle, contract, leverage, marginMode, nil)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/contracts/"+contract+"/leverage", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/contracts/"+contract+"/leverage", "")
 	}
 	return p.Print(result)
 }
@@ -375,8 +376,7 @@ func runFuturesUpdateDualPositionCrossMode(cmd *cobra.Command, args []string) er
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.FuturesAPI.UpdateDualCompPositionCrossMode(c.Context(), settle, req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/dual_comp/positions/cross_mode", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/dual_comp/positions/cross_mode", string(body))
 	}
 	return p.Print(result)
 }
@@ -396,8 +396,7 @@ func runFuturesUpdateDualPositionRiskLimit(cmd *cobra.Command, args []string) er
 
 	result, httpResp, err := c.FuturesAPI.UpdateDualModePositionRiskLimit(c.Context(), settle, contract, riskLimit)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/dual_comp/positions/"+contract+"/risk_limit", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/dual_comp/positions/"+contract+"/risk_limit", "")
 	}
 	return p.Print(result)
 }
@@ -433,8 +432,7 @@ func runFuturesPositionCloseHistory(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.ListPositionClose(c.Context(), settle, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/position_close", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/position_close", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -469,8 +467,7 @@ func runFuturesPositionLiquidates(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.ListLiquidates(c.Context(), settle, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/liquidates", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/liquidates", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -505,8 +502,7 @@ func runFuturesPositionADL(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.ListAutoDeleverages(c.Context(), settle, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/auto_deleverages", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/auto_deleverages", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

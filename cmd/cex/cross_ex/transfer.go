@@ -80,8 +80,8 @@ func runTransferList(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.CrossExAPI.ListCrossexTransfers(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/crossex/transfers", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/crossex/transfers", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -114,8 +114,7 @@ func runTransferCreate(cmd *cobra.Command, args []string) error {
 	}
 	result, httpResp, err := c.CrossExAPI.CreateCrossexTransfer(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/crossex/transfers", jsonStr))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/crossex/transfers", jsonStr)
 	}
 	return p.Print(result)
 }

@@ -1,6 +1,10 @@
 package output
 
-import "github.com/gate/gate-cli/internal/agentfeature"
+import (
+	"net/http"
+
+	"github.com/gate/gate-cli/internal/agentfeature"
+)
 
 // FillAgentErrorType sets ErrorType when omitted so PrintError JSON is agent-convergable.
 func FillAgentErrorType(ge *GateError) {
@@ -18,6 +22,15 @@ func FillAgentErrorConvergence(ge *GateError) {
 	FillAgentErrorType(ge)
 	if ge.ErrorType == "" {
 		ge.ErrorType = "UNKNOWN"
+	}
+	// A validation label does not prove a failed write was never committed.
+	// Apply this last-mile guard before default advice can suggest replaying it.
+	if ge.Request != nil && ge.Request.Method != "" && ge.Request.Method != http.MethodGet && ge.Request.Method != http.MethodHead && ((ge.Status >= 200 && ge.Status < 300) || ge.Status >= 500) {
+		ge.Retryable = false
+		if ge.SuggestedNextAction == "" {
+			ge.SuggestedNextAction = "query the original order or business reference before submitting any further write"
+		}
+		return
 	}
 	if ge.SuggestedNextAction == "" {
 		ge.SuggestedNextAction = defaultSuggestedNextAction(ge.ErrorType, ge.Label)
@@ -48,6 +61,9 @@ func defaultSuggestedNextAction(errorType, label string) string {
 		return "fix migrate failures (backup, provider config); do not retry migrate until resolved"
 	}
 	switch errorType {
+	case "UNSUPPORTED_OPERATION":
+		// API-order TP/SL updates remain unsupported after correcting arguments.
+		return "stop retrying; API orders do not support editing, adding or deleting TP/SL conditions; changing flags cannot enable this operation"
 	case "INVALID_ARGS":
 		return "fix flags or query; you may check the leaf command --help once, then retry with corrected args"
 	case "AUTH_ERROR":
@@ -56,6 +72,9 @@ func defaultSuggestedNextAction(errorType, label string) string {
 		return "stop retrying; verify API key permissions or Intel bearer scope"
 	case "EMPTY_RESULT":
 		return "answer that no records matched; do not blindly retry the same command"
+	case "API_NOT_FOUND":
+		// Do not turn a proxy's generic 404 into a fabricated account result.
+		return "stop business retries; verify the API origin, gateway route and installed command contract; do not report an empty account result"
 	case "NETWORK_ERROR":
 		return "stop business retries; report service unavailable or retry later without changing args"
 	case "COMMAND_NOT_FOUND":

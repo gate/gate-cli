@@ -55,8 +55,8 @@ func runUserInfo(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.P2pAPI.P2pMerchantAccountGetUserInfo(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/p2p/merchant/account/get_user_info", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "POST", "/api/v4/p2p/merchant/account/get_user_info", "")
 	}
 	return p.Print(result)
 }
@@ -78,8 +78,7 @@ func runCounterparty(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.P2pAPI.P2pMerchantAccountGetCounterpartyUserInfo(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/p2p/merchant/account/get_counterparty_user_info", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/p2p/merchant/account/get_counterparty_user_info", "")
 	}
 	return p.Print(result)
 }
@@ -108,8 +107,7 @@ func runPayment(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.P2pAPI.P2pMerchantAccountGetMyselfPayment(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/p2p/merchant/account/get_myself_payment", jsonStr))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/p2p/merchant/account/get_myself_payment", jsonStr)
 	}
 	return p.Print(result)
 }

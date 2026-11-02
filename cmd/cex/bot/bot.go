@@ -1,6 +1,6 @@
 // Package bot wraps Gate AI Hub (BotAPI) endpoints under `gate-cli cex bot`.
 //
-// Coverage of the BotApiService surface in gateapi-go v7.2.78:
+// Coverage of the BotApiService surface in gateapi-go v7.2.167:
 //
 //	bot recommend                       GetAIHubStrategyRecommend
 //	bot running                         GetAIHubPortfolioRunning
@@ -8,6 +8,7 @@
 //	bot stop                            PostAIHubPortfolioStop
 //	bot grid spot      / margin / infinite / futures  (Post*GridCreate)
 //	bot martingale spot / contract                    (Post*MartingaleCreate)
+//	bot smart-position / futures-combo create         (PostAIHub*Create)
 package bot
 
 import (
@@ -23,7 +24,7 @@ import (
 var Cmd = &cobra.Command{
 	Use:   "bot",
 	Short: "Gate AI Hub (quant strategies) commands",
-	Long:  "Discover, create, query, and stop AI Hub strategies (spot/margin/infinite/futures grid + spot/contract martingale).",
+	Long:  "Discover, create, query, and stop AI Hub strategies (spot/margin/infinite/futures grid + spot/contract martingale + smart_position + futures_combo).",
 }
 
 func init() {
@@ -33,11 +34,12 @@ func init() {
 		RunE:  runBotRecommend,
 	}
 	recommendCmd.Flags().String("market", "", "Trading pair, e.g. BTC_USDT")
-	recommendCmd.Flags().String("strategy-type", "", "Strategy type filter (e.g. spot_grid, futures_grid, spot_martingale)")
+	recommendCmd.Flags().String("strategy-type", "", "Recommendation type: spot_grid, margin_grid, infinite_grid, futures_grid, spot_martingale, smart_position")
 	recommendCmd.Flags().String("direction", "", "Market direction")
 	recommendCmd.Flags().String("invest-amount", "", "Investment amount")
 	recommendCmd.Flags().String("scene", "", "Recommend scene: top1 / bundle / filter / refresh")
 	recommendCmd.Flags().String("refresh-recommendation-id", "", "Recommendation ID for scene=refresh; format strategy_type|market[|backtest_id]")
+	recommendCmd.Flags().String("exclude-recommendation-id", "", "Previous returned recommendation ID to exclude in refresh scene")
 	recommendCmd.Flags().Int32("limit", 0, "Max results returned (filter scene capped at 10)")
 	recommendCmd.Flags().String("max-drawdown-lte", "", "Max drawdown upper bound")
 	recommendCmd.Flags().String("backtest-apr-gte", "", "Backtest annualized return lower bound")
@@ -47,7 +49,7 @@ func init() {
 		Short: "List currently-running strategies",
 		RunE:  runBotRunning,
 	}
-	runningCmd.Flags().String("strategy-type", "", "Filter by strategy type")
+	runningCmd.Flags().String("strategy-type", "", "Filter by strategy type (six existing types, smart_position, futures_combo)")
 	runningCmd.Flags().String("market", "", "Filter by trading pair")
 	runningCmd.Flags().Int32("page", 0, "Page number")
 	runningCmd.Flags().Int32("page-size", 0, "Page size")
@@ -58,19 +60,21 @@ func init() {
 		RunE:  runBotDetail,
 	}
 	detailCmd.Flags().String("strategy-id", "", "Strategy ID (required)")
-	detailCmd.MarkFlagRequired("strategy-id")
+	mustRequireBotFlag(detailCmd, "strategy-id")
 	detailCmd.Flags().String("strategy-type", "", "Strategy type (required); used to dispatch to the underlying detail implementation")
-	detailCmd.MarkFlagRequired("strategy-type")
+	mustRequireBotFlag(detailCmd, "strategy-type")
 
 	stopCmd := &cobra.Command{
 		Use:   "stop",
 		Short: "Stop a running strategy",
 		RunE:  runBotStop,
 	}
+	stopCmd.Flags().String("stop-mode", "", "smart_position only: market, limit, no_close (required for this type)")
+	stopCmd.Flags().String("stop-options", "", "limit mode JSON: price and expiration (seconds), optional slip")
 	stopCmd.Flags().String("strategy-id", "", "Strategy ID (required)")
-	stopCmd.MarkFlagRequired("strategy-id")
+	mustRequireBotFlag(stopCmd, "strategy-id")
 	stopCmd.Flags().String("strategy-type", "", "Strategy type (required)")
-	stopCmd.MarkFlagRequired("strategy-type")
+	mustRequireBotFlag(stopCmd, "strategy-type")
 
 	Cmd.AddCommand(recommendCmd, runningCmd, detailCmd, stopCmd)
 }
@@ -114,6 +118,9 @@ func runBotRecommend(cmd *cobra.Command, args []string) error {
 	if refreshID != "" {
 		opts.RefreshRecommendationId = optional.NewString(refreshID)
 	}
+	if exclude, _ := cmd.Flags().GetString("exclude-recommendation-id"); exclude != "" {
+		opts.ExcludeRecommendationId = optional.NewString(exclude)
+	}
 	if limit != 0 {
 		opts.Limit = optional.NewInt32(limit)
 	}
@@ -125,9 +132,8 @@ func runBotRecommend(cmd *cobra.Command, args []string) error {
 	}
 
 	result, httpResp, err := c.BotAPI.GetAIHubStrategyRecommend(c.Context(), opts)
-	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/bot/strategy/recommend", ""))
-		return nil
+	if err := client.BotResultError(result, err, httpResp, "GET", "/api/v4/bot/strategy/recommend", ""); err != nil {
+		return err
 	}
 	return p.Print(result)
 }
@@ -162,9 +168,8 @@ func runBotRunning(cmd *cobra.Command, args []string) error {
 	}
 
 	result, httpResp, err := c.BotAPI.GetAIHubPortfolioRunning(c.Context(), opts)
-	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/bot/portfolio/running", ""))
-		return nil
+	if err := client.BotResultError(result, err, httpResp, "GET", "/api/v4/bot/portfolio/running", ""); err != nil {
+		return err
 	}
 	return p.Print(result)
 }
@@ -183,9 +188,8 @@ func runBotDetail(cmd *cobra.Command, args []string) error {
 	}
 
 	result, httpResp, err := c.BotAPI.GetAIHubPortfolioDetail(c.Context(), strategyID, strategyType, nil)
-	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/bot/portfolio/detail", ""))
-		return nil
+	if err := client.BotResultError(result, err, httpResp, "GET", "/api/v4/bot/portfolio/detail", ""); err != nil {
+		return err
 	}
 	return p.Print(result)
 }
@@ -208,10 +212,20 @@ func runBotStop(cmd *cobra.Command, args []string) error {
 		StrategyType: gateapi.StrategyType(strategyType),
 	}
 
+	body.StopMode, _ = cmd.Flags().GetString("stop-mode")
+	options, _ := cmd.Flags().GetString("stop-options")
+	if options != "" {
+		if err := decodeBotJSON(options, &body.StopOptions); err != nil {
+			return err
+		}
+	}
+	if err := validateBotStop(body); err != nil {
+		return err
+	}
+
 	result, httpResp, err := c.BotAPI.PostAIHubPortfolioStop(c.Context(), body, nil)
-	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/bot/portfolio/stop", ""))
-		return nil
+	if err := client.BotResultError(result, err, httpResp, "POST", "/api/v4/bot/portfolio/stop", ""); err != nil {
+		return err
 	}
 	return p.Print(result)
 }

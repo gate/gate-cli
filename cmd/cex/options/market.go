@@ -7,9 +7,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var marketCmd = &cobra.Command{
@@ -140,8 +140,8 @@ func runOptionsUnderlyings(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.OptionsAPI.ListOptionsUnderlyings(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/options/underlyings", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/options/underlyings", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -163,8 +163,7 @@ func runOptionsExpirations(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.OptionsAPI.ListOptionsExpirations(c.Context(), underlying)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/options/expirations", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/options/expirations", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -192,8 +191,7 @@ func runOptionsContracts(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.OptionsAPI.ListOptionsContracts(c.Context(), underlying, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/options/contracts", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/options/contracts", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -219,8 +217,7 @@ func runOptionsContract(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.OptionsAPI.GetOptionsContract(c.Context(), contract)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/options/contracts/"+contract, ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/options/contracts/"+contract, "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -245,8 +242,7 @@ func runOptionsSettlements(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.OptionsAPI.ListOptionsSettlements(c.Context(), underlying, nil)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/options/settlements", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/options/settlements", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -270,8 +266,7 @@ func runOptionsSettlement(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.OptionsAPI.GetOptionsSettlement(c.Context(), contract, underlying, at)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/options/settlements/"+contract, ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/options/settlements/"+contract, "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -302,8 +297,7 @@ func runOptionsOrderBook(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.OptionsAPI.ListOptionsOrderBook(c.Context(), contract, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/options/order_book", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/options/order_book", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -337,8 +331,7 @@ func runOptionsTickers(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.OptionsAPI.ListOptionsTickers(c.Context(), underlying)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/options/tickers", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/options/tickers", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -360,8 +353,7 @@ func runOptionsUnderlyingTickers(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.OptionsAPI.ListOptionsUnderlyingTickers(c.Context(), underlying)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/options/underlyings/"+underlying+"/tickers", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/options/underlyings/"+underlying+"/tickers", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -392,8 +384,7 @@ func runOptionsCandlesticks(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.OptionsAPI.ListOptionsCandlesticks(c.Context(), contract, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/options/candlesticks", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/options/candlesticks", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -425,8 +416,7 @@ func runOptionsUnderlyingCandlesticks(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.OptionsAPI.ListOptionsUnderlyingCandlesticks(c.Context(), underlying, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/options/underlyings/"+underlying+"/candlesticks", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/options/underlyings/"+underlying+"/candlesticks", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -457,8 +447,7 @@ func runOptionsTrades(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.OptionsAPI.ListOptionsTrades(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/options/trades", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/options/trades", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

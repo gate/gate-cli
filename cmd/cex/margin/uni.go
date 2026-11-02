@@ -110,8 +110,8 @@ func runUniPairs(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MarginUniAPI.ListUniCurrencyPairs(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/margin/uni/currency_pairs", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/margin/uni/currency_pairs", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -133,8 +133,7 @@ func runUniPair(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MarginUniAPI.GetUniCurrencyPair(c.Context(), pair)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/margin/uni/currency_pairs/"+pair, ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/margin/uni/currency_pairs/"+pair, "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -160,8 +159,7 @@ func runUniEstimateRate(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MarginUniAPI.GetMarginUniEstimateRate(c.Context(), currencies)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/margin/uni/estimate_rate", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/margin/uni/estimate_rate", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -203,8 +201,7 @@ func runUniLoans(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MarginUniAPI.ListUniLoans(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/margin/uni/loans", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/margin/uni/loans", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -239,8 +236,7 @@ func runUniLend(cmd *cobra.Command, args []string) error {
 
 	httpResp, err := c.MarginUniAPI.CreateUniLoan(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/margin/uni/loans", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/margin/uni/loans", "")
 	}
 	return p.Print(map[string]string{
 		"message":       "loan created successfully",
@@ -284,8 +280,7 @@ func runUniLoanRecords(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MarginUniAPI.ListUniLoanRecords(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/margin/uni/loan_records", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/margin/uni/loan_records", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -335,8 +330,7 @@ func runUniInterestRecords(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MarginUniAPI.ListUniLoanInterestRecords(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/margin/uni/interest_records", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/margin/uni/interest_records", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -362,8 +356,7 @@ func runUniBorrowable(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MarginUniAPI.GetUniBorrowable(c.Context(), currency, pair)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/margin/uni/borrowable", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/margin/uni/borrowable", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

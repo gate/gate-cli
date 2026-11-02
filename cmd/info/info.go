@@ -17,6 +17,6 @@ Describe: gate-cli info describe --name "info coin get-coin-info" (CLI path or M
 
 func init() {
 	// Schema refresh is env-only (no --refresh-schema flag): set GATE_INTEL_REFRESH_SCHEMA=1.
-	// See README.md (Intel), specs/intel-config-and-security.md, specs/open-items-and-dependencies.md,
-	// and specs/cli/cli-first-mcp-technical-implementation-plan.md.
+// Public command behavior is documented by the bundled contracts and leaf help.
+// Public command behavior is documented by the bundled contracts and leaf help.
 }

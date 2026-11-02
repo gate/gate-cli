@@ -1,0 +1,557 @@
+[
+  {
+    "name": "pov-create",
+    "args": [
+      "spot",
+      "pov",
+      "create",
+      "--pair",
+      "BTC_USDT",
+      "--side",
+      "buy",
+      "--amount",
+      "0.000000000000000001",
+      "--participation-rate",
+      "10",
+      "--ttl",
+      "1h",
+      "--limit-price",
+      "60000",
+      "--trigger-price",
+      "59000",
+      "--text",
+      "t-pov"
+    ],
+    "method": "POST",
+    "path": "/api/v4/spot/pov_orders",
+    "query": {},
+    "body": {
+      "currency_pair": "BTC_USDT",
+      "side": "buy",
+      "amount": "0.000000000000000001",
+      "participation_rate": 10,
+      "ttl": "1h",
+      "limit_price": "60000",
+      "trigger_price": "59000",
+      "text": "t-pov"
+    },
+    "response": {
+      "id": "9223372036854775807",
+      "status": "CREATED"
+    },
+    "private": true
+  },
+  {
+    "name": "pov-list",
+    "args": [
+      "spot",
+      "pov",
+      "list",
+      "--status",
+      "finished",
+      "--pair",
+      "BTC_USDT",
+      "--side",
+      "sell",
+      "--page",
+      "100",
+      "--limit",
+      "1000"
+    ],
+    "method": "GET",
+    "path": "/api/v4/spot/pov_orders",
+    "query": {
+      "status": "finished",
+      "currency_pair": "BTC_USDT",
+      "side": "sell",
+      "page": "100",
+      "limit": "1000"
+    },
+    "body": null,
+    "response": [
+      {
+        "id": "123"
+      }
+    ],
+    "private": true
+  },
+  {
+    "name": "pov-get",
+    "args": [
+      "spot",
+      "pov",
+      "get",
+      "--id",
+      "9223372036854775807"
+    ],
+    "method": "GET",
+    "path": "/api/v4/spot/pov_orders/9223372036854775807",
+    "query": {},
+    "body": null,
+    "response": {
+      "id": "9223372036854775807"
+    },
+    "private": true
+  },
+  {
+    "name": "pov-cancel",
+    "args": [
+      "spot",
+      "pov",
+      "cancel",
+      "--id",
+      "9223372036854775807"
+    ],
+    "method": "DELETE",
+    "path": "/api/v4/spot/pov_orders/9223372036854775807",
+    "query": {},
+    "body": null,
+    "response": {
+      "id": "9223372036854775807"
+    },
+    "private": true
+  },
+  {
+    "name": "pov-cancel-all",
+    "args": [
+      "spot",
+      "pov",
+      "cancel-all",
+      "--pair",
+      "BTC_USDT"
+    ],
+    "method": "DELETE",
+    "path": "/api/v4/spot/pov_orders",
+    "query": {
+      "currency_pair": "BTC_USDT"
+    },
+    "body": null,
+    "response": [
+      {
+        "id": "123"
+      }
+    ],
+    "private": true
+  },
+  {
+    "name": "spot-rpi",
+    "args": [
+      "spot",
+      "market",
+      "rpi-orderbook",
+      "--pair",
+      "BTC_USDT",
+      "--interval",
+      "0.01",
+      "--limit",
+      "100",
+      "--with-id=false"
+    ],
+    "method": "GET",
+    "path": "/api/v4/spot/rpi_order_book",
+    "query": {
+      "currency_pair": "BTC_USDT",
+      "interval": "0.01",
+      "limit": "100",
+      "with_id": "false"
+    },
+    "body": null,
+    "response": {
+      "id": 123,
+      "asks": [
+        [
+          "60000",
+          "1"
+        ]
+      ],
+      "bids": [
+        [
+          "59999",
+          "2"
+        ]
+      ]
+    },
+    "private": false
+  },
+  {
+    "name": "contracts-all",
+    "args": [
+      "futures",
+      "market",
+      "contracts-all",
+      "--settle",
+      "btc",
+      "--offset",
+      "100",
+      "--limit",
+      "1000"
+    ],
+    "method": "GET",
+    "path": "/api/v4/futures/btc/contracts_all",
+    "query": {
+      "offset": "100",
+      "limit": "1000"
+    },
+    "body": null,
+    "response": [
+      {
+        "name": "BTC_USD"
+      }
+    ],
+    "private": false
+  },
+  {
+    "name": "futures-rpi",
+    "args": [
+      "futures",
+      "market",
+      "rpi-orderbook",
+      "--settle",
+      "usdt",
+      "--contract",
+      "BTC_USDT",
+      "--interval",
+      "0",
+      "--limit",
+      "50",
+      "--with-id"
+    ],
+    "method": "GET",
+    "path": "/api/v4/futures/usdt/rpi_order_book",
+    "query": {
+      "contract": "BTC_USDT",
+      "interval": "0",
+      "limit": "50",
+      "with_id": "true"
+    },
+    "body": null,
+    "response": {
+      "id": 123,
+      "asks": [
+        {
+          "p": "60000",
+          "s": "1"
+        }
+      ],
+      "bids": []
+    },
+    "private": false
+  },
+  {
+    "name": "adl",
+    "args": [
+      "futures",
+      "market",
+      "adl-risk-states",
+      "--settle",
+      "usdt"
+    ],
+    "method": "GET",
+    "path": "/api/v4/futures/usdt/adl_risk_states",
+    "query": {},
+    "body": null,
+    "response": {
+      "settle": "usdt",
+      "states": {}
+    },
+    "private": false
+  },
+  {
+    "name": "chase-create",
+    "args": [
+      "futures",
+      "chase",
+      "create",
+      "--settle",
+      "usdt",
+      "--json",
+      "{\"contract\": \"BTC_USDT\", \"settle\": \"usdt\", \"amount\": \"-1.000000000000000001\", \"price_limit\": \"0\", \"offset_limit\": \"1\", \"reduce_only\": true, \"text\": \"t-chase\", \"is_dual_mode\": true, \"price_type\": 2, \"price_gap_type\": 1, \"price_gap_value\": \"0.000000000000000001\", \"pos_margin_mode\": \"isolated\", \"position_mode\": \"dual\"}"
+    ],
+    "method": "POST",
+    "path": "/api/v4/futures/usdt/autoorder/v1/chase/create",
+    "query": {},
+    "body": {
+      "contract": "BTC_USDT",
+      "settle": "usdt",
+      "amount": "-1.000000000000000001",
+      "price_limit": "0",
+      "offset_limit": "1",
+      "reduce_only": true,
+      "text": "t-chase",
+      "is_dual_mode": true,
+      "price_type": 2,
+      "price_gap_type": 1,
+      "price_gap_value": "0.000000000000000001",
+      "pos_margin_mode": "isolated",
+      "position_mode": "dual"
+    },
+    "response": {
+      "id": "9223372036854775807"
+    },
+    "private": true
+  },
+  {
+    "name": "chase-get",
+    "args": [
+      "futures",
+      "chase",
+      "get",
+      "--id",
+      "9223372036854775807"
+    ],
+    "method": "GET",
+    "path": "/api/v4/futures/usdt/autoorder/v1/chase/detail",
+    "query": {
+      "id": "9223372036854775807"
+    },
+    "body": null,
+    "response": {
+      "order": {
+        "id": "9223372036854775807"
+      }
+    },
+    "private": true
+  },
+  {
+    "name": "chase-list",
+    "args": [
+      "futures",
+      "chase",
+      "list",
+      "--contract",
+      "BTC_USDT",
+      "--finished",
+      "--from",
+      "1700000000",
+      "--to",
+      "1700000010",
+      "--page",
+      "2",
+      "--limit",
+      "100",
+      "--sort-by",
+      "2",
+      "--hide-cancel=false",
+      "--reduce-only",
+      "2",
+      "--side",
+      "1"
+    ],
+    "method": "GET",
+    "path": "/api/v4/futures/usdt/autoorder/v1/chase/list",
+    "query": {
+      "contract": "BTC_USDT",
+      "is_finished": "true",
+      "start_at": "1700000000",
+      "end_at": "1700000010",
+      "page_num": "2",
+      "page_size": "100",
+      "sort_by": "2",
+      "hide_cancel": "false",
+      "reduce_only": "2",
+      "side": "1"
+    },
+    "body": null,
+    "response": {
+      "orders": [
+        {
+          "id": "123"
+        }
+      ]
+    },
+    "private": true
+  },
+  {
+    "name": "chase-stop",
+    "args": [
+      "futures",
+      "chase",
+      "stop",
+      "--text",
+      "t-chase"
+    ],
+    "method": "POST",
+    "path": "/api/v4/futures/usdt/autoorder/v1/chase/stop",
+    "query": {},
+    "body": {
+      "text": "t-chase"
+    },
+    "response": {
+      "order": {
+        "id": "123"
+      }
+    },
+    "private": true
+  },
+  {
+    "name": "chase-stop-all",
+    "args": [
+      "futures",
+      "chase",
+      "stop-all",
+      "--contract",
+      "BTC_USDT",
+      "--pos-margin-mode",
+      "cross"
+    ],
+    "method": "POST",
+    "path": "/api/v4/futures/usdt/autoorder/v1/chase/stop_all",
+    "query": {},
+    "body": {
+      "contract": "BTC_USDT",
+      "pos_margin_mode": "cross"
+    },
+    "response": {
+      "orders": [
+        {
+          "id": "123"
+        }
+      ]
+    },
+    "private": true
+  },
+  {
+    "name": "delta-get",
+    "args": [
+      "unified",
+      "config",
+      "delta-neutral-get"
+    ],
+    "method": "GET",
+    "path": "/api/v4/unified/delta_neutral",
+    "query": {},
+    "body": null,
+    "response": {
+      "enabled": true
+    },
+    "private": true
+  },
+  {
+    "name": "delta-set",
+    "args": [
+      "unified",
+      "config",
+      "delta-neutral-set",
+      "--enabled=false"
+    ],
+    "method": "POST",
+    "path": "/api/v4/unified/delta_neutral",
+    "query": {},
+    "body": {
+      "enabled": false
+    },
+    "response": {
+      "enabled": false
+    },
+    "private": true
+  },
+  {
+    "name": "quick-estimate",
+    "args": [
+      "unified",
+      "loan",
+      "quick-estimate"
+    ],
+    "method": "GET",
+    "path": "/api/v4/unified/estimated_quick_repayment",
+    "query": {},
+    "body": null,
+    "response": {
+      "debt_currencies": [],
+      "available_currencies": []
+    },
+    "private": true
+  },
+  {
+    "name": "quick-repay",
+    "args": [
+      "unified",
+      "loan",
+      "quick-repay",
+      "--debt-currencies",
+      "USDT,ETH",
+      "--available-currencies",
+      "BTC,USDC"
+    ],
+    "method": "POST",
+    "path": "/api/v4/unified/quick_repayment",
+    "query": {},
+    "body": {
+      "debt_currencies": [
+        "USDT",
+        "ETH"
+      ],
+      "available_currencies": [
+        "BTC",
+        "USDC"
+      ]
+    },
+    "response": {
+      "order_id": "123",
+      "repaid_infos": [],
+      "used_infos": []
+    },
+    "private": true
+  },
+  {
+    "name": "leverage-all",
+    "args": [
+      "unified",
+      "config",
+      "leverage-set-all",
+      "--leverage",
+      "3.000000000000000001"
+    ],
+    "method": "POST",
+    "path": "/api/v4/unified/leverage/user_setting",
+    "query": {},
+    "body": {
+      "leverage": "3.000000000000000001"
+    },
+    "response": [],
+    "private": true
+  },
+  {
+    "name": "commissions",
+    "args": [
+      "tradfi",
+      "market",
+      "commissions",
+      "--symbols",
+      "XAUUSD,EURUSD",
+      "--category-code",
+      "metal"
+    ],
+    "method": "GET",
+    "path": "/api/v4/tradfi/symbols/commissions",
+    "query": {
+      "symbols": "XAUUSD,EURUSD",
+      "category_code": "metal"
+    },
+    "body": null,
+    "response": {
+      "timestamp": 1700000000000,
+      "data": {}
+    },
+    "private": true
+  },
+  {
+    "name": "order-log",
+    "args": [
+      "tradfi",
+      "order",
+      "log",
+      "--log-id",
+      "9223372036854775807"
+    ],
+    "method": "GET",
+    "path": "/api/v4/tradfi/orders/log/9223372036854775807",
+    "query": {},
+    "body": null,
+    "response": {
+      "timestamp": 1700000000000,
+      "data": {}
+    },
+    "private": true
+  }
+]

@@ -1,0 +1,2723 @@
+[
+  {
+    "id": "short-size-2",
+    "case": {
+      "name": "cex futures order short",
+      "operation": "CreateFuturesOrder",
+      "public": false,
+      "args": [
+        "cex",
+        "futures",
+        "order",
+        "short",
+        "--contract",
+        "SYNTH_USDT",
+        "--size",
+        "2"
+      ],
+      "exchanges": [
+        {
+          "method": "POST",
+          "path": "/api/v4/futures/usdt/orders",
+          "query": "",
+          "body": {
+            "contract": "SYNTH_USDT",
+            "size": "-2",
+            "price": "0",
+            "tif": "ioc"
+          },
+          "reply": {
+            "id": 9007199254740993,
+            "user": 7,
+            "create_time": 7,
+            "update_time": 7,
+            "finish_time": 7,
+            "finish_as": "fixture-value",
+            "status": "open",
+            "contract": "SYNTH_USDT",
+            "size": "2.00000001",
+            "iceberg": "fixture-value",
+            "price": "2.00000001",
+            "close": false,
+            "is_close": false,
+            "reduce_only": false,
+            "is_reduce_only": false,
+            "is_liq": true,
+            "tif": "fixture-value",
+            "left": "2.00000001",
+            "fill_price": "fixture-value",
+            "text": "fixture-value",
+            "tkfr": "fixture-value",
+            "mkfr": "fixture-value",
+            "refu": 7,
+            "auto_size": "fixture-value",
+            "stp_id": 7,
+            "stp_act": "fixture-value",
+            "amend_text": "fixture-value",
+            "pid": 7,
+            "market_order_slip_ratio": "fixture-value",
+            "pos_margin_mode": "fixture-value",
+            "action_mode": "fixture-value",
+            "tpsl_tp_trigger_price": "fixture-value",
+            "tpsl_sl_trigger_price": "fixture-value",
+            "tpsl_tp_bbo_type": "fixture-value",
+            "tpsl_sl_bbo_type": "fixture-value"
+          }
+        }
+      ],
+      "want": {
+        "id": 9007199254740993,
+        "user": 7,
+        "create_time": 7,
+        "update_time": 7,
+        "finish_time": 7,
+        "finish_as": "fixture-value",
+        "status": "open",
+        "contract": "SYNTH_USDT",
+        "size": "2.00000001",
+        "iceberg": "fixture-value",
+        "price": "2.00000001",
+        "is_liq": true,
+        "tif": "fixture-value",
+        "left": "2.00000001",
+        "fill_price": "fixture-value",
+        "text": "fixture-value",
+        "tkfr": "fixture-value",
+        "mkfr": "fixture-value",
+        "refu": 7,
+        "auto_size": "fixture-value",
+        "stp_id": 7,
+        "stp_act": "fixture-value",
+        "amend_text": "fixture-value",
+        "pid": 7,
+        "market_order_slip_ratio": "fixture-value",
+        "pos_margin_mode": "fixture-value",
+        "action_mode": "fixture-value",
+        "tpsl_tp_trigger_price": "fixture-value",
+        "tpsl_sl_trigger_price": "fixture-value",
+        "tpsl_tp_bbo_type": "fixture-value",
+        "tpsl_sl_bbo_type": "fixture-value"
+      },
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "{\n  \"id\": 9007199254740993,\n  \"user\": 7,\n  \"create_time\": 7,\n  \"update_time\": 7,\n  \"finish_time\": 7,\n  \"finish_as\": \"fixture-value\",\n  \"status\": \"open\",\n  \"contract\": \"SYNTH_USDT\",\n  \"size\": \"2.00000001\",\n  \"iceberg\": \"fixture-value\",\n  \"price\": \"2.00000001\",\n  \"is_liq\": true,\n  \"tif\": \"fixture-value\",\n  \"left\": \"2.00000001\",\n  \"fill_price\": \"fixture-value\",\n  \"text\": \"fixture-value\",\n  \"tkfr\": \"fixture-value\",\n  \"mkfr\": \"fixture-value\",\n  \"refu\": 7,\n  \"auto_size\": \"fixture-value\",\n  \"stp_id\": 7,\n  \"stp_act\": \"fixture-value\",\n  \"amend_text\": \"fixture-value\",\n  \"pid\": 7,\n  \"market_order_slip_ratio\": \"fixture-value\",\n  \"pos_margin_mode\": \"fixture-value\",\n  \"action_mode\": \"fixture-value\",\n  \"tpsl_tp_trigger_price\": \"fixture-value\",\n  \"tpsl_sl_trigger_price\": \"fixture-value\",\n  \"tpsl_tp_bbo_type\": \"fixture-value\",\n  \"tpsl_sl_bbo_type\": \"fixture-value\"\n}\n"
+    }
+  },
+  {
+    "id": "add-short-size-2",
+    "case": {
+      "name": "cex futures order add",
+      "operation": "CreateFuturesOrder",
+      "public": false,
+      "args": [
+        "cex",
+        "futures",
+        "order",
+        "add",
+        "--contract",
+        "SYNTH_USDT",
+        "--size",
+        "2"
+      ],
+      "exchanges": [
+        {
+          "method": "GET",
+          "path": "/api/v4/futures/usdt/accounts",
+          "query": "",
+          "body": null,
+          "reply": {
+            "in_dual_mode": false,
+            "currency": "USDT"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/v4/futures/usdt/positions/SYNTH_USDT",
+          "query": "",
+          "body": null,
+          "reply": {
+            "contract": "SYNTH_USDT",
+            "size": "-4",
+            "mode": "single"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/api/v4/futures/usdt/orders",
+          "query": "",
+          "body": {
+            "contract": "SYNTH_USDT",
+            "size": "-2",
+            "price": "0",
+            "tif": "ioc"
+          },
+          "reply": {
+            "id": 9007199254740993,
+            "user": 7,
+            "create_time": 7,
+            "update_time": 7,
+            "finish_time": 7,
+            "finish_as": "fixture-value",
+            "status": "open",
+            "contract": "SYNTH_USDT",
+            "size": "2.00000001",
+            "iceberg": "fixture-value",
+            "price": "2.00000001",
+            "close": false,
+            "is_close": false,
+            "reduce_only": false,
+            "is_reduce_only": false,
+            "is_liq": true,
+            "tif": "fixture-value",
+            "left": "2.00000001",
+            "fill_price": "fixture-value",
+            "text": "fixture-value",
+            "tkfr": "fixture-value",
+            "mkfr": "fixture-value",
+            "refu": 7,
+            "auto_size": "fixture-value",
+            "stp_id": 7,
+            "stp_act": "fixture-value",
+            "amend_text": "fixture-value",
+            "pid": 7,
+            "market_order_slip_ratio": "fixture-value",
+            "pos_margin_mode": "fixture-value",
+            "action_mode": "fixture-value",
+            "tpsl_tp_trigger_price": "fixture-value",
+            "tpsl_sl_trigger_price": "fixture-value",
+            "tpsl_tp_bbo_type": "fixture-value",
+            "tpsl_sl_bbo_type": "fixture-value"
+          }
+        }
+      ],
+      "want": {
+        "id": 9007199254740993,
+        "user": 7,
+        "create_time": 7,
+        "update_time": 7,
+        "finish_time": 7,
+        "finish_as": "fixture-value",
+        "status": "open",
+        "contract": "SYNTH_USDT",
+        "size": "2.00000001",
+        "iceberg": "fixture-value",
+        "price": "2.00000001",
+        "is_liq": true,
+        "tif": "fixture-value",
+        "left": "2.00000001",
+        "fill_price": "fixture-value",
+        "text": "fixture-value",
+        "tkfr": "fixture-value",
+        "mkfr": "fixture-value",
+        "refu": 7,
+        "auto_size": "fixture-value",
+        "stp_id": 7,
+        "stp_act": "fixture-value",
+        "amend_text": "fixture-value",
+        "pid": 7,
+        "market_order_slip_ratio": "fixture-value",
+        "pos_margin_mode": "fixture-value",
+        "action_mode": "fixture-value",
+        "tpsl_tp_trigger_price": "fixture-value",
+        "tpsl_sl_trigger_price": "fixture-value",
+        "tpsl_tp_bbo_type": "fixture-value",
+        "tpsl_sl_bbo_type": "fixture-value"
+      },
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "{\n  \"id\": 9007199254740993,\n  \"user\": 7,\n  \"create_time\": 7,\n  \"update_time\": 7,\n  \"finish_time\": 7,\n  \"finish_as\": \"fixture-value\",\n  \"status\": \"open\",\n  \"contract\": \"SYNTH_USDT\",\n  \"size\": \"2.00000001\",\n  \"iceberg\": \"fixture-value\",\n  \"price\": \"2.00000001\",\n  \"is_liq\": true,\n  \"tif\": \"fixture-value\",\n  \"left\": \"2.00000001\",\n  \"fill_price\": \"fixture-value\",\n  \"text\": \"fixture-value\",\n  \"tkfr\": \"fixture-value\",\n  \"mkfr\": \"fixture-value\",\n  \"refu\": 7,\n  \"auto_size\": \"fixture-value\",\n  \"stp_id\": 7,\n  \"stp_act\": \"fixture-value\",\n  \"amend_text\": \"fixture-value\",\n  \"pid\": 7,\n  \"market_order_slip_ratio\": \"fixture-value\",\n  \"pos_margin_mode\": \"fixture-value\",\n  \"action_mode\": \"fixture-value\",\n  \"tpsl_tp_trigger_price\": \"fixture-value\",\n  \"tpsl_sl_trigger_price\": \"fixture-value\",\n  \"tpsl_tp_bbo_type\": \"fixture-value\",\n  \"tpsl_sl_bbo_type\": \"fixture-value\"\n}\n"
+    }
+  },
+  {
+    "id": "remove-long-size-2",
+    "case": {
+      "name": "cex futures order remove",
+      "operation": "CreateFuturesOrder",
+      "public": false,
+      "args": [
+        "cex",
+        "futures",
+        "order",
+        "remove",
+        "--contract",
+        "SYNTH_USDT",
+        "--size",
+        "2"
+      ],
+      "exchanges": [
+        {
+          "method": "GET",
+          "path": "/api/v4/futures/usdt/accounts",
+          "query": "",
+          "body": null,
+          "reply": {
+            "in_dual_mode": false,
+            "currency": "USDT"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/v4/futures/usdt/positions/SYNTH_USDT",
+          "query": "",
+          "body": null,
+          "reply": {
+            "contract": "SYNTH_USDT",
+            "size": "4",
+            "mode": "single"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/api/v4/futures/usdt/orders",
+          "query": "",
+          "body": {
+            "contract": "SYNTH_USDT",
+            "size": "-2",
+            "price": "0",
+            "reduce_only": true,
+            "tif": "ioc"
+          },
+          "reply": {
+            "id": 9007199254740993,
+            "user": 7,
+            "create_time": 7,
+            "update_time": 7,
+            "finish_time": 7,
+            "finish_as": "fixture-value",
+            "status": "open",
+            "contract": "SYNTH_USDT",
+            "size": "2.00000001",
+            "iceberg": "fixture-value",
+            "price": "2.00000001",
+            "close": false,
+            "is_close": false,
+            "reduce_only": false,
+            "is_reduce_only": false,
+            "is_liq": true,
+            "tif": "fixture-value",
+            "left": "2.00000001",
+            "fill_price": "fixture-value",
+            "text": "fixture-value",
+            "tkfr": "fixture-value",
+            "mkfr": "fixture-value",
+            "refu": 7,
+            "auto_size": "fixture-value",
+            "stp_id": 7,
+            "stp_act": "fixture-value",
+            "amend_text": "fixture-value",
+            "pid": 7,
+            "market_order_slip_ratio": "fixture-value",
+            "pos_margin_mode": "fixture-value",
+            "action_mode": "fixture-value",
+            "tpsl_tp_trigger_price": "fixture-value",
+            "tpsl_sl_trigger_price": "fixture-value",
+            "tpsl_tp_bbo_type": "fixture-value",
+            "tpsl_sl_bbo_type": "fixture-value"
+          }
+        }
+      ],
+      "want": {
+        "id": 9007199254740993,
+        "user": 7,
+        "create_time": 7,
+        "update_time": 7,
+        "finish_time": 7,
+        "finish_as": "fixture-value",
+        "status": "open",
+        "contract": "SYNTH_USDT",
+        "size": "2.00000001",
+        "iceberg": "fixture-value",
+        "price": "2.00000001",
+        "is_liq": true,
+        "tif": "fixture-value",
+        "left": "2.00000001",
+        "fill_price": "fixture-value",
+        "text": "fixture-value",
+        "tkfr": "fixture-value",
+        "mkfr": "fixture-value",
+        "refu": 7,
+        "auto_size": "fixture-value",
+        "stp_id": 7,
+        "stp_act": "fixture-value",
+        "amend_text": "fixture-value",
+        "pid": 7,
+        "market_order_slip_ratio": "fixture-value",
+        "pos_margin_mode": "fixture-value",
+        "action_mode": "fixture-value",
+        "tpsl_tp_trigger_price": "fixture-value",
+        "tpsl_sl_trigger_price": "fixture-value",
+        "tpsl_tp_bbo_type": "fixture-value",
+        "tpsl_sl_bbo_type": "fixture-value"
+      },
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "{\n  \"id\": 9007199254740993,\n  \"user\": 7,\n  \"create_time\": 7,\n  \"update_time\": 7,\n  \"finish_time\": 7,\n  \"finish_as\": \"fixture-value\",\n  \"status\": \"open\",\n  \"contract\": \"SYNTH_USDT\",\n  \"size\": \"2.00000001\",\n  \"iceberg\": \"fixture-value\",\n  \"price\": \"2.00000001\",\n  \"is_liq\": true,\n  \"tif\": \"fixture-value\",\n  \"left\": \"2.00000001\",\n  \"fill_price\": \"fixture-value\",\n  \"text\": \"fixture-value\",\n  \"tkfr\": \"fixture-value\",\n  \"mkfr\": \"fixture-value\",\n  \"refu\": 7,\n  \"auto_size\": \"fixture-value\",\n  \"stp_id\": 7,\n  \"stp_act\": \"fixture-value\",\n  \"amend_text\": \"fixture-value\",\n  \"pid\": 7,\n  \"market_order_slip_ratio\": \"fixture-value\",\n  \"pos_margin_mode\": \"fixture-value\",\n  \"action_mode\": \"fixture-value\",\n  \"tpsl_tp_trigger_price\": \"fixture-value\",\n  \"tpsl_sl_trigger_price\": \"fixture-value\",\n  \"tpsl_tp_bbo_type\": \"fixture-value\",\n  \"tpsl_sl_bbo_type\": \"fixture-value\"\n}\n"
+    }
+  },
+  {
+    "id": "remove-short-size-2",
+    "case": {
+      "name": "cex futures order remove",
+      "operation": "CreateFuturesOrder",
+      "public": false,
+      "args": [
+        "cex",
+        "futures",
+        "order",
+        "remove",
+        "--contract",
+        "SYNTH_USDT",
+        "--size",
+        "2"
+      ],
+      "exchanges": [
+        {
+          "method": "GET",
+          "path": "/api/v4/futures/usdt/accounts",
+          "query": "",
+          "body": null,
+          "reply": {
+            "in_dual_mode": false,
+            "currency": "USDT"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/v4/futures/usdt/positions/SYNTH_USDT",
+          "query": "",
+          "body": null,
+          "reply": {
+            "contract": "SYNTH_USDT",
+            "size": "-4",
+            "mode": "single"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/api/v4/futures/usdt/orders",
+          "query": "",
+          "body": {
+            "contract": "SYNTH_USDT",
+            "size": "2",
+            "price": "0",
+            "reduce_only": true,
+            "tif": "ioc"
+          },
+          "reply": {
+            "id": 9007199254740993,
+            "user": 7,
+            "create_time": 7,
+            "update_time": 7,
+            "finish_time": 7,
+            "finish_as": "fixture-value",
+            "status": "open",
+            "contract": "SYNTH_USDT",
+            "size": "2.00000001",
+            "iceberg": "fixture-value",
+            "price": "2.00000001",
+            "close": false,
+            "is_close": false,
+            "reduce_only": false,
+            "is_reduce_only": false,
+            "is_liq": true,
+            "tif": "fixture-value",
+            "left": "2.00000001",
+            "fill_price": "fixture-value",
+            "text": "fixture-value",
+            "tkfr": "fixture-value",
+            "mkfr": "fixture-value",
+            "refu": 7,
+            "auto_size": "fixture-value",
+            "stp_id": 7,
+            "stp_act": "fixture-value",
+            "amend_text": "fixture-value",
+            "pid": 7,
+            "market_order_slip_ratio": "fixture-value",
+            "pos_margin_mode": "fixture-value",
+            "action_mode": "fixture-value",
+            "tpsl_tp_trigger_price": "fixture-value",
+            "tpsl_sl_trigger_price": "fixture-value",
+            "tpsl_tp_bbo_type": "fixture-value",
+            "tpsl_sl_bbo_type": "fixture-value"
+          }
+        }
+      ],
+      "want": {
+        "id": 9007199254740993,
+        "user": 7,
+        "create_time": 7,
+        "update_time": 7,
+        "finish_time": 7,
+        "finish_as": "fixture-value",
+        "status": "open",
+        "contract": "SYNTH_USDT",
+        "size": "2.00000001",
+        "iceberg": "fixture-value",
+        "price": "2.00000001",
+        "is_liq": true,
+        "tif": "fixture-value",
+        "left": "2.00000001",
+        "fill_price": "fixture-value",
+        "text": "fixture-value",
+        "tkfr": "fixture-value",
+        "mkfr": "fixture-value",
+        "refu": 7,
+        "auto_size": "fixture-value",
+        "stp_id": 7,
+        "stp_act": "fixture-value",
+        "amend_text": "fixture-value",
+        "pid": 7,
+        "market_order_slip_ratio": "fixture-value",
+        "pos_margin_mode": "fixture-value",
+        "action_mode": "fixture-value",
+        "tpsl_tp_trigger_price": "fixture-value",
+        "tpsl_sl_trigger_price": "fixture-value",
+        "tpsl_tp_bbo_type": "fixture-value",
+        "tpsl_sl_bbo_type": "fixture-value"
+      },
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "{\n  \"id\": 9007199254740993,\n  \"user\": 7,\n  \"create_time\": 7,\n  \"update_time\": 7,\n  \"finish_time\": 7,\n  \"finish_as\": \"fixture-value\",\n  \"status\": \"open\",\n  \"contract\": \"SYNTH_USDT\",\n  \"size\": \"2.00000001\",\n  \"iceberg\": \"fixture-value\",\n  \"price\": \"2.00000001\",\n  \"is_liq\": true,\n  \"tif\": \"fixture-value\",\n  \"left\": \"2.00000001\",\n  \"fill_price\": \"fixture-value\",\n  \"text\": \"fixture-value\",\n  \"tkfr\": \"fixture-value\",\n  \"mkfr\": \"fixture-value\",\n  \"refu\": 7,\n  \"auto_size\": \"fixture-value\",\n  \"stp_id\": 7,\n  \"stp_act\": \"fixture-value\",\n  \"amend_text\": \"fixture-value\",\n  \"pid\": 7,\n  \"market_order_slip_ratio\": \"fixture-value\",\n  \"pos_margin_mode\": \"fixture-value\",\n  \"action_mode\": \"fixture-value\",\n  \"tpsl_tp_trigger_price\": \"fixture-value\",\n  \"tpsl_sl_trigger_price\": \"fixture-value\",\n  \"tpsl_tp_bbo_type\": \"fixture-value\",\n  \"tpsl_sl_bbo_type\": \"fixture-value\"\n}\n"
+    }
+  },
+  {
+    "id": "short-size--2",
+    "case": {
+      "name": "cex futures order short",
+      "operation": "CreateFuturesOrder",
+      "public": false,
+      "args": [
+        "cex",
+        "futures",
+        "order",
+        "short",
+        "--contract",
+        "SYNTH_USDT",
+        "--size",
+        "-2"
+      ],
+      "exchanges": [
+        {
+          "method": "POST",
+          "path": "/api/v4/futures/usdt/orders",
+          "query": "",
+          "body": {
+            "contract": "SYNTH_USDT",
+            "size": "-2",
+            "price": "0",
+            "tif": "ioc"
+          },
+          "reply": {
+            "id": 9007199254740993,
+            "user": 7,
+            "create_time": 7,
+            "update_time": 7,
+            "finish_time": 7,
+            "finish_as": "fixture-value",
+            "status": "open",
+            "contract": "SYNTH_USDT",
+            "size": "2.00000001",
+            "iceberg": "fixture-value",
+            "price": "2.00000001",
+            "close": false,
+            "is_close": false,
+            "reduce_only": false,
+            "is_reduce_only": false,
+            "is_liq": true,
+            "tif": "fixture-value",
+            "left": "2.00000001",
+            "fill_price": "fixture-value",
+            "text": "fixture-value",
+            "tkfr": "fixture-value",
+            "mkfr": "fixture-value",
+            "refu": 7,
+            "auto_size": "fixture-value",
+            "stp_id": 7,
+            "stp_act": "fixture-value",
+            "amend_text": "fixture-value",
+            "pid": 7,
+            "market_order_slip_ratio": "fixture-value",
+            "pos_margin_mode": "fixture-value",
+            "action_mode": "fixture-value",
+            "tpsl_tp_trigger_price": "fixture-value",
+            "tpsl_sl_trigger_price": "fixture-value",
+            "tpsl_tp_bbo_type": "fixture-value",
+            "tpsl_sl_bbo_type": "fixture-value"
+          }
+        }
+      ],
+      "want": {
+        "id": 9007199254740993,
+        "user": 7,
+        "create_time": 7,
+        "update_time": 7,
+        "finish_time": 7,
+        "finish_as": "fixture-value",
+        "status": "open",
+        "contract": "SYNTH_USDT",
+        "size": "2.00000001",
+        "iceberg": "fixture-value",
+        "price": "2.00000001",
+        "is_liq": true,
+        "tif": "fixture-value",
+        "left": "2.00000001",
+        "fill_price": "fixture-value",
+        "text": "fixture-value",
+        "tkfr": "fixture-value",
+        "mkfr": "fixture-value",
+        "refu": 7,
+        "auto_size": "fixture-value",
+        "stp_id": 7,
+        "stp_act": "fixture-value",
+        "amend_text": "fixture-value",
+        "pid": 7,
+        "market_order_slip_ratio": "fixture-value",
+        "pos_margin_mode": "fixture-value",
+        "action_mode": "fixture-value",
+        "tpsl_tp_trigger_price": "fixture-value",
+        "tpsl_sl_trigger_price": "fixture-value",
+        "tpsl_tp_bbo_type": "fixture-value",
+        "tpsl_sl_bbo_type": "fixture-value"
+      },
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "{\n  \"id\": 9007199254740993,\n  \"user\": 7,\n  \"create_time\": 7,\n  \"update_time\": 7,\n  \"finish_time\": 7,\n  \"finish_as\": \"fixture-value\",\n  \"status\": \"open\",\n  \"contract\": \"SYNTH_USDT\",\n  \"size\": \"2.00000001\",\n  \"iceberg\": \"fixture-value\",\n  \"price\": \"2.00000001\",\n  \"is_liq\": true,\n  \"tif\": \"fixture-value\",\n  \"left\": \"2.00000001\",\n  \"fill_price\": \"fixture-value\",\n  \"text\": \"fixture-value\",\n  \"tkfr\": \"fixture-value\",\n  \"mkfr\": \"fixture-value\",\n  \"refu\": 7,\n  \"auto_size\": \"fixture-value\",\n  \"stp_id\": 7,\n  \"stp_act\": \"fixture-value\",\n  \"amend_text\": \"fixture-value\",\n  \"pid\": 7,\n  \"market_order_slip_ratio\": \"fixture-value\",\n  \"pos_margin_mode\": \"fixture-value\",\n  \"action_mode\": \"fixture-value\",\n  \"tpsl_tp_trigger_price\": \"fixture-value\",\n  \"tpsl_sl_trigger_price\": \"fixture-value\",\n  \"tpsl_tp_bbo_type\": \"fixture-value\",\n  \"tpsl_sl_bbo_type\": \"fixture-value\"\n}\n"
+    }
+  },
+  {
+    "id": "add-short-size--2",
+    "case": {
+      "name": "cex futures order add",
+      "operation": "CreateFuturesOrder",
+      "public": false,
+      "args": [
+        "cex",
+        "futures",
+        "order",
+        "add",
+        "--contract",
+        "SYNTH_USDT",
+        "--size",
+        "-2"
+      ],
+      "exchanges": [
+        {
+          "method": "GET",
+          "path": "/api/v4/futures/usdt/accounts",
+          "query": "",
+          "body": null,
+          "reply": {
+            "in_dual_mode": false,
+            "currency": "USDT"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/v4/futures/usdt/positions/SYNTH_USDT",
+          "query": "",
+          "body": null,
+          "reply": {
+            "contract": "SYNTH_USDT",
+            "size": "-4",
+            "mode": "single"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/api/v4/futures/usdt/orders",
+          "query": "",
+          "body": {
+            "contract": "SYNTH_USDT",
+            "size": "-2",
+            "price": "0",
+            "tif": "ioc"
+          },
+          "reply": {
+            "id": 9007199254740993,
+            "user": 7,
+            "create_time": 7,
+            "update_time": 7,
+            "finish_time": 7,
+            "finish_as": "fixture-value",
+            "status": "open",
+            "contract": "SYNTH_USDT",
+            "size": "2.00000001",
+            "iceberg": "fixture-value",
+            "price": "2.00000001",
+            "close": false,
+            "is_close": false,
+            "reduce_only": false,
+            "is_reduce_only": false,
+            "is_liq": true,
+            "tif": "fixture-value",
+            "left": "2.00000001",
+            "fill_price": "fixture-value",
+            "text": "fixture-value",
+            "tkfr": "fixture-value",
+            "mkfr": "fixture-value",
+            "refu": 7,
+            "auto_size": "fixture-value",
+            "stp_id": 7,
+            "stp_act": "fixture-value",
+            "amend_text": "fixture-value",
+            "pid": 7,
+            "market_order_slip_ratio": "fixture-value",
+            "pos_margin_mode": "fixture-value",
+            "action_mode": "fixture-value",
+            "tpsl_tp_trigger_price": "fixture-value",
+            "tpsl_sl_trigger_price": "fixture-value",
+            "tpsl_tp_bbo_type": "fixture-value",
+            "tpsl_sl_bbo_type": "fixture-value"
+          }
+        }
+      ],
+      "want": {
+        "id": 9007199254740993,
+        "user": 7,
+        "create_time": 7,
+        "update_time": 7,
+        "finish_time": 7,
+        "finish_as": "fixture-value",
+        "status": "open",
+        "contract": "SYNTH_USDT",
+        "size": "2.00000001",
+        "iceberg": "fixture-value",
+        "price": "2.00000001",
+        "is_liq": true,
+        "tif": "fixture-value",
+        "left": "2.00000001",
+        "fill_price": "fixture-value",
+        "text": "fixture-value",
+        "tkfr": "fixture-value",
+        "mkfr": "fixture-value",
+        "refu": 7,
+        "auto_size": "fixture-value",
+        "stp_id": 7,
+        "stp_act": "fixture-value",
+        "amend_text": "fixture-value",
+        "pid": 7,
+        "market_order_slip_ratio": "fixture-value",
+        "pos_margin_mode": "fixture-value",
+        "action_mode": "fixture-value",
+        "tpsl_tp_trigger_price": "fixture-value",
+        "tpsl_sl_trigger_price": "fixture-value",
+        "tpsl_tp_bbo_type": "fixture-value",
+        "tpsl_sl_bbo_type": "fixture-value"
+      },
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "{\n  \"id\": 9007199254740993,\n  \"user\": 7,\n  \"create_time\": 7,\n  \"update_time\": 7,\n  \"finish_time\": 7,\n  \"finish_as\": \"fixture-value\",\n  \"status\": \"open\",\n  \"contract\": \"SYNTH_USDT\",\n  \"size\": \"2.00000001\",\n  \"iceberg\": \"fixture-value\",\n  \"price\": \"2.00000001\",\n  \"is_liq\": true,\n  \"tif\": \"fixture-value\",\n  \"left\": \"2.00000001\",\n  \"fill_price\": \"fixture-value\",\n  \"text\": \"fixture-value\",\n  \"tkfr\": \"fixture-value\",\n  \"mkfr\": \"fixture-value\",\n  \"refu\": 7,\n  \"auto_size\": \"fixture-value\",\n  \"stp_id\": 7,\n  \"stp_act\": \"fixture-value\",\n  \"amend_text\": \"fixture-value\",\n  \"pid\": 7,\n  \"market_order_slip_ratio\": \"fixture-value\",\n  \"pos_margin_mode\": \"fixture-value\",\n  \"action_mode\": \"fixture-value\",\n  \"tpsl_tp_trigger_price\": \"fixture-value\",\n  \"tpsl_sl_trigger_price\": \"fixture-value\",\n  \"tpsl_tp_bbo_type\": \"fixture-value\",\n  \"tpsl_sl_bbo_type\": \"fixture-value\"\n}\n"
+    }
+  },
+  {
+    "id": "remove-long-size--2",
+    "case": {
+      "name": "cex futures order remove",
+      "operation": "CreateFuturesOrder",
+      "public": false,
+      "args": [
+        "cex",
+        "futures",
+        "order",
+        "remove",
+        "--contract",
+        "SYNTH_USDT",
+        "--size",
+        "-2"
+      ],
+      "exchanges": [
+        {
+          "method": "GET",
+          "path": "/api/v4/futures/usdt/accounts",
+          "query": "",
+          "body": null,
+          "reply": {
+            "in_dual_mode": false,
+            "currency": "USDT"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/v4/futures/usdt/positions/SYNTH_USDT",
+          "query": "",
+          "body": null,
+          "reply": {
+            "contract": "SYNTH_USDT",
+            "size": "4",
+            "mode": "single"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/api/v4/futures/usdt/orders",
+          "query": "",
+          "body": {
+            "contract": "SYNTH_USDT",
+            "size": "-2",
+            "price": "0",
+            "reduce_only": true,
+            "tif": "ioc"
+          },
+          "reply": {
+            "id": 9007199254740993,
+            "user": 7,
+            "create_time": 7,
+            "update_time": 7,
+            "finish_time": 7,
+            "finish_as": "fixture-value",
+            "status": "open",
+            "contract": "SYNTH_USDT",
+            "size": "2.00000001",
+            "iceberg": "fixture-value",
+            "price": "2.00000001",
+            "close": false,
+            "is_close": false,
+            "reduce_only": false,
+            "is_reduce_only": false,
+            "is_liq": true,
+            "tif": "fixture-value",
+            "left": "2.00000001",
+            "fill_price": "fixture-value",
+            "text": "fixture-value",
+            "tkfr": "fixture-value",
+            "mkfr": "fixture-value",
+            "refu": 7,
+            "auto_size": "fixture-value",
+            "stp_id": 7,
+            "stp_act": "fixture-value",
+            "amend_text": "fixture-value",
+            "pid": 7,
+            "market_order_slip_ratio": "fixture-value",
+            "pos_margin_mode": "fixture-value",
+            "action_mode": "fixture-value",
+            "tpsl_tp_trigger_price": "fixture-value",
+            "tpsl_sl_trigger_price": "fixture-value",
+            "tpsl_tp_bbo_type": "fixture-value",
+            "tpsl_sl_bbo_type": "fixture-value"
+          }
+        }
+      ],
+      "want": {
+        "id": 9007199254740993,
+        "user": 7,
+        "create_time": 7,
+        "update_time": 7,
+        "finish_time": 7,
+        "finish_as": "fixture-value",
+        "status": "open",
+        "contract": "SYNTH_USDT",
+        "size": "2.00000001",
+        "iceberg": "fixture-value",
+        "price": "2.00000001",
+        "is_liq": true,
+        "tif": "fixture-value",
+        "left": "2.00000001",
+        "fill_price": "fixture-value",
+        "text": "fixture-value",
+        "tkfr": "fixture-value",
+        "mkfr": "fixture-value",
+        "refu": 7,
+        "auto_size": "fixture-value",
+        "stp_id": 7,
+        "stp_act": "fixture-value",
+        "amend_text": "fixture-value",
+        "pid": 7,
+        "market_order_slip_ratio": "fixture-value",
+        "pos_margin_mode": "fixture-value",
+        "action_mode": "fixture-value",
+        "tpsl_tp_trigger_price": "fixture-value",
+        "tpsl_sl_trigger_price": "fixture-value",
+        "tpsl_tp_bbo_type": "fixture-value",
+        "tpsl_sl_bbo_type": "fixture-value"
+      },
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "{\n  \"id\": 9007199254740993,\n  \"user\": 7,\n  \"create_time\": 7,\n  \"update_time\": 7,\n  \"finish_time\": 7,\n  \"finish_as\": \"fixture-value\",\n  \"status\": \"open\",\n  \"contract\": \"SYNTH_USDT\",\n  \"size\": \"2.00000001\",\n  \"iceberg\": \"fixture-value\",\n  \"price\": \"2.00000001\",\n  \"is_liq\": true,\n  \"tif\": \"fixture-value\",\n  \"left\": \"2.00000001\",\n  \"fill_price\": \"fixture-value\",\n  \"text\": \"fixture-value\",\n  \"tkfr\": \"fixture-value\",\n  \"mkfr\": \"fixture-value\",\n  \"refu\": 7,\n  \"auto_size\": \"fixture-value\",\n  \"stp_id\": 7,\n  \"stp_act\": \"fixture-value\",\n  \"amend_text\": \"fixture-value\",\n  \"pid\": 7,\n  \"market_order_slip_ratio\": \"fixture-value\",\n  \"pos_margin_mode\": \"fixture-value\",\n  \"action_mode\": \"fixture-value\",\n  \"tpsl_tp_trigger_price\": \"fixture-value\",\n  \"tpsl_sl_trigger_price\": \"fixture-value\",\n  \"tpsl_tp_bbo_type\": \"fixture-value\",\n  \"tpsl_sl_bbo_type\": \"fixture-value\"\n}\n"
+    }
+  },
+  {
+    "id": "remove-short-size--2",
+    "case": {
+      "name": "cex futures order remove",
+      "operation": "CreateFuturesOrder",
+      "public": false,
+      "args": [
+        "cex",
+        "futures",
+        "order",
+        "remove",
+        "--contract",
+        "SYNTH_USDT",
+        "--size",
+        "-2"
+      ],
+      "exchanges": [
+        {
+          "method": "GET",
+          "path": "/api/v4/futures/usdt/accounts",
+          "query": "",
+          "body": null,
+          "reply": {
+            "in_dual_mode": false,
+            "currency": "USDT"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/v4/futures/usdt/positions/SYNTH_USDT",
+          "query": "",
+          "body": null,
+          "reply": {
+            "contract": "SYNTH_USDT",
+            "size": "-4",
+            "mode": "single"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/api/v4/futures/usdt/orders",
+          "query": "",
+          "body": {
+            "contract": "SYNTH_USDT",
+            "size": "2",
+            "price": "0",
+            "reduce_only": true,
+            "tif": "ioc"
+          },
+          "reply": {
+            "id": 9007199254740993,
+            "user": 7,
+            "create_time": 7,
+            "update_time": 7,
+            "finish_time": 7,
+            "finish_as": "fixture-value",
+            "status": "open",
+            "contract": "SYNTH_USDT",
+            "size": "2.00000001",
+            "iceberg": "fixture-value",
+            "price": "2.00000001",
+            "close": false,
+            "is_close": false,
+            "reduce_only": false,
+            "is_reduce_only": false,
+            "is_liq": true,
+            "tif": "fixture-value",
+            "left": "2.00000001",
+            "fill_price": "fixture-value",
+            "text": "fixture-value",
+            "tkfr": "fixture-value",
+            "mkfr": "fixture-value",
+            "refu": 7,
+            "auto_size": "fixture-value",
+            "stp_id": 7,
+            "stp_act": "fixture-value",
+            "amend_text": "fixture-value",
+            "pid": 7,
+            "market_order_slip_ratio": "fixture-value",
+            "pos_margin_mode": "fixture-value",
+            "action_mode": "fixture-value",
+            "tpsl_tp_trigger_price": "fixture-value",
+            "tpsl_sl_trigger_price": "fixture-value",
+            "tpsl_tp_bbo_type": "fixture-value",
+            "tpsl_sl_bbo_type": "fixture-value"
+          }
+        }
+      ],
+      "want": {
+        "id": 9007199254740993,
+        "user": 7,
+        "create_time": 7,
+        "update_time": 7,
+        "finish_time": 7,
+        "finish_as": "fixture-value",
+        "status": "open",
+        "contract": "SYNTH_USDT",
+        "size": "2.00000001",
+        "iceberg": "fixture-value",
+        "price": "2.00000001",
+        "is_liq": true,
+        "tif": "fixture-value",
+        "left": "2.00000001",
+        "fill_price": "fixture-value",
+        "text": "fixture-value",
+        "tkfr": "fixture-value",
+        "mkfr": "fixture-value",
+        "refu": 7,
+        "auto_size": "fixture-value",
+        "stp_id": 7,
+        "stp_act": "fixture-value",
+        "amend_text": "fixture-value",
+        "pid": 7,
+        "market_order_slip_ratio": "fixture-value",
+        "pos_margin_mode": "fixture-value",
+        "action_mode": "fixture-value",
+        "tpsl_tp_trigger_price": "fixture-value",
+        "tpsl_sl_trigger_price": "fixture-value",
+        "tpsl_tp_bbo_type": "fixture-value",
+        "tpsl_sl_bbo_type": "fixture-value"
+      },
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "{\n  \"id\": 9007199254740993,\n  \"user\": 7,\n  \"create_time\": 7,\n  \"update_time\": 7,\n  \"finish_time\": 7,\n  \"finish_as\": \"fixture-value\",\n  \"status\": \"open\",\n  \"contract\": \"SYNTH_USDT\",\n  \"size\": \"2.00000001\",\n  \"iceberg\": \"fixture-value\",\n  \"price\": \"2.00000001\",\n  \"is_liq\": true,\n  \"tif\": \"fixture-value\",\n  \"left\": \"2.00000001\",\n  \"fill_price\": \"fixture-value\",\n  \"text\": \"fixture-value\",\n  \"tkfr\": \"fixture-value\",\n  \"mkfr\": \"fixture-value\",\n  \"refu\": 7,\n  \"auto_size\": \"fixture-value\",\n  \"stp_id\": 7,\n  \"stp_act\": \"fixture-value\",\n  \"amend_text\": \"fixture-value\",\n  \"pid\": 7,\n  \"market_order_slip_ratio\": \"fixture-value\",\n  \"pos_margin_mode\": \"fixture-value\",\n  \"action_mode\": \"fixture-value\",\n  \"tpsl_tp_trigger_price\": \"fixture-value\",\n  \"tpsl_sl_trigger_price\": \"fixture-value\",\n  \"tpsl_tp_bbo_type\": \"fixture-value\",\n  \"tpsl_sl_bbo_type\": \"fixture-value\"\n}\n"
+    }
+  },
+  {
+    "id": "long-string-preservation-0.00000001",
+    "case": {
+      "name": "cex futures order long",
+      "operation": "CreateFuturesOrder",
+      "public": false,
+      "args": [
+        "cex",
+        "futures",
+        "order",
+        "long",
+        "--contract",
+        "SYNTH_USDT",
+        "--size",
+        "0.00000001"
+      ],
+      "exchanges": [
+        {
+          "method": "POST",
+          "path": "/api/v4/futures/usdt/orders",
+          "query": "",
+          "body": {
+            "contract": "SYNTH_USDT",
+            "size": "0.00000001",
+            "price": "0",
+            "tif": "ioc"
+          },
+          "reply": {
+            "id": 9007199254740993,
+            "user": 7,
+            "create_time": 7,
+            "update_time": 7,
+            "finish_time": 7,
+            "finish_as": "fixture-value",
+            "status": "open",
+            "contract": "SYNTH_USDT",
+            "size": "2.00000001",
+            "iceberg": "fixture-value",
+            "price": "2.00000001",
+            "close": false,
+            "is_close": false,
+            "reduce_only": false,
+            "is_reduce_only": false,
+            "is_liq": true,
+            "tif": "fixture-value",
+            "left": "2.00000001",
+            "fill_price": "fixture-value",
+            "text": "fixture-value",
+            "tkfr": "fixture-value",
+            "mkfr": "fixture-value",
+            "refu": 7,
+            "auto_size": "fixture-value",
+            "stp_id": 7,
+            "stp_act": "fixture-value",
+            "amend_text": "fixture-value",
+            "pid": 7,
+            "market_order_slip_ratio": "fixture-value",
+            "pos_margin_mode": "fixture-value",
+            "action_mode": "fixture-value",
+            "tpsl_tp_trigger_price": "fixture-value",
+            "tpsl_sl_trigger_price": "fixture-value",
+            "tpsl_tp_bbo_type": "fixture-value",
+            "tpsl_sl_bbo_type": "fixture-value"
+          }
+        }
+      ],
+      "want": {
+        "id": 9007199254740993,
+        "user": 7,
+        "create_time": 7,
+        "update_time": 7,
+        "finish_time": 7,
+        "finish_as": "fixture-value",
+        "status": "open",
+        "contract": "SYNTH_USDT",
+        "size": "2.00000001",
+        "iceberg": "fixture-value",
+        "price": "2.00000001",
+        "is_liq": true,
+        "tif": "fixture-value",
+        "left": "2.00000001",
+        "fill_price": "fixture-value",
+        "text": "fixture-value",
+        "tkfr": "fixture-value",
+        "mkfr": "fixture-value",
+        "refu": 7,
+        "auto_size": "fixture-value",
+        "stp_id": 7,
+        "stp_act": "fixture-value",
+        "amend_text": "fixture-value",
+        "pid": 7,
+        "market_order_slip_ratio": "fixture-value",
+        "pos_margin_mode": "fixture-value",
+        "action_mode": "fixture-value",
+        "tpsl_tp_trigger_price": "fixture-value",
+        "tpsl_sl_trigger_price": "fixture-value",
+        "tpsl_tp_bbo_type": "fixture-value",
+        "tpsl_sl_bbo_type": "fixture-value"
+      },
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "{\n  \"id\": 9007199254740993,\n  \"user\": 7,\n  \"create_time\": 7,\n  \"update_time\": 7,\n  \"finish_time\": 7,\n  \"finish_as\": \"fixture-value\",\n  \"status\": \"open\",\n  \"contract\": \"SYNTH_USDT\",\n  \"size\": \"2.00000001\",\n  \"iceberg\": \"fixture-value\",\n  \"price\": \"2.00000001\",\n  \"is_liq\": true,\n  \"tif\": \"fixture-value\",\n  \"left\": \"2.00000001\",\n  \"fill_price\": \"fixture-value\",\n  \"text\": \"fixture-value\",\n  \"tkfr\": \"fixture-value\",\n  \"mkfr\": \"fixture-value\",\n  \"refu\": 7,\n  \"auto_size\": \"fixture-value\",\n  \"stp_id\": 7,\n  \"stp_act\": \"fixture-value\",\n  \"amend_text\": \"fixture-value\",\n  \"pid\": 7,\n  \"market_order_slip_ratio\": \"fixture-value\",\n  \"pos_margin_mode\": \"fixture-value\",\n  \"action_mode\": \"fixture-value\",\n  \"tpsl_tp_trigger_price\": \"fixture-value\",\n  \"tpsl_sl_trigger_price\": \"fixture-value\",\n  \"tpsl_tp_bbo_type\": \"fixture-value\",\n  \"tpsl_sl_bbo_type\": \"fixture-value\"\n}\n"
+    }
+  },
+  {
+    "id": "long-string-preservation-9007199254740993",
+    "case": {
+      "name": "cex futures order long",
+      "operation": "CreateFuturesOrder",
+      "public": false,
+      "args": [
+        "cex",
+        "futures",
+        "order",
+        "long",
+        "--contract",
+        "SYNTH_USDT",
+        "--size",
+        "9007199254740993"
+      ],
+      "exchanges": [
+        {
+          "method": "POST",
+          "path": "/api/v4/futures/usdt/orders",
+          "query": "",
+          "body": {
+            "contract": "SYNTH_USDT",
+            "size": "9007199254740993",
+            "price": "0",
+            "tif": "ioc"
+          },
+          "reply": {
+            "id": 9007199254740993,
+            "user": 7,
+            "create_time": 7,
+            "update_time": 7,
+            "finish_time": 7,
+            "finish_as": "fixture-value",
+            "status": "open",
+            "contract": "SYNTH_USDT",
+            "size": "2.00000001",
+            "iceberg": "fixture-value",
+            "price": "2.00000001",
+            "close": false,
+            "is_close": false,
+            "reduce_only": false,
+            "is_reduce_only": false,
+            "is_liq": true,
+            "tif": "fixture-value",
+            "left": "2.00000001",
+            "fill_price": "fixture-value",
+            "text": "fixture-value",
+            "tkfr": "fixture-value",
+            "mkfr": "fixture-value",
+            "refu": 7,
+            "auto_size": "fixture-value",
+            "stp_id": 7,
+            "stp_act": "fixture-value",
+            "amend_text": "fixture-value",
+            "pid": 7,
+            "market_order_slip_ratio": "fixture-value",
+            "pos_margin_mode": "fixture-value",
+            "action_mode": "fixture-value",
+            "tpsl_tp_trigger_price": "fixture-value",
+            "tpsl_sl_trigger_price": "fixture-value",
+            "tpsl_tp_bbo_type": "fixture-value",
+            "tpsl_sl_bbo_type": "fixture-value"
+          }
+        }
+      ],
+      "want": {
+        "id": 9007199254740993,
+        "user": 7,
+        "create_time": 7,
+        "update_time": 7,
+        "finish_time": 7,
+        "finish_as": "fixture-value",
+        "status": "open",
+        "contract": "SYNTH_USDT",
+        "size": "2.00000001",
+        "iceberg": "fixture-value",
+        "price": "2.00000001",
+        "is_liq": true,
+        "tif": "fixture-value",
+        "left": "2.00000001",
+        "fill_price": "fixture-value",
+        "text": "fixture-value",
+        "tkfr": "fixture-value",
+        "mkfr": "fixture-value",
+        "refu": 7,
+        "auto_size": "fixture-value",
+        "stp_id": 7,
+        "stp_act": "fixture-value",
+        "amend_text": "fixture-value",
+        "pid": 7,
+        "market_order_slip_ratio": "fixture-value",
+        "pos_margin_mode": "fixture-value",
+        "action_mode": "fixture-value",
+        "tpsl_tp_trigger_price": "fixture-value",
+        "tpsl_sl_trigger_price": "fixture-value",
+        "tpsl_tp_bbo_type": "fixture-value",
+        "tpsl_sl_bbo_type": "fixture-value"
+      },
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "{\n  \"id\": 9007199254740993,\n  \"user\": 7,\n  \"create_time\": 7,\n  \"update_time\": 7,\n  \"finish_time\": 7,\n  \"finish_as\": \"fixture-value\",\n  \"status\": \"open\",\n  \"contract\": \"SYNTH_USDT\",\n  \"size\": \"2.00000001\",\n  \"iceberg\": \"fixture-value\",\n  \"price\": \"2.00000001\",\n  \"is_liq\": true,\n  \"tif\": \"fixture-value\",\n  \"left\": \"2.00000001\",\n  \"fill_price\": \"fixture-value\",\n  \"text\": \"fixture-value\",\n  \"tkfr\": \"fixture-value\",\n  \"mkfr\": \"fixture-value\",\n  \"refu\": 7,\n  \"auto_size\": \"fixture-value\",\n  \"stp_id\": 7,\n  \"stp_act\": \"fixture-value\",\n  \"amend_text\": \"fixture-value\",\n  \"pid\": 7,\n  \"market_order_slip_ratio\": \"fixture-value\",\n  \"pos_margin_mode\": \"fixture-value\",\n  \"action_mode\": \"fixture-value\",\n  \"tpsl_tp_trigger_price\": \"fixture-value\",\n  \"tpsl_sl_trigger_price\": \"fixture-value\",\n  \"tpsl_tp_bbo_type\": \"fixture-value\",\n  \"tpsl_sl_bbo_type\": \"fixture-value\"\n}\n"
+    }
+  },
+  {
+    "id": "dual-full-close-default",
+    "case": {
+      "name": "cex futures order close",
+      "operation": "CreateFuturesOrder",
+      "public": false,
+      "args": [
+        "cex",
+        "futures",
+        "order",
+        "close",
+        "--contract",
+        "SYNTH_USDT"
+      ],
+      "exchanges": [
+        {
+          "method": "GET",
+          "path": "/api/v4/futures/usdt/accounts",
+          "query": "",
+          "body": null,
+          "reply": {
+            "in_dual_mode": true,
+            "currency": "USDT"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/api/v4/futures/usdt/orders",
+          "query": "",
+          "body": {
+            "contract": "SYNTH_USDT",
+            "size": "0",
+            "price": "0",
+            "tif": "ioc",
+            "auto_size": "close_long"
+          },
+          "reply": {
+            "id": 9007199254740993,
+            "user": 7,
+            "create_time": 7,
+            "update_time": 7,
+            "finish_time": 7,
+            "finish_as": "fixture-value",
+            "status": "open",
+            "contract": "SYNTH_USDT",
+            "size": "2.00000001",
+            "iceberg": "fixture-value",
+            "price": "2.00000001",
+            "close": false,
+            "is_close": false,
+            "reduce_only": false,
+            "is_reduce_only": false,
+            "is_liq": true,
+            "tif": "fixture-value",
+            "left": "2.00000001",
+            "fill_price": "fixture-value",
+            "text": "fixture-value",
+            "tkfr": "fixture-value",
+            "mkfr": "fixture-value",
+            "refu": 7,
+            "auto_size": "fixture-value",
+            "stp_id": 7,
+            "stp_act": "fixture-value",
+            "amend_text": "fixture-value",
+            "pid": 7,
+            "market_order_slip_ratio": "fixture-value",
+            "pos_margin_mode": "fixture-value",
+            "action_mode": "fixture-value",
+            "tpsl_tp_trigger_price": "fixture-value",
+            "tpsl_sl_trigger_price": "fixture-value",
+            "tpsl_tp_bbo_type": "fixture-value",
+            "tpsl_sl_bbo_type": "fixture-value"
+          }
+        }
+      ],
+      "want": {
+        "id": 9007199254740993,
+        "user": 7,
+        "create_time": 7,
+        "update_time": 7,
+        "finish_time": 7,
+        "finish_as": "fixture-value",
+        "status": "open",
+        "contract": "SYNTH_USDT",
+        "size": "2.00000001",
+        "iceberg": "fixture-value",
+        "price": "2.00000001",
+        "is_liq": true,
+        "tif": "fixture-value",
+        "left": "2.00000001",
+        "fill_price": "fixture-value",
+        "text": "fixture-value",
+        "tkfr": "fixture-value",
+        "mkfr": "fixture-value",
+        "refu": 7,
+        "auto_size": "fixture-value",
+        "stp_id": 7,
+        "stp_act": "fixture-value",
+        "amend_text": "fixture-value",
+        "pid": 7,
+        "market_order_slip_ratio": "fixture-value",
+        "pos_margin_mode": "fixture-value",
+        "action_mode": "fixture-value",
+        "tpsl_tp_trigger_price": "fixture-value",
+        "tpsl_sl_trigger_price": "fixture-value",
+        "tpsl_tp_bbo_type": "fixture-value",
+        "tpsl_sl_bbo_type": "fixture-value"
+      },
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "{\n  \"id\": 9007199254740993,\n  \"user\": 7,\n  \"create_time\": 7,\n  \"update_time\": 7,\n  \"finish_time\": 7,\n  \"finish_as\": \"fixture-value\",\n  \"status\": \"open\",\n  \"contract\": \"SYNTH_USDT\",\n  \"size\": \"2.00000001\",\n  \"iceberg\": \"fixture-value\",\n  \"price\": \"2.00000001\",\n  \"is_liq\": true,\n  \"tif\": \"fixture-value\",\n  \"left\": \"2.00000001\",\n  \"fill_price\": \"fixture-value\",\n  \"text\": \"fixture-value\",\n  \"tkfr\": \"fixture-value\",\n  \"mkfr\": \"fixture-value\",\n  \"refu\": 7,\n  \"auto_size\": \"fixture-value\",\n  \"stp_id\": 7,\n  \"stp_act\": \"fixture-value\",\n  \"amend_text\": \"fixture-value\",\n  \"pid\": 7,\n  \"market_order_slip_ratio\": \"fixture-value\",\n  \"pos_margin_mode\": \"fixture-value\",\n  \"action_mode\": \"fixture-value\",\n  \"tpsl_tp_trigger_price\": \"fixture-value\",\n  \"tpsl_sl_trigger_price\": \"fixture-value\",\n  \"tpsl_tp_bbo_type\": \"fixture-value\",\n  \"tpsl_sl_bbo_type\": \"fixture-value\"\n}\n"
+    }
+  },
+  {
+    "id": "dual-full-close-short",
+    "case": {
+      "name": "cex futures order close",
+      "operation": "CreateFuturesOrder",
+      "public": false,
+      "args": [
+        "cex",
+        "futures",
+        "order",
+        "close",
+        "--contract",
+        "SYNTH_USDT",
+        "--side",
+        "short"
+      ],
+      "exchanges": [
+        {
+          "method": "GET",
+          "path": "/api/v4/futures/usdt/accounts",
+          "query": "",
+          "body": null,
+          "reply": {
+            "in_dual_mode": true,
+            "currency": "USDT"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/api/v4/futures/usdt/orders",
+          "query": "",
+          "body": {
+            "contract": "SYNTH_USDT",
+            "size": "0",
+            "price": "0",
+            "tif": "ioc",
+            "auto_size": "close_short"
+          },
+          "reply": {
+            "id": 9007199254740993,
+            "user": 7,
+            "create_time": 7,
+            "update_time": 7,
+            "finish_time": 7,
+            "finish_as": "fixture-value",
+            "status": "open",
+            "contract": "SYNTH_USDT",
+            "size": "2.00000001",
+            "iceberg": "fixture-value",
+            "price": "2.00000001",
+            "close": false,
+            "is_close": false,
+            "reduce_only": false,
+            "is_reduce_only": false,
+            "is_liq": true,
+            "tif": "fixture-value",
+            "left": "2.00000001",
+            "fill_price": "fixture-value",
+            "text": "fixture-value",
+            "tkfr": "fixture-value",
+            "mkfr": "fixture-value",
+            "refu": 7,
+            "auto_size": "fixture-value",
+            "stp_id": 7,
+            "stp_act": "fixture-value",
+            "amend_text": "fixture-value",
+            "pid": 7,
+            "market_order_slip_ratio": "fixture-value",
+            "pos_margin_mode": "fixture-value",
+            "action_mode": "fixture-value",
+            "tpsl_tp_trigger_price": "fixture-value",
+            "tpsl_sl_trigger_price": "fixture-value",
+            "tpsl_tp_bbo_type": "fixture-value",
+            "tpsl_sl_bbo_type": "fixture-value"
+          }
+        }
+      ],
+      "want": {
+        "id": 9007199254740993,
+        "user": 7,
+        "create_time": 7,
+        "update_time": 7,
+        "finish_time": 7,
+        "finish_as": "fixture-value",
+        "status": "open",
+        "contract": "SYNTH_USDT",
+        "size": "2.00000001",
+        "iceberg": "fixture-value",
+        "price": "2.00000001",
+        "is_liq": true,
+        "tif": "fixture-value",
+        "left": "2.00000001",
+        "fill_price": "fixture-value",
+        "text": "fixture-value",
+        "tkfr": "fixture-value",
+        "mkfr": "fixture-value",
+        "refu": 7,
+        "auto_size": "fixture-value",
+        "stp_id": 7,
+        "stp_act": "fixture-value",
+        "amend_text": "fixture-value",
+        "pid": 7,
+        "market_order_slip_ratio": "fixture-value",
+        "pos_margin_mode": "fixture-value",
+        "action_mode": "fixture-value",
+        "tpsl_tp_trigger_price": "fixture-value",
+        "tpsl_sl_trigger_price": "fixture-value",
+        "tpsl_tp_bbo_type": "fixture-value",
+        "tpsl_sl_bbo_type": "fixture-value"
+      },
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "{\n  \"id\": 9007199254740993,\n  \"user\": 7,\n  \"create_time\": 7,\n  \"update_time\": 7,\n  \"finish_time\": 7,\n  \"finish_as\": \"fixture-value\",\n  \"status\": \"open\",\n  \"contract\": \"SYNTH_USDT\",\n  \"size\": \"2.00000001\",\n  \"iceberg\": \"fixture-value\",\n  \"price\": \"2.00000001\",\n  \"is_liq\": true,\n  \"tif\": \"fixture-value\",\n  \"left\": \"2.00000001\",\n  \"fill_price\": \"fixture-value\",\n  \"text\": \"fixture-value\",\n  \"tkfr\": \"fixture-value\",\n  \"mkfr\": \"fixture-value\",\n  \"refu\": 7,\n  \"auto_size\": \"fixture-value\",\n  \"stp_id\": 7,\n  \"stp_act\": \"fixture-value\",\n  \"amend_text\": \"fixture-value\",\n  \"pid\": 7,\n  \"market_order_slip_ratio\": \"fixture-value\",\n  \"pos_margin_mode\": \"fixture-value\",\n  \"action_mode\": \"fixture-value\",\n  \"tpsl_tp_trigger_price\": \"fixture-value\",\n  \"tpsl_sl_trigger_price\": \"fixture-value\",\n  \"tpsl_tp_bbo_type\": \"fixture-value\",\n  \"tpsl_sl_bbo_type\": \"fixture-value\"\n}\n"
+    }
+  },
+  {
+    "id": "single-full-close-default",
+    "case": {
+      "name": "cex futures order close",
+      "operation": "CreateFuturesOrder",
+      "public": false,
+      "args": [
+        "cex",
+        "futures",
+        "order",
+        "close",
+        "--contract",
+        "SYNTH_USDT"
+      ],
+      "exchanges": [
+        {
+          "method": "GET",
+          "path": "/api/v4/futures/usdt/accounts",
+          "query": "",
+          "body": null,
+          "reply": {
+            "in_dual_mode": false,
+            "currency": "USDT"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/api/v4/futures/usdt/orders",
+          "query": "",
+          "body": {
+            "contract": "SYNTH_USDT",
+            "size": "0",
+            "price": "0",
+            "close": true,
+            "tif": "ioc"
+          },
+          "reply": {
+            "id": 9007199254740993,
+            "user": 7,
+            "create_time": 7,
+            "update_time": 7,
+            "finish_time": 7,
+            "finish_as": "fixture-value",
+            "status": "open",
+            "contract": "SYNTH_USDT",
+            "size": "2.00000001",
+            "iceberg": "fixture-value",
+            "price": "2.00000001",
+            "close": false,
+            "is_close": false,
+            "reduce_only": false,
+            "is_reduce_only": false,
+            "is_liq": true,
+            "tif": "fixture-value",
+            "left": "2.00000001",
+            "fill_price": "fixture-value",
+            "text": "fixture-value",
+            "tkfr": "fixture-value",
+            "mkfr": "fixture-value",
+            "refu": 7,
+            "auto_size": "fixture-value",
+            "stp_id": 7,
+            "stp_act": "fixture-value",
+            "amend_text": "fixture-value",
+            "pid": 7,
+            "market_order_slip_ratio": "fixture-value",
+            "pos_margin_mode": "fixture-value",
+            "action_mode": "fixture-value",
+            "tpsl_tp_trigger_price": "fixture-value",
+            "tpsl_sl_trigger_price": "fixture-value",
+            "tpsl_tp_bbo_type": "fixture-value",
+            "tpsl_sl_bbo_type": "fixture-value"
+          }
+        }
+      ],
+      "want": {
+        "id": 9007199254740993,
+        "user": 7,
+        "create_time": 7,
+        "update_time": 7,
+        "finish_time": 7,
+        "finish_as": "fixture-value",
+        "status": "open",
+        "contract": "SYNTH_USDT",
+        "size": "2.00000001",
+        "iceberg": "fixture-value",
+        "price": "2.00000001",
+        "is_liq": true,
+        "tif": "fixture-value",
+        "left": "2.00000001",
+        "fill_price": "fixture-value",
+        "text": "fixture-value",
+        "tkfr": "fixture-value",
+        "mkfr": "fixture-value",
+        "refu": 7,
+        "auto_size": "fixture-value",
+        "stp_id": 7,
+        "stp_act": "fixture-value",
+        "amend_text": "fixture-value",
+        "pid": 7,
+        "market_order_slip_ratio": "fixture-value",
+        "pos_margin_mode": "fixture-value",
+        "action_mode": "fixture-value",
+        "tpsl_tp_trigger_price": "fixture-value",
+        "tpsl_sl_trigger_price": "fixture-value",
+        "tpsl_tp_bbo_type": "fixture-value",
+        "tpsl_sl_bbo_type": "fixture-value"
+      },
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "{\n  \"id\": 9007199254740993,\n  \"user\": 7,\n  \"create_time\": 7,\n  \"update_time\": 7,\n  \"finish_time\": 7,\n  \"finish_as\": \"fixture-value\",\n  \"status\": \"open\",\n  \"contract\": \"SYNTH_USDT\",\n  \"size\": \"2.00000001\",\n  \"iceberg\": \"fixture-value\",\n  \"price\": \"2.00000001\",\n  \"is_liq\": true,\n  \"tif\": \"fixture-value\",\n  \"left\": \"2.00000001\",\n  \"fill_price\": \"fixture-value\",\n  \"text\": \"fixture-value\",\n  \"tkfr\": \"fixture-value\",\n  \"mkfr\": \"fixture-value\",\n  \"refu\": 7,\n  \"auto_size\": \"fixture-value\",\n  \"stp_id\": 7,\n  \"stp_act\": \"fixture-value\",\n  \"amend_text\": \"fixture-value\",\n  \"pid\": 7,\n  \"market_order_slip_ratio\": \"fixture-value\",\n  \"pos_margin_mode\": \"fixture-value\",\n  \"action_mode\": \"fixture-value\",\n  \"tpsl_tp_trigger_price\": \"fixture-value\",\n  \"tpsl_sl_trigger_price\": \"fixture-value\",\n  \"tpsl_tp_bbo_type\": \"fixture-value\",\n  \"tpsl_sl_bbo_type\": \"fixture-value\"\n}\n"
+    }
+  },
+  {
+    "id": "single-full-close-empty-size",
+    "case": {
+      "name": "cex futures order close",
+      "operation": "CreateFuturesOrder",
+      "public": false,
+      "args": [
+        "cex",
+        "futures",
+        "order",
+        "close",
+        "--contract",
+        "SYNTH_USDT",
+        "--size",
+        ""
+      ],
+      "exchanges": [
+        {
+          "method": "GET",
+          "path": "/api/v4/futures/usdt/accounts",
+          "query": "",
+          "body": null,
+          "reply": {
+            "in_dual_mode": false,
+            "currency": "USDT"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/api/v4/futures/usdt/orders",
+          "query": "",
+          "body": {
+            "contract": "SYNTH_USDT",
+            "size": "0",
+            "price": "0",
+            "close": true,
+            "tif": "ioc"
+          },
+          "reply": {
+            "id": 9007199254740993,
+            "user": 7,
+            "create_time": 7,
+            "update_time": 7,
+            "finish_time": 7,
+            "finish_as": "fixture-value",
+            "status": "open",
+            "contract": "SYNTH_USDT",
+            "size": "2.00000001",
+            "iceberg": "fixture-value",
+            "price": "2.00000001",
+            "close": false,
+            "is_close": false,
+            "reduce_only": false,
+            "is_reduce_only": false,
+            "is_liq": true,
+            "tif": "fixture-value",
+            "left": "2.00000001",
+            "fill_price": "fixture-value",
+            "text": "fixture-value",
+            "tkfr": "fixture-value",
+            "mkfr": "fixture-value",
+            "refu": 7,
+            "auto_size": "fixture-value",
+            "stp_id": 7,
+            "stp_act": "fixture-value",
+            "amend_text": "fixture-value",
+            "pid": 7,
+            "market_order_slip_ratio": "fixture-value",
+            "pos_margin_mode": "fixture-value",
+            "action_mode": "fixture-value",
+            "tpsl_tp_trigger_price": "fixture-value",
+            "tpsl_sl_trigger_price": "fixture-value",
+            "tpsl_tp_bbo_type": "fixture-value",
+            "tpsl_sl_bbo_type": "fixture-value"
+          }
+        }
+      ],
+      "want": {
+        "id": 9007199254740993,
+        "user": 7,
+        "create_time": 7,
+        "update_time": 7,
+        "finish_time": 7,
+        "finish_as": "fixture-value",
+        "status": "open",
+        "contract": "SYNTH_USDT",
+        "size": "2.00000001",
+        "iceberg": "fixture-value",
+        "price": "2.00000001",
+        "is_liq": true,
+        "tif": "fixture-value",
+        "left": "2.00000001",
+        "fill_price": "fixture-value",
+        "text": "fixture-value",
+        "tkfr": "fixture-value",
+        "mkfr": "fixture-value",
+        "refu": 7,
+        "auto_size": "fixture-value",
+        "stp_id": 7,
+        "stp_act": "fixture-value",
+        "amend_text": "fixture-value",
+        "pid": 7,
+        "market_order_slip_ratio": "fixture-value",
+        "pos_margin_mode": "fixture-value",
+        "action_mode": "fixture-value",
+        "tpsl_tp_trigger_price": "fixture-value",
+        "tpsl_sl_trigger_price": "fixture-value",
+        "tpsl_tp_bbo_type": "fixture-value",
+        "tpsl_sl_bbo_type": "fixture-value"
+      },
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "{\n  \"id\": 9007199254740993,\n  \"user\": 7,\n  \"create_time\": 7,\n  \"update_time\": 7,\n  \"finish_time\": 7,\n  \"finish_as\": \"fixture-value\",\n  \"status\": \"open\",\n  \"contract\": \"SYNTH_USDT\",\n  \"size\": \"2.00000001\",\n  \"iceberg\": \"fixture-value\",\n  \"price\": \"2.00000001\",\n  \"is_liq\": true,\n  \"tif\": \"fixture-value\",\n  \"left\": \"2.00000001\",\n  \"fill_price\": \"fixture-value\",\n  \"text\": \"fixture-value\",\n  \"tkfr\": \"fixture-value\",\n  \"mkfr\": \"fixture-value\",\n  \"refu\": 7,\n  \"auto_size\": \"fixture-value\",\n  \"stp_id\": 7,\n  \"stp_act\": \"fixture-value\",\n  \"amend_text\": \"fixture-value\",\n  \"pid\": 7,\n  \"market_order_slip_ratio\": \"fixture-value\",\n  \"pos_margin_mode\": \"fixture-value\",\n  \"action_mode\": \"fixture-value\",\n  \"tpsl_tp_trigger_price\": \"fixture-value\",\n  \"tpsl_sl_trigger_price\": \"fixture-value\",\n  \"tpsl_tp_bbo_type\": \"fixture-value\",\n  \"tpsl_sl_bbo_type\": \"fixture-value\"\n}\n"
+    }
+  },
+  {
+    "id": "batch-protection-null",
+    "case": {
+      "name": "cex spot order batch-amend",
+      "operation": "AmendBatchOrders",
+      "public": false,
+      "args": [
+        "cex",
+        "spot",
+        "order",
+        "batch-amend",
+        "--orders-json",
+        "[{\"order_id\":\"9007199254740993\",\"currency_pair\":\"SYNTH_USDT\",\"amount\":\"2\",\"stop_loss\":null}]"
+      ],
+      "exchanges": [
+        {
+          "method": "POST",
+          "path": "/api/v4/spot/amend_batch_orders",
+          "query": "",
+          "body": [
+            {
+              "order_id": "9007199254740993",
+              "currency_pair": "SYNTH_USDT",
+              "amount": "2",
+              "stop_profit": null,
+              "stop_loss": null
+            }
+          ],
+          "reply": [
+            {
+              "order_id": "9007199254740993",
+              "amend_text": "fixture-value",
+              "text": "fixture-value",
+              "succeeded": true,
+              "label": "",
+              "message": "",
+              "id": "9007199254740993",
+              "create_time": "fixture-value",
+              "update_time": "fixture-value",
+              "create_time_ms": 7,
+              "update_time_ms": 7,
+              "status": "open",
+              "currency_pair": "SYNTH_USDT",
+              "type": "fixture-value",
+              "account": "fixture-value",
+              "side": "fixture-value",
+              "amount": "2.00000001",
+              "price": "2.00000001",
+              "time_in_force": "fixture-value",
+              "iceberg": "fixture-value",
+              "auto_borrow": true,
+              "auto_repay": true,
+              "left": "2.00000001",
+              "filled_amount": "fixture-value",
+              "fill_price": "fixture-value",
+              "filled_total": "fixture-value",
+              "avg_deal_price": "fixture-value",
+              "fee": "fixture-value",
+              "fee_currency": "fixture-value",
+              "point_fee": "fixture-value",
+              "gt_fee": "fixture-value",
+              "gt_discount": true,
+              "rebated_fee": "fixture-value",
+              "rebated_fee_currency": "fixture-value",
+              "stp_id": 7,
+              "stp_act": "fixture-value",
+              "finish_as": "fixture-value",
+              "slippage": "fixture-value",
+              "stop_profit": {
+                "trigger_price": "fixture-value",
+                "order_price": "fixture-value"
+              },
+              "stop_loss": {
+                "trigger_price": "fixture-value",
+                "order_price": "fixture-value"
+              }
+            }
+          ]
+        }
+      ],
+      "want": [
+        {
+          "order_id": "9007199254740993",
+          "amend_text": "fixture-value",
+          "text": "fixture-value",
+          "succeeded": true,
+          "id": "9007199254740993",
+          "create_time": "fixture-value",
+          "update_time": "fixture-value",
+          "create_time_ms": 7,
+          "update_time_ms": 7,
+          "status": "open",
+          "currency_pair": "SYNTH_USDT",
+          "type": "fixture-value",
+          "account": "fixture-value",
+          "side": "fixture-value",
+          "amount": "2.00000001",
+          "price": "2.00000001",
+          "time_in_force": "fixture-value",
+          "iceberg": "fixture-value",
+          "auto_borrow": true,
+          "auto_repay": true,
+          "left": "2.00000001",
+          "filled_amount": "fixture-value",
+          "fill_price": "fixture-value",
+          "filled_total": "fixture-value",
+          "avg_deal_price": "fixture-value",
+          "fee": "fixture-value",
+          "fee_currency": "fixture-value",
+          "point_fee": "fixture-value",
+          "gt_fee": "fixture-value",
+          "gt_discount": true,
+          "rebated_fee": "fixture-value",
+          "rebated_fee_currency": "fixture-value",
+          "stp_id": 7,
+          "stp_act": "fixture-value",
+          "finish_as": "fixture-value",
+          "slippage": "fixture-value",
+          "stop_profit": {
+            "trigger_price": "fixture-value",
+            "order_price": "fixture-value"
+          },
+          "stop_loss": {
+            "trigger_price": "fixture-value",
+            "order_price": "fixture-value"
+          }
+        }
+      ],
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "[\n  {\n    \"order_id\": \"9007199254740993\",\n    \"amend_text\": \"fixture-value\",\n    \"text\": \"fixture-value\",\n    \"succeeded\": true,\n    \"id\": \"9007199254740993\",\n    \"create_time\": \"fixture-value\",\n    \"update_time\": \"fixture-value\",\n    \"create_time_ms\": 7,\n    \"update_time_ms\": 7,\n    \"status\": \"open\",\n    \"currency_pair\": \"SYNTH_USDT\",\n    \"type\": \"fixture-value\",\n    \"account\": \"fixture-value\",\n    \"side\": \"fixture-value\",\n    \"amount\": \"2.00000001\",\n    \"price\": \"2.00000001\",\n    \"time_in_force\": \"fixture-value\",\n    \"iceberg\": \"fixture-value\",\n    \"auto_borrow\": true,\n    \"auto_repay\": true,\n    \"left\": \"2.00000001\",\n    \"filled_amount\": \"fixture-value\",\n    \"fill_price\": \"fixture-value\",\n    \"filled_total\": \"fixture-value\",\n    \"avg_deal_price\": \"fixture-value\",\n    \"fee\": \"fixture-value\",\n    \"fee_currency\": \"fixture-value\",\n    \"point_fee\": \"fixture-value\",\n    \"gt_fee\": \"fixture-value\",\n    \"gt_discount\": true,\n    \"rebated_fee\": \"fixture-value\",\n    \"rebated_fee_currency\": \"fixture-value\",\n    \"stp_id\": 7,\n    \"stp_act\": \"fixture-value\",\n    \"finish_as\": \"fixture-value\",\n    \"slippage\": \"fixture-value\",\n    \"stop_profit\": {\n      \"trigger_price\": \"fixture-value\",\n      \"order_price\": \"fixture-value\"\n    },\n    \"stop_loss\": {\n      \"trigger_price\": \"fixture-value\",\n      \"order_price\": \"fixture-value\"\n    }\n  }\n]\n"
+    }
+  },
+  {
+    "id": "batch-protection-explicit-cancel",
+    "case": {
+      "name": "cex spot order batch-amend",
+      "operation": "AmendBatchOrders",
+      "public": false,
+      "args": [
+        "cex",
+        "spot",
+        "order",
+        "batch-amend",
+        "--orders-json",
+        "[{\"order_id\":\"9007199254740993\",\"currency_pair\":\"SYNTH_USDT\",\"amount\":\"2\",\"stop_loss\":{}}]"
+      ],
+      "exchanges": [
+        {
+          "method": "POST",
+          "path": "/api/v4/spot/amend_batch_orders",
+          "query": "",
+          "body": [
+            {
+              "order_id": "9007199254740993",
+              "currency_pair": "SYNTH_USDT",
+              "amount": "2",
+              "stop_profit": null,
+              "stop_loss": {}
+            }
+          ],
+          "reply": [
+            {
+              "order_id": "9007199254740993",
+              "amend_text": "fixture-value",
+              "text": "fixture-value",
+              "succeeded": true,
+              "label": "",
+              "message": "",
+              "id": "9007199254740993",
+              "create_time": "fixture-value",
+              "update_time": "fixture-value",
+              "create_time_ms": 7,
+              "update_time_ms": 7,
+              "status": "open",
+              "currency_pair": "SYNTH_USDT",
+              "type": "fixture-value",
+              "account": "fixture-value",
+              "side": "fixture-value",
+              "amount": "2.00000001",
+              "price": "2.00000001",
+              "time_in_force": "fixture-value",
+              "iceberg": "fixture-value",
+              "auto_borrow": true,
+              "auto_repay": true,
+              "left": "2.00000001",
+              "filled_amount": "fixture-value",
+              "fill_price": "fixture-value",
+              "filled_total": "fixture-value",
+              "avg_deal_price": "fixture-value",
+              "fee": "fixture-value",
+              "fee_currency": "fixture-value",
+              "point_fee": "fixture-value",
+              "gt_fee": "fixture-value",
+              "gt_discount": true,
+              "rebated_fee": "fixture-value",
+              "rebated_fee_currency": "fixture-value",
+              "stp_id": 7,
+              "stp_act": "fixture-value",
+              "finish_as": "fixture-value",
+              "slippage": "fixture-value",
+              "stop_profit": {
+                "trigger_price": "fixture-value",
+                "order_price": "fixture-value"
+              },
+              "stop_loss": {
+                "trigger_price": "fixture-value",
+                "order_price": "fixture-value"
+              }
+            }
+          ]
+        }
+      ],
+      "want": [
+        {
+          "order_id": "9007199254740993",
+          "amend_text": "fixture-value",
+          "text": "fixture-value",
+          "succeeded": true,
+          "id": "9007199254740993",
+          "create_time": "fixture-value",
+          "update_time": "fixture-value",
+          "create_time_ms": 7,
+          "update_time_ms": 7,
+          "status": "open",
+          "currency_pair": "SYNTH_USDT",
+          "type": "fixture-value",
+          "account": "fixture-value",
+          "side": "fixture-value",
+          "amount": "2.00000001",
+          "price": "2.00000001",
+          "time_in_force": "fixture-value",
+          "iceberg": "fixture-value",
+          "auto_borrow": true,
+          "auto_repay": true,
+          "left": "2.00000001",
+          "filled_amount": "fixture-value",
+          "fill_price": "fixture-value",
+          "filled_total": "fixture-value",
+          "avg_deal_price": "fixture-value",
+          "fee": "fixture-value",
+          "fee_currency": "fixture-value",
+          "point_fee": "fixture-value",
+          "gt_fee": "fixture-value",
+          "gt_discount": true,
+          "rebated_fee": "fixture-value",
+          "rebated_fee_currency": "fixture-value",
+          "stp_id": 7,
+          "stp_act": "fixture-value",
+          "finish_as": "fixture-value",
+          "slippage": "fixture-value",
+          "stop_profit": {
+            "trigger_price": "fixture-value",
+            "order_price": "fixture-value"
+          },
+          "stop_loss": {
+            "trigger_price": "fixture-value",
+            "order_price": "fixture-value"
+          }
+        }
+      ],
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "[\n  {\n    \"order_id\": \"9007199254740993\",\n    \"amend_text\": \"fixture-value\",\n    \"text\": \"fixture-value\",\n    \"succeeded\": true,\n    \"id\": \"9007199254740993\",\n    \"create_time\": \"fixture-value\",\n    \"update_time\": \"fixture-value\",\n    \"create_time_ms\": 7,\n    \"update_time_ms\": 7,\n    \"status\": \"open\",\n    \"currency_pair\": \"SYNTH_USDT\",\n    \"type\": \"fixture-value\",\n    \"account\": \"fixture-value\",\n    \"side\": \"fixture-value\",\n    \"amount\": \"2.00000001\",\n    \"price\": \"2.00000001\",\n    \"time_in_force\": \"fixture-value\",\n    \"iceberg\": \"fixture-value\",\n    \"auto_borrow\": true,\n    \"auto_repay\": true,\n    \"left\": \"2.00000001\",\n    \"filled_amount\": \"fixture-value\",\n    \"fill_price\": \"fixture-value\",\n    \"filled_total\": \"fixture-value\",\n    \"avg_deal_price\": \"fixture-value\",\n    \"fee\": \"fixture-value\",\n    \"fee_currency\": \"fixture-value\",\n    \"point_fee\": \"fixture-value\",\n    \"gt_fee\": \"fixture-value\",\n    \"gt_discount\": true,\n    \"rebated_fee\": \"fixture-value\",\n    \"rebated_fee_currency\": \"fixture-value\",\n    \"stp_id\": 7,\n    \"stp_act\": \"fixture-value\",\n    \"finish_as\": \"fixture-value\",\n    \"slippage\": \"fixture-value\",\n    \"stop_profit\": {\n      \"trigger_price\": \"fixture-value\",\n      \"order_price\": \"fixture-value\"\n    },\n    \"stop_loss\": {\n      \"trigger_price\": \"fixture-value\",\n      \"order_price\": \"fixture-value\"\n    }\n  }\n]\n"
+    }
+  },
+  {
+    "id": "batch-protection-value",
+    "case": {
+      "name": "cex spot order batch-amend",
+      "operation": "AmendBatchOrders",
+      "public": false,
+      "args": [
+        "cex",
+        "spot",
+        "order",
+        "batch-amend",
+        "--orders-json",
+        "[{\"order_id\":\"9007199254740993\",\"currency_pair\":\"SYNTH_USDT\",\"amount\":\"2\",\"stop_loss\":{\"trigger_price\":\"8\"}}]"
+      ],
+      "exchanges": [
+        {
+          "method": "POST",
+          "path": "/api/v4/spot/amend_batch_orders",
+          "query": "",
+          "body": [
+            {
+              "order_id": "9007199254740993",
+              "currency_pair": "SYNTH_USDT",
+              "amount": "2",
+              "stop_profit": null,
+              "stop_loss": {
+                "trigger_price": "8"
+              }
+            }
+          ],
+          "reply": [
+            {
+              "order_id": "9007199254740993",
+              "amend_text": "fixture-value",
+              "text": "fixture-value",
+              "succeeded": true,
+              "label": "",
+              "message": "",
+              "id": "9007199254740993",
+              "create_time": "fixture-value",
+              "update_time": "fixture-value",
+              "create_time_ms": 7,
+              "update_time_ms": 7,
+              "status": "open",
+              "currency_pair": "SYNTH_USDT",
+              "type": "fixture-value",
+              "account": "fixture-value",
+              "side": "fixture-value",
+              "amount": "2.00000001",
+              "price": "2.00000001",
+              "time_in_force": "fixture-value",
+              "iceberg": "fixture-value",
+              "auto_borrow": true,
+              "auto_repay": true,
+              "left": "2.00000001",
+              "filled_amount": "fixture-value",
+              "fill_price": "fixture-value",
+              "filled_total": "fixture-value",
+              "avg_deal_price": "fixture-value",
+              "fee": "fixture-value",
+              "fee_currency": "fixture-value",
+              "point_fee": "fixture-value",
+              "gt_fee": "fixture-value",
+              "gt_discount": true,
+              "rebated_fee": "fixture-value",
+              "rebated_fee_currency": "fixture-value",
+              "stp_id": 7,
+              "stp_act": "fixture-value",
+              "finish_as": "fixture-value",
+              "slippage": "fixture-value",
+              "stop_profit": {
+                "trigger_price": "fixture-value",
+                "order_price": "fixture-value"
+              },
+              "stop_loss": {
+                "trigger_price": "fixture-value",
+                "order_price": "fixture-value"
+              }
+            }
+          ]
+        }
+      ],
+      "want": [
+        {
+          "order_id": "9007199254740993",
+          "amend_text": "fixture-value",
+          "text": "fixture-value",
+          "succeeded": true,
+          "id": "9007199254740993",
+          "create_time": "fixture-value",
+          "update_time": "fixture-value",
+          "create_time_ms": 7,
+          "update_time_ms": 7,
+          "status": "open",
+          "currency_pair": "SYNTH_USDT",
+          "type": "fixture-value",
+          "account": "fixture-value",
+          "side": "fixture-value",
+          "amount": "2.00000001",
+          "price": "2.00000001",
+          "time_in_force": "fixture-value",
+          "iceberg": "fixture-value",
+          "auto_borrow": true,
+          "auto_repay": true,
+          "left": "2.00000001",
+          "filled_amount": "fixture-value",
+          "fill_price": "fixture-value",
+          "filled_total": "fixture-value",
+          "avg_deal_price": "fixture-value",
+          "fee": "fixture-value",
+          "fee_currency": "fixture-value",
+          "point_fee": "fixture-value",
+          "gt_fee": "fixture-value",
+          "gt_discount": true,
+          "rebated_fee": "fixture-value",
+          "rebated_fee_currency": "fixture-value",
+          "stp_id": 7,
+          "stp_act": "fixture-value",
+          "finish_as": "fixture-value",
+          "slippage": "fixture-value",
+          "stop_profit": {
+            "trigger_price": "fixture-value",
+            "order_price": "fixture-value"
+          },
+          "stop_loss": {
+            "trigger_price": "fixture-value",
+            "order_price": "fixture-value"
+          }
+        }
+      ],
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "[\n  {\n    \"order_id\": \"9007199254740993\",\n    \"amend_text\": \"fixture-value\",\n    \"text\": \"fixture-value\",\n    \"succeeded\": true,\n    \"id\": \"9007199254740993\",\n    \"create_time\": \"fixture-value\",\n    \"update_time\": \"fixture-value\",\n    \"create_time_ms\": 7,\n    \"update_time_ms\": 7,\n    \"status\": \"open\",\n    \"currency_pair\": \"SYNTH_USDT\",\n    \"type\": \"fixture-value\",\n    \"account\": \"fixture-value\",\n    \"side\": \"fixture-value\",\n    \"amount\": \"2.00000001\",\n    \"price\": \"2.00000001\",\n    \"time_in_force\": \"fixture-value\",\n    \"iceberg\": \"fixture-value\",\n    \"auto_borrow\": true,\n    \"auto_repay\": true,\n    \"left\": \"2.00000001\",\n    \"filled_amount\": \"fixture-value\",\n    \"fill_price\": \"fixture-value\",\n    \"filled_total\": \"fixture-value\",\n    \"avg_deal_price\": \"fixture-value\",\n    \"fee\": \"fixture-value\",\n    \"fee_currency\": \"fixture-value\",\n    \"point_fee\": \"fixture-value\",\n    \"gt_fee\": \"fixture-value\",\n    \"gt_discount\": true,\n    \"rebated_fee\": \"fixture-value\",\n    \"rebated_fee_currency\": \"fixture-value\",\n    \"stp_id\": 7,\n    \"stp_act\": \"fixture-value\",\n    \"finish_as\": \"fixture-value\",\n    \"slippage\": \"fixture-value\",\n    \"stop_profit\": {\n      \"trigger_price\": \"fixture-value\",\n      \"order_price\": \"fixture-value\"\n    },\n    \"stop_loss\": {\n      \"trigger_price\": \"fixture-value\",\n      \"order_price\": \"fixture-value\"\n    }\n  }\n]\n"
+    }
+  },
+  {
+    "id": "batch-protection-uppercase",
+    "case": {
+      "name": "cex spot order batch-amend",
+      "operation": "AmendBatchOrders",
+      "public": false,
+      "args": [
+        "cex",
+        "spot",
+        "order",
+        "batch-amend",
+        "--orders-json",
+        "[{\"order_id\":\"9007199254740993\",\"currency_pair\":\"SYNTH_USDT\",\"amount\":\"2\",\"STOP_LOSS\":{\"TRIGGER_PRICE\":\"8\"}}]"
+      ],
+      "exchanges": [
+        {
+          "method": "POST",
+          "path": "/api/v4/spot/amend_batch_orders",
+          "query": "",
+          "body": [
+            {
+              "order_id": "9007199254740993",
+              "currency_pair": "SYNTH_USDT",
+              "amount": "2",
+              "stop_profit": null,
+              "stop_loss": {
+                "trigger_price": "8"
+              }
+            }
+          ],
+          "reply": [
+            {
+              "order_id": "9007199254740993",
+              "amend_text": "fixture-value",
+              "text": "fixture-value",
+              "succeeded": true,
+              "label": "",
+              "message": "",
+              "id": "9007199254740993",
+              "create_time": "fixture-value",
+              "update_time": "fixture-value",
+              "create_time_ms": 7,
+              "update_time_ms": 7,
+              "status": "open",
+              "currency_pair": "SYNTH_USDT",
+              "type": "fixture-value",
+              "account": "fixture-value",
+              "side": "fixture-value",
+              "amount": "2.00000001",
+              "price": "2.00000001",
+              "time_in_force": "fixture-value",
+              "iceberg": "fixture-value",
+              "auto_borrow": true,
+              "auto_repay": true,
+              "left": "2.00000001",
+              "filled_amount": "fixture-value",
+              "fill_price": "fixture-value",
+              "filled_total": "fixture-value",
+              "avg_deal_price": "fixture-value",
+              "fee": "fixture-value",
+              "fee_currency": "fixture-value",
+              "point_fee": "fixture-value",
+              "gt_fee": "fixture-value",
+              "gt_discount": true,
+              "rebated_fee": "fixture-value",
+              "rebated_fee_currency": "fixture-value",
+              "stp_id": 7,
+              "stp_act": "fixture-value",
+              "finish_as": "fixture-value",
+              "slippage": "fixture-value",
+              "stop_profit": {
+                "trigger_price": "fixture-value",
+                "order_price": "fixture-value"
+              },
+              "stop_loss": {
+                "trigger_price": "fixture-value",
+                "order_price": "fixture-value"
+              }
+            }
+          ]
+        }
+      ],
+      "want": [
+        {
+          "order_id": "9007199254740993",
+          "amend_text": "fixture-value",
+          "text": "fixture-value",
+          "succeeded": true,
+          "id": "9007199254740993",
+          "create_time": "fixture-value",
+          "update_time": "fixture-value",
+          "create_time_ms": 7,
+          "update_time_ms": 7,
+          "status": "open",
+          "currency_pair": "SYNTH_USDT",
+          "type": "fixture-value",
+          "account": "fixture-value",
+          "side": "fixture-value",
+          "amount": "2.00000001",
+          "price": "2.00000001",
+          "time_in_force": "fixture-value",
+          "iceberg": "fixture-value",
+          "auto_borrow": true,
+          "auto_repay": true,
+          "left": "2.00000001",
+          "filled_amount": "fixture-value",
+          "fill_price": "fixture-value",
+          "filled_total": "fixture-value",
+          "avg_deal_price": "fixture-value",
+          "fee": "fixture-value",
+          "fee_currency": "fixture-value",
+          "point_fee": "fixture-value",
+          "gt_fee": "fixture-value",
+          "gt_discount": true,
+          "rebated_fee": "fixture-value",
+          "rebated_fee_currency": "fixture-value",
+          "stp_id": 7,
+          "stp_act": "fixture-value",
+          "finish_as": "fixture-value",
+          "slippage": "fixture-value",
+          "stop_profit": {
+            "trigger_price": "fixture-value",
+            "order_price": "fixture-value"
+          },
+          "stop_loss": {
+            "trigger_price": "fixture-value",
+            "order_price": "fixture-value"
+          }
+        }
+      ],
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "[\n  {\n    \"order_id\": \"9007199254740993\",\n    \"amend_text\": \"fixture-value\",\n    \"text\": \"fixture-value\",\n    \"succeeded\": true,\n    \"id\": \"9007199254740993\",\n    \"create_time\": \"fixture-value\",\n    \"update_time\": \"fixture-value\",\n    \"create_time_ms\": 7,\n    \"update_time_ms\": 7,\n    \"status\": \"open\",\n    \"currency_pair\": \"SYNTH_USDT\",\n    \"type\": \"fixture-value\",\n    \"account\": \"fixture-value\",\n    \"side\": \"fixture-value\",\n    \"amount\": \"2.00000001\",\n    \"price\": \"2.00000001\",\n    \"time_in_force\": \"fixture-value\",\n    \"iceberg\": \"fixture-value\",\n    \"auto_borrow\": true,\n    \"auto_repay\": true,\n    \"left\": \"2.00000001\",\n    \"filled_amount\": \"fixture-value\",\n    \"fill_price\": \"fixture-value\",\n    \"filled_total\": \"fixture-value\",\n    \"avg_deal_price\": \"fixture-value\",\n    \"fee\": \"fixture-value\",\n    \"fee_currency\": \"fixture-value\",\n    \"point_fee\": \"fixture-value\",\n    \"gt_fee\": \"fixture-value\",\n    \"gt_discount\": true,\n    \"rebated_fee\": \"fixture-value\",\n    \"rebated_fee_currency\": \"fixture-value\",\n    \"stp_id\": 7,\n    \"stp_act\": \"fixture-value\",\n    \"finish_as\": \"fixture-value\",\n    \"slippage\": \"fixture-value\",\n    \"stop_profit\": {\n      \"trigger_price\": \"fixture-value\",\n      \"order_price\": \"fixture-value\"\n    },\n    \"stop_loss\": {\n      \"trigger_price\": \"fixture-value\",\n      \"order_price\": \"fixture-value\"\n    }\n  }\n]\n"
+    }
+  },
+  {
+    "id": "batch-protection-extra-field-with-valid-value",
+    "case": {
+      "name": "cex spot order batch-amend",
+      "operation": "AmendBatchOrders",
+      "public": false,
+      "args": [
+        "cex",
+        "spot",
+        "order",
+        "batch-amend",
+        "--orders-json",
+        "[{\"order_id\":\"9007199254740993\",\"currency_pair\":\"SYNTH_USDT\",\"amount\":\"2\",\"stop_loss\":{\"trigger_price\":\"8\",\"ignored_note\":\"kept-by-input-not-by-SDK\"}}]"
+      ],
+      "exchanges": [
+        {
+          "method": "POST",
+          "path": "/api/v4/spot/amend_batch_orders",
+          "query": "",
+          "body": [
+            {
+              "order_id": "9007199254740993",
+              "currency_pair": "SYNTH_USDT",
+              "amount": "2",
+              "stop_profit": null,
+              "stop_loss": {
+                "trigger_price": "8"
+              }
+            }
+          ],
+          "reply": [
+            {
+              "order_id": "9007199254740993",
+              "amend_text": "fixture-value",
+              "text": "fixture-value",
+              "succeeded": true,
+              "label": "",
+              "message": "",
+              "id": "9007199254740993",
+              "create_time": "fixture-value",
+              "update_time": "fixture-value",
+              "create_time_ms": 7,
+              "update_time_ms": 7,
+              "status": "open",
+              "currency_pair": "SYNTH_USDT",
+              "type": "fixture-value",
+              "account": "fixture-value",
+              "side": "fixture-value",
+              "amount": "2.00000001",
+              "price": "2.00000001",
+              "time_in_force": "fixture-value",
+              "iceberg": "fixture-value",
+              "auto_borrow": true,
+              "auto_repay": true,
+              "left": "2.00000001",
+              "filled_amount": "fixture-value",
+              "fill_price": "fixture-value",
+              "filled_total": "fixture-value",
+              "avg_deal_price": "fixture-value",
+              "fee": "fixture-value",
+              "fee_currency": "fixture-value",
+              "point_fee": "fixture-value",
+              "gt_fee": "fixture-value",
+              "gt_discount": true,
+              "rebated_fee": "fixture-value",
+              "rebated_fee_currency": "fixture-value",
+              "stp_id": 7,
+              "stp_act": "fixture-value",
+              "finish_as": "fixture-value",
+              "slippage": "fixture-value",
+              "stop_profit": {
+                "trigger_price": "fixture-value",
+                "order_price": "fixture-value"
+              },
+              "stop_loss": {
+                "trigger_price": "fixture-value",
+                "order_price": "fixture-value"
+              }
+            }
+          ]
+        }
+      ],
+      "want": [
+        {
+          "order_id": "9007199254740993",
+          "amend_text": "fixture-value",
+          "text": "fixture-value",
+          "succeeded": true,
+          "id": "9007199254740993",
+          "create_time": "fixture-value",
+          "update_time": "fixture-value",
+          "create_time_ms": 7,
+          "update_time_ms": 7,
+          "status": "open",
+          "currency_pair": "SYNTH_USDT",
+          "type": "fixture-value",
+          "account": "fixture-value",
+          "side": "fixture-value",
+          "amount": "2.00000001",
+          "price": "2.00000001",
+          "time_in_force": "fixture-value",
+          "iceberg": "fixture-value",
+          "auto_borrow": true,
+          "auto_repay": true,
+          "left": "2.00000001",
+          "filled_amount": "fixture-value",
+          "fill_price": "fixture-value",
+          "filled_total": "fixture-value",
+          "avg_deal_price": "fixture-value",
+          "fee": "fixture-value",
+          "fee_currency": "fixture-value",
+          "point_fee": "fixture-value",
+          "gt_fee": "fixture-value",
+          "gt_discount": true,
+          "rebated_fee": "fixture-value",
+          "rebated_fee_currency": "fixture-value",
+          "stp_id": 7,
+          "stp_act": "fixture-value",
+          "finish_as": "fixture-value",
+          "slippage": "fixture-value",
+          "stop_profit": {
+            "trigger_price": "fixture-value",
+            "order_price": "fixture-value"
+          },
+          "stop_loss": {
+            "trigger_price": "fixture-value",
+            "order_price": "fixture-value"
+          }
+        }
+      ],
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "[\n  {\n    \"order_id\": \"9007199254740993\",\n    \"amend_text\": \"fixture-value\",\n    \"text\": \"fixture-value\",\n    \"succeeded\": true,\n    \"id\": \"9007199254740993\",\n    \"create_time\": \"fixture-value\",\n    \"update_time\": \"fixture-value\",\n    \"create_time_ms\": 7,\n    \"update_time_ms\": 7,\n    \"status\": \"open\",\n    \"currency_pair\": \"SYNTH_USDT\",\n    \"type\": \"fixture-value\",\n    \"account\": \"fixture-value\",\n    \"side\": \"fixture-value\",\n    \"amount\": \"2.00000001\",\n    \"price\": \"2.00000001\",\n    \"time_in_force\": \"fixture-value\",\n    \"iceberg\": \"fixture-value\",\n    \"auto_borrow\": true,\n    \"auto_repay\": true,\n    \"left\": \"2.00000001\",\n    \"filled_amount\": \"fixture-value\",\n    \"fill_price\": \"fixture-value\",\n    \"filled_total\": \"fixture-value\",\n    \"avg_deal_price\": \"fixture-value\",\n    \"fee\": \"fixture-value\",\n    \"fee_currency\": \"fixture-value\",\n    \"point_fee\": \"fixture-value\",\n    \"gt_fee\": \"fixture-value\",\n    \"gt_discount\": true,\n    \"rebated_fee\": \"fixture-value\",\n    \"rebated_fee_currency\": \"fixture-value\",\n    \"stp_id\": 7,\n    \"stp_act\": \"fixture-value\",\n    \"finish_as\": \"fixture-value\",\n    \"slippage\": \"fixture-value\",\n    \"stop_profit\": {\n      \"trigger_price\": \"fixture-value\",\n      \"order_price\": \"fixture-value\"\n    },\n    \"stop_loss\": {\n      \"trigger_price\": \"fixture-value\",\n      \"order_price\": \"fixture-value\"\n    }\n  }\n]\n"
+    }
+  },
+  {
+    "id": "batch-non-protection-null-preserved",
+    "case": {
+      "name": "cex spot order batch-amend",
+      "operation": "AmendBatchOrders",
+      "public": false,
+      "args": [
+        "cex",
+        "spot",
+        "order",
+        "batch-amend",
+        "--orders-json",
+        "[{\"order_id\": \"9007199254740993\", \"currency_pair\": \"SYNTH_USDT\", \"amount\": \"2\", \"account\": null, \"stop_loss\": null}]"
+      ],
+      "exchanges": [
+        {
+          "method": "POST",
+          "path": "/api/v4/spot/amend_batch_orders",
+          "query": "",
+          "body": [
+            {
+              "order_id": "9007199254740993",
+              "currency_pair": "SYNTH_USDT",
+              "amount": "2",
+              "stop_profit": null,
+              "stop_loss": null
+            }
+          ],
+          "reply": [
+            {
+              "order_id": "9007199254740993",
+              "amend_text": "fixture-value",
+              "text": "fixture-value",
+              "succeeded": true,
+              "label": "",
+              "message": "",
+              "id": "9007199254740993",
+              "create_time": "fixture-value",
+              "update_time": "fixture-value",
+              "create_time_ms": 7,
+              "update_time_ms": 7,
+              "status": "open",
+              "currency_pair": "SYNTH_USDT",
+              "type": "fixture-value",
+              "account": "fixture-value",
+              "side": "fixture-value",
+              "amount": "2.00000001",
+              "price": "2.00000001",
+              "time_in_force": "fixture-value",
+              "iceberg": "fixture-value",
+              "auto_borrow": true,
+              "auto_repay": true,
+              "left": "2.00000001",
+              "filled_amount": "fixture-value",
+              "fill_price": "fixture-value",
+              "filled_total": "fixture-value",
+              "avg_deal_price": "fixture-value",
+              "fee": "fixture-value",
+              "fee_currency": "fixture-value",
+              "point_fee": "fixture-value",
+              "gt_fee": "fixture-value",
+              "gt_discount": true,
+              "rebated_fee": "fixture-value",
+              "rebated_fee_currency": "fixture-value",
+              "stp_id": 7,
+              "stp_act": "fixture-value",
+              "finish_as": "fixture-value",
+              "slippage": "fixture-value",
+              "stop_profit": {
+                "trigger_price": "fixture-value",
+                "order_price": "fixture-value"
+              },
+              "stop_loss": {
+                "trigger_price": "fixture-value",
+                "order_price": "fixture-value"
+              }
+            }
+          ]
+        }
+      ],
+      "want": [
+        {
+          "order_id": "9007199254740993",
+          "amend_text": "fixture-value",
+          "text": "fixture-value",
+          "succeeded": true,
+          "id": "9007199254740993",
+          "create_time": "fixture-value",
+          "update_time": "fixture-value",
+          "create_time_ms": 7,
+          "update_time_ms": 7,
+          "status": "open",
+          "currency_pair": "SYNTH_USDT",
+          "type": "fixture-value",
+          "account": "fixture-value",
+          "side": "fixture-value",
+          "amount": "2.00000001",
+          "price": "2.00000001",
+          "time_in_force": "fixture-value",
+          "iceberg": "fixture-value",
+          "auto_borrow": true,
+          "auto_repay": true,
+          "left": "2.00000001",
+          "filled_amount": "fixture-value",
+          "fill_price": "fixture-value",
+          "filled_total": "fixture-value",
+          "avg_deal_price": "fixture-value",
+          "fee": "fixture-value",
+          "fee_currency": "fixture-value",
+          "point_fee": "fixture-value",
+          "gt_fee": "fixture-value",
+          "gt_discount": true,
+          "rebated_fee": "fixture-value",
+          "rebated_fee_currency": "fixture-value",
+          "stp_id": 7,
+          "stp_act": "fixture-value",
+          "finish_as": "fixture-value",
+          "slippage": "fixture-value",
+          "stop_profit": {
+            "trigger_price": "fixture-value",
+            "order_price": "fixture-value"
+          },
+          "stop_loss": {
+            "trigger_price": "fixture-value",
+            "order_price": "fixture-value"
+          }
+        }
+      ],
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "[\n  {\n    \"order_id\": \"9007199254740993\",\n    \"amend_text\": \"fixture-value\",\n    \"text\": \"fixture-value\",\n    \"succeeded\": true,\n    \"id\": \"9007199254740993\",\n    \"create_time\": \"fixture-value\",\n    \"update_time\": \"fixture-value\",\n    \"create_time_ms\": 7,\n    \"update_time_ms\": 7,\n    \"status\": \"open\",\n    \"currency_pair\": \"SYNTH_USDT\",\n    \"type\": \"fixture-value\",\n    \"account\": \"fixture-value\",\n    \"side\": \"fixture-value\",\n    \"amount\": \"2.00000001\",\n    \"price\": \"2.00000001\",\n    \"time_in_force\": \"fixture-value\",\n    \"iceberg\": \"fixture-value\",\n    \"auto_borrow\": true,\n    \"auto_repay\": true,\n    \"left\": \"2.00000001\",\n    \"filled_amount\": \"fixture-value\",\n    \"fill_price\": \"fixture-value\",\n    \"filled_total\": \"fixture-value\",\n    \"avg_deal_price\": \"fixture-value\",\n    \"fee\": \"fixture-value\",\n    \"fee_currency\": \"fixture-value\",\n    \"point_fee\": \"fixture-value\",\n    \"gt_fee\": \"fixture-value\",\n    \"gt_discount\": true,\n    \"rebated_fee\": \"fixture-value\",\n    \"rebated_fee_currency\": \"fixture-value\",\n    \"stp_id\": 7,\n    \"stp_act\": \"fixture-value\",\n    \"finish_as\": \"fixture-value\",\n    \"slippage\": \"fixture-value\",\n    \"stop_profit\": {\n      \"trigger_price\": \"fixture-value\",\n      \"order_price\": \"fixture-value\"\n    },\n    \"stop_loss\": {\n      \"trigger_price\": \"fixture-value\",\n      \"order_price\": \"fixture-value\"\n    }\n  }\n]\n"
+    }
+  },
+  {
+    "id": "batch-reduce-only-true",
+    "case": {
+      "name": "cex futures order batch-create",
+      "operation": "CreateBatchFuturesOrder",
+      "public": false,
+      "args": [
+        "cex",
+        "futures",
+        "order",
+        "batch-create",
+        "--orders-json",
+        "[{\"contract\": \"SYNTH_USDT\", \"size\": \"1\", \"price\": \"0\", \"tif\": \"ioc\", \"reduce_only\": true}]"
+      ],
+      "exchanges": [
+        {
+          "method": "POST",
+          "path": "/api/v4/futures/usdt/batch_orders",
+          "query": "",
+          "body": [
+            {
+              "contract": "SYNTH_USDT",
+              "size": "1",
+              "price": "0",
+              "reduce_only": true,
+              "tif": "ioc"
+            }
+          ],
+          "reply": [
+            {
+              "succeeded": true,
+              "label": "",
+              "detail": "fixture-value",
+              "id": 9007199254740993,
+              "user": 7,
+              "create_time": 7,
+              "finish_time": 7,
+              "finish_as": "fixture-value",
+              "status": "open",
+              "contract": "SYNTH_USDT",
+              "size": "2.00000001",
+              "iceberg": "fixture-value",
+              "price": "2.00000001",
+              "close": false,
+              "is_close": false,
+              "reduce_only": false,
+              "is_reduce_only": false,
+              "is_liq": true,
+              "tif": "fixture-value",
+              "left": "2.00000001",
+              "fill_price": "fixture-value",
+              "text": "fixture-value",
+              "tkfr": "fixture-value",
+              "mkfr": "fixture-value",
+              "refu": 7,
+              "auto_size": "fixture-value",
+              "stp_act": "fixture-value",
+              "stp_id": 7,
+              "market_order_slip_ratio": "fixture-value"
+            }
+          ]
+        }
+      ],
+      "want": [
+        {
+          "succeeded": true,
+          "detail": "fixture-value",
+          "id": 9007199254740993,
+          "user": 7,
+          "create_time": 7,
+          "finish_time": 7,
+          "finish_as": "fixture-value",
+          "status": "open",
+          "contract": "SYNTH_USDT",
+          "size": "2.00000001",
+          "iceberg": "fixture-value",
+          "price": "2.00000001",
+          "is_liq": true,
+          "tif": "fixture-value",
+          "left": "2.00000001",
+          "fill_price": "fixture-value",
+          "text": "fixture-value",
+          "tkfr": "fixture-value",
+          "mkfr": "fixture-value",
+          "refu": 7,
+          "auto_size": "fixture-value",
+          "stp_act": "fixture-value",
+          "stp_id": 7,
+          "market_order_slip_ratio": "fixture-value"
+        }
+      ],
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "[\n  {\n    \"succeeded\": true,\n    \"detail\": \"fixture-value\",\n    \"id\": 9007199254740993,\n    \"user\": 7,\n    \"create_time\": 7,\n    \"finish_time\": 7,\n    \"finish_as\": \"fixture-value\",\n    \"status\": \"open\",\n    \"contract\": \"SYNTH_USDT\",\n    \"size\": \"2.00000001\",\n    \"iceberg\": \"fixture-value\",\n    \"price\": \"2.00000001\",\n    \"is_liq\": true,\n    \"tif\": \"fixture-value\",\n    \"left\": \"2.00000001\",\n    \"fill_price\": \"fixture-value\",\n    \"text\": \"fixture-value\",\n    \"tkfr\": \"fixture-value\",\n    \"mkfr\": \"fixture-value\",\n    \"refu\": 7,\n    \"auto_size\": \"fixture-value\",\n    \"stp_act\": \"fixture-value\",\n    \"stp_id\": 7,\n    \"market_order_slip_ratio\": \"fixture-value\"\n  }\n]\n"
+    }
+  },
+  {
+    "id": "positional-cex futures market risk-limit-table",
+    "case": {
+      "name": "cex futures market risk-limit-table",
+      "operation": "GetFuturesRiskLimitTable",
+      "public": true,
+      "args": [
+        "cex",
+        "futures",
+        "market",
+        "risk-limit-table",
+        "7"
+      ],
+      "exchanges": [
+        {
+          "method": "GET",
+          "path": "/api/v4/futures/usdt/risk_limit_table",
+          "query": "table_id=7",
+          "body": null,
+          "reply": [
+            {
+              "tier": 7,
+              "risk_limit": "fixture-value",
+              "initial_rate": "fixture-value",
+              "maintenance_rate": "fixture-value",
+              "leverage_max": "fixture-value",
+              "deduction": "fixture-value"
+            }
+          ]
+        }
+      ],
+      "want": [
+        {
+          "tier": 7,
+          "risk_limit": "fixture-value",
+          "initial_rate": "fixture-value",
+          "maintenance_rate": "fixture-value",
+          "leverage_max": "fixture-value",
+          "deduction": "fixture-value"
+        }
+      ],
+      "void": false,
+      "anonymous": true,
+      "want_pretty": "┌──────┬───────────────┬───────────────┬──────────────────┐\n│ Tier │  Risk Limit   │ Initial Rate  │ Maintenance Rate │\n├──────┼───────────────┼───────────────┼──────────────────┤\n│ 7    │ fixture-value │ fixture-value │ fixture-value    │\n└──────┴───────────────┴───────────────┴──────────────────┘\n"
+    }
+  },
+  {
+    "id": "positional-cex assetswap order get",
+    "case": {
+      "name": "cex assetswap order get",
+      "operation": "GetAssetSwapOrderV1",
+      "public": false,
+      "args": [
+        "cex",
+        "assetswap",
+        "order",
+        "get",
+        "9007199254740993"
+      ],
+      "exchanges": [
+        {
+          "method": "GET",
+          "path": "/api/v4/asset-swap/order/9007199254740993",
+          "query": "",
+          "body": null,
+          "reply": {
+            "code": 0,
+            "label": "",
+            "message": "",
+            "data": {
+              "id": 9007199254740993,
+              "user_id": 7,
+              "from": [
+                {
+                  "asset": "USDT",
+                  "icon_url": "fixture-value",
+                  "amount": "2.00000001",
+                  "amount_show": "fixture-value"
+                }
+              ],
+              "to": [
+                {
+                  "asset": "USDT",
+                  "icon_url": "fixture-value",
+                  "amount": "2.00000001",
+                  "amount_show": "fixture-value"
+                }
+              ],
+              "source": "fixture-value",
+              "app_id": "fixture-value",
+              "client_req_id": "fixture-value",
+              "status": 7,
+              "create_time": 7
+            },
+            "timestamp": 7
+          }
+        }
+      ],
+      "want": {
+        "code": 0,
+        "message": "",
+        "data": {
+          "id": 9007199254740993,
+          "user_id": 7,
+          "from": [
+            {
+              "asset": "USDT",
+              "icon_url": "fixture-value",
+              "amount": "2.00000001",
+              "amount_show": "fixture-value"
+            }
+          ],
+          "to": [
+            {
+              "asset": "USDT",
+              "icon_url": "fixture-value",
+              "amount": "2.00000001",
+              "amount_show": "fixture-value"
+            }
+          ],
+          "source": "fixture-value",
+          "app_id": "fixture-value",
+          "client_req_id": "fixture-value",
+          "status": 7,
+          "create_time": 7
+        },
+        "timestamp": 7
+      },
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "{\n  \"code\": 0,\n  \"message\": \"\",\n  \"data\": {\n    \"id\": 9007199254740993,\n    \"user_id\": 7,\n    \"from\": [\n      {\n        \"asset\": \"USDT\",\n        \"icon_url\": \"fixture-value\",\n        \"amount\": \"2.00000001\",\n        \"amount_show\": \"fixture-value\"\n      }\n    ],\n    \"to\": [\n      {\n        \"asset\": \"USDT\",\n        \"icon_url\": \"fixture-value\",\n        \"amount\": \"2.00000001\",\n        \"amount_show\": \"fixture-value\"\n      }\n    ],\n    \"source\": \"fixture-value\",\n    \"app_id\": \"fixture-value\",\n    \"client_req_id\": \"fixture-value\",\n    \"status\": 7,\n    \"create_time\": 7\n  },\n  \"timestamp\": 7\n}\n"
+    }
+  },
+  {
+    "id": "positional-cex earn dual refund-preview",
+    "case": {
+      "name": "cex earn dual refund-preview",
+      "operation": "GetDualOrderRefundPreview",
+      "public": false,
+      "args": [
+        "cex",
+        "earn",
+        "dual",
+        "refund-preview",
+        "9007199254740993"
+      ],
+      "exchanges": [
+        {
+          "method": "GET",
+          "path": "/api/v4/earn/dual/order-refund-preview",
+          "query": "order_id=9007199254740993",
+          "body": null,
+          "reply": {
+            "create_timest": 7,
+            "delivery_timest": 7,
+            "exercise_price": "fixture-value",
+            "invest_amount": "fixture-value",
+            "invest_currency": "fixture-value",
+            "name": "fixture-value",
+            "order_id": 9007199254740993,
+            "req_id": "fixture-value",
+            "refund_service_charge": 7,
+            "settle_price": "fixture-value",
+            "settlement_amount": "fixture-value",
+            "settlement_currency": "fixture-value",
+            "settlement_interest": "fixture-value",
+            "settlement_principle": "fixture-value",
+            "type": "fixture-value",
+            "money_back_timest": 7
+          }
+        }
+      ],
+      "want": {
+        "create_timest": 7,
+        "delivery_timest": 7,
+        "exercise_price": "fixture-value",
+        "invest_amount": "fixture-value",
+        "invest_currency": "fixture-value",
+        "name": "fixture-value",
+        "order_id": 9007199254740993,
+        "req_id": "fixture-value",
+        "refund_service_charge": 7,
+        "settle_price": "fixture-value",
+        "settlement_amount": "fixture-value",
+        "settlement_currency": "fixture-value",
+        "settlement_interest": "fixture-value",
+        "settlement_principle": "fixture-value",
+        "type": "fixture-value",
+        "money_back_timest": 7
+      },
+      "void": false,
+      "anonymous": false,
+      "want_pretty": "{\n  \"create_timest\": 7,\n  \"delivery_timest\": 7,\n  \"exercise_price\": \"fixture-value\",\n  \"invest_amount\": \"fixture-value\",\n  \"invest_currency\": \"fixture-value\",\n  \"name\": \"fixture-value\",\n  \"order_id\": 9007199254740993,\n  \"req_id\": \"fixture-value\",\n  \"refund_service_charge\": 7,\n  \"settle_price\": \"fixture-value\",\n  \"settlement_amount\": \"fixture-value\",\n  \"settlement_currency\": \"fixture-value\",\n  \"settlement_interest\": \"fixture-value\",\n  \"settlement_principle\": \"fixture-value\",\n  \"type\": \"fixture-value\",\n  \"money_back_timest\": 7\n}\n"
+    }
+  }
+]

@@ -78,7 +78,7 @@ playwright-cli tracing-stop
 
 ```bash
 playwright-cli tracing-start
-playwright-cli open https://slow-site.com
+playwright-cli open https://slow.example.test
 playwright-cli tracing-stop
 
 # View network waterfall to identify slow resources

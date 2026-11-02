@@ -6,9 +6,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var marketCmd = &cobra.Command{
@@ -60,8 +60,8 @@ func runWalletChains(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.WalletAPI.ListCurrencyChains(c.Context(), currency)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/wallet/currency_chains", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/wallet/currency_chains", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -92,8 +92,7 @@ func runWalletWithdrawStatus(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.WalletAPI.ListWithdrawStatus(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/wallet/withdraw_status", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/wallet/withdraw_status", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -127,8 +126,7 @@ func runWalletTradeFee(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.WalletAPI.GetTradeFee(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/wallet/fee", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/wallet/fee", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -154,8 +152,7 @@ func runWalletLowCap(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.WalletAPI.GetLowCapExchangeList(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/wallet/low_cap_exchange_list", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/wallet/low_cap_exchange_list", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

@@ -105,7 +105,9 @@ func AttachInvokeFlagsFromArgv(cmd *cobra.Command, argv []string, backend string
 	if len(tail) == 0 {
 		return
 	}
-	name := ParseLongFlag(tail, "name")
+	// Resolve before selecting a schema; RunE normalization is too late to
+	// register flat flags for a user-facing --name command path.
+	name := ResolveMCPToolName(backend, ParseLongFlag(tail, "name"))
 	if name == "" {
 		return
 	}

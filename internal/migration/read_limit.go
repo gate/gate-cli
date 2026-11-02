@@ -6,7 +6,7 @@ import (
 )
 
 // readFromReaderLimited reads at most maxBytes from r using a LimitReader(maxBytes+1) sentinel
-// so callers can reject payloads larger than maxBytes (CR-211).
+// so callers can reject payloads larger than maxBytes .
 func readFromReaderLimited(r io.Reader, maxBytes int64) ([]byte, error) {
 	data, err := io.ReadAll(io.LimitReader(r, maxBytes+1))
 	if err != nil {

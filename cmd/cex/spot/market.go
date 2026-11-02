@@ -6,9 +6,10 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	"github.com/gate/gate-cli/internal/output"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var marketCmd = &cobra.Command{
@@ -94,10 +95,10 @@ func init() {
 	}
 	insuranceCmd.Flags().String("business", "margin", "Leverage business: margin, unified")
 	insuranceCmd.Flags().String("currency", "", "Currency name (required)")
-	insuranceCmd.Flags().Int64("from", 0, "Start Unix timestamp (seconds)")
-	insuranceCmd.Flags().Int64("to", 0, "End Unix timestamp (seconds)")
+	insuranceCmd.Flags().Int64("from", 0, "Start Unix timestamp in seconds, greater than zero (required)")
+	insuranceCmd.Flags().Int64("to", 0, "End Unix timestamp in seconds, at or after --from (required)")
 	insuranceCmd.Flags().Int32("limit", 0, "Number of records to return")
-	insuranceCmd.MarkFlagRequired("currency")
+	cmdutil.MustRequireFlags(insuranceCmd, "currency", "from", "to")
 
 	timeCmd := &cobra.Command{
 		Use:   "time",
@@ -122,8 +123,8 @@ func runSpotTicker(cmd *cobra.Command, args []string) error {
 		CurrencyPair: optional.NewString(pair),
 	})
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/tickers", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/spot/tickers", "")
 	}
 	if len(tickers) == 0 {
 		return fmt.Errorf("no ticker found for %s", pair)
@@ -147,8 +148,7 @@ func runSpotTickers(cmd *cobra.Command, args []string) error {
 
 	tickers, httpResp, err := c.SpotAPI.ListTickers(c.Context(), nil)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/tickers", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/spot/tickers", "")
 	}
 	if p.IsJSON() {
 		return p.Print(tickers)
@@ -173,8 +173,7 @@ func runSpotOrderbook(cmd *cobra.Command, args []string) error {
 		Limit: optional.NewInt32(depth),
 	})
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/order_book", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/spot/order_book", "")
 	}
 	return p.Print(ob)
 }
@@ -192,8 +191,7 @@ func runSpotTrades(cmd *cobra.Command, args []string) error {
 		Limit: optional.NewInt32(limit),
 	})
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/trades", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/spot/trades", "")
 	}
 	if p.IsJSON() {
 		return p.Print(trades)
@@ -220,8 +218,7 @@ func runSpotCandlesticks(cmd *cobra.Command, args []string) error {
 		Limit:    optional.NewInt32(limit),
 	})
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/candlesticks", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/spot/candlesticks", "")
 	}
 	// Candlesticks returns [][]string: [timestamp, volume, close, high, low, open, ...]
 	if p.IsJSON() {
@@ -246,8 +243,7 @@ func runSpotCurrencies(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.SpotAPI.ListCurrencies(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/currencies", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/spot/currencies", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -273,8 +269,7 @@ func runSpotCurrency(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.SpotAPI.GetCurrency(c.Context(), currency)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/currencies/"+currency, ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/spot/currencies/"+currency, "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -298,8 +293,7 @@ func runSpotPairs(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.SpotAPI.ListCurrencyPairs(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/currency_pairs", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/spot/currency_pairs", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -321,8 +315,7 @@ func runSpotPair(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.SpotAPI.GetCurrencyPair(c.Context(), pair)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/currency_pairs/"+pair, ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/spot/currency_pairs/"+pair, "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -339,6 +332,14 @@ func runSpotInsurance(cmd *cobra.Command, args []string) error {
 	from, _ := cmd.Flags().GetInt64("from")
 	to, _ := cmd.Flags().GetInt64("to")
 	limit, _ := cmd.Flags().GetInt32("limit")
+	// The API requires explicit, non-zero bounds. Validate before client setup so
+	// missing/invalid input cannot read credentials or silently query epoch zero.
+	if from <= 0 || to <= 0 {
+		return output.InvalidArgsError("--from and --to must be Unix timestamps greater than zero")
+	}
+	if from > to {
+		return output.InvalidArgsError("--from must be less than or equal to --to")
+	}
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
@@ -352,8 +353,7 @@ func runSpotInsurance(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.SpotAPI.GetSpotInsuranceHistory(c.Context(), business, currency, from, to, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/insurance_history", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/spot/insurance_history", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -374,8 +374,7 @@ func runSpotServerTime(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.SpotAPI.GetSystemTime(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/time", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/spot/time", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

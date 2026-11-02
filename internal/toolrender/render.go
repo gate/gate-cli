@@ -12,8 +12,8 @@ import (
 )
 
 // RenderCallResult writes call results via standard printer.
-// JSON mode prints the business data value only (PRD §3.7.8). Pretty mode uses fixed sections
-// without protocol wrapper fields (PRD §3.7.5).
+// JSON mode prints the business data value only. Pretty mode uses fixed sections
+// without protocol wrapper fields.
 func RenderCallResult(p *output.Printer, backend, toolName string, result *mcpclient.CallResult, maxBytes int64) error {
 	if result == nil {
 		return fmt.Errorf("nil tools/call result")

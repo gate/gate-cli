@@ -82,8 +82,8 @@ func runSymbols(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.CrossExAPI.ListCrossexRuleSymbols(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/crossex/rule/symbols", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/crossex/rule/symbols", "")
 	}
 	return p.Print(result)
 }
@@ -98,8 +98,7 @@ func runRiskLimits(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.CrossExAPI.ListCrossexRuleRiskLimits(c.Context(), symbols)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/crossex/rule/risk_limits", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/crossex/rule/risk_limits", "")
 	}
 	return p.Print(result)
 }
@@ -121,8 +120,7 @@ func runTransferCoins(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.CrossExAPI.ListCrossexTransferCoins(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/crossex/rule/transfer_coins", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/crossex/rule/transfer_coins", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -146,8 +144,7 @@ func runFee(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.CrossExAPI.GetCrossexFee(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/crossex/fee", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/crossex/fee", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -181,8 +178,7 @@ func runInterestRate(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.CrossExAPI.GetCrossexInterestRate(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/crossex/interest_rate", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/crossex/interest_rate", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -213,8 +209,7 @@ func runDiscountRate(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.CrossExAPI.ListCrossexCoinDiscountRate(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/crossex/coin_discount_rate", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/crossex/coin_discount_rate", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

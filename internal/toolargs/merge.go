@@ -2,6 +2,7 @@ package toolargs
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -72,11 +73,7 @@ func parseBaseJSON(cmd *cobra.Command) (map[string]interface{}, error) {
 	case strings.TrimSpace(argsJSON) != "":
 		return parseJSONObject(argsJSON)
 	case strings.TrimSpace(argsFile) != "":
-		clean, err := resolveArgsFilePath(argsFile)
-		if err != nil {
-			return nil, err
-		}
-		f, err := os.Open(clean)
+		f, err := openArgsFile(argsFile)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read args file: %w", err)
 		}
@@ -94,6 +91,50 @@ func parseBaseJSON(cmd *cobra.Command) (map[string]interface{}, error) {
 	}
 }
 
+// openArgsFile confines every path form, including absolute and home paths, to
+// the real cwd. The final rooted open prevents a path swap after validation
+// from escaping the boundary; explicit selection does not grant extra access.
+func openArgsFile(raw string) (file *os.File, err error) {
+	clean, err := resolveArgsFilePath(raw)
+	if err != nil {
+		return nil, err
+	}
+	// Anchor to the actual cwd handle, rather than trusting a path that can be
+	// renamed. Root.Open rechecks containment during the final filesystem walk.
+	root, err := os.OpenRoot(".")
+	if err != nil {
+		return nil, fmt.Errorf("open args file root: %w", err)
+	}
+	defer func() {
+		if closeErr := root.Close(); closeErr != nil {
+			if file != nil {
+				closeErr = errors.Join(closeErr, file.Close())
+				file = nil
+			}
+			err = errors.Join(err, fmt.Errorf("close args file root: %w", closeErr))
+		}
+	}()
+	cwd, err := os.Getwd()
+	if err != nil {
+		return nil, fmt.Errorf("resolve args file root: %w", err)
+	}
+	base, err := filepath.EvalSymlinks(cwd)
+	if err != nil {
+		return nil, fmt.Errorf("resolve args file root: %w", err)
+	}
+	target, err := filepath.EvalSymlinks(clean)
+	if err != nil {
+		return nil, fmt.Errorf("resolve args file: %w", err)
+	}
+	rel, err := filepath.Rel(base, target)
+	if err != nil || !filepath.IsLocal(rel) {
+		return nil, fmt.Errorf("args file %q must stay within working directory", raw)
+	}
+	// Resolving first retains existing absolute symlinks whose target is inside
+	// cwd. Opening via Root (not os.Open(target)) prevents a later swap escaping.
+	return root.Open(rel)
+}
+
 func parseJSONObject(raw string) (map[string]interface{}, error) {
 	var out map[string]interface{}
 	if err := json.Unmarshal([]byte(raw), &out); err != nil {
@@ -105,8 +146,9 @@ func parseJSONObject(raw string) (map[string]interface{}, error) {
 	return out, nil
 }
 
-// resolveArgsFilePath expands ~, cleans the path, and rejects relative paths that lexically
-// escape the current working directory (CR-1012). Absolute paths are accepted as-is.
+// resolveArgsFilePath expands ~ and rejects lexical relative escapes .
+// Returning an absolute name only normalizes it; openArgsFile must still check
+// its real target and open it through the cwd root for every input form.
 func resolveArgsFilePath(raw string) (string, error) {
 	clean, err := expandUserPath(strings.TrimSpace(raw))
 	if err != nil {
@@ -231,7 +273,7 @@ func readFlagArgument(cmd *cobra.Command, f *pflag.Flag) (interface{}, bool) {
 		}
 		norm := normalizeFlagStringList(v)
 		if norm == nil {
-			// Align with stringArray: explicit empty clears to [] in MCP args (CR-806 / CR-405).
+			// Align with stringArray: explicit empty clears to [] in MCP args .
 			return []string{}, true
 		}
 		return norm, true

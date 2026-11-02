@@ -1,7 +1,6 @@
 package bot
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -24,7 +23,7 @@ func init() {
 		RunE:  runBotGridSpotCreate,
 	}
 	spotCmd.Flags().String("json", "", "JSON body for SpotGridCreateRequest (required)")
-	spotCmd.MarkFlagRequired("json")
+	mustRequireBotFlag(spotCmd, "json")
 
 	marginCmd := &cobra.Command{
 		Use:   "margin",
@@ -33,7 +32,7 @@ func init() {
 		RunE:  runBotGridMarginCreate,
 	}
 	marginCmd.Flags().String("json", "", "JSON body for MarginGridCreateRequest (required)")
-	marginCmd.MarkFlagRequired("json")
+	mustRequireBotFlag(marginCmd, "json")
 
 	infiniteCmd := &cobra.Command{
 		Use:   "infinite",
@@ -42,7 +41,7 @@ func init() {
 		RunE:  runBotGridInfiniteCreate,
 	}
 	infiniteCmd.Flags().String("json", "", "JSON body for InfiniteGridCreateRequest (required)")
-	infiniteCmd.MarkFlagRequired("json")
+	mustRequireBotFlag(infiniteCmd, "json")
 
 	futuresCmd := &cobra.Command{
 		Use:   "futures",
@@ -51,7 +50,7 @@ func init() {
 		RunE:  runBotGridFuturesCreate,
 	}
 	futuresCmd.Flags().String("json", "", "JSON body for FuturesGridCreateRequest (required)")
-	futuresCmd.MarkFlagRequired("json")
+	mustRequireBotFlag(futuresCmd, "json")
 
 	gridCmd.AddCommand(spotCmd, marginCmd, infiniteCmd, futuresCmd)
 	Cmd.AddCommand(gridCmd)
@@ -69,14 +68,13 @@ func runBotGridSpotCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	var body gateapi.SpotGridCreateRequest
-	if err := json.Unmarshal([]byte(jsonStr), &body); err != nil {
+	if err := decodeBotJSON(jsonStr, &body); err != nil {
 		return fmt.Errorf("invalid --json: %w", err)
 	}
 
 	result, httpResp, err := c.BotAPI.PostAIHubSpotGridCreate(c.Context(), body, nil)
-	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/bot/spot/grid/create", jsonStr))
-		return nil
+	if err := client.BotResultError(result, err, httpResp, "POST", "/api/v4/bot/spot-grid/create", jsonStr); err != nil {
+		return err
 	}
 	return p.Print(result)
 }
@@ -93,14 +91,13 @@ func runBotGridMarginCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	var body gateapi.MarginGridCreateRequest
-	if err := json.Unmarshal([]byte(jsonStr), &body); err != nil {
+	if err := decodeBotJSON(jsonStr, &body); err != nil {
 		return fmt.Errorf("invalid --json: %w", err)
 	}
 
 	result, httpResp, err := c.BotAPI.PostAIHubMarginGridCreate(c.Context(), body, nil)
-	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/bot/margin/grid/create", jsonStr))
-		return nil
+	if err := client.BotResultError(result, err, httpResp, "POST", "/api/v4/bot/margin-grid/create", jsonStr); err != nil {
+		return err
 	}
 	return p.Print(result)
 }
@@ -117,14 +114,13 @@ func runBotGridInfiniteCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	var body gateapi.InfiniteGridCreateRequest
-	if err := json.Unmarshal([]byte(jsonStr), &body); err != nil {
+	if err := decodeBotJSON(jsonStr, &body); err != nil {
 		return fmt.Errorf("invalid --json: %w", err)
 	}
 
 	result, httpResp, err := c.BotAPI.PostAIHubInfiniteGridCreate(c.Context(), body, nil)
-	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/bot/infinite/grid/create", jsonStr))
-		return nil
+	if err := client.BotResultError(result, err, httpResp, "POST", "/api/v4/bot/infinite-grid/create", jsonStr); err != nil {
+		return err
 	}
 	return p.Print(result)
 }
@@ -141,14 +137,13 @@ func runBotGridFuturesCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	var body gateapi.FuturesGridCreateRequest
-	if err := json.Unmarshal([]byte(jsonStr), &body); err != nil {
+	if err := decodeBotJSON(jsonStr, &body); err != nil {
 		return fmt.Errorf("invalid --json: %w", err)
 	}
 
 	result, httpResp, err := c.BotAPI.PostAIHubFuturesGridCreate(c.Context(), body, nil)
-	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/bot/futures/grid/create", jsonStr))
-		return nil
+	if err := client.BotResultError(result, err, httpResp, "POST", "/api/v4/bot/futures-grid/create", jsonStr); err != nil {
+		return err
 	}
 	return p.Print(result)
 }

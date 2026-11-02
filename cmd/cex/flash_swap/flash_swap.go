@@ -155,8 +155,8 @@ func runPairs(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FlashSwapAPI.ListFlashSwapCurrencyPair(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/flash_swap/currency_pairs", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/flash_swap/currency_pairs", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -203,8 +203,7 @@ func runOrders(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FlashSwapAPI.ListFlashSwapOrders(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/flash_swap/orders", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/flash_swap/orders", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -230,8 +229,7 @@ func runOrder(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FlashSwapAPI.GetFlashSwapOrder(c.Context(), id)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", fmt.Sprintf("/api/v4/flash_swap/orders/%d", id), ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", fmt.Sprintf("/api/v4/flash_swap/orders/%d", id), "")
 	}
 	return p.Print(result)
 }
@@ -259,8 +257,7 @@ func runPreview(cmd *cobra.Command, args []string) error {
 	reqBody, _ := json.Marshal(body)
 	result, httpResp, err := c.FlashSwapAPI.PreviewFlashSwapOrder(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/flash_swap/orders/preview", string(reqBody)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/flash_swap/orders/preview", string(reqBody))
 	}
 	return p.Print(result)
 }
@@ -290,8 +287,7 @@ func runCreate(cmd *cobra.Command, args []string) error {
 	reqBody, _ := json.Marshal(body)
 	result, httpResp, err := c.FlashSwapAPI.CreateFlashSwapOrder(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/flash_swap/orders", string(reqBody)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/flash_swap/orders", string(reqBody))
 	}
 	return p.Print(result)
 }
@@ -320,8 +316,7 @@ func runPreviewV1(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FlashSwapAPI.PreviewFlashSwapOrderV1(c.Context(), sellAsset, buyAsset, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/flash_swap/orders/preview_v1", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/flash_swap/orders/preview_v1", "")
 	}
 	return p.Print(result)
 }
@@ -343,8 +338,7 @@ func runCreateV1(cmd *cobra.Command, args []string) error {
 	}
 	result, httpResp, err := c.FlashSwapAPI.CreateFlashSwapOrderV1(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/flash_swap/orders_v1", jsonStr))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/flash_swap/orders_v1", jsonStr)
 	}
 	return p.Print(result)
 }
@@ -366,8 +360,7 @@ func runPreviewManyToOne(cmd *cobra.Command, args []string) error {
 	}
 	result, httpResp, err := c.FlashSwapAPI.PreviewFlashSwapMultiCurrencyManyToOneOrder(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/flash_swap/multi_currency/many_to_one/preview", jsonStr))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/flash_swap/multi_currency/many_to_one/preview", jsonStr)
 	}
 	return p.Print(result)
 }
@@ -389,8 +382,7 @@ func runCreateManyToOne(cmd *cobra.Command, args []string) error {
 	}
 	result, httpResp, err := c.FlashSwapAPI.CreateFlashSwapMultiCurrencyManyToOneOrder(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/flash_swap/multi_currency/many_to_one", jsonStr))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/flash_swap/multi_currency/many_to_one", jsonStr)
 	}
 	return p.Print(result)
 }
@@ -412,8 +404,7 @@ func runPreviewOneToMany(cmd *cobra.Command, args []string) error {
 	}
 	result, httpResp, err := c.FlashSwapAPI.PreviewFlashSwapMultiCurrencyOneToManyOrder(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/flash_swap/multi_currency/one_to_many/preview", jsonStr))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/flash_swap/multi_currency/one_to_many/preview", jsonStr)
 	}
 	return p.Print(result)
 }
@@ -435,8 +426,7 @@ func runCreateOneToMany(cmd *cobra.Command, args []string) error {
 	}
 	result, httpResp, err := c.FlashSwapAPI.CreateFlashSwapMultiCurrencyOneToManyOrder(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/flash_swap/multi_currency/one_to_many", jsonStr))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/flash_swap/multi_currency/one_to_many", jsonStr)
 	}
 	return p.Print(result)
 }

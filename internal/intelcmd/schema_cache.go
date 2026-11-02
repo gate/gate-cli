@@ -3,7 +3,7 @@ package intelcmd
 import "github.com/gate/gate-cli/internal/toolschema"
 
 // LoadToolSchemasFromCache loads cached tool summaries for backend, then runs mergeBaseline
-// on return (same defer order as legacy cmd/*/load*ToolSchemas) (CR-811).
+// on return (same defer order as legacy cmd/*/load*ToolSchemas) .
 func LoadToolSchemasFromCache(backend string, mergeBaseline func(out map[string]toolschema.ToolSummary)) map[string]toolschema.ToolSummary {
 	out := map[string]toolschema.ToolSummary{}
 	if mergeBaseline != nil {

@@ -7,7 +7,7 @@ import "sync"
 // Server-side tools/call validation remains authoritative at runtime.
 //
 // Keys, types, enum/default, and JSON Schema bounds (minimum/maximum/maxLength/maxItems, etc.)
-// mirror specs/mcp/news-tools-args-and-logic.json for flat-flag help text (incl. LLM-facing ranges); extend when upstream adds fields.
+// Public command behavior is documented by the bundled contracts and leaf help.
 var NewsBaselineInputSchemas = map[string]map[string]interface{}{
 	"news_feed_search_news": newsObj(map[string]interface{}{
 		"query":            newsStr("query; non-empty -> similarity mode (tickers not sent downstream)"),
@@ -140,7 +140,7 @@ var NewsBaselineInputSchemas = map[string]map[string]interface{}{
 		"sort_by":      newsStrEnum("sort_by; signal index; default recently_listed; ES 400 fallback chain", "recently_listed", "attention", "volume", "liquidity", "recently_listed", "probability_change", "volume_delta_today"),
 		"limit":        newsIntDefaultMinMax("limit; size=limit+1 for next_page_token", 20, 1, 100),
 		"page_token":   newsStr("page_token; base64 {sort_by, search_after}; sort_by mismatch -> invalid_param"),
-		"with_markets": newsBoolDefault("with_markets; attach dws_prediction_market_hf summaries", false),
+		"with_markets": newsBoolDefault("with_markets; attach market summaries", false),
 	}),
 	"news_prediction_get_event_signal": newsObj(map[string]interface{}{
 		"event_ref":                 newsEventRef("event_ref; venue:venue_event_id (first ':' splits; id may contain more colons)"),
@@ -163,7 +163,7 @@ func newsStringMaxLength(desc string, max int) map[string]interface{} {
 	}
 }
 
-// newsStrEnum builds a string field with enum (and optional default) for CLI flag usage; values follow specs/mcp/news-tools-args-and-logic.json.
+// Public command behavior is documented by the bundled contracts and leaf help.
 func newsStrEnum(desc, defaultVal string, enum ...string) map[string]interface{} {
 	ev := make([]interface{}, len(enum))
 	for i, s := range enum {

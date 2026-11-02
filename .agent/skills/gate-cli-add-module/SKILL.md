@@ -57,7 +57,7 @@ go build -o gate-cli . # verify existing code still compiles after upgrade
 
 ## Step 2 — Create Feature Branch
 
-Load `git-branch-flow` skill, then:
+Verify the repository remote and its default branch, then use a dedicated feature branch:
 
 ```bash
 git checkout main && git pull
@@ -112,13 +112,13 @@ var Cmd = &cobra.Command{
 All modules follow a strict three-level hierarchy (matching spot/futures/tradfi):
 
 ```
-gate-cli <module> <group> <action>
+gate-cli cex <module> <group> <action>
 # e.g.:
-gate-cli options market tickers
-gate-cli options order list
-gate-cli options position get
-gate-cli delivery account book
-gate-cli wallet balance total
+gate-cli cex options market tickers
+gate-cli cex options order list
+gate-cli cex options position get
+gate-cli cex delivery account book
+gate-cli cex wallet balance total
 ```
 
 **Never** add leaf commands directly under the module root. Always use a group.

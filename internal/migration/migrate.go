@@ -251,7 +251,7 @@ func atomicWritePreservePerm(path string, data []byte) error {
 		return err
 	}
 	// On Unix this is atomic within the same filesystem; on Windows, os.Rename may refuse
-	// if the target exists—callers should ensure path is the intended final name (CR-1011).
+	// if the target exists—callers should ensure path is the intended final name .
 	if err := os.Rename(tmp, path); err != nil {
 		return err
 	}

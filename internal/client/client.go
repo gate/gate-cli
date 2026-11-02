@@ -2,9 +2,16 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
+	"time"
+
+	"github.com/gate/gate-cli/internal/exitcode"
+	"github.com/gate/gate-cli/internal/oauth2"
+	"github.com/gate/gate-cli/internal/operations"
 
 	gateapi "github.com/gate/gateapi-go/v7"
 
@@ -18,7 +25,8 @@ import (
 type Client struct {
 	SpotAPI                *gateapi.SpotApiService
 	FuturesAPI             *gateapi.FuturesApiService
-	TradFiAPI              *gateapi.TradFiApiService
+	TradFiAPI              *gateapi.CFDApiService
+	StockAPI               *gateapi.StockApiService
 	AlphaAPI               *gateapi.AlphaApiService
 	AccountAPI             *gateapi.AccountApiService
 	WalletAPI              *gateapi.WalletApiService
@@ -27,7 +35,6 @@ type Client struct {
 	MarginAPI              *gateapi.MarginApiService
 	MarginUniAPI           *gateapi.MarginUniApiService
 	UnifiedAPI             *gateapi.UnifiedApiService
-	SubAccountAPI          *gateapi.SubAccountApiService
 	EarnAPI                *gateapi.EarnApiService
 	EarnUniAPI             *gateapi.EarnUniApiService
 	FlashSwapAPI           *gateapi.FlashSwapApiService
@@ -38,13 +45,14 @@ type Client struct {
 	WithdrawalAPI          *gateapi.WithdrawalApiService
 	ActivityAPI            *gateapi.ActivityApiService
 	CouponAPI              *gateapi.CouponApiService
-	LaunchAPI              *gateapi.LaunchApiService
 	SquareAPI              *gateapi.SquareApiService
 	WelfareAPI             *gateapi.WelfareApiService
 	AssetswapAPI           *gateapi.AssetswapApiService
 	BotAPI                 *gateapi.BotApiService
 	ctx                    context.Context
 	auth                   bool
+	oauthAvailable         bool
+	resource               string
 	userAgent              string
 	defaultHeaders         map[string]string
 
@@ -55,6 +63,24 @@ type Client struct {
 // New creates a Gate API client from the resolved config.
 // cmdPath is the slash-separated command path (e.g. "spot/order/create").
 func New(cfg *config.Config, cmdPath string) (*Client, error) {
+	return NewWithContext(context.Background(), cfg, cmdPath)
+}
+
+// NewWithContext 保留统一SDK构造入口，命令取消直接传给每个API调用。
+func NewWithContext(ctx context.Context, cfg *config.Config, cmdPath string) (*Client, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	base := cfg.BaseURL
+	if base == "" {
+		base = "https://api.gateio.ws"
+	}
+	resource, err := oauth2.APIResource(base)
+	if err != nil {
+		return nil, err
+	}
+	hmac := cfg.APIKey != "" && cfg.APISecret != ""
+	available := cfg.OAuth2.Token != nil || len(cfg.OAuth2.Tokens) > 0
 	gateCfg := gateapi.NewConfiguration()
 
 	sdkUA := gateCfg.UserAgent
@@ -74,14 +100,18 @@ func New(cfg *config.Config, cmdPath string) (*Client, error) {
 		gateCfg.Key = cfg.APIKey
 		gateCfg.Secret = cfg.APISecret
 	}
-	gateCfg.Debug = cfg.Debug
+	// SDK Debug会Dump完整认证头/请求体；集中到安全transport只输出固定摘要。
+	gateCfg.Debug = false
+	gateCfg.BasePath = resource
+	gateCfg.HTTPClient = &http.Client{Timeout: 30 * time.Second, Transport: &apiTransport{resource: resource, hmac: hmac, oauth: available, debug: cfg.Debug, base: sharedAPITransport}, CheckRedirect: apiRedirect}
 
 	apiClient := gateapi.NewAPIClient(gateCfg)
 
 	return &Client{
 		SpotAPI:                apiClient.SpotApi,
 		FuturesAPI:             apiClient.FuturesApi,
-		TradFiAPI:              apiClient.TradFiApi,
+		TradFiAPI:              apiClient.CFDApi,
+		StockAPI:               apiClient.StockApi,
 		AlphaAPI:               apiClient.AlphaApi,
 		AccountAPI:             apiClient.AccountApi,
 		WalletAPI:              apiClient.WalletApi,
@@ -90,7 +120,6 @@ func New(cfg *config.Config, cmdPath string) (*Client, error) {
 		MarginAPI:              apiClient.MarginApi,
 		MarginUniAPI:           apiClient.MarginUniApi,
 		UnifiedAPI:             apiClient.UnifiedApi,
-		SubAccountAPI:          apiClient.SubAccountApi,
 		EarnAPI:                apiClient.EarnApi,
 		EarnUniAPI:             apiClient.EarnUniApi,
 		FlashSwapAPI:           apiClient.FlashSwapApi,
@@ -101,16 +130,16 @@ func New(cfg *config.Config, cmdPath string) (*Client, error) {
 		WithdrawalAPI:          apiClient.WithdrawalApi,
 		ActivityAPI:            apiClient.ActivityApi,
 		CouponAPI:              apiClient.CouponApi,
-		LaunchAPI:              apiClient.LaunchApi,
 		SquareAPI:              apiClient.SquareApi,
 		WelfareAPI:             apiClient.WelfareApi,
 		AssetswapAPI:           apiClient.AssetswapApi,
 		BotAPI:                 apiClient.BotApi,
-		ctx:                    context.Background(),
-		auth:                   cfg.APIKey != "" && cfg.APISecret != "",
-		userAgent:              gateCfg.UserAgent,
-		defaultHeaders:         gateCfg.DefaultHeader,
-		dualCache:              make(map[string]bool),
+		ctx:                    ctx,
+		oauthAvailable:         available, resource: resource,
+		auth:           cfg.APIKey != "" && cfg.APISecret != "",
+		userAgent:      gateCfg.UserAgent,
+		defaultHeaders: gateCfg.DefaultHeader,
+		dualCache:      make(map[string]bool),
 	}, nil
 }
 
@@ -136,28 +165,38 @@ func (c *Client) DefaultHeader(key string) string {
 
 // RequireAuth returns an error if the client has no API credentials.
 func (c *Client) RequireAuth() error {
-	if !c.auth {
-		return fmt.Errorf("API key and secret required — set GATE_API_KEY/GATE_API_SECRET or run: gate-cli config init")
+	if c.auth {
+		return nil
 	}
-	return nil
+	if c.oauthAvailable {
+		token, err := oauth2.LoadToken()
+		if err != nil {
+			return err
+		}
+		if token != nil && token.AccessToken != "" && token.Resource == c.resource && oauth2.NormalizeDiscoveryURL(token.DiscoveryURL) == oauth2.CurrentDiscoveryURL() {
+			return nil
+		}
+	}
+	return exitcode.New(4, fmt.Errorf("OAuth2 authorization or API key required — run: gate-cli cex auth login; configure API key only if needed"))
 }
 
-// IsDualMode returns true when the futures account uses dual-position (hedge) mode
-// for the given settle currency. The result is cached after the first successful call.
-func (c *Client) IsDualMode(settle string) bool {
+// IsDualMode 返回已确认的仓位模式；查询失败必须传播，不能把未知状态当成单向模式。
+// 仅缓存成功结果，锁只保护进程内快照，不跨SDK网络请求持有。
+func (c *Client) IsDualMode(settle string) (bool, error) {
 	c.dualMu.Lock()
-	defer c.dualMu.Unlock()
-
-	if v, ok := c.dualCache[settle]; ok {
-		return v
+	value, ok := c.dualCache[settle]
+	c.dualMu.Unlock()
+	if ok {
+		return value, nil
 	}
-
-	acc, _, err := c.FuturesAPI.ListFuturesAccounts(c.ctx, settle)
+	acc, response, err := c.FuturesAPI.ListFuturesAccounts(c.ctx, settle)
 	if err != nil {
-		return false // assume single mode on error
+		return false, CommandError(err, response, "GET", "/api/v4/futures/"+settle+"/accounts", "")
 	}
+	c.dualMu.Lock()
 	c.dualCache[settle] = acc.InDualMode
-	return acc.InDualMode
+	c.dualMu.Unlock()
+	return acc.InDualMode, nil
 }
 
 // GetFuturesPosition returns open position(s) for a contract.
@@ -166,7 +205,11 @@ func (c *Client) IsDualMode(settle string) bool {
 // In dual mode the slice has up to two elements (long side, short side);
 // positions with size "0" are included to preserve the full dual-mode snapshot.
 func (c *Client) GetFuturesPosition(settle, contract string) ([]gateapi.Position, *http.Response, error) {
-	if c.IsDualMode(settle) {
+	isDual, err := c.IsDualMode(settle)
+	if err != nil {
+		return nil, nil, err
+	}
+	if isDual {
 		return c.FuturesAPI.GetDualModePosition(c.ctx, settle, contract)
 	}
 	pos, resp, err := c.FuturesAPI.GetPosition(c.ctx, settle, contract)
@@ -180,7 +223,11 @@ func (c *Client) GetFuturesPosition(settle, contract string) ([]gateapi.Position
 // In dual mode uses UpdateDualModePositionLeverage (returns []Position).
 // In single mode uses UpdatePositionLeverage (returns Position, wrapped in a slice).
 func (c *Client) UpdateFuturesPositionLeverage(settle, contract, leverage string, opts *gateapi.UpdatePositionLeverageOpts) ([]gateapi.Position, *http.Response, error) {
-	if c.IsDualMode(settle) {
+	isDual, err := c.IsDualMode(settle)
+	if err != nil {
+		return nil, nil, err
+	}
+	if isDual {
 		var dualOpts *gateapi.UpdateDualModePositionLeverageOpts
 		if opts != nil {
 			dualOpts = &gateapi.UpdateDualModePositionLeverageOpts{
@@ -199,10 +246,24 @@ func (c *Client) UpdateFuturesPositionLeverage(settle, contract, leverage string
 // ParseGateError converts a Gate SDK error + HTTP response into a GateError.
 // It extracts: status code, Gate label/message, x-gate-trace-id header, and request info.
 func ParseGateError(err error, httpResp *http.Response, method, url, body string) *output.GateError {
+	// SDK errors have value receivers; a typed nil pointer must not reach Error().
+	switch e := err.(type) {
+	case *gateapi.GateAPIError:
+		if e == nil {
+			err = nil
+		}
+	case *gateapi.GenericOpenAPIError:
+		if e == nil {
+			err = nil
+		}
+	}
 	gateErr := &output.GateError{
 		Status:  500,
-		Message: err.Error(),
+		Message: "unknown API error",
 		Request: &output.RequestInfo{Method: method, URL: url, Body: body},
+	}
+	if err != nil {
+		gateErr.Message = err.Error()
 	}
 
 	if httpResp != nil {
@@ -211,16 +272,114 @@ func ParseGateError(err error, httpResp *http.Response, method, url, body string
 	}
 
 	// GateAPIError carries structured label + message from Gate standard error format.
-	if apiErr, ok := err.(gateapi.GateAPIError); ok {
+	var apiErr gateapi.GateAPIError
+	var apiPtr *gateapi.GateAPIError
+	if errors.As(err, &apiErr) || (errors.As(err, &apiPtr) && apiPtr != nil) {
+		if apiPtr != nil {
+			apiErr = *apiPtr
+		}
 		gateErr.Label = apiErr.Label
 		gateErr.Message = apiErr.GetMessage()
 		return gateErr
 	}
 
 	// GenericOpenAPIError: HTTP-level error without Gate structure.
-	if genErr, ok := err.(gateapi.GenericOpenAPIError); ok {
-		gateErr.Message = string(genErr.Body())
+	var genErr gateapi.GenericOpenAPIError
+	var genPtr *gateapi.GenericOpenAPIError
+	if errors.As(err, &genErr) || (errors.As(err, &genPtr) && genPtr != nil) {
+		if genPtr != nil {
+			genErr = *genPtr
+		}
+		if httpResp != nil && httpResp.StatusCode >= 200 && httpResp.StatusCode < 300 {
+			// Some endpoints return a business rejection with HTTP 200. The SDK
+			// retains its body on decode failure; recover only the error contract.
+			if label, message, ok := decodeBusinessError(genErr.Body()); ok {
+				gateErr.Label, gateErr.Message = label, message
+				return gateErr
+			}
+			if httpResp.StatusCode == http.StatusResetContent {
+				// Only SDK 176's declared detail error gets this presentation;
+				// unrelated operations retain their existing decoding failures.
+				op, lookupErr := operations.Lookup(method, url)
+				if lookupErr == nil && op != nil && op.OperationID == "getPriceTriggeredOrder" {
+					// Generic SDK errors may embed raw bodies; do not expose them.
+					gateErr.Label = "API_ERROR"
+					gateErr.Message = "API returned an unrecognized error response"
+					return gateErr
+				}
+			}
+			// A successful HTTP status can still contain an incompatible SDK DTO.
+			// Keep the decoding cause; replacing it with the body hides the failure
+			// and can dump an entire account response into stderr.
+			gateErr.Label = "INVALID_RESPONSE"
+			gateErr.Message = "cannot decode API response: " + genErr.Error()
+		} else {
+			gateErr.Message = string(genErr.Body())
+		}
 	}
 
 	return gateErr
+}
+
+// CommandError 保留Gate协议错误并统一失败退出码；新股票和本期CFD路径复用此入口。
+func CommandError(err error, response *http.Response, method, path, body string) error {
+	return commandError(err, response, &output.RequestInfo{Method: method, URL: path, Body: body})
+}
+
+// A missing diagnostic request is distinct from an invented GET/POST. The old
+// public entry always supplies its original metadata and retains its behavior.
+func commandError(err error, response *http.Response, request *output.RequestInfo) error {
+	// 多步骤调用已在真正失败的边界构造错误；不得覆盖其状态、退出码和请求位置，
+	// 更不能把模式查询失败误标为后续交易写入结果未知。
+	var existing *output.GateError
+	if errors.As(err, &existing) {
+		return err
+	}
+	method, path, body := "", "", ""
+	if request != nil {
+		method, path, body = request.Method, request.URL, request.Body
+	}
+	detail := ParseGateError(err, response, method, path, body)
+	detail.Request = request
+	code := 1
+	var coded *exitcode.Error
+	if errors.As(err, &coded) {
+		code = coded.Code
+		if code == 4 {
+			detail.Status = 401
+		}
+	}
+	var expired *oauth2.TokenExpiredError
+	if errors.As(err, &expired) {
+		detail.Status = 401
+		code = 4
+	}
+	if detail.Status == 401 || detail.Status == 403 {
+		code = 4
+	}
+	// 权限失败的恢复建议区分CEX与Intel；不因401/403自动改认证或重放业务请求。
+	if detail.Status == 401 {
+		detail.SuggestedNextAction = "stop retrying; run gate-cli cex auth login --force, or verify the configured API key"
+	}
+	if detail.Status == 403 {
+		detail.SuggestedNextAction = "stop retrying; verify granted scopes and account/API key permissions"
+	}
+	// 已收到写响应但无法取得可用结果时，服务端可能已提交；先对账/查询，不直接补发。
+	if request != nil && method != "GET" && method != "HEAD" && response != nil && ((response.StatusCode >= 200 && response.StatusCode < 300) || response.StatusCode >= 500) && !strings.Contains(detail.Message, "outcome unknown") {
+		detail.Message = "write outcome unknown; reconcile before submitting again: " + detail.Message
+		detail.SuggestedNextAction = "query the original order or business reference before submitting any further write"
+	}
+	if request == nil {
+		// Preserve upstream facts and auth exit codes even if local catalog
+		// diagnostics fail. Unknown operation metadata must never invite replay.
+		detail.ErrorType = "UNKNOWN"
+		if detail.Status == 401 {
+			detail.ErrorType = "AUTH_ERROR"
+		}
+		if detail.Status == 403 {
+			detail.ErrorType = "PERMISSION_DENIED"
+		}
+		detail.SuggestedNextAction = "operation metadata unavailable; verify the CLI installation and original error; do not resubmit writes automatically"
+	}
+	return exitcode.New(code, detail)
 }

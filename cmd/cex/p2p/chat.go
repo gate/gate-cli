@@ -81,8 +81,8 @@ func runChatList(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.P2pAPI.P2pMerchantChatGetChatsList(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/p2p/merchant/chat/get_chats_list", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "POST", "/api/v4/p2p/merchant/chat/get_chats_list", "")
 	}
 	return p.Print(result)
 }
@@ -108,8 +108,7 @@ func runChatSend(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.P2pAPI.P2pMerchantChatSendChatMessage(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/p2p/merchant/chat/send_chat_message", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/p2p/merchant/chat/send_chat_message", "")
 	}
 	return p.Print(result)
 }
@@ -132,8 +131,7 @@ func runChatUpload(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.P2pAPI.P2pMerchantChatUploadChatFile(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/p2p/merchant/chat/upload_chat_file", jsonStr))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/p2p/merchant/chat/upload_chat_file", jsonStr)
 	}
 	return p.Print(result)
 }

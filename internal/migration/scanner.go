@@ -13,7 +13,7 @@ var gateMarkers = []string{
 	"gate-news",
 }
 
-// gateTokenHints derives JSON/string hints from gateMarkers (CR-832).
+// gateTokenHints derives JSON/string hints from gateMarkers .
 var gateTokenHints = buildGateTokenHints(gateMarkers)
 
 func buildGateTokenHints(markers []string) []string {
@@ -38,7 +38,7 @@ type ProviderScan struct {
 	EntriesFound int      `json:"entries_found"`
 	Entries      []Entry  `json:"entries,omitempty"`
 	Error        string   `json:"error,omitempty"`
-	// Warnings are non-fatal notes (e.g. symlink followed within home; CR-1009).
+	// Warnings are non-fatal notes (e.g. symlink followed within home; review).
 	Warnings []string `json:"warnings,omitempty"`
 }
 
@@ -107,7 +107,7 @@ func (s *Scanner) Scan(providerIDs []string) []ProviderScan {
 }
 
 // subpathWithinHome reports whether target is under home. Both paths are cleaned and
-// EvalSymlinks so macOS /var vs /private/var does not falsely reject valid configs (CR-1009).
+// EvalSymlinks so macOS /var vs /private/var does not falsely reject valid configs .
 func subpathWithinHome(home, target string) bool {
 	homeRes, err := filepath.EvalSymlinks(home)
 	if err != nil {
@@ -207,9 +207,9 @@ func (s *Scanner) scanProvider(providerID string, paths []string) ProviderScan {
 	return result
 }
 
-// containsGateTokenLegacy is the substring / hint path for non-JSON or invalid JSON files (CR-207).
+// containsGateTokenLegacy is the substring / hint path for non-JSON or invalid JSON files .
 // legacyTextLower must be strings.ToLower(rawContent); substring matches can false-positive in
-// comments/URLs vs structured JSON (CR-411) — prefer valid JSON configs when possible.
+// comments/URLs vs structured JSON  — prefer valid JSON configs when possible.
 func containsGateTokenLegacy(legacyTextLower, marker string) bool {
 	if strings.Contains(legacyTextLower, `"`+marker+`"`) {
 		return true
@@ -223,7 +223,7 @@ func containsGateTokenLegacy(legacyTextLower, marker string) bool {
 }
 
 // containsGateToken reports whether rawContent references marker.
-// legacyTextLower should be strings.ToLower(rawContent); ignored when rawContent is valid JSON (CR-207).
+// legacyTextLower should be strings.ToLower(rawContent); ignored when rawContent is valid JSON .
 // Kept for unit tests; scanProvider uses the same JSON-once logic inline.
 func containsGateToken(legacyTextLower, rawContent, marker string) bool {
 	var decoded interface{}

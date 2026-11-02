@@ -25,7 +25,7 @@ import (
 const sessionHeader = "MCP-Session-Id"
 const defaultMaxResponseBytes = 16 << 20 // 16 MiB
 
-// errIntelHTTPBodyTooLarge is wrapped into size-limit errors so callers can use errors.Is (CR-1013).
+// errIntelHTTPBodyTooLarge is wrapped into size-limit errors so callers can use errors.Is .
 var errIntelHTTPBodyTooLarge = errors.New("intel HTTP response body exceeded configured read limit")
 
 var (
@@ -40,7 +40,7 @@ var (
 	}
 )
 
-// redactMaxDepth caps recursion for debug redaction (CR-506: trie/substring overhaul deferred as non-hot-path).
+// redactMaxDepth caps recursion for debug redaction (review: trie/substring overhaul deferred as non-hot-path).
 const redactMaxDepth = 16
 
 // gateCLIProductHeader aligns MCP HTTP requests with REST client defaults
@@ -144,7 +144,7 @@ type Client struct {
 	injectDefaultGateCliName bool
 	userAgent                string
 	errOut                   io.Writer
-	diagMu                   sync.Mutex // serializes transport diag lines to errOut (CR-410)
+	diagMu                   sync.Mutex // serializes transport diag lines to errOut
 
 	sessionID string
 	idSeq     uint64
@@ -159,7 +159,7 @@ type Client struct {
 	initializing   bool
 	initErr        error
 	// initWait is an unbuffered "done" channel for the in-flight initialize round; it is
-	// make+closed under mu so waiters block until the initializer finishes (CR-412 / CR-301).
+	// make+closed under mu so waiters block until the initializer finishes .
 	initWait chan struct{}
 
 	listCacheTTLFull  time.Duration
@@ -215,7 +215,7 @@ func (c *Client) writeDiagf(format string, a ...interface{}) {
 
 // readLimit is the maximum MCP JSON-RPC response body size in bytes. The client reads at
 // most limit+1 bytes (see call path) so peak allocation is bounded; tune with
-// GATE_INTEL_MAX_RESPONSE_BYTES (CR-208: intentional trade-off vs streaming decode).
+// GATE_INTEL_MAX_RESPONSE_BYTES (review: intentional trade-off vs streaming decode).
 func (c *Client) readLimit() int64 {
 	if c == nil || c.maxResponseBytes <= 0 {
 		return defaultMaxResponseBytes
@@ -514,7 +514,7 @@ func (c *Client) ensureInitialized(ctx context.Context) (err error) {
 }
 
 // callWithRetry performs at most one follow-up attempt after HTTP 401 when retryOnUnauthorized
-// is true (used for tools/list and initialize). There is no generic exponential backoff; CR-601
+// is true (used for tools/list and initialize). There is no generic exponential backoff; review
 // scope is "single session reset + one re-call" only.
 func (c *Client) callWithRetry(ctx context.Context, method string, params interface{}, retryOnUnauthorized bool) (*rpcResponse, *http.Response, string, error) {
 	resp, httpResp, reqID, err := c.call(ctx, method, params)
@@ -556,7 +556,7 @@ func (c *Client) call(ctx context.Context, method string, params interface{}) (*
 		c.logTransportFailure(method, reqID, 0, err)
 		return nil, nil, reqID, err
 	}
-	// Header order (CR-310): applyHeaders runs before Do; it sets Content-Type/Accept,
+	// Header order : applyHeaders runs before Do; it sets Content-Type/Accept,
 	// user extra_headers, optional Bearer, strips any client-supplied session header,
 	// then attaches the session id from client state, then optional X-Gate-Cli-Name.
 	c.applyHeaders(req)
@@ -680,7 +680,9 @@ func (c *Client) logTransportFailure(method, requestID string, elapsed time.Dura
 	sessionSet := c.sessionID != ""
 	c.mu.Unlock()
 	c.writeDiagf("%s backend=%s rpc_method=%s request_id=%s transport_error=%q elapsed_ms=%d session_set=%t\n",
-		tag, c.backend, method, requestID, err.Error(), elapsed.Milliseconds(), sessionSet)
+		// Diagnostics share the public error boundary: URL credentials must not
+		// reappear merely because a user enabled debug output.
+		tag, c.backend, method, requestID, sanitizeUserErrorMessage(err), elapsed.Milliseconds(), sessionSet)
 }
 
 func (c *Client) resetSession() {
@@ -697,7 +699,7 @@ func (c *Client) resetSession() {
 // when invoking it (sync.Mutex is not re-entrant); ListTools holds the lock only around
 // cache reads/writes and calls this helper on error paths without nesting.
 // Assigning nil (not [:0]) releases the backing array for GC once no callers retain slices
-// derived from the previous cache (CR-210).
+// derived from the previous cache .
 func (c *Client) invalidateListCache() {
 	c.mu.Lock()
 	defer c.mu.Unlock()

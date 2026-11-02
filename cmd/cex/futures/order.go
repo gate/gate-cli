@@ -3,13 +3,15 @@ package futures
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	"github.com/gate/gate-cli/internal/output"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var orderCmd = &cobra.Command{
@@ -57,6 +59,12 @@ func init() {
 	getCmd.MarkFlagRequired("id")
 	addSettleFlag(getCmd)
 
+	// A separate text lookup preserves the existing numeric get contract.
+	textGetCmd := &cobra.Command{Use: "get-by-text", Short: "Query a futures order by correlation text (server history limits apply)", RunE: runFuturesOrderGetByText, Annotations: map[string]string{"gate.effect": "read"}}
+	textGetCmd.Flags().String("text", "", "Order correlation text (required; not a permanent lookup key)")
+	_ = textGetCmd.MarkFlagRequired("text")
+	addSettleFlag(textGetCmd)
+	orderCmd.AddCommand(textGetCmd)
 	// list
 	listCmd := &cobra.Command{
 		Use:   "list",
@@ -118,6 +126,7 @@ func init() {
 	batchCreateCmd.Flags().String("orders-json", "", "JSON array of FuturesOrder objects (required)")
 	batchCreateCmd.MarkFlagRequired("orders-json")
 	addSettleFlag(batchCreateCmd)
+	batchCreateCmd.Annotations = map[string]string{"gate.effect": "write"}
 
 	batchCancelCmd := &cobra.Command{
 		Use:   "batch-cancel",
@@ -127,6 +136,7 @@ func init() {
 	batchCancelCmd.Flags().StringSlice("ids", nil, "Order IDs to cancel (required)")
 	batchCancelCmd.MarkFlagRequired("ids")
 	addSettleFlag(batchCancelCmd)
+	batchCancelCmd.Annotations = map[string]string{"gate.effect": "write"}
 
 	batchAmendCmd := &cobra.Command{
 		Use:   "batch-amend",
@@ -136,6 +146,7 @@ func init() {
 	batchAmendCmd.Flags().String("orders-json", "", "JSON array of BatchAmendOrderReq objects (required)")
 	batchAmendCmd.MarkFlagRequired("orders-json")
 	addSettleFlag(batchAmendCmd)
+	batchAmendCmd.Annotations = map[string]string{"gate.effect": "write"}
 
 	bboCmd := &cobra.Command{
 		Use:   "bbo",
@@ -179,6 +190,8 @@ func init() {
 }
 
 func addFuturesOrderFlags(cmd *cobra.Command) {
+	cmd.Flags().String("text", "", "Optional correlation text: t- prefix and at most 28 ASCII suffix bytes; not an idempotency guarantee")
+	cmd.Annotations = map[string]string{"gate.effect": "write"}
 	cmd.Flags().String("contract", "", "Contract name, e.g. BTC_USDT (required)")
 	cmd.Flags().String("size", "", "Number of contracts (required)")
 	cmd.Flags().String("price", "", "Limit price (omit for market order)")
@@ -256,6 +269,10 @@ func applyFuturesTif(order *gateapi.FuturesOrder, price string) {
 //	add    → queries current position; uses same direction as existing position
 //	remove → queries current position; uses opposite direction with reduce-only
 func runFuturesDirectionOrder(cmd *cobra.Command, direction string) error {
+	text, textErr := cmdutil.OrderText(cmd)
+	if textErr != nil {
+		return textErr
+	}
 	contract, _ := cmd.Flags().GetString("contract")
 	sizeStr, _ := cmd.Flags().GetString("size")
 	price, _ := cmd.Flags().GetString("price")
@@ -274,7 +291,11 @@ func runFuturesDirectionOrder(cmd *cobra.Command, direction string) error {
 
 	switch direction {
 	case "long":
-		// positive size — already set
+		// Keep the original quantity string/precision; a negative long would
+		// execute the opposite trade, rather than reject the conflicting intent.
+		if strings.HasPrefix(strings.TrimSpace(sizeStr), "-") {
+			return output.InvalidArgsError("--size cannot be negative for long")
+		}
 	case "short":
 		if len(sizeStr) > 0 && sizeStr[0] != '-' {
 			finalSize = "-" + sizeStr
@@ -283,17 +304,31 @@ func runFuturesDirectionOrder(cmd *cobra.Command, direction string) error {
 		// Query current position to determine the correct direction.
 		positions, httpResp, posErr := c.GetFuturesPosition(settle, contract)
 		if posErr != nil {
-			p.PrintError(client.ParseGateError(posErr, httpResp, "GET", "/api/v4/futures/"+settle+"/positions/"+contract, ""))
-			return nil
+			// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+			return client.CommandError(posErr, httpResp, "GET", "/api/v4/futures/"+settle+"/positions/"+contract, "")
 		}
 		isShort, posErr := positionIsShort(positions)
 		if posErr != nil {
 			return fmt.Errorf("cannot %s: %w", direction, posErr)
 		}
+		if direction == "add" && !isShort && strings.HasPrefix(strings.TrimSpace(sizeStr), "-") {
+			// Only enforce the established single-side intent. Selecting a side
+			// when both hedge positions exist is a separate, unchanged policy.
+			open := 0
+			for _, position := range positions {
+				if position.Size != "" && position.Size != "0" {
+					open++
+				}
+			}
+			if open == 1 {
+				return output.InvalidArgsError("--size would reduce or reverse the existing long position; use remove to reduce it")
+			}
+		}
 		finalSize, reduceOnly = applyDirectionSign(direction, sizeStr, isShort)
 	}
 
 	order := gateapi.FuturesOrder{
+		Text:       text,
 		Contract:   contract,
 		Size:       finalSize,
 		ReduceOnly: reduceOnly,
@@ -303,8 +338,7 @@ func runFuturesDirectionOrder(cmd *cobra.Command, direction string) error {
 	body, _ := json.Marshal(order)
 	result, httpResp, err := c.FuturesAPI.CreateFuturesOrder(c.Context(), settle, order, nil)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/orders", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/orders", string(body))
 	}
 	return p.Print(result)
 }
@@ -323,8 +357,17 @@ func runFuturesClose(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	isDual := c.IsDualMode(settle)
+	isDual, err := c.IsDualMode(settle)
+	if err != nil {
+		// 模式未知时停止交易，把原始查询错误交给统一入口输出给Agent。
+		return err
+	}
 	isFullClose := sizeStr == "0" || sizeStr == ""
+	// --side is relevant only in hedge mode. Preserve one-way close semantics
+	// and the existing default long, but never turn a typo into a different trade.
+	if isDual && side != "long" && side != "short" {
+		return output.InvalidArgsError("--side must be long or short in dual position mode")
+	}
 
 	order := gateapi.FuturesOrder{
 		Contract: contract,
@@ -362,8 +405,7 @@ func runFuturesClose(cmd *cobra.Command, args []string) error {
 		// Single mode partial close: query position to determine direction.
 		positions, httpResp2, posErr := c.GetFuturesPosition(settle, contract)
 		if posErr != nil {
-			p.PrintError(client.ParseGateError(posErr, httpResp2, "GET", "/api/v4/futures/"+settle+"/positions/"+contract, ""))
-			return nil
+			return client.CommandError(posErr, httpResp2, "GET", "/api/v4/futures/"+settle+"/positions/"+contract, "")
 		}
 		isShort, posErr := positionIsShort(positions)
 		if posErr != nil {
@@ -376,8 +418,7 @@ func runFuturesClose(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(order)
 	result, httpResp, err := c.FuturesAPI.CreateFuturesOrder(c.Context(), settle, order, nil)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/orders", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/orders", string(body))
 	}
 	return p.Print(result)
 }
@@ -396,8 +437,7 @@ func runFuturesOrderGet(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.GetFuturesOrder(c.Context(), settle, fmt.Sprintf("%d", id))
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", fmt.Sprintf("/api/v4/futures/%s/orders/%d", settle, id), ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", fmt.Sprintf("/api/v4/futures/%s/orders/%d", settle, id), "")
 	}
 	return p.Print(result)
 }
@@ -425,8 +465,7 @@ func runFuturesOrderList(cmd *cobra.Command, args []string) error {
 
 	orders, httpResp, err := c.FuturesAPI.ListFuturesOrders(c.Context(), settle, status, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/orders", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/orders", "")
 	}
 	if p.IsJSON() {
 		return p.Print(orders)
@@ -459,8 +498,7 @@ func runFuturesOrderCancel(cmd *cobra.Command, args []string) error {
 			Contract: optional.NewString(contract),
 		})
 		if err != nil {
-			p.PrintError(client.ParseGateError(err, httpResp, "DELETE", "/api/v4/futures/"+settle+"/orders", ""))
-			return nil
+			return client.CommandError(err, httpResp, "DELETE", "/api/v4/futures/"+settle+"/orders", "")
 		}
 		return p.Print(cancelled)
 	}
@@ -471,8 +509,7 @@ func runFuturesOrderCancel(cmd *cobra.Command, args []string) error {
 	}
 	result, httpResp, err := c.FuturesAPI.CancelFuturesOrder(c.Context(), settle, fmt.Sprintf("%d", id), nil)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "DELETE", fmt.Sprintf("/api/v4/futures/%s/orders/%d", settle, id), ""))
-		return nil
+		return client.CommandError(err, httpResp, "DELETE", fmt.Sprintf("/api/v4/futures/%s/orders/%d", settle, id), "")
 	}
 	return p.Print(result)
 }
@@ -500,8 +537,7 @@ func runFuturesMyTrades(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.GetMyTrades(c.Context(), settle, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/my_trades", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/my_trades", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -544,8 +580,7 @@ func runFuturesMyTradesTimerange(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.GetMyTradesWithTimeRange(c.Context(), settle, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/my_trades/timerange", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/my_trades/timerange", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -581,8 +616,7 @@ func runFuturesAmendOrder(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(amendment)
 	result, httpResp, err := c.FuturesAPI.AmendFuturesOrder(c.Context(), settle, fmt.Sprintf("%d", id), amendment, nil)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "PUT", fmt.Sprintf("/api/v4/futures/%s/orders/%d", settle, id), string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "PUT", fmt.Sprintf("/api/v4/futures/%s/orders/%d", settle, id), string(body))
 	}
 	return p.Print(result)
 }
@@ -603,12 +637,14 @@ func runFuturesBatchCreateOrders(cmd *cobra.Command, args []string) error {
 	if err := json.Unmarshal([]byte(ordersJSON), &orders); err != nil {
 		return fmt.Errorf("invalid --orders-json: %w", err)
 	}
+	if err := cmdutil.ValidateBatchJSONKeys(ordersJSON); err != nil {
+		return output.InvalidArgsError(err.Error())
+	}
 	result, httpResp, err := c.FuturesAPI.CreateBatchFuturesOrder(c.Context(), settle, orders, nil)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/batch_orders", ordersJSON))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/batch_orders", ordersJSON)
 	}
-	return p.Print(result)
+	return printFuturesBatchResult(p, result, httpResp, func(item gateapi.BatchFuturesOrder) bool { return item.Succeeded })
 }
 
 func runFuturesBatchCancelOrders(cmd *cobra.Command, args []string) error {
@@ -625,10 +661,9 @@ func runFuturesBatchCancelOrders(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.CancelBatchFutureOrders(c.Context(), settle, ids, nil)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/batch_cancel_orders", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/batch_cancel_orders", "")
 	}
-	return p.Print(result)
+	return printFuturesBatchResult(p, result, httpResp, func(item gateapi.FutureCancelOrderResult) bool { return item.Succeeded })
 }
 
 func runFuturesBatchAmendOrders(cmd *cobra.Command, args []string) error {
@@ -649,10 +684,9 @@ func runFuturesBatchAmendOrders(cmd *cobra.Command, args []string) error {
 	}
 	result, httpResp, err := c.FuturesAPI.AmendBatchFutureOrders(c.Context(), settle, items, nil)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/batch_amend_orders", ordersJSON))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/batch_amend_orders", ordersJSON)
 	}
-	return p.Print(result)
+	return printFuturesBatchResult(p, result, httpResp, func(item gateapi.BatchFuturesOrder) bool { return item.Succeeded })
 }
 
 func runFuturesBBOOrder(cmd *cobra.Command, args []string) error {
@@ -673,8 +707,7 @@ func runFuturesBBOOrder(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.FuturesAPI.CreateFuturesBBOOrder(c.Context(), settle, req, nil)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/bbo_order", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/bbo_order", string(body))
 	}
 	return p.Print(result)
 }
@@ -696,8 +729,7 @@ func runFuturesCountdownCancelAll(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.FuturesAPI.CountdownCancelAllFutures(c.Context(), settle, req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/countdown_cancel_all", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/countdown_cancel_all", string(body))
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -739,8 +771,7 @@ func runFuturesOrdersTimerange(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.GetOrdersWithTimeRange(c.Context(), settle, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/orders_timerange", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/orders_timerange", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -750,4 +781,29 @@ func runFuturesOrdersTimerange(cmd *cobra.Command, args []string) error {
 		rows[i] = []string{fmt.Sprintf("%d", o.Id), o.Contract, o.Size, o.Price, o.Tif, o.Status}
 	}
 	return p.Table([]string{"ID", "Contract", "Size", "Price", "TIF", "Status"}, rows)
+}
+
+// runFuturesOrderGetByText performs one read only; absence does not authorize a
+// resubmission. Numeric get and all existing cancel/amend paths remain unchanged.
+func runFuturesOrderGetByText(cmd *cobra.Command, _ []string) error {
+	text, err := cmdutil.OrderText(cmd)
+	if err != nil {
+		return err
+	}
+	if text == "" {
+		return fmt.Errorf("--text must be non-empty")
+	}
+	settle := cmdutil.GetSettle(cmd)
+	c, err := cmdutil.GetClient(cmd)
+	if err != nil {
+		return err
+	}
+	if err = c.RequireAuth(); err != nil {
+		return err
+	}
+	result, response, err := c.FuturesAPI.GetFuturesOrder(c.Context(), settle, text)
+	if err != nil {
+		return client.CommandError(err, response, "GET", "/api/v4/futures/"+settle+"/orders/"+text, "")
+	}
+	return cmdutil.GetPrinter(cmd).Print(result)
 }

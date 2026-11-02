@@ -7,9 +7,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var accountCmd = &cobra.Command{
@@ -78,8 +78,8 @@ func runFuturesAccountGet(cmd *cobra.Command, args []string) error {
 
 	account, httpResp, err := c.FuturesAPI.ListFuturesAccounts(c.Context(), settle)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/accounts", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/accounts", "")
 	}
 	if p.IsJSON() {
 		return p.Print(account)
@@ -121,8 +121,7 @@ func runFuturesAccountBook(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.ListFuturesAccountBook(c.Context(), settle, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/account_book", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/account_book", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -153,8 +152,7 @@ func runFuturesAccountFee(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.GetFuturesFee(c.Context(), settle, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/fee", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/fee", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -181,8 +179,7 @@ func runFuturesDualMode(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(map[string]bool{"dual_mode": enable})
 	result, httpResp, err := c.FuturesAPI.SetDualMode(c.Context(), settle, enable)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/dual_mode", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/dual_mode", string(body))
 	}
 	return p.Print(result)
 }
@@ -202,8 +199,7 @@ func runFuturesPositionMode(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(map[string]string{"position_mode": mode})
 	result, httpResp, err := c.FuturesAPI.SetPositionMode(c.Context(), settle, mode)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/position_mode", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/position_mode", string(body))
 	}
 	return p.Print(result)
 }

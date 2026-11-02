@@ -1,7 +1,6 @@
 package mcpspec
 
 import (
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,57 +25,9 @@ func repoRoot(t *testing.T) string {
 	}
 }
 
+// The tracked public contract is authoritative; local drafts cannot change it.
 func TestBundledMatchesSpecs(t *testing.T) {
-	t.Parallel()
-	root := repoRoot(t)
-	pairs := []struct {
-		spec, bundled string
-	}{
-		{
-			filepath.Join(root, "specs", "mcp", "info-mcp-tools-inputs-logic.json"),
-			filepath.Join(root, "internal", "mcpspec", "bundled", "info-mcp-tools-inputs-logic.json"),
-		},
-		{
-			filepath.Join(root, "specs", "mcp", "news-tools-args-and-logic.json"),
-			filepath.Join(root, "internal", "mcpspec", "bundled", "news-tools-args-and-logic.json"),
-		},
-	}
-	for _, p := range pairs {
-		// specs/ is gitignored, so this parity check only runs where the
-		// author keeps the source spec. CI has the bundled copy only and
-		// must skip rather than Fatal.
-		a, err := os.ReadFile(p.spec)
-		if err != nil {
-			if os.IsNotExist(err) {
-				t.Skipf("skip parity: spec %s not present (expected in CI)", p.spec)
-			}
-			t.Fatalf("read spec %s: %v", p.spec, err)
-		}
-		b, err := os.ReadFile(p.bundled)
-		if err != nil {
-			t.Fatalf("read bundled %s: %v", p.bundled, err)
-		}
-		if p.bundled == filepath.Join(root, "internal", "mcpspec", "bundled", "info-mcp-tools-inputs-logic.json") {
-			var specDoc, bundledDoc interface{}
-			if err := json.Unmarshal(a, &specDoc); err != nil {
-				t.Fatalf("parse spec %s: %v", p.spec, err)
-			}
-			if err := json.Unmarshal(b, &bundledDoc); err != nil {
-				t.Fatalf("parse bundled %s: %v", p.bundled, err)
-			}
-			ok, err := infoSpecEqualExcludingDescriptions(specDoc, bundledDoc)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if !ok {
-				t.Fatalf("bundled out of sync with local spec on logic/fields (descriptions are bundled-only); run scripts/patch-info-spec-descriptions.py — %s vs %s", p.spec, p.bundled)
-			}
-			continue
-		}
-		if string(a) != string(b) {
-			t.Fatalf("bundled out of sync with spec; cp specs/mcp/*.json internal/mcpspec/bundled/ — compare %s vs %s", p.spec, p.bundled)
-		}
-	}
+	assertPublicInputContract(t)
 }
 
 func TestBundledSocialInsightCoinSemantics(t *testing.T) {

@@ -7,9 +7,10 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	"github.com/gate/gate-cli/internal/output"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var trailCmd = &cobra.Command{
@@ -27,9 +28,11 @@ func init() {
 	createCmd.Flags().String("amount", "", "Trading quantity in contracts, positive=buy, negative=sell (required)")
 	createCmd.Flags().String("activation-price", "0", "Activation price (0 = trigger immediately)")
 	createCmd.Flags().String("price-offset", "", "Callback ratio or price distance, e.g. 0.1 or 0.1% (required)")
+	createCmd.Flags().Int32("price-type", 0, "Activation price reference: 1=latest, 2=index, 3=mark (required)")
 	createCmd.MarkFlagRequired("contract")
 	createCmd.MarkFlagRequired("amount")
 	createCmd.MarkFlagRequired("price-offset")
+	cmdutil.MustRequireFlags(createCmd, "price-type")
 	addSettleFlag(createCmd)
 
 	stopCmd := &cobra.Command{
@@ -95,6 +98,12 @@ func init() {
 }
 
 func runFuturesTrailCreate(cmd *cobra.Command, args []string) error {
+	// The API requires an explicit reference price; zero/missing must not
+	// silently change the caller's trading intent or reach the backend.
+	priceType, err := cmd.Flags().GetInt32("price-type")
+	if err != nil || !cmd.Flags().Changed("price-type") || priceType < 1 || priceType > 3 {
+		return output.InvalidArgsError("--price-type is required and must be 1 (latest), 2 (index), or 3 (mark)")
+	}
 	contract, _ := cmd.Flags().GetString("contract")
 	amount, _ := cmd.Flags().GetString("amount")
 	activationPrice, _ := cmd.Flags().GetString("activation-price")
@@ -114,12 +123,13 @@ func runFuturesTrailCreate(cmd *cobra.Command, args []string) error {
 		Amount:          amount,
 		ActivationPrice: activationPrice,
 		PriceOffset:     priceOffset,
+		PriceType:       priceType,
 	}
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.FuturesAPI.CreateTrailOrder(c.Context(), settle, req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/trail_orders", string(body)))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.TrailCommandError(err, httpResp, "createTrailOrder", settle, string(body))
 	}
 	return p.Print(result)
 }
@@ -144,8 +154,7 @@ func runFuturesTrailStop(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.FuturesAPI.StopTrailOrder(c.Context(), settle, req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "DELETE", "/api/v4/futures/"+settle+"/trail_orders", string(body)))
-		return nil
+		return client.TrailCommandError(err, httpResp, "stopTrailOrder", settle, string(body))
 	}
 	return p.Print(result)
 }
@@ -166,8 +175,7 @@ func runFuturesTrailStopAll(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.FuturesAPI.StopAllTrailOrders(c.Context(), settle, req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "DELETE", "/api/v4/futures/"+settle+"/trail_orders/all", string(body)))
-		return nil
+		return client.TrailCommandError(err, httpResp, "stopAllTrailOrders", settle, string(body))
 	}
 	return p.Print(result)
 }
@@ -199,15 +207,17 @@ func runFuturesTrailList(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.GetTrailOrders(c.Context(), settle, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/trail_orders", ""))
-		return nil
+		return client.TrailCommandError(err, httpResp, "getTrailOrders", settle, "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
 	}
-	rows := make([][]string, len(result.Orders))
-	for i, o := range result.Orders {
-		rows[i] = []string{fmt.Sprintf("%d", o.Id), o.Contract, o.Amount, o.ActivationPrice, o.PriceOffset, o.Status}
+	// The SDK owns the envelope and string IDs. Table output must preserve the
+	// exact identifier, including values above JavaScript's safe integer range.
+	orders := result.Data.Orders
+	rows := make([][]string, len(orders))
+	for i, o := range orders {
+		rows[i] = []string{o.Id, o.Contract, o.Amount, o.ActivationPrice, o.PriceOffset, o.Status}
 	}
 	return p.Table([]string{"ID", "Contract", "Amount", "Activation Price", "Offset", "Status"}, rows)
 }
@@ -226,8 +236,7 @@ func runFuturesTrailGet(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.GetTrailOrderDetail(c.Context(), settle, id)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", fmt.Sprintf("/api/v4/futures/%s/trail_orders/%d", settle, id), ""))
-		return nil
+		return client.TrailCommandError(err, httpResp, "getTrailOrderDetail", settle, "")
 	}
 	return p.Print(result)
 }
@@ -260,8 +269,7 @@ func runFuturesTrailUpdate(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.FuturesAPI.UpdateTrailOrder(c.Context(), settle, req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "PUT", "/api/v4/futures/"+settle+"/trail_orders", string(body)))
-		return nil
+		return client.TrailCommandError(err, httpResp, "updateTrailOrder", settle, string(body))
 	}
 	return p.Print(result)
 }
@@ -279,22 +287,24 @@ func runFuturesTrailLog(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	opts := &gateapi.GetTrailOrderChangeLogOpts{}
+	// The API documents page 1 as the default, but the service requires it on
+	// the wire. Keep pagination in the SDK instead of reconstructing responses.
+	opts := &gateapi.GetTrailOrderChangeLogOpts{PageNum: optional.NewInt32(1)}
 	if limit != 0 {
 		opts.PageSize = optional.NewInt32(limit)
 	}
 
 	result, httpResp, err := c.FuturesAPI.GetTrailOrderChangeLog(c.Context(), settle, id, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", fmt.Sprintf("/api/v4/futures/%s/trail_orders/%d/change_log", settle, id), ""))
-		return nil
+		return client.TrailCommandError(err, httpResp, "getTrailOrderChangeLog", settle, "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
 	}
-	rows := make([][]string, len(result.ChangeLog))
-	for i, r := range result.ChangeLog {
-		rows[i] = []string{fmt.Sprintf("%d", r.UpdatedAt), r.Amount, r.ActivationPrice, r.PriceOffset}
+	// SDK v178 owns the envelope and the quoted timestamp representation.
+	rows := make([][]string, len(result.Data.ChangeLog))
+	for i, r := range result.Data.ChangeLog {
+		rows[i] = []string{r.UpdatedAt, r.Amount, r.ActivationPrice, r.PriceOffset}
 	}
 	return p.Table([]string{"Updated At", "Amount", "Activation Price", "Offset"}, rows)
 }

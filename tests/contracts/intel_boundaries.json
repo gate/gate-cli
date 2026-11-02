@@ -1,0 +1,470 @@
+[
+  {
+    "name": "hot-limit-1",
+    "path": "news feed get-hot-topics",
+    "tool": "news_feed_get_hot_topics",
+    "arguments": {
+      "coin": "BTC",
+      "window": "4h",
+      "limit": 1
+    },
+    "invalid": true
+  },
+  {
+    "name": "hot-limit-2",
+    "path": "news feed get-hot-topics",
+    "tool": "news_feed_get_hot_topics",
+    "arguments": {
+      "coin": "BTC",
+      "window": "4h",
+      "limit": 2
+    },
+    "invalid": false
+  },
+  {
+    "name": "hot-limit-4",
+    "path": "news feed get-hot-topics",
+    "tool": "news_feed_get_hot_topics",
+    "arguments": {
+      "coin": "BTC",
+      "window": "4h",
+      "limit": 4
+    },
+    "invalid": false
+  },
+  {
+    "name": "hot-limit-5",
+    "path": "news feed get-hot-topics",
+    "tool": "news_feed_get_hot_topics",
+    "arguments": {
+      "coin": "BTC",
+      "window": "4h",
+      "limit": 5
+    },
+    "invalid": true
+  },
+  {
+    "name": "hot-empty-coin",
+    "path": "news feed get-hot-topics",
+    "tool": "news_feed_get_hot_topics",
+    "arguments": {
+      "coin": "   "
+    },
+    "invalid": true
+  },
+  {
+    "name": "hot-invalid-window",
+    "path": "news feed get-hot-topics",
+    "tool": "news_feed_get_hot_topics",
+    "arguments": {
+      "coin": "BTC",
+      "window": "24h"
+    },
+    "invalid": true
+  },
+  {
+    "name": "mention-valid-window",
+    "path": "news feed get-mention-burst",
+    "tool": "news_feed_get_mention_burst",
+    "arguments": {
+      "coin": "BTC",
+      "window": "24h"
+    },
+    "invalid": false
+  },
+  {
+    "name": "mention-wrong-window",
+    "path": "news feed get-mention-burst",
+    "tool": "news_feed_get_mention_burst",
+    "arguments": {
+      "coin": "BTC",
+      "window": "12h"
+    },
+    "invalid": true
+  },
+  {
+    "name": "mention-mixed-all",
+    "path": "news feed get-mention-burst",
+    "tool": "news_feed_get_mention_burst",
+    "arguments": {
+      "coin": "BTC",
+      "platforms": "all,twitter"
+    },
+    "invalid": true
+  },
+  {
+    "name": "report-ascii-20",
+    "path": "news events get-market-move-report",
+    "tool": "news_events_get_market_move_report",
+    "arguments": {
+      "symbol": "AAAAAAAAAAAAAAAAAAAA"
+    },
+    "invalid": false
+  },
+  {
+    "name": "report-ascii-21",
+    "path": "news events get-market-move-report",
+    "tool": "news_events_get_market_move_report",
+    "arguments": {
+      "symbol": "AAAAAAAAAAAAAAAAAAAAA"
+    },
+    "invalid": true
+  },
+  {
+    "name": "report-unicode-20",
+    "path": "news events get-market-move-report",
+    "tool": "news_events_get_market_move_report",
+    "arguments": {
+      "symbol": "币币币币币币币币币币币币币币币币币币币币"
+    },
+    "invalid": false
+  },
+  {
+    "name": "report-unicode-21",
+    "path": "news events get-market-move-report",
+    "tool": "news_events_get_market_move_report",
+    "arguments": {
+      "symbol": "币币币币币币币币币币币币币币币币币币币币币"
+    },
+    "invalid": true
+  },
+  {
+    "name": "report-empty-symbol",
+    "path": "news events get-market-move-report",
+    "tool": "news_events_get_market_move_report",
+    "arguments": {
+      "symbol": "   "
+    },
+    "invalid": true
+  },
+  {
+    "name": "report-forbidden-generation",
+    "path": "news events get-market-move-report",
+    "tool": "news_events_get_market_move_report",
+    "arguments": {
+      "symbol": "BTC",
+      "is_make_new": false
+    },
+    "invalid": true
+  },
+  {
+    "name": "report-limit--1",
+    "path": "news events list-market-move-reports",
+    "tool": "news_events_list_market_move_reports",
+    "arguments": {
+      "symbol": "BTC",
+      "start_time": "2026-11-01 00:00:00",
+      "end_time": "2026-11-02 00:00:00",
+      "limit": -1
+    },
+    "invalid": true
+  },
+  {
+    "name": "report-limit-0",
+    "path": "news events list-market-move-reports",
+    "tool": "news_events_list_market_move_reports",
+    "arguments": {
+      "symbol": "BTC",
+      "start_time": "2026-11-01 00:00:00",
+      "end_time": "2026-11-02 00:00:00",
+      "limit": 0
+    },
+    "invalid": false
+  },
+  {
+    "name": "report-limit-1",
+    "path": "news events list-market-move-reports",
+    "tool": "news_events_list_market_move_reports",
+    "arguments": {
+      "symbol": "BTC",
+      "start_time": "2026-11-01 00:00:00",
+      "end_time": "2026-11-02 00:00:00",
+      "limit": 1
+    },
+    "invalid": false
+  },
+  {
+    "name": "report-limit-100",
+    "path": "news events list-market-move-reports",
+    "tool": "news_events_list_market_move_reports",
+    "arguments": {
+      "symbol": "BTC",
+      "start_time": "2026-11-01 00:00:00",
+      "end_time": "2026-11-02 00:00:00",
+      "limit": 100
+    },
+    "invalid": false
+  },
+  {
+    "name": "report-limit-101",
+    "path": "news events list-market-move-reports",
+    "tool": "news_events_list_market_move_reports",
+    "arguments": {
+      "symbol": "BTC",
+      "start_time": "2026-11-01 00:00:00",
+      "end_time": "2026-11-02 00:00:00",
+      "limit": 101
+    },
+    "invalid": true
+  },
+  {
+    "name": "report-time-equal",
+    "path": "news events list-market-move-reports",
+    "tool": "news_events_list_market_move_reports",
+    "arguments": {
+      "symbol": "BTC",
+      "start_time": "2026-11-01 00:00:00",
+      "end_time": "2026-11-01 00:00:00"
+    },
+    "invalid": false
+  },
+  {
+    "name": "report-time-offset-valid",
+    "path": "news events list-market-move-reports",
+    "tool": "news_events_list_market_move_reports",
+    "arguments": {
+      "symbol": "BTC",
+      "start_time": "2026-11-01T08:00:00+08:00",
+      "end_time": "2026-11-01T01:00:00Z"
+    },
+    "invalid": false
+  },
+  {
+    "name": "report-time-offset-reversed",
+    "path": "news events list-market-move-reports",
+    "tool": "news_events_list_market_move_reports",
+    "arguments": {
+      "symbol": "BTC",
+      "start_time": "2026-11-01T01:00:00Z",
+      "end_time": "2026-11-01T08:00:00+08:00"
+    },
+    "invalid": true
+  },
+  {
+    "name": "report-time-invalid-leap-day",
+    "path": "news events list-market-move-reports",
+    "tool": "news_events_list_market_move_reports",
+    "arguments": {
+      "symbol": "BTC",
+      "start_time": "2026-02-29 00:00:00",
+      "end_time": "2026-03-01 00:00:00"
+    },
+    "invalid": true
+  },
+  {
+    "name": "report-time-valid-leap-day",
+    "path": "news events list-market-move-reports",
+    "tool": "news_events_list_market_move_reports",
+    "arguments": {
+      "symbol": "BTC",
+      "start_time": "2028-02-29 00:00:00",
+      "end_time": "2028-03-01 00:00:00"
+    },
+    "invalid": false
+  },
+  {
+    "name": "report-missing-end",
+    "path": "news events list-market-move-reports",
+    "tool": "news_events_list_market_move_reports",
+    "arguments": {
+      "symbol": "BTC",
+      "start_time": "2026-11-01 00:00:00"
+    },
+    "invalid": true
+  },
+  {
+    "name": "calendar-zero-dates",
+    "path": "info macro get-economic-calendar",
+    "tool": "info_macro_get_economic_calendar",
+    "arguments": {},
+    "invalid": false
+  },
+  {
+    "name": "calendar-start-only",
+    "path": "info macro get-economic-calendar",
+    "tool": "info_macro_get_economic_calendar",
+    "arguments": {
+      "start_date": "2026-11-01"
+    },
+    "invalid": false
+  },
+  {
+    "name": "calendar-end-only",
+    "path": "info macro get-economic-calendar",
+    "tool": "info_macro_get_economic_calendar",
+    "arguments": {
+      "end_date": "2026-11-01"
+    },
+    "invalid": false
+  },
+  {
+    "name": "calendar-reversed",
+    "path": "info macro get-economic-calendar",
+    "tool": "info_macro_get_economic_calendar",
+    "arguments": {
+      "start_date": "2026-11-02",
+      "end_date": "2026-11-01"
+    },
+    "invalid": true
+  },
+  {
+    "name": "indicator-limit-500",
+    "path": "info markettrend get-indicator-history",
+    "tool": "info_markettrend_get_indicator_history",
+    "arguments": {
+      "symbol": "BTC_USDT",
+      "indicators": [
+        "rsi"
+      ],
+      "timeframe": "1h",
+      "limit": 500
+    },
+    "invalid": false
+  },
+  {
+    "name": "indicator-limit-501",
+    "path": "info markettrend get-indicator-history",
+    "tool": "info_markettrend_get_indicator_history",
+    "arguments": {
+      "symbol": "BTC_USDT",
+      "indicators": [
+        "rsi"
+      ],
+      "timeframe": "1h",
+      "limit": 501
+    },
+    "invalid": true
+  },
+  {
+    "name": "batch-symbol-count-0",
+    "path": "info marketsnapshot batch-market-snapshot",
+    "tool": "info_marketsnapshot_batch_market_snapshot",
+    "arguments": {
+      "symbols": []
+    },
+    "invalid": true
+  },
+  {
+    "name": "batch-symbol-count-20",
+    "path": "info marketsnapshot batch-market-snapshot",
+    "tool": "info_marketsnapshot_batch_market_snapshot",
+    "arguments": {
+      "symbols": [
+        "SYNTH0_USDT",
+        "SYNTH1_USDT",
+        "SYNTH2_USDT",
+        "SYNTH3_USDT",
+        "SYNTH4_USDT",
+        "SYNTH5_USDT",
+        "SYNTH6_USDT",
+        "SYNTH7_USDT",
+        "SYNTH8_USDT",
+        "SYNTH9_USDT",
+        "SYNTH10_USDT",
+        "SYNTH11_USDT",
+        "SYNTH12_USDT",
+        "SYNTH13_USDT",
+        "SYNTH14_USDT",
+        "SYNTH15_USDT",
+        "SYNTH16_USDT",
+        "SYNTH17_USDT",
+        "SYNTH18_USDT",
+        "SYNTH19_USDT"
+      ]
+    },
+    "invalid": false
+  },
+  {
+    "name": "batch-symbol-count-21",
+    "path": "info marketsnapshot batch-market-snapshot",
+    "tool": "info_marketsnapshot_batch_market_snapshot",
+    "arguments": {
+      "symbols": [
+        "SYNTH0_USDT",
+        "SYNTH1_USDT",
+        "SYNTH2_USDT",
+        "SYNTH3_USDT",
+        "SYNTH4_USDT",
+        "SYNTH5_USDT",
+        "SYNTH6_USDT",
+        "SYNTH7_USDT",
+        "SYNTH8_USDT",
+        "SYNTH9_USDT",
+        "SYNTH10_USDT",
+        "SYNTH11_USDT",
+        "SYNTH12_USDT",
+        "SYNTH13_USDT",
+        "SYNTH14_USDT",
+        "SYNTH15_USDT",
+        "SYNTH16_USDT",
+        "SYNTH17_USDT",
+        "SYNTH18_USDT",
+        "SYNTH19_USDT",
+        "SYNTH20_USDT"
+      ]
+    },
+    "invalid": true
+  },
+  {
+    "name": "ranking-dependent-range-valid",
+    "path": "info coin get-coin-rankings",
+    "tool": "info_coin_get_coin_rankings",
+    "arguments": {
+      "ranking_type": "top_gainers",
+      "time_range": "24h"
+    },
+    "invalid": false
+  },
+  {
+    "name": "ranking-dependent-range-invalid",
+    "path": "info coin get-coin-rankings",
+    "tool": "info_coin_get_coin_rankings",
+    "arguments": {
+      "ranking_type": "popular",
+      "time_range": "24h"
+    },
+    "invalid": true
+  },
+  {
+    "name": "chain-staking-valid",
+    "path": "info platformmetrics get-chain-activity",
+    "tool": "info_platformmetrics_get_chain_activity",
+    "arguments": {
+      "metric_group": "staking",
+      "chain": "eth"
+    },
+    "invalid": false
+  },
+  {
+    "name": "chain-staking-wrong-chain",
+    "path": "info platformmetrics get-chain-activity",
+    "tool": "info_platformmetrics_get_chain_activity",
+    "arguments": {
+      "metric_group": "staking",
+      "chain": "btc"
+    },
+    "invalid": true
+  },
+  {
+    "name": "search-limit-100",
+    "path": "news feed search-news",
+    "tool": "news_feed_search_news",
+    "arguments": {
+      "query": "BTC",
+      "time_range": "24h",
+      "limit": 100
+    },
+    "invalid": false
+  },
+  {
+    "name": "search-limit-101",
+    "path": "news feed search-news",
+    "tool": "news_feed_search_news",
+    "arguments": {
+      "query": "BTC",
+      "time_range": "24h",
+      "limit": 101
+    },
+    "invalid": true
+  }
+]

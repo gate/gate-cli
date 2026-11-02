@@ -70,7 +70,7 @@ func LoadCache(backend string) ([]ToolSummary, bool, error) {
 
 // ForceRefreshEnabled reports whether Intel tool schema caches should be treated as stale
 // for this process. Non-empty `GATE_INTEL_REFRESH_SCHEMA` set to 1/true/yes enables refresh
-// (see README Intel MCP section; CR-833).
+// (see README Intel MCP section; review).
 func ForceRefreshEnabled() bool {
 	v := strings.TrimSpace(strings.ToLower(os.Getenv(forceRefreshEnv)))
 	if v == "1" || v == "true" || v == "yes" {
@@ -82,8 +82,8 @@ func ForceRefreshEnabled() bool {
 // IsBackendInvoked reports whether os.Args contains the given backend name as its own token.
 //
 // Deprecated: argv sniffing is brittle (flags, command order). Prefer checking the active
-// Cobra command. Kept for existing unit tests; do not use in new call sites. See
-// specs/open-items-and-dependencies.md (Intel / MCP) and specs/cli/cli-first-mcp-technical-implementation-plan.md.
+// Cobra command. Kept for existing unit tests; do not use in new call sites.
+
 func IsBackendInvoked(backend string) bool {
 	b := strings.TrimSpace(strings.ToLower(backend))
 	if b == "" {
@@ -125,7 +125,7 @@ func SaveCache(backend string, tools []ToolSummary) error {
 		return err
 	}
 	tmp := p + ".tmp"
-	// Always create the temp file with tight permissions; final mode comes from existing file or default 0o600 (CR-409).
+	// Always create the temp file with tight permissions; final mode comes from existing file or default 0o600 .
 	if err := os.WriteFile(tmp, raw, 0o600); err != nil {
 		return err
 	}

@@ -12,7 +12,7 @@ import (
 	"github.com/gate/gate-cli/internal/toolargs"
 )
 
-// PRD adversarial cases: wrong top-level, help crawl, wrong news path, oversized kline.
+// Adversarial cases: wrong top-level, help crawl, wrong news path, oversized kline.
 
 func TestAdversarialWrongTopLevelEarn(t *testing.T) {
 	t.Parallel()

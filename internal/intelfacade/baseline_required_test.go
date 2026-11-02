@@ -2,7 +2,7 @@ package intelfacade
 
 import "testing"
 
-// CR-830: drift in "required" vs "properties" breaks flag wiring at runtime; keep them aligned.
+// Review: drift in "required" vs "properties" breaks flag wiring at runtime; keep them aligned.
 func TestInfoBaselineRequiredFieldsAreProperties(t *testing.T) {
 	t.Parallel()
 	for tool, sch := range InfoBaselineInputSchemas {

@@ -3,12 +3,14 @@ package futures
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	"github.com/gate/gate-cli/internal/output"
 	gateapi "github.com/gate/gateapi-go/v7"
 )
 
@@ -40,9 +42,16 @@ func init() {
 	createCmd.Flags().Int32("price-type", 0, "Reference price type: 0=latest, 1=mark, 2=index")
 	createCmd.Flags().Int64("size", 0, "Order size (0 for full close) (required)")
 	createCmd.Flags().String("price", "", "Order price (0 for market) (required)")
-	createCmd.MarkFlagRequired("contract")
-	createCmd.MarkFlagRequired("trigger-price")
-	createCmd.MarkFlagRequired("price")
+	createCmd.Flags().String("tif", "", "Time in force: gtc or ioc; omitted by default (server default); market orders require ioc")
+	if err := createCmd.MarkFlagRequired("contract"); err != nil {
+		panic(err)
+	} // 该flag必须先声明，失败是注册错误。
+	if err := createCmd.MarkFlagRequired("trigger-price"); err != nil {
+		panic(err)
+	} // 该flag必须先声明，失败是注册错误。
+	if err := createCmd.MarkFlagRequired("price"); err != nil {
+		panic(err)
+	} // 该flag必须先声明，失败是注册错误。
 	addSettleFlag(createCmd)
 
 	cancelAllCmd := &cobra.Command{
@@ -59,7 +68,9 @@ func init() {
 		RunE:  runFuturesPriceTriggerGet,
 	}
 	getCmd.Flags().Int64("id", 0, "Order ID (required)")
-	getCmd.MarkFlagRequired("id")
+	if err := getCmd.MarkFlagRequired("id"); err != nil {
+		panic(err)
+	} // 该flag必须先声明，失败是注册错误。
 	addSettleFlag(getCmd)
 
 	cancelCmd := &cobra.Command{
@@ -68,7 +79,9 @@ func init() {
 		RunE:  runFuturesPriceTriggerCancel,
 	}
 	cancelCmd.Flags().Int64("id", 0, "Order ID (required)")
-	cancelCmd.MarkFlagRequired("id")
+	if err := cancelCmd.MarkFlagRequired("id"); err != nil {
+		panic(err)
+	} // 该flag必须先声明，失败是注册错误。
 	addSettleFlag(cancelCmd)
 
 	updateCmd := &cobra.Command{
@@ -76,11 +89,18 @@ func init() {
 		Short: "Update a price-triggered order",
 		RunE:  runFuturesPriceTriggerUpdate,
 	}
-	updateCmd.Flags().Int64("id", 0, "Order ID (required)")
+	updateCmd.Flags().String("id", "", "Path order ID (required)")
+	// SDK契约区分URL路径ID与body中待更新的触发单ID，不能自动互相代填。
+	updateCmd.Flags().Int64("body-order-id", 0, "Body trigger order ID (required)")
+	if err := updateCmd.MarkFlagRequired("body-order-id"); err != nil {
+		panic(err)
+	} // 该flag必须先声明，失败是注册错误。
 	updateCmd.Flags().Int64("size", 0, "New order size")
 	updateCmd.Flags().String("price", "", "New order price")
 	updateCmd.Flags().String("trigger-price", "", "New trigger price")
-	updateCmd.MarkFlagRequired("id")
+	if err := updateCmd.MarkFlagRequired("id"); err != nil {
+		panic(err)
+	} // 该flag必须先声明，失败是注册错误。
 	addSettleFlag(updateCmd)
 
 	priceTriggerCmd.AddCommand(listCmd, createCmd, cancelAllCmd, getCmd, cancelCmd, updateCmd)
@@ -115,8 +135,8 @@ func runFuturesPriceTriggerList(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.ListPriceTriggeredOrders(c.Context(), settle, status, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/price_orders", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/price_orders", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -136,6 +156,12 @@ func runFuturesPriceTriggerList(cmd *cobra.Command, args []string) error {
 }
 
 func runFuturesPriceTriggerCreate(cmd *cobra.Command, args []string) error {
+	// Only explicit new input is validated: omitted TIF must retain the old
+	// SDK omitempty wire and must not silently change the user's trade intent.
+	tif, _ := cmd.Flags().GetString("tif")
+	if cmd.Flags().Changed("tif") && tif != "gtc" && tif != "ioc" {
+		return output.InvalidArgsError("--tif must be gtc or ioc when explicitly provided")
+	}
 	contract, _ := cmd.Flags().GetString("contract")
 	triggerPrice, _ := cmd.Flags().GetString("trigger-price")
 	triggerRule, _ := cmd.Flags().GetInt32("trigger-rule")
@@ -157,6 +183,7 @@ func runFuturesPriceTriggerCreate(cmd *cobra.Command, args []string) error {
 			Contract: contract,
 			Size:     size,
 			Price:    price,
+			Tif:      tif,
 		},
 		Trigger: gateapi.FuturesPriceTrigger{
 			Price:     triggerPrice,
@@ -167,8 +194,7 @@ func runFuturesPriceTriggerCreate(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.FuturesAPI.CreatePriceTriggeredOrder(c.Context(), settle, req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/price_orders", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/price_orders", string(body))
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -198,8 +224,7 @@ func runFuturesPriceTriggerCancelAll(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.CancelPriceTriggeredOrderList(c.Context(), settle, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "DELETE", "/api/v4/futures/"+settle+"/price_orders", ""))
-		return nil
+		return client.CommandError(err, httpResp, "DELETE", "/api/v4/futures/"+settle+"/price_orders", "")
 	}
 	return p.Print(result)
 }
@@ -218,8 +243,7 @@ func runFuturesPriceTriggerGet(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.GetPriceTriggeredOrder(c.Context(), settle, id)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", fmt.Sprintf("/api/v4/futures/%s/price_orders/%d", settle, id), ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", fmt.Sprintf("/api/v4/futures/%s/price_orders/%d", settle, id), "")
 	}
 	return p.Print(result)
 }
@@ -238,14 +262,17 @@ func runFuturesPriceTriggerCancel(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.CancelPriceTriggeredOrder(c.Context(), settle, id)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "DELETE", fmt.Sprintf("/api/v4/futures/%s/price_orders/%d", settle, id), ""))
-		return nil
+		return client.CommandError(err, httpResp, "DELETE", fmt.Sprintf("/api/v4/futures/%s/price_orders/%d", settle, id), "")
 	}
 	return p.Print(result)
 }
 
 func runFuturesPriceTriggerUpdate(cmd *cobra.Command, args []string) error {
-	id, _ := cmd.Flags().GetInt64("id")
+	id, _ := cmd.Flags().GetString("id")
+	bodyID, _ := cmd.Flags().GetInt64("body-order-id")
+	if id == "" || strings.ContainsAny(id, "/%\\?#") || bodyID <= 0 {
+		return fmt.Errorf("path id and positive body-order-id are required")
+	}
 	size, _ := cmd.Flags().GetInt64("size")
 	price, _ := cmd.Flags().GetString("price")
 	triggerPrice, _ := cmd.Flags().GetString("trigger-price")
@@ -259,7 +286,7 @@ func runFuturesPriceTriggerUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	req := gateapi.FuturesUpdatePriceTriggeredOrder{}
+	req := gateapi.FuturesUpdatePriceTriggeredOrder{OrderId: bodyID}
 	if size != 0 {
 		req.Size = size
 	}
@@ -272,8 +299,7 @@ func runFuturesPriceTriggerUpdate(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.FuturesAPI.UpdatePriceTriggeredOrder(c.Context(), settle, id, req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "PUT", fmt.Sprintf("/api/v4/futures/%s/price_orders/%d", settle, id), string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "PUT", fmt.Sprintf("/api/v4/futures/%s/price_orders/amend/%s", settle, id), string(body))
 	}
 	if p.IsJSON() {
 		return p.Print(result)

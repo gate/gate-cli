@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var debitFeeCmd = &cobra.Command{
@@ -47,8 +47,8 @@ func runDebitFeeGet(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.AccountAPI.GetDebitFee(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/account/debit_fee", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/account/debit_fee", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -86,8 +86,7 @@ func runDebitFeeSet(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	httpResp, err := c.AccountAPI.SetDebitFee(c.Context(), req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/account/debit_fee", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/account/debit_fee", string(body))
 	}
 	return p.Table([]string{"Enabled"}, [][]string{{enabledStr}})
 }

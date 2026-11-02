@@ -1,0 +1,59 @@
+package oauth2
+
+import (
+	"strings"
+	"testing"
+	"time"
+)
+
+// TestRecoverySecondInterruptionContract 执行真实恢复逻辑；构建 overlay 在烧毁 RT 落盘后中断。
+// 下一次恢复只持有当前磁盘快照，必须能继续重新授权，也不能复活旧 RT。
+func TestRecoverySecondInterruptionContract(t *testing.T) {
+	_, cleanup := setupTestTokenDir(t)
+	defer cleanup()
+	old := &TokenData{ClientID: "synthetic", AccessToken: "synthetic-at", RefreshToken: "synthetic-rt", Resource: "https://api.gateio.ws/api/v4", ExpiresAt: time.Now().Add(-time.Hour)}
+	writeTestToken(t, old)
+	old, err := LoadToken()
+	if err != nil {
+		t.Fatal(err)
+	}
+	operation, err := BeginAuthOperation(t.Context(), "login", old)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := operation.Dispatch(t.Context(), nil); err != nil {
+		t.Fatal(err)
+	}
+	record, err := readOperation()
+	if err != nil {
+		t.Fatal(err)
+	}
+	record.PID = 99999999
+	if processAlive(record.PID) {
+		t.Fatal("synthetic dead PID is alive")
+	}
+	if err := writeOperation(record); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := BeginAuthOperation(t.Context(), "login", old); err == nil || !strings.Contains(err.Error(), "injected recovery interruption") {
+		t.Fatalf("fault did not reach recovery persistence window: %v", err)
+	}
+	burned, err := LoadToken()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if burned.RefreshToken != "" {
+		t.Fatal("RT was not durably burned before interruption")
+	}
+	pending, err := readOperation()
+	if err != nil || pending == nil || pending.Result != credentialDigest(burned) {
+		t.Fatalf("interrupted recovery lost write-ahead provenance: %v", err)
+	}
+	next, err := BeginAuthOperation(t.Context(), "login", burned)
+	if err != nil {
+		t.Fatalf("second recovery blocks fresh authorization: %v", err)
+	}
+	if err := next.Finish(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+}

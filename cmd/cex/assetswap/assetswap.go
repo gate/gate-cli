@@ -98,8 +98,8 @@ func runAssets(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.AssetswapAPI.ListAssetSwapAssets(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/asset-swap/asset/list", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/asset-swap/asset/list", "")
 	}
 	return p.Print(result)
 }
@@ -113,8 +113,7 @@ func runConfig(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.AssetswapAPI.GetAssetSwapConfig(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/asset-swap/config", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/asset-swap/config", "")
 	}
 	return p.Print(result)
 }
@@ -145,8 +144,7 @@ func runEvaluate(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.AssetswapAPI.EvaluateAssetSwap(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/asset-swap/evaluate", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/asset-swap/evaluate", "")
 	}
 	return p.Print(result)
 }
@@ -169,8 +167,7 @@ func runOrderCreate(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.AssetswapAPI.CreateAssetSwapOrderV1(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/asset-swap/order/v1", rawJSON))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/asset-swap/order/v1", rawJSON)
 	}
 	return p.Print(result)
 }
@@ -193,8 +190,7 @@ func runOrderPreview(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.AssetswapAPI.PreviewAssetSwapOrderV1(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/asset-swap/order/preview/v1", rawJSON))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/asset-swap/order/preview/v1", rawJSON)
 	}
 	return p.Print(result)
 }
@@ -241,8 +237,7 @@ func runOrderList(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.AssetswapAPI.ListAssetSwapOrdersV1(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/asset-swap/order/list/v1", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/asset-swap/order/list/v1", "")
 	}
 	return p.Print(result)
 }
@@ -260,8 +255,7 @@ func runOrderGet(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.AssetswapAPI.GetAssetSwapOrderV1(c.Context(), orderID)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/asset-swap/order/detail/v1/"+orderID, ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/asset-swap/order/detail/v1/"+orderID, "")
 	}
 	return p.Print(result)
 }

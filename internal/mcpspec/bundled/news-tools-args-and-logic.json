@@ -1,102 +1,222 @@
 {
   "version": "2026-07-13",
-  "source_of_truth": [
-    "internal/mcphost/toolnames.go",
-    "internal/mcphost/tools_news_feed.go",
-    "internal/mcphost/tools_social_insights.go",
-    "internal/mcphost/tools_event.go",
-    "internal/mcphost/tools_explain_market_move.go",
-    "internal/mcphost/tools_market_move_reports.go",
-    "internal/mcphost/tools_prediction.go",
-    "internal/mcphost/tools_placeholder.go",
-    "internal/event/types.go",
-    "internal/event/service.go",
-    "internal/event/opensearch.go",
-    "internal/explain/types.go",
-    "internal/explain/service.go",
-    "internal/tavily/client.go",
-    "internal/prediction/types.go",
-    "internal/prediction/search_events_types.go",
-    "internal/prediction/event_signal_types.go",
-    "internal/prediction/service.go",
-    "internal/prediction/opensearch.go",
-    "internal/prediction/orderbook.go",
-    "internal/prediction/orderbook_validate.go",
-    "internal/prediction/search_events.go",
-    "internal/prediction/search_events_validate.go",
-    "internal/prediction/search_events_query.go",
-    "internal/prediction/event_signal.go",
-    "internal/prediction/event_signal_validate.go",
-    "internal/prediction/event_signal_map.go",
-    "internal/prediction/event_signal_query.go",
-    "internal/prediction/search_events_map.go",
-    "internal/prediction/opensearch_fields.go",
-    "internal/prediction/market_lookup.go",
-    "pkg/errs/client.go",
-    "internal/mcphost/sdk.go"
-  ],
   "tools": [
     {
       "name": "news_feed_search_news",
       "category": "news_feed",
-      "description": "[Read] Search the platform news index for headlines, news items, and briefing-style result lists. Open-web research with synthesized answers and cited external pages -> web_search. Event catalog with event_id -> get_latest_events.",
+      "description": "[Read] Search the platform news collection for headlines, news items, and briefing-style result lists. Open-web research with synthesized answers and cited external pages -> web_search. Event catalog with event_id -> get_latest_events.",
       "input_rules": {
         "required_policy": "no strict required params",
         "params": [
-          { "name": "query", "type": "string", "required": false, "notes": "If non-empty, enters similarity mode; tickers are not sent downstream." },
-          { "name": "coin", "type": "string", "required": false, "notes": "Comma-separated tickers; only sent as downstream tickers when query is empty." },
-          { "name": "platform", "type": "string", "required": false, "notes": "Preferred source platform filter, higher priority than platform_type." },
-          { "name": "platform_type", "type": "string", "required": false, "notes": "Legacy platform mapping; ignored when platform exists; 'all' means omit." },
-          { "name": "lang", "type": "string", "required": false, "notes": "MCP local filter only, not sent downstream." },
-          { "name": "time_range", "type": "string", "required": false, "enum": ["1h", "24h", "7d", "30d"], "notes": "If present, overrides start_time/end_time. Unknown preset normalizes to 24h. If all time inputs empty, implicit last 7d." },
-          { "name": "start_time", "type": "string", "required": false, "notes": "ISO8601 or Unix sec/ms supported." },
-          { "name": "end_time", "type": "string", "required": false, "notes": "ISO8601 or Unix sec/ms supported; date-only end is treated as end-of-day." },
-          { "name": "sort_by", "type": "string", "required": false, "default": "time" },
-          { "name": "top_total_score", "type": "integer|null", "required": false, "notes": "Effective value forced by mode: query non-empty -> 0; query empty -> default 1 unless explicitly 0." },
-          { "name": "limit", "type": "integer", "required": false, "default": 10, "max": 100 },
-          { "name": "page", "type": "integer", "required": false, "default": 1 },
-          { "name": "similarity_score", "type": "string", "required": false, "default": "0.6 when query non-empty" }
+          {
+            "name": "query",
+            "type": "string",
+            "required": false,
+            "notes": "If non-empty, enters similarity mode; tickers are not sent downstream."
+          },
+          {
+            "name": "coin",
+            "type": "string",
+            "required": false,
+            "notes": "Comma-separated tickers; only sent as downstream tickers when query is empty."
+          },
+          {
+            "name": "platform",
+            "type": "string",
+            "required": false,
+            "notes": "Preferred source platform filter, higher priority than platform_type."
+          },
+          {
+            "name": "platform_type",
+            "type": "string",
+            "required": false,
+            "notes": "Legacy platform mapping; ignored when platform exists; 'all' means omit."
+          },
+          {
+            "name": "lang",
+            "type": "string",
+            "required": false,
+            "notes": "MCP local filter only, not sent downstream."
+          },
+          {
+            "name": "time_range",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "1h",
+              "24h",
+              "7d",
+              "30d"
+            ],
+            "notes": "If present, overrides start_time/end_time. Unknown preset normalizes to 24h. If all time inputs empty, implicit last 7d."
+          },
+          {
+            "name": "start_time",
+            "type": "string",
+            "required": false,
+            "notes": "ISO8601 or Unix sec/ms supported."
+          },
+          {
+            "name": "end_time",
+            "type": "string",
+            "required": false,
+            "notes": "ISO8601 or Unix sec/ms supported; date-only end is treated as end-of-day."
+          },
+          {
+            "name": "sort_by",
+            "type": "string",
+            "required": false,
+            "default": "time"
+          },
+          {
+            "name": "top_total_score",
+            "type": "integer|null",
+            "required": false,
+            "notes": "Effective value forced by mode: query non-empty -> 0; query empty -> default 1 unless explicitly 0."
+          },
+          {
+            "name": "limit",
+            "type": "integer",
+            "required": false,
+            "default": 10,
+            "max": 100
+          },
+          {
+            "name": "page",
+            "type": "integer",
+            "required": false,
+            "default": 1
+          },
+          {
+            "name": "similarity_score",
+            "type": "string",
+            "required": false,
+            "default": "0.6 when query non-empty"
+          }
         ]
       },
       "logic": [
-        "Resolve effective time window: time_range > (start_time,end_time); if both empty then default to last 7d.",
-        "Build GET request to real_time_news_feed-compatible endpoint with from/to Unix seconds, paging, and mode fields.",
-        "If query is empty and initial default-window result is empty, auto fallback once to 30d window.",
-        "Apply local post-filters: time window safety filter, optional lang filter, optional entity-based rerank for query mode.",
-        "Sort locally by time desc only when top_total_score=0 and sort_by=time."
+        "Resolve time_range before explicit dates, default to last 7d; an empty unqueried default window may widen once to 30d. Apply optional language/entity filters and sort by descending time only for top_total_score=0 with sort_by=time."
       ],
       "errors": [
-        { "code": "invalid_param", "when": "start_time/end_time cannot be parsed or start_time > end_time" },
-        { "code": "config_load_failed", "when": "API config missing" }
+        {
+          "code": "invalid_param",
+          "when": "start_time/end_time cannot be parsed or start_time > end_time"
+        },
+        {
+          "code": "config_load_failed",
+          "when": "API config missing"
+        }
       ]
     },
     {
       "name": "news_feed_search_ugc",
       "category": "news_feed",
-      "description": "[Read] Reddit/Discord/Telegram/YouTube-style UGC: non-empty query uses vector API; coin without query uses OpenSearch. Both empty invalid. X/Twitter narrative -> search_x; headlines -> search_news. Not macro economic statistics; not structured event list -> get_latest_events.",
+      "description": "[Read] Reddit/Discord/Telegram/YouTube-style UGC: a non-empty query searches relevant content; coin without query selects coin-related content. Both empty is invalid. X/Twitter narrative -> search_x; headlines -> search_news. Not macro economic statistics or a structured event list; use get_latest_events for events.",
       "input_rules": {
         "required_policy": "query and coin cannot both be empty; may combine query with coin",
         "params": [
-          { "name": "query", "type": "string", "required": false, "notes": "If non-empty, uses vector API branch." },
-          { "name": "coin", "type": "string", "required": false, "notes": "If query empty, coin is required to enter OpenSearch branch." },
-          { "name": "platform", "type": "string", "required": false, "default": "all", "enum": ["reddit", "discord", "telegram", "youtube", "all"] },
-          { "name": "domain", "type": "string", "required": false, "default": "all", "enum": ["crypto", "defi", "finance", "macro", "ai_agent", "web3_dev", "all"] },
-          { "name": "channel", "type": "string", "required": false },
-          { "name": "quality_tier", "type": "string", "required": false, "default": "A", "enum": ["A", "B", "all"] },
-          { "name": "time_range", "type": "string", "required": false, "default": "7d", "enum": ["1h", "24h", "7d", "30d", "all"] },
-          { "name": "sort_by", "type": "string", "required": false, "default": "relevance", "enum": ["relevance", "upvotes", "recent"] },
-          { "name": "limit", "type": "integer", "required": false, "default": 10, "max": 50 }
+          {
+            "name": "query",
+            "type": "string",
+            "required": false,
+            "notes": "If non-empty, uses vector API branch."
+          },
+          {
+            "name": "coin",
+            "type": "string",
+            "required": false,
+            "notes": "If query is empty, coin is required to select coin-related content."
+          },
+          {
+            "name": "platform",
+            "type": "string",
+            "required": false,
+            "default": "all",
+            "enum": [
+              "reddit",
+              "discord",
+              "telegram",
+              "youtube",
+              "all"
+            ]
+          },
+          {
+            "name": "domain",
+            "type": "string",
+            "required": false,
+            "default": "all",
+            "enum": [
+              "crypto",
+              "defi",
+              "finance",
+              "macro",
+              "ai_agent",
+              "web3_dev",
+              "all"
+            ]
+          },
+          {
+            "name": "channel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "quality_tier",
+            "type": "string",
+            "required": false,
+            "default": "A",
+            "enum": [
+              "A",
+              "B",
+              "all"
+            ]
+          },
+          {
+            "name": "time_range",
+            "type": "string",
+            "required": false,
+            "default": "7d",
+            "enum": [
+              "1h",
+              "24h",
+              "7d",
+              "30d",
+              "all"
+            ]
+          },
+          {
+            "name": "sort_by",
+            "type": "string",
+            "required": false,
+            "default": "relevance",
+            "enum": [
+              "relevance",
+              "upvotes",
+              "recent"
+            ]
+          },
+          {
+            "name": "limit",
+            "type": "integer",
+            "required": false,
+            "default": 10,
+            "max": 50
+          }
         ]
       },
       "logic": [
-        "Validation first: if both query and coin are empty, return invalid_param.",
-        "Branch A (query non-empty): call ugc_vector_data with normalized filters and time_start/time_end Unix seconds; local sort and trim by limit.",
-        "Branch B (query empty): use OpenSearch index query with filters/sort/time range mapping; requires opensearch client/index config.",
-        "Both branches map downstream items into unified spec field set."
+        "Require query or coin. A query performs text-based search with the supplied filters; without query, coin selects coin-related content. Both branches return the same public result fields, sorted and capped as requested."
       ],
       "errors": [
-        { "code": "invalid_param", "when": "query and coin are both empty" },
-        { "code": "config_load_failed", "when": "API config missing for vector branch or OpenSearch unavailable for empty-query branch" }
+        {
+          "code": "invalid_param",
+          "when": "query and coin are both empty"
+        },
+        {
+          "code": "config_load_failed",
+          "when": "The requested search capability is unavailable: text search for a non-empty query, or coin-related search when query is empty."
+        }
       ]
     },
     {
@@ -104,39 +224,151 @@
       "category": "news_feed",
       "description": "[Read] Search and analyze X/Twitter discussions for a topic, with tweet-level evidence and cited posts. Aggregate social mood, sentiment score, or positive/negative split -> get_social_sentiment. Open-web pages -> web_search. Multi-platform social search -> search_ugc.",
       "input_rules": {
-        "required_policy": "no hard required param, but empty query on xAI path returns empty result",
+        "required_policy": "No field is unconditionally required, but an empty query in live X-search mode returns an empty result.",
         "params": [
-          { "name": "query", "type": "string", "required": false, "notes": "Topic text for X discussion search." },
-          { "name": "time_range", "type": "string", "required": false, "default": "24h", "enum": ["1h", "24h", "7d"], "notes": "Preferred recency window; when provided it overrides days." },
-          { "name": "days", "type": "integer", "required": false, "default": 1, "min": 1, "notes": "xAI only: lookback days when time_range omitted; omitted or <=0 treated as 1 (24h). jsonschema text says default 7 but runtime default is 1 when unset." },
-          { "name": "allowed_handles", "type": "string[]", "required": false, "max_items": 10 },
-          { "name": "excluded_handles", "type": "string[]", "required": false, "max_items": 10 },
-          { "name": "model", "type": "string", "required": false },
-          { "name": "enable_image_understanding", "type": "boolean", "required": false, "default": false },
-          { "name": "enable_video_understanding", "type": "boolean", "required": false, "default": false },
-          { "name": "coin", "type": "string", "required": false, "notes": "Only used in platform fallback path (mapped to search_news style)." },
-          { "name": "platform", "type": "string", "required": false, "notes": "Platform fallback only." },
-          { "name": "platform_type", "type": "string", "required": false, "notes": "Platform fallback only." },
-          { "name": "lang", "type": "string", "required": false, "default": "zh", "enum": ["zh", "en", "auto"], "notes": "Controls xAI answer language; also used by platform fallback MCP lang filter." },
-          { "name": "start_time", "type": "string", "required": false, "notes": "Platform fallback only." },
-          { "name": "end_time", "type": "string", "required": false, "notes": "Platform fallback only." },
-          { "name": "sort_by", "type": "string", "required": false, "notes": "Platform fallback only." },
-          { "name": "top_total_score", "type": "integer|null", "required": false, "notes": "Platform fallback only." },
-          { "name": "limit", "type": "integer", "required": false, "default": 10, "notes": "Platform fallback only." },
-          { "name": "page", "type": "integer", "required": false, "default": 1, "notes": "Platform fallback only." },
-          { "name": "similarity_score", "type": "string", "required": false, "notes": "Platform fallback only." }
+          {
+            "name": "query",
+            "type": "string",
+            "required": false,
+            "notes": "Topic text for X discussion search."
+          },
+          {
+            "name": "time_range",
+            "type": "string",
+            "required": false,
+            "default": "24h",
+            "enum": [
+              "1h",
+              "24h",
+              "7d"
+            ],
+            "notes": "Preferred recency window; when provided it overrides days."
+          },
+          {
+            "name": "days",
+            "type": "integer",
+            "required": false,
+            "default": 1,
+            "min": 1,
+            "notes": "For live X search: lookback days when time_range is omitted. Omitted or <=0 is treated as 1 (24h). The effective default is 1 even where older schema text states 7."
+          },
+          {
+            "name": "allowed_handles",
+            "type": "string[]",
+            "required": false,
+            "max_items": 10
+          },
+          {
+            "name": "excluded_handles",
+            "type": "string[]",
+            "required": false,
+            "max_items": 10
+          },
+          {
+            "name": "model",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "enable_image_understanding",
+            "type": "boolean",
+            "required": false,
+            "default": false
+          },
+          {
+            "name": "enable_video_understanding",
+            "type": "boolean",
+            "required": false,
+            "default": false
+          },
+          {
+            "name": "coin",
+            "type": "string",
+            "required": false,
+            "notes": "Only used in platform fallback path (mapped to search_news style)."
+          },
+          {
+            "name": "platform",
+            "type": "string",
+            "required": false,
+            "notes": "Platform fallback only."
+          },
+          {
+            "name": "platform_type",
+            "type": "string",
+            "required": false,
+            "notes": "Platform fallback only."
+          },
+          {
+            "name": "lang",
+            "type": "string",
+            "required": false,
+            "default": "zh",
+            "enum": [
+              "zh",
+              "en",
+              "auto"
+            ],
+            "notes": "Controls the X-search answer language and the language filter when the general-news fallback is used."
+          },
+          {
+            "name": "start_time",
+            "type": "string",
+            "required": false,
+            "notes": "Platform fallback only."
+          },
+          {
+            "name": "end_time",
+            "type": "string",
+            "required": false,
+            "notes": "Platform fallback only."
+          },
+          {
+            "name": "sort_by",
+            "type": "string",
+            "required": false,
+            "notes": "Platform fallback only."
+          },
+          {
+            "name": "top_total_score",
+            "type": "integer|null",
+            "required": false,
+            "notes": "Platform fallback only."
+          },
+          {
+            "name": "limit",
+            "type": "integer",
+            "required": false,
+            "default": 10,
+            "notes": "Platform fallback only."
+          },
+          {
+            "name": "page",
+            "type": "integer",
+            "required": false,
+            "default": 1,
+            "notes": "Platform fallback only."
+          },
+          {
+            "name": "similarity_score",
+            "type": "string",
+            "required": false,
+            "notes": "Platform fallback only."
+          }
         ]
       },
       "logic": [
-        "Validation: allowed_handles and excluded_handles cannot both be non-empty.",
-        "If xAI key exists, run xAI Responses search_x flow with date window resolved from time_range (1h/24h->1d, 7d->7d); if time_range missing then use days.",
-        "If xAI key missing and platform fallback enabled, convert args to search_news-compatible args and call platform endpoint.",
-        "If xAI key missing and fallback disabled, return config_load_failed.",
-        "Always coerce sentiment fields in response to stable defaults."
+        "Reject simultaneous non-empty allowed_handles and excluded_handles. Resolve dates from time_range (1h/24h use one day, 7d uses seven days) or otherwise days. If live X search is not configured, use the configured general-news fallback when enabled; otherwise config_load_failed. Preserve stable default sentiment fields."
       ],
       "errors": [
-        { "code": "invalid_param", "when": "allowed_handles and excluded_handles are both provided" },
-        { "code": "config_load_failed", "when": "xAI key missing and fallback disabled, or core config unavailable" }
+        {
+          "code": "invalid_param",
+          "when": "allowed_handles and excluded_handles are both provided"
+        },
+        {
+          "code": "config_load_failed",
+          "when": "Live X search is unavailable and fallback is disabled, or the requested search capability is otherwise unavailable."
+        }
       ]
     },
     {
@@ -146,23 +378,70 @@
       "input_rules": {
         "required_policy": "query is required",
         "params": [
-          { "name": "query", "type": "string", "required": true },
-          { "name": "coin", "type": "string", "required": false },
-          { "name": "mode", "type": "string", "required": false, "default": "analysis", "enum": ["analysis", "brief"] },
-          { "name": "time_range", "type": "string", "required": false, "default": "24h", "enum": ["1h", "24h", "7d", "30d"] },
-          { "name": "lang", "type": "string", "required": false, "default": "zh", "enum": ["zh", "en", "auto"] },
-          { "name": "limit", "type": "integer", "required": false, "default": 5, "max": 10 }
+          {
+            "name": "query",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "coin",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "mode",
+            "type": "string",
+            "required": false,
+            "default": "analysis",
+            "enum": [
+              "analysis",
+              "brief"
+            ]
+          },
+          {
+            "name": "time_range",
+            "type": "string",
+            "required": false,
+            "default": "24h",
+            "enum": [
+              "1h",
+              "24h",
+              "7d",
+              "30d"
+            ]
+          },
+          {
+            "name": "lang",
+            "type": "string",
+            "required": false,
+            "default": "zh",
+            "enum": [
+              "zh",
+              "en",
+              "auto"
+            ]
+          },
+          {
+            "name": "limit",
+            "type": "integer",
+            "required": false,
+            "default": 5,
+            "max": 10
+          }
         ]
       },
       "logic": [
-        "Normalize mode/time_range/lang/limit, then call xAI ResponsesWebSearch API.",
-        "Parse structured output into summary/key_points/cited_sources and normalize citations.",
-        "If mode=brief, truncate summary to about 100 characters.",
-        "Return citations also as items list for generic clients."
+        "Normalize mode/time_range/lang/limit; return summary/key_points/cited_sources with normalized citations and an items list. brief truncates the summary to about 100 characters."
       ],
       "errors": [
-        { "code": "invalid_param", "when": "query is empty" },
-        { "code": "config_load_failed", "when": "xAI key or app config missing" }
+        {
+          "code": "invalid_param",
+          "when": "query is empty"
+        },
+        {
+          "code": "config_load_failed",
+          "when": "The web-search capability or required access is unavailable."
+        }
       ]
     },
     {
@@ -172,24 +451,68 @@
       "input_rules": {
         "required_policy": "no strict required params",
         "params": [
-          { "name": "exchange", "type": "string", "required": false, "notes": "Used as platform fallback if platform is empty." },
-          { "name": "platform", "type": "string", "required": false, "notes": "Wins over exchange for downstream platform param." },
-          { "name": "query", "type": "string", "required": false },
-          { "name": "coin", "type": "string", "required": false },
-          { "name": "announcement_type", "type": "string", "required": false, "enum": ["listing", "delisting", "maintenance", "all"] },
-          { "name": "limit", "type": "integer", "required": false, "max": 100, "notes": "Only forwarded when >0." },
-          { "name": "from", "type": "integer", "required": false, "notes": "Unix sec lower bound; local post-filter also applied." },
-          { "name": "to", "type": "integer", "required": false, "notes": "Unix sec upper bound; local post-filter also applied." }
+          {
+            "name": "exchange",
+            "type": "string",
+            "required": false,
+            "notes": "Used as platform fallback if platform is empty."
+          },
+          {
+            "name": "platform",
+            "type": "string",
+            "required": false,
+            "notes": "Wins over exchange for downstream platform param."
+          },
+          {
+            "name": "query",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "coin",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "announcement_type",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "listing",
+              "delisting",
+              "maintenance",
+              "all"
+            ]
+          },
+          {
+            "name": "limit",
+            "type": "integer",
+            "required": false,
+            "max": 100,
+            "notes": "Only forwarded when >0."
+          },
+          {
+            "name": "from",
+            "type": "integer",
+            "required": false,
+            "notes": "Unix sec lower bound; local post-filter also applied."
+          },
+          {
+            "name": "to",
+            "type": "integer",
+            "required": false,
+            "notes": "Unix sec upper bound; local post-filter also applied."
+          }
         ]
       },
       "logic": [
-        "Build request to exchange_notice_sql endpoint with selected params.",
-        "platform param is resolved as platform > exchange priority.",
-        "Parse compatible list shapes (notice_list/news_list/items/list/data).",
-        "Apply local time filtering for from/to and sort by time desc."
+        "Return exchange announcements with selected parameters; platform takes precedence over exchange. Accept the documented compatible response-list shapes, apply from/to filtering, and sort newest first."
       ],
       "errors": [
-        { "code": "config_load_failed", "when": "API config missing" }
+        {
+          "code": "config_load_failed",
+          "when": "API config missing"
+        }
       ]
     },
     {
@@ -199,18 +522,34 @@
       "input_rules": {
         "required_policy": "no strict required params",
         "params": [
-          { "name": "coin", "type": "string", "required": false, "default": "BTC" },
-          { "name": "time_range", "type": "string", "required": false, "default": "24h", "enum": ["1h", "24h", "7d"], "notes": "Invalid values are normalized to 24h." }
+          {
+            "name": "coin",
+            "type": "string",
+            "required": false,
+            "default": "BTC"
+          },
+          {
+            "name": "time_range",
+            "type": "string",
+            "required": false,
+            "default": "24h",
+            "enum": [
+              "1h",
+              "24h",
+              "7d"
+            ],
+            "notes": "Invalid values are normalized to 24h."
+          }
         ]
       },
       "logic": [
-        "Normalize coin/time_range and convert to Unix start/end window.",
-        "Run 3 downstream calls in parallel: sentiment_score, positive_ratio, sentiment_analysis.",
-        "Compute overall_sentiment + normalized sentiment_label + mention_count + distribution + top_tweets.",
-        "top_tweets are parsed from sentiment_analysis response and returned in unified structure."
+        "Normalize coin/time_range; return overall_sentiment, normalized sentiment_label, mention_count, distribution and top_tweets based on the available sentiment data."
       ],
       "errors": [
-        { "code": "config_load_failed", "when": "API config missing" }
+        {
+          "code": "config_load_failed",
+          "when": "API config missing"
+        }
       ]
     },
     {
@@ -220,19 +559,44 @@
       "input_rules": {
         "required_policy": "coin is required",
         "params": [
-          { "name": "coin", "type": "string", "required": true, "notes": "Trimmed and normalized to uppercase. No coin-dictionary validation is performed; unknown or no-data tickers may return an empty result with hide_reason=no_data." },
-          { "name": "window", "type": "string", "required": false, "default": "24h", "enum": ["24h"] },
-          { "name": "platforms", "type": "string", "required": false, "default": "all", "notes": "Comma-separated. Supported: all, gate_square, binance_square, twitter, telegram, youtube, reddit, discord. all cannot be combined with another platform." }
+          {
+            "name": "coin",
+            "type": "string",
+            "required": true,
+            "notes": "Trimmed and normalized to uppercase. No coin-dictionary validation is performed; unknown or no-data tickers may return an empty result with hide_reason=no_data."
+          },
+          {
+            "name": "window",
+            "type": "string",
+            "required": false,
+            "default": "24h",
+            "enum": [
+              "24h"
+            ]
+          },
+          {
+            "name": "platforms",
+            "type": "string",
+            "required": false,
+            "default": "all",
+            "notes": "Comma-separated. Supported: all, gate_square, binance_square, twitter, telegram, youtube, reddit, discord. all cannot be combined with another platform."
+          }
         ]
       },
       "logic": [
-        "Normalize coin, window, and platforms, then call news_feed_get_mention_burst through the News MCP backend.",
-        "Return current and previous mention counts, weighted growth, sentiment direction, display color, and per-platform breakdown.",
-        "hide_reason explains no_data, insufficient_baseline, insufficient_sample, or not_burst; nullable numeric fields are preserved."
+        "Normalize coin, window and the selected platforms.",
+        "Return current and previous mention counts, weighted growth, sentiment direction, display color and per-platform breakdown.",
+        "hide_reason explains no_data, insufficient_baseline, insufficient_sample or not_burst; preserve nullable numeric fields rather than replacing missing values with zero."
       ],
       "errors": [
-        { "code": "invalid_param", "when": "coin is empty, window is not 24h, or platforms contains an unsupported value" },
-        { "code": "internal", "when": "the upstream social API call fails" }
+        {
+          "code": "invalid_param",
+          "when": "coin is empty, window is not 24h, or platforms contains an unsupported value"
+        },
+        {
+          "code": "internal",
+          "when": "the upstream social API call fails"
+        }
       ]
     },
     {
@@ -242,20 +606,52 @@
       "input_rules": {
         "required_policy": "coin is required",
         "params": [
-          { "name": "coin", "type": "string", "required": true, "notes": "Trimmed and normalized to uppercase. No coin-dictionary validation is performed; unknown or no-data tickers may return an empty result with hide_reason=no_data." },
-          { "name": "window", "type": "string", "required": false, "default": "4h", "enum": ["4h"] },
-          { "name": "limit", "type": "integer", "required": false, "default": 4, "min": 2, "max": 4 },
-          { "name": "platforms", "type": "string", "required": false, "default": "all", "notes": "Comma-separated. Supported: all, gate_square, binance_square, twitter, telegram, youtube, reddit, discord. all cannot be combined with another platform." }
+          {
+            "name": "coin",
+            "type": "string",
+            "required": true,
+            "notes": "Trimmed and normalized to uppercase. No coin-dictionary validation is performed; unknown or no-data tickers may return an empty result with hide_reason=no_data."
+          },
+          {
+            "name": "window",
+            "type": "string",
+            "required": false,
+            "default": "4h",
+            "enum": [
+              "4h"
+            ]
+          },
+          {
+            "name": "limit",
+            "type": "integer",
+            "required": false,
+            "default": 4,
+            "min": 2,
+            "max": 4
+          },
+          {
+            "name": "platforms",
+            "type": "string",
+            "required": false,
+            "default": "all",
+            "notes": "Comma-separated. Supported: all, gate_square, binance_square, twitter, telegram, youtube, reddit, discord. all cannot be combined with another platform."
+          }
         ]
       },
       "logic": [
-        "Normalize coin, fixed 4h window, topic limit, and platforms, then call news_feed_get_hot_topics through the News MCP backend.",
-        "Return qualified themes with direction, titles, summary, influence, sentiment, platforms, and representative evidence posts.",
-        "Fewer than two qualified themes produces an empty topics array and a hide_reason from the MCP service."
+        "Normalize coin, the fixed 4h window, topic limit and selected platforms.",
+        "Return qualified themes with direction, titles, summary, influence, sentiment, platforms and representative evidence posts.",
+        "Fewer than two qualified themes returns an empty topics array with a hide_reason."
       ],
       "errors": [
-        { "code": "invalid_param", "when": "coin is empty, window is not 4h, limit is outside 2-4, or platforms contains an unsupported value" },
-        { "code": "internal", "when": "the upstream social API call fails" }
+        {
+          "code": "invalid_param",
+          "when": "coin is empty, window is not 4h, limit is outside 2-4, or platforms contains an unsupported value"
+        },
+        {
+          "code": "internal",
+          "when": "the upstream social API call fails"
+        }
       ]
     },
     {
@@ -265,25 +661,73 @@
       "input_rules": {
         "required_policy": "no strict required params",
         "params": [
-          { "name": "event_type", "type": "string", "required": false, "notes": "all or empty means no type filter." },
-          { "name": "coin", "type": "string", "required": false, "notes": "Comma-separated; expanded to variant terms for related_coins/symbols filtering." },
-          { "name": "time_range", "type": "string", "required": false, "enum": ["1h", "24h", "7d"], "notes": "Mutually exclusive with start_time/end_time." },
-          { "name": "start_time", "type": "string", "required": false, "notes": "Mutually exclusive with time_range." },
-          { "name": "end_time", "type": "string", "required": false, "notes": "Mutually exclusive with time_range." },
-          { "name": "cursor", "type": "string", "required": false, "notes": "Reserved; not used by current OpenSearch implementation (no pagination)." },
-          { "name": "limit", "type": "integer", "required": false, "default": 20, "max": 100, "notes": "Omitted or <=0 -> 20; >100 -> invalid_size." }
+          {
+            "name": "event_type",
+            "type": "string",
+            "required": false,
+            "notes": "all or empty means no type filter."
+          },
+          {
+            "name": "coin",
+            "type": "string",
+            "required": false,
+            "notes": "Comma-separated; expanded to variant terms for related_coins/symbols filtering."
+          },
+          {
+            "name": "time_range",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "1h",
+              "24h",
+              "7d"
+            ],
+            "notes": "Mutually exclusive with start_time/end_time."
+          },
+          {
+            "name": "start_time",
+            "type": "string",
+            "required": false,
+            "notes": "Mutually exclusive with time_range."
+          },
+          {
+            "name": "end_time",
+            "type": "string",
+            "required": false,
+            "notes": "Mutually exclusive with time_range."
+          },
+          {
+            "name": "cursor",
+            "type": "string",
+            "required": false,
+            "notes": "Reserved; currently unused and does not enable pagination."
+          },
+          {
+            "name": "limit",
+            "type": "integer",
+            "required": false,
+            "default": 20,
+            "max": 100,
+            "notes": "Omitted or <=0 -> 20; >100 -> invalid_size."
+          }
         ]
       },
       "logic": [
-        "Validate request: limit default 20, max 100; time_range enum check; time_range cannot coexist with start/end.",
-        "Build OpenSearch bool query with event_type/coin/time filters and sort by event time desc.",
-        "If no time params: use service policy (optional all-time mode or default 24h).",
-        "Map source docs to event list schema and return total/count/items."
+        "Validate limit default 20 maximum 100 and the time_range enum; time_range cannot coexist with explicit dates. Apply event-type/coin/time filters, newest first. With no time parameters use the documented service policy. Return total/count/items."
       ],
       "errors": [
-        { "code": "invalid_param", "when": "time_range invalid or mixed with start/end" },
-        { "code": "invalid_size", "when": "limit > 100" },
-        { "code": "internal", "when": "OpenSearch query fails (MCP maps opensearch_query_failed to internal)" }
+        {
+          "code": "invalid_param",
+          "when": "time_range invalid or mixed with start/end"
+        },
+        {
+          "code": "invalid_size",
+          "when": "limit > 100"
+        },
+        {
+          "code": "internal",
+          "when": "Event retrieval fails; the client receives internal."
+        }
       ],
       "placeholder_when_unconfigured": true
     },
@@ -294,48 +738,109 @@
       "input_rules": {
         "required_policy": "event_id is required",
         "params": [
-          { "name": "event_id", "type": "string", "required": true, "max_length": 512, "pattern": "^[A-Za-z0-9:_-]+$", "notes": "Cannot contain unsafe chars like quotes/semicolon/backslash." }
+          {
+            "name": "event_id",
+            "type": "string",
+            "required": true,
+            "max_length": 512,
+            "pattern": "^[A-Za-z0-9:_-]+$",
+            "notes": "Cannot contain unsafe chars like quotes/semicolon/backslash."
+          }
         ]
       },
       "logic": [
-        "Validate event_id non-empty and safe format.",
-        "Query OpenSearch by configured id field and map result into detail response.",
-        "Return resource_not_found if id has no hit (message echoes event_id)."
+        "Validate non-empty safe event_id and retrieve matching details. Return resource_not_found when it does not exist, preserving the public event_id context."
       ],
       "errors": [
-        { "code": "invalid_event_id", "when": "event_id empty, too long, or illegal characters" },
-        { "code": "resource_not_found", "when": "valid event_id but no document in index" },
-        { "code": "internal", "when": "OpenSearch query fails (MCP maps opensearch_query_failed to internal)" }
+        {
+          "code": "invalid_event_id",
+          "when": "event_id empty, too long, or illegal characters"
+        },
+        {
+          "code": "resource_not_found",
+          "when": "event_id is valid but no matching event exists"
+        },
+        {
+          "code": "internal",
+          "when": "Event retrieval fails; the client receives internal."
+        }
       ],
       "placeholder_when_unconfigured": true
     },
     {
       "name": "news_events_explain_market_move",
       "category": "news_events",
-      "description": "[Read] Explain what drove a crypto asset's price move in a given time window.\nReturns a concise summary (from real-time Tavily search), the latest high-priority real-time events, and supporting internal event pool items, plus data-completeness status.\nThis tool is a data aggregator; the downstream agent performs the final attribution reasoning.",
+      "description": "[Read] Explain what drove a crypto asset's price move in a given time window.\nReturns a concise summary from current web evidence, the latest high-priority events, supporting event-feed items, and data-completeness status.\nThis tool aggregates evidence; the downstream agent performs the final attribution reasoning.",
       "input_rules": {
         "required_policy": "query and coin are required",
         "params": [
-          { "name": "query", "type": "string", "required": true, "notes": "User question, e.g. why did BTC surge; whitespace-trimmed; empty rejected." },
-          { "name": "coin", "type": "string", "required": true, "notes": "Target symbol; whitespace-trimmed; empty -> missing_coin. Passed through event.NormalizeCoin (alias/full name -> standard ticker); unknown aliases are kept, not rejected." },
-          { "name": "time_range", "type": "string", "required": false, "default": "2h", "enum": ["30m", "1h", "2h", "4h", "24h"], "notes": "Only these literals are preserved (case-insensitive); any other value including empty or 7d normalizes to 2h. Drives Tavily recency (days) and maps upward for internal pool window (see logic)." },
-          { "name": "mode", "type": "string", "required": false, "default": "auto", "enum": ["auto", "price_move", "event_impact"], "notes": "Normalized at handler; forwarded on Request but not read by explain service today (reserved)." },
-          { "name": "lang", "type": "string", "required": false, "default": "zh", "enum": ["zh", "en"], "notes": "Normalized at handler; forwarded on Request but not read by explain service today (reserved)." }
+          {
+            "name": "query",
+            "type": "string",
+            "required": true,
+            "notes": "User question, e.g. why did BTC surge; whitespace-trimmed; empty rejected."
+          },
+          {
+            "name": "coin",
+            "type": "string",
+            "required": true,
+            "notes": "Target symbol; whitespace is trimmed and empty input returns missing_coin. Known aliases and full names are normalized to a standard ticker; unknown aliases are preserved rather than rejected."
+          },
+          {
+            "name": "time_range",
+            "type": "string",
+            "required": false,
+            "default": "2h",
+            "enum": [
+              "30m",
+              "1h",
+              "2h",
+              "4h",
+              "24h"
+            ],
+            "notes": "Only 30m/1h/2h/4h/24h are preserved (case-insensitive); any other value, including empty or 7d, normalizes to 2h. Selects the recency of web evidence and the event-feed window described in logic."
+          },
+          {
+            "name": "mode",
+            "type": "string",
+            "required": false,
+            "default": "auto",
+            "enum": [
+              "auto",
+              "price_move",
+              "event_impact"
+            ],
+            "notes": "Reserved. Accepted values are normalized but currently do not affect explanation results."
+          },
+          {
+            "name": "lang",
+            "type": "string",
+            "required": false,
+            "default": "zh",
+            "enum": [
+              "zh",
+              "en"
+            ],
+            "notes": "Reserved. Accepted values are normalized but currently do not affect explanation results."
+          }
         ]
       },
       "logic": [
-        "Registration: live when explain.Service wired (Tavily + optional eventSvc); no placeholder tool when unconfigured.",
-        "Handler validates query/coin, normalizes coin via NormalizeCoin, normalizes time_range/lang/mode, then calls explain.Service.ExplainMarketMove.",
-        "Two goroutines in parallel: (A) Tavily multi-query search, (B) event.Service.GetLatestEvents with limit=2.",
-        "Tavily path: skipped with data_status missing_sources tavily_realtime_search if client nil. Handler normalizes time_range first (only 30m/1h/2h/4h/24h kept; other values including 7d -> 2h). Tavily days from normalized range: 30m/1h/24h->1, 2h/4h->3 (Tavily default). Per-query timeout from explain YAML (btc vs non-BTC sub-queries).",
-        "Tavily results: collect result.Answer strings into summary; map result.Results to MarketMoveEvent (title, truncated content summary, source from URL host, url, relevance_score adjusted by days factor). Dedupe by URL else title (keep highest score), sort by relevance_score desc, cap count to btcResultLimit (BTC) or nonBtcResultLimit (non-BTC) from YAML.",
-        "Internal pool path: skipped with missing_sources internal_event_pool if eventSvc nil. Else maps normalized time_range to Tool-1 window: 30m->1h, 1h->1h, 2h/4h->24h, 24h->24h; calls GetLatestEvents(coin, that time_range, limit=2). Maps each item to MarketMoveEvent (title, summary from context else impact_analysis, source 'Internal Event Pool', first_seen_time from event_time, relevance_score from event_type + time decay).",
-        "Merge: summary = Tavily answers joined by newline; data_status.is_partial if any missing_sources; notes aggregate Tavily/internal notes; if both lists empty and not partial, note 'No relevant events found'."
+        "Validate query/coin and normalize time_range/lang/mode. Combine current public web evidence with up to two relevant event-feed items. Keep 30m/1h/2h/4h/24h (case insensitive); other values including empty and 7d normalize to 2h. Event-feed windows map 30m/1h to 1h and 2h/4h/24h to 24h. Deduplicate evidence by URL then title, keep the highest relevance and sort descending. Preserve summary, evidence timestamps/scores and completeness/missing_sources values. If both sources return no evidence and none is missing, report No relevant events found."
       ],
       "errors": [
-        { "code": "invalid_param", "when": "query is empty after trim" },
-        { "code": "missing_coin", "when": "coin is empty after trim" },
-        { "code": "internal", "when": "ExplainMarketMove returns error (current implementation usually returns success with partial empty slices)" }
+        {
+          "code": "invalid_param",
+          "when": "query is empty after trim"
+        },
+        {
+          "code": "missing_coin",
+          "when": "coin is empty after trim"
+        },
+        {
+          "code": "internal",
+          "when": "ExplainMarketMove returns error (current implementation usually returns success with partial empty slices)"
+        }
       ]
     },
     {
@@ -345,215 +850,560 @@
       "input_rules": {
         "required_policy": "symbol is required",
         "params": [
-          { "name": "symbol", "type": "string", "required": true, "max_length": 20, "notes": "Trimmed and normalized to uppercase by the MCP service." },
-          { "name": "report_id", "type": "string", "required": false, "notes": "Exact stored-report lookup; takes priority over event_id." },
-          { "name": "event_id", "type": "string", "required": false, "notes": "Returns the latest report for this event when report_id is omitted. Omit both IDs for the latest symbol report." }
+          {
+            "name": "symbol",
+            "type": "string",
+            "required": true,
+            "max_length": 20,
+            "notes": "Trimmed and normalized to uppercase by the MCP service."
+          },
+          {
+            "name": "report_id",
+            "type": "string",
+            "required": false,
+            "notes": "Exact stored-report lookup; takes priority over event_id."
+          },
+          {
+            "name": "event_id",
+            "type": "string",
+            "required": false,
+            "notes": "Returns the latest report for this event when report_id is omitted. Omit both IDs for the latest symbol report."
+          }
         ]
       },
       "logic": [
-        "Validate symbol and call service-ai-pe POST /api/v1/market-move-attribution/get-report without authentication.",
-        "The request body contains only symbol and non-empty report_id/event_id. is_make_new is not a schema field, CLI flag, or forwarded API parameter.",
-        "Return the stored report status, Markdown report_info, evidence summary, market-move fields, and timestamps. event_time, window_start, window_end, created_at, generated_at, updated_at, and display_expire_time are UTC0 strings without a timezone suffix; window_start_utc8 and window_end_utc8 carry an explicit +08:00 offset. JSON-string evidence from older storage rows is decoded into the same structured evidence object. Lookup priority is report_id > event_id > symbol."
+        "Retrieve an existing stored report for the normalized symbol; never request generation. Only symbol and non-empty report_id/event_id are sent. Lookup priority is report_id > event_id > symbol. Preserve report status, Markdown report_info, evidence, market-move fields, UTC0 timestamps and explicit +08:00 UTC8-window fields. Legacy serialized evidence is returned in the same structured evidence shape."
       ],
       "errors": [
-        { "code": "invalid_param", "when": "symbol is empty or longer than 20 characters; CLI JSON fallback explicitly includes is_make_new" },
-        { "code": "config_load_failed", "when": "api.peUrl is empty" },
-        { "code": "internal", "when": "service-ai-pe request, response decoding, or business response fails" }
+        {
+          "code": "invalid_param",
+          "when": "symbol is empty or longer than 20 characters; CLI JSON fallback explicitly includes is_make_new"
+        },
+        {
+          "code": "config_load_failed",
+          "when": "The stored-report capability is not configured."
+        },
+        {
+          "code": "internal",
+          "when": "The stored-report request, response decoding, or business response fails."
+        }
       ]
     },
     {
       "name": "news_events_list_market_move_reports",
       "category": "news_events",
-      "description": "[Read] List stored market-move attribution reports for one symbol, filtering by an inclusive UTC0 updated_at range and sorting results by event_time descending. Reports may be updated after their market event, so updated_at can be later than event_time. Timezone-less inputs are UTC0; inputs with an explicit offset are converted to UTC0 before the read-only service-ai-pe query.",
+      "description": "[Read] List stored market-move attribution reports for one symbol, filtering by an inclusive UTC0 updated_at range and sorting results by event_time descending. Reports may be updated after their market event, so updated_at can be later than event_time. Timezone-less inputs are UTC0; inputs with an explicit offset are converted to UTC0 before the read-only lookup.",
       "input_rules": {
         "required_policy": "symbol, start_time, and end_time are required",
         "params": [
-          { "name": "symbol", "type": "string", "required": true, "max_length": 20, "notes": "Trimmed and normalized to uppercase by the MCP service." },
-          { "name": "start_time", "type": "string", "required": true, "notes": "Inclusive lower bound for report updated_at in UTC0; ISO 8601 or YYYY-MM-DD HH:MM:SS. No timezone means UTC0; an explicit offset is converted to UTC0." },
-          { "name": "end_time", "type": "string", "required": true, "notes": "Inclusive upper bound for report updated_at in UTC0; ISO 8601 or YYYY-MM-DD HH:MM:SS. No timezone means UTC0; an explicit offset is converted to UTC0; cannot precede start_time." },
-          { "name": "limit", "type": "integer", "required": false, "default": 20, "min": 0, "max": 100, "notes": "0 has the same behavior as omitted and defaults to 20; nonzero values must be 1-100." }
+          {
+            "name": "symbol",
+            "type": "string",
+            "required": true,
+            "max_length": 20,
+            "notes": "Trimmed and normalized to uppercase by the MCP service."
+          },
+          {
+            "name": "start_time",
+            "type": "string",
+            "required": true,
+            "notes": "Inclusive lower bound for report updated_at in UTC0; ISO 8601 or YYYY-MM-DD HH:MM:SS. No timezone means UTC0; an explicit offset is converted to UTC0."
+          },
+          {
+            "name": "end_time",
+            "type": "string",
+            "required": true,
+            "notes": "Inclusive upper bound for report updated_at in UTC0; ISO 8601 or YYYY-MM-DD HH:MM:SS. No timezone means UTC0; an explicit offset is converted to UTC0; cannot precede start_time."
+          },
+          {
+            "name": "limit",
+            "type": "integer",
+            "required": false,
+            "default": 20,
+            "min": 0,
+            "max": 100,
+            "notes": "0 has the same behavior as omitted and defaults to 20; nonzero values must be 1-100."
+          }
         ]
       },
       "logic": [
-        "Validate symbol, parse both updated_at bounds, interpret timezone-less values as UTC0, convert explicit offsets to UTC0, require start_time <= end_time, and normalize omitted or zero limit to 20.",
-        "Call service-ai-pe POST /api/v1/market-move-attribution/report-list without authentication; no report-generation parameter is exposed or sent.",
-        "Filter inclusively by updated_at, then return status (ready/generating/not_found/failed), trace_id, reports ordered by event_time DESC, and duration_ms. Because reports can be updated one or more times after generation, updated_at may be later than event_time; event_time does not indicate whether a row falls inside the requested filter window."
+        "Validate symbol and inclusive updated_at bounds; timezone-less inputs are UTC0 and explicit offsets convert to UTC0. Require start_time<=end_time; omitted/zero limit normalizes to 20. Read existing reports without a generation parameter. Return ready/generating/not_found/failed status, trace_id, reports sorted by event_time descending and duration_ms. updated_at may be later than event_time, so filter by updated_at rather than event time."
       ],
       "errors": [
-        { "code": "invalid_param", "when": "required input is missing, datetime is invalid, start_time > end_time, or CLI JSON fallback includes is_make_new" },
-        { "code": "invalid_size", "when": "limit is negative or greater than 100" },
-        { "code": "config_load_failed", "when": "api.peUrl is empty" },
-        { "code": "internal", "when": "service-ai-pe request, response decoding, or business response fails" }
+        {
+          "code": "invalid_param",
+          "when": "required input is missing, datetime is invalid, start_time > end_time, or CLI JSON fallback includes is_make_new"
+        },
+        {
+          "code": "invalid_size",
+          "when": "limit is negative or greater than 100"
+        },
+        {
+          "code": "config_load_failed",
+          "when": "The stored-report capability is not configured."
+        },
+        {
+          "code": "internal",
+          "when": "The stored-report request, response decoding, or business response fails."
+        }
       ]
     },
     {
       "name": "news_prediction_get_volume_delta_ranking",
       "category": "news_prediction",
-      "description": "[Read] Daily venue/overall ranking by volume delta (UTC rank_date). Optional venue[], category (exact term on rank index), status (active/closed/resolved/all; default active). Requires opensearch.predictionRankIndex.",
+      "description": "[Read] Daily venue/overall ranking by volume delta (UTC rank_date). Optional venue[], exact category filter, and status active/closed/resolved/all (default active). Returns not_implemented when the ranking capability is unavailable.",
       "input_rules": {
         "required_policy": "no strict required params",
         "params": [
-          { "name": "date_utc", "type": "string", "required": false, "default": "today_utc (UTC YYYY-MM-DD)", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "notes": "Empty or omitted -> current UTC date." },
-          { "name": "limit", "type": "integer", "required": false, "default": 20, "max": 100, "notes": "Omitted or null -> 20; explicit <=0 -> invalid_size; >100 -> invalid_size." },
-          { "name": "venue", "type": "string[]", "required": false, "enum": ["polymarket", "predict_fun"], "notes": "Each element must be allowed; empty or omitted -> no venue filter (all venues). Multiple values -> OpenSearch terms filter (exact)." },
-          { "name": "category", "type": "string", "required": false, "notes": "Free-text exact term on rank index field category; no server-side enum check. Empty or omitted -> no filter. Non-empty and not 'all' (case-sensitive) -> term filter. Unknown values -> empty overall, not invalid_param." },
-          { "name": "status", "type": "string", "required": false, "default": "active", "enum": ["active", "closed", "resolved", "all"], "notes": "Empty or omitted -> treated as 'active' before query. 'all' -> no status filter. Otherwise term filter on field status (exact)." }
+          {
+            "name": "date_utc",
+            "type": "string",
+            "required": false,
+            "default": "today_utc (UTC YYYY-MM-DD)",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "notes": "Empty or omitted -> current UTC date."
+          },
+          {
+            "name": "limit",
+            "type": "integer",
+            "required": false,
+            "default": 20,
+            "max": 100,
+            "notes": "Omitted or null -> 20; explicit <=0 -> invalid_size; >100 -> invalid_size."
+          },
+          {
+            "name": "venue",
+            "type": "string[]",
+            "required": false,
+            "enum": [
+              "polymarket",
+              "predict_fun"
+            ],
+            "notes": "Each element must be allowed; empty or omitted -> no venue filter (all venues). Multiple values match any of the supplied venues exactly."
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "required": false,
+            "notes": "Free-text exact category filter; no server-side enum check. Empty or omitted -> no filter. Non-empty and not 'all' (case-sensitive) -> exact match. Unknown values -> empty overall, not invalid_param."
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false,
+            "default": "active",
+            "enum": [
+              "active",
+              "closed",
+              "resolved",
+              "all"
+            ],
+            "notes": "Empty or omitted -> active. 'all' -> no status filter; otherwise match the selected status exactly."
+          }
         ]
       },
       "logic": [
-        "Validate: limit omitted -> 20; limit in 1..100; limit <=0 or >100 -> invalid_size; date_utc must be YYYY-MM-DD when set; each non-empty venue in whitelist (polymarket/predict_fun); category trimmed only (no enum validation); status empty -> active; status must be active/closed/resolved/all.",
-        "OpenSearch bool filter: term rank_type=volume_delta; range on part_date for the UTC calendar day; optional terms on venue; optional term on category when set and not 'all'; optional term on status when not 'all'.",
-        "OpenSearch sort: volume_delta_usd_today desc only; client sortRankingItems tie-breaks by venue_event_id then rank_no. Size = limit. Filter field part_date for UTC calendar day of date_utc.",
-        "Map _source to RankingItem; event_name prefers event_name else market_title; market_name similar; parse excluded_reasons_json to excluded_reasons (invalid JSON -> []).",
-        "Response: overall = ordered hits; by_venue groups by venue (default keys include polymarket, predict_fun; additional keys appear only when present in hits); generated_at = max(calc_time) from hits else UTC now; duration_ms; partial/source_data_status/excluded_reasons aggregated per implementation.",
-        "Do not drop hits for null volume_delta_usd_today on this rank_type (all matching docs returned up to limit)."
+        "Validate limit default 20 in 1..100, YYYY-MM-DD date_utc, supported venues polymarket/predict_fun and status active/closed/resolved/all (default active). category is a trimmed exact free-text filter; unknown categories return empty results. Rank by volume_delta_usd_today descending with ties broken by venue_event_id then rank_no. Preserve overall/by_venue/generated_at/duration_ms/partial/source_data_status/excluded_reasons; null volume_delta values do not by themselves remove matching rows."
       ],
       "errors": [
-        { "code": "invalid_param", "when": "date_utc not YYYY-MM-DD; any non-empty venue not polymarket/predict_fun; status not in active/closed/resolved/all" },
-        { "code": "invalid_size", "when": "limit <= 0 or limit > 100" },
-        { "code": "internal", "when": "OpenSearch query fails (MCP maps opensearch to internal)" },
-        { "code": "not_implemented", "when": "opensearch.predictionRankIndex unset or prediction service not wired (placeholder tool)" }
+        {
+          "code": "invalid_param",
+          "when": "date_utc not YYYY-MM-DD; any non-empty venue not polymarket/predict_fun; status not in active/closed/resolved/all"
+        },
+        {
+          "code": "invalid_size",
+          "when": "limit <= 0 or limit > 100"
+        },
+        {
+          "code": "internal",
+          "when": "Ranking retrieval fails; the client receives internal."
+        },
+        {
+          "code": "not_implemented",
+          "when": "The ranking capability is unavailable; this placeholder returns not_implemented."
+        }
       ],
       "placeholder_when_unconfigured": true
     },
     {
       "name": "news_prediction_get_fastest_rising_ranking",
       "category": "news_prediction",
-      "description": "[Read] Daily venue/overall ranking by probability rise (UTC rank_date). Optional venue[], category, status (same as volume_delta ranking). Drops rows missing open_mid_probability_utc or probability_delta_today. Requires predictionRankIndex.",
+      "description": "[Read] Daily venue/overall ranking by probability rise (UTC rank_date). Optional venue[], category, and status match volume_delta ranking. Drops rows missing open_mid_probability_utc or probability_delta_today. Returns not_implemented when the ranking capability is unavailable.",
       "input_rules": {
         "required_policy": "no strict required params",
         "params": [
-          { "name": "date_utc", "type": "string", "required": false, "default": "today_utc (UTC YYYY-MM-DD)", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "notes": "Empty or omitted -> current UTC date." },
-          { "name": "limit", "type": "integer", "required": false, "default": 20, "max": 100, "notes": "Same as volume_delta: omitted -> 20; <=0 or >100 -> invalid_size." },
-          { "name": "venue", "type": "string[]", "required": false, "enum": ["polymarket", "predict_fun"], "notes": "Each element must be allowed; empty or omitted -> no venue filter. Multiple values -> terms filter (exact)." },
-          { "name": "category", "type": "string", "required": false, "notes": "Same as volume_delta: free-text exact term; no enum validation; empty/omit -> no filter; not 'all' -> term filter." },
-          { "name": "status", "type": "string", "required": false, "default": "active", "enum": ["active", "closed", "resolved", "all"], "notes": "Same semantics as volume_delta tool: empty -> active; 'all' -> no status filter." }
+          {
+            "name": "date_utc",
+            "type": "string",
+            "required": false,
+            "default": "today_utc (UTC YYYY-MM-DD)",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "notes": "Empty or omitted -> current UTC date."
+          },
+          {
+            "name": "limit",
+            "type": "integer",
+            "required": false,
+            "default": 20,
+            "max": 100,
+            "notes": "Same as volume_delta: omitted -> 20; <=0 or >100 -> invalid_size."
+          },
+          {
+            "name": "venue",
+            "type": "string[]",
+            "required": false,
+            "enum": [
+              "polymarket",
+              "predict_fun"
+            ],
+            "notes": "Each element must be allowed; empty or omitted -> no venue filter. Multiple values -> terms filter (exact)."
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "required": false,
+            "notes": "Same category behavior as volume_delta: free-text exact match, no enum validation. Empty or omitted -> no filter; 'all' -> no filter; any other value -> exact category match."
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false,
+            "default": "active",
+            "enum": [
+              "active",
+              "closed",
+              "resolved",
+              "all"
+            ],
+            "notes": "Same semantics as volume_delta tool: empty -> active; 'all' -> no status filter."
+          }
         ]
       },
       "logic": [
-        "Same validation as volume_delta (category free-text, no enum check; status enum only) and same OpenSearch filter shape, except rank_type=fastest_rising.",
-        "OpenSearch sort: probability_delta_today desc only; client tie-break same as volume_delta. Size = limit.",
-        "Post-filter from result set: drop items where open_mid_probability_utc is null or probability_delta_today is null (not eligible for fastest_rising list); excluded_reasons from dropped rows may contribute to partial/excluded_reasons aggregation.",
-        "Map remaining docs to RankingItem; parse excluded_reasons_json as volume_delta tool.",
-        "Response shape same family as volume_delta (overall, by_venue, generated_at, duration_ms, partial, etc.)."
+        "Use the same filters and validation as volume-delta ranking, ordered by probability_delta_today descending with ties broken by venue_event_id then rank_no. Exclude rows missing open_mid_probability_utc or probability_delta_today and preserve their completeness/exclusion reasons. Return the same ranking response family."
       ],
       "errors": [
-        { "code": "invalid_param", "when": "date_utc not YYYY-MM-DD; any non-empty venue not polymarket/predict_fun; status not in active/closed/resolved/all" },
-        { "code": "invalid_size", "when": "limit <= 0 or limit > 100" },
-        { "code": "internal", "when": "OpenSearch query fails (MCP maps opensearch to internal)" },
-        { "code": "not_implemented", "when": "opensearch.predictionRankIndex unset or prediction service not wired (placeholder tool)" }
+        {
+          "code": "invalid_param",
+          "when": "date_utc not YYYY-MM-DD; any non-empty venue not polymarket/predict_fun; status not in active/closed/resolved/all"
+        },
+        {
+          "code": "invalid_size",
+          "when": "limit <= 0 or limit > 100"
+        },
+        {
+          "code": "internal",
+          "when": "Ranking retrieval fails; the client receives internal."
+        },
+        {
+          "code": "not_implemented",
+          "when": "The ranking capability is unavailable; this placeholder returns not_implemented."
+        }
       ],
       "placeholder_when_unconfigured": true
     },
     {
       "name": "news_prediction_get_market_orderbook",
       "category": "news_prediction",
-      "description": "[Read] Live current order book only (mode=current). depth 1-20 (default 20). polymarket: market_id=venue_market_id; needs opensearch.predictionMarketIndex for token lookup (else not_implemented); yes/no CLOB /book in parallel—partial if one side fails, tool error only if both fail. predict_fun: official numeric market_id (not polymarket ids); needs predictFunAPIKey—empty/missing config returns partial_not_configured (no HTTP); API/parse errors return partial (not internal); 404 resource_not_found. Rejects history/granularity/time/page_token. snapshot_time/book_levels/best_* may be null when partial. Event list/signal -> search_events / get_event_signal.",
+      "description": "[Read] Live current order book only (mode=current). depth 1-20 (default 20). polymarket uses market_id=venue_market_id; unavailable market lookup returns not_implemented. Returns yes/no books: one failed side is partial, both failed sides fail the tool. predict_fun uses its official numeric market_id, not a polymarket ID; unavailable access returns partial_not_configured without a request. API/parse failures return partial rather than internal; 404 returns resource_not_found. Rejects history/granularity/time/page_token. snapshot_time/book_levels/best_* may be null when partial. Event list/signal -> search_events / get_event_signal.",
       "input_rules": {
         "required_policy": "venue and market_id are required",
         "params": [
-          { "name": "venue", "type": "string", "required": true, "enum": ["polymarket", "predict_fun"], "notes": "Trimmed; must be in whitelist." },
-          { "name": "market_id", "type": "string", "required": true, "notes": "polymarket: venue_market_id in dws_prediction_market_hf (requires predictionMarketIndex). predict_fun: official numeric market id (e.g. 356640), not polymarket venue_market_id." },
-          { "name": "depth", "type": "integer", "required": false, "default": 20, "min": 1, "max": 20, "notes": "Levels returned in yes_bids/yes_asks (top-N from each side)." },
-          { "name": "mode", "type": "string", "required": false, "default": "current (implicit)", "enum": ["current", ""], "notes": "history rejected; empty treated as current." },
-          { "name": "granularity", "type": "string", "required": false, "notes": "Unsupported; non-empty -> invalid_param." },
-          { "name": "start_time", "type": "string", "required": false, "notes": "Unsupported; non-empty -> invalid_param." },
-          { "name": "end_time", "type": "string", "required": false, "notes": "Unsupported; non-empty -> invalid_param." },
-          { "name": "page_token", "type": "string", "required": false, "notes": "Unsupported; non-empty -> invalid_param." }
+          {
+            "name": "venue",
+            "type": "string",
+            "required": true,
+            "enum": [
+              "polymarket",
+              "predict_fun"
+            ],
+            "notes": "Trimmed; must be in whitelist."
+          },
+          {
+            "name": "market_id",
+            "type": "string",
+            "required": true,
+            "notes": "polymarket: its venue_market_id; requires available market lookup. predict_fun: official numeric market ID (e.g. 356640), not a polymarket venue_market_id."
+          },
+          {
+            "name": "depth",
+            "type": "integer",
+            "required": false,
+            "default": 20,
+            "min": 1,
+            "max": 20,
+            "notes": "Levels returned in yes_bids/yes_asks (top-N from each side)."
+          },
+          {
+            "name": "mode",
+            "type": "string",
+            "required": false,
+            "default": "current (implicit)",
+            "enum": [
+              "current",
+              ""
+            ],
+            "notes": "history rejected; empty treated as current."
+          },
+          {
+            "name": "granularity",
+            "type": "string",
+            "required": false,
+            "notes": "Unsupported; non-empty -> invalid_param."
+          },
+          {
+            "name": "start_time",
+            "type": "string",
+            "required": false,
+            "notes": "Unsupported; non-empty -> invalid_param."
+          },
+          {
+            "name": "end_time",
+            "type": "string",
+            "required": false,
+            "notes": "Unsupported; non-empty -> invalid_param."
+          },
+          {
+            "name": "page_token",
+            "type": "string",
+            "required": false,
+            "notes": "Unsupported; non-empty -> invalid_param."
+          }
         ]
       },
       "logic": [
-        "Registration: live when predictionSvc non-nil and OrderbookEnabled (obHTTP from ApplyOrderbookConfig in main); placeholder when predictionSvc nil or orderbook disabled. Live polymarket still requires predictionMarketIndex for token lookup.",
-        "Validate venue/market_id/depth/mode; reject history and any of granularity/start_time/end_time/page_token.",
-        "Optional in-memory cache (venue+market_id+depth) when prediction.orderbookCacheSeconds > 0; only caches complete non-partial responses.",
-        "polymarket: term lookup on predictionMarketIndex by venue.keyword+venue_market_id; fetch yes/no token CLOB books in parallel; BookLevels from both books (best_yes/no bid/ask, spreads, top5_depth_* on yes book, yes_bids/yes_asks). partial if either fetch fails or any best price missing; hard error only if BOTH fetches fail.",
-        "predict_fun: if predictFunAPIKey empty -> partial, missing_sources=[predict_fun_not_configured], source_data_status=partial_not_configured (no HTTP call). Else GET official orderbook (parse success/data envelope; 401/unauthorized -> partial_not_configured not internal); yes book only, best_no_* derived as complement of yes ask/bid; API/parse failure -> partial + predict_fun_orderbook_failed (nil tool error); 404 -> resource_not_found.",
-        "Response: partial, missing_sources, venue, market_id, source_api, mode=current, snapshot_time, book_levels, source_data_status (complete|partial|partial_not_configured), duration_ms. Not items/total/count."
+        "Support current books only; reject history/granularity/time/page_token. Validate venue/market_id/depth/mode. A complete response may be cached briefly; partial responses are not cached. polymarket uses its venue market ID and returns yes/no books; one failed side is partial and both failed sides fail the operation. predict_fun uses its official numeric ID; unavailable authorization returns partial_not_configured without a request, API/parse failures return partial with the documented missing_sources, and 404 returns resource_not_found. Preserve snapshot_time/book_levels/source_api/source_data_status/duration_ms and complement-derived no-side prices."
       ],
       "errors": [
-        { "code": "invalid_param", "when": "venue/market_id empty; venue not polymarket/predict_fun; depth < 1 or > 20; mode=history or other unsupported mode; granularity/start_time/end_time/page_token set" },
-        { "code": "config_load_failed", "when": "obHTTP nil; polymarket CLOB base URL empty on fetch" },
-        { "code": "not_implemented", "when": "placeholder (predictionSvc nil); polymarket when predictionMarketIndex unset" },
-        { "code": "internal", "when": "polymarket market index OpenSearch query fails (MCP maps opensearch to internal)" },
-        { "code": "internal", "when": "polymarket CLOB: both yes and no book fetches fail (single-side fail -> partial, no tool error)" },
-        { "code": "resource_not_found", "when": "polymarket: no market hit or missing yes/no token_id; predict_fun: HTTP 404 market_id=… venue=predict_fun" },
-        { "code": "(success partial)", "when": "predict_fun: empty API key, 401/unauthorized, or API/parse failure -> partial + missing_sources (predict_fun_not_configured|predict_fun_orderbook_failed); not internal" }
+        {
+          "code": "invalid_param",
+          "when": "venue/market_id empty; venue not polymarket/predict_fun; depth < 1 or > 20; mode=history or other unsupported mode; granularity/start_time/end_time/page_token set"
+        },
+        {
+          "code": "config_load_failed",
+          "when": "obHTTP nil; polymarket CLOB base URL empty on fetch"
+        },
+        {
+          "code": "not_implemented",
+          "when": "The order-book capability is unavailable, or polymarket market lookup is unavailable."
+        },
+        {
+          "code": "internal",
+          "when": "polymarket market lookup fails; the client receives internal."
+        },
+        {
+          "code": "internal",
+          "when": "polymarket CLOB: both yes and no book fetches fail (single-side fail -> partial, no tool error)"
+        },
+        {
+          "code": "resource_not_found",
+          "when": "polymarket: no market hit or missing yes/no token_id; predict_fun: HTTP 404 market_id=… venue=predict_fun"
+        },
+        {
+          "code": "(success partial)",
+          "when": "predict_fun: empty API key, 401/unauthorized, or API/parse failure -> partial + missing_sources (predict_fun_not_configured|predict_fun_orderbook_failed); not internal"
+        }
       ],
       "placeholder_when_unconfigured": true
     },
     {
       "name": "news_prediction_search_events",
       "category": "news_prediction",
-      "description": "[Read] Search prediction events (dws_prediction_event_signal_hf; collapse per pk_id). At least one of query, coin, or category required. Default sort_by=recently_listed; status defaults active (only coin with no query/category -> all). coin uses related_coins/symbols (may return 0 rows if index lacks them). category is enum (crypto_price, sports, …). with_markets attaches dws_prediction_market_hf summaries. Single event_ref detail -> get_event_signal; live order book -> get_market_orderbook.",
+      "description": "[Read] Search prediction events, returning one latest result per event. At least one of query, coin, or category is required. Default sort_by=recently_listed; status defaults active (coin alone with no query/category -> all). Coin matching can legitimately return zero rows when coin associations are unavailable. category accepts the declared enum (crypto_price, sports, ...). with_markets attaches market summaries. Single event_ref detail -> get_event_signal; live order book -> get_market_orderbook.",
       "input_rules": {
         "required_policy": "at least one of query, coin, or category is required",
         "params": [
-          { "name": "query", "type": "string", "required": false, "notes": "Trimmed; wildcard on venue_event_title (keyword field). Pure-digit query also term venue_event_id." },
-          { "name": "coin", "type": "string", "required": false, "notes": "Normalized via event.NormalizeCoin. Omitted status: all only when coin set and query/category both empty; coin+category without query still defaults active. terms on related_coins and symbols (not coins/tokens)." },
-          { "name": "category", "type": "string", "required": false, "enum": ["crypto_event", "crypto_price", "culture", "earnings", "elections", "finance", "geopolitics", "macro_economy", "mentions", "other", "politics", "sports", "tech_ai", "weather_climate", "world"], "notes": "Maps to index field event_category_primary (term). Optional market pre-query on market_category_primary." },
-          { "name": "status", "type": "string", "required": false, "default": "active when omitted (except coin-only with no query/category -> all)", "enum": ["active", "closed", "resolved", "all"], "notes": "Omitted: active unless query empty AND coin set AND category empty (then all). coin+category without query still defaults active. Filter maps to event_status. Response status_tags from status_json_array|status_tags|event_status." },
-          { "name": "venue", "type": "string[]", "required": false, "enum": ["polymarket", "predict_fun"], "notes": "Each non-empty element validated; blank skipped; filter uses venue.keyword." },
-          { "name": "sort_by", "type": "string", "required": false, "default": "recently_listed", "enum": ["attention", "volume", "liquidity", "recently_listed", "probability_change", "volume_delta_today"], "notes": "Signal index fields: attention→attention_score; volume|volume_delta_today→total_volume_usd_24h; liquidity→total_liquidity_usd; recently_listed→create_time+part_hour; probability_change→|probability_change_6h|. ES 400 fallback chain per implementation." },
-          { "name": "limit", "type": "integer", "required": false, "default": 20, "max": 100, "notes": "Values <1 or >100 invalid. OpenSearch size=limit+1; return first limit hits." },
-          { "name": "page_token", "type": "string", "required": false, "notes": "Base64 JSON {sort_by, search_after}; invalid decode or sort_by mismatch (when both sides non-empty) -> invalid_param." },
-          { "name": "with_markets", "type": "boolean", "required": false, "default": false, "notes": "When true attach markets from predictionMarketIndex; when false omit markets. On attach skip/fail: missing_sources markets_index_not_configured|markets_attach_failed; partial stays false." }
+          {
+            "name": "query",
+            "type": "string",
+            "required": false,
+            "notes": "Whitespace is trimmed. Query matches event-title text; a query containing only digits also matches the venue event ID exactly."
+          },
+          {
+            "name": "coin",
+            "type": "string",
+            "required": false,
+            "notes": "Known coin aliases are normalized to a standard ticker. If status is omitted, use all only when coin is provided and query/category are both empty; coin+category without query still defaults to active. Coin associations can be absent, in which case a coin filter can legitimately return no matches."
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "crypto_event",
+              "crypto_price",
+              "culture",
+              "earnings",
+              "elections",
+              "finance",
+              "geopolitics",
+              "macro_economy",
+              "mentions",
+              "other",
+              "politics",
+              "sports",
+              "tech_ai",
+              "weather_climate",
+              "world"
+            ],
+            "notes": "Filters by the selected event category; market-category associations may also be used when available."
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false,
+            "default": "active when omitted (except coin-only with no query/category -> all)",
+            "enum": [
+              "active",
+              "closed",
+              "resolved",
+              "all"
+            ],
+            "notes": "Omitted -> active unless query is empty, coin is provided and category is empty, in which case all. Coin+category without query still defaults to active. Results reflect the selected event status and expose normalized status_tags."
+          },
+          {
+            "name": "venue",
+            "type": "string[]",
+            "required": false,
+            "enum": [
+              "polymarket",
+              "predict_fun"
+            ],
+            "notes": "Each non-empty element is validated; blank elements are skipped. Matches the selected venues."
+          },
+          {
+            "name": "sort_by",
+            "type": "string",
+            "required": false,
+            "default": "recently_listed",
+            "enum": [
+              "attention",
+              "volume",
+              "liquidity",
+              "recently_listed",
+              "probability_change",
+              "volume_delta_today"
+            ],
+            "notes": "attention sorts by attention; volume|volume_delta_today by 24h volume; liquidity by liquidity; recently_listed by listing recency; probability_change by the absolute 6h probability change. If preferred sort metadata is unavailable, a supported fallback ordering is used."
+          },
+          {
+            "name": "limit",
+            "type": "integer",
+            "required": false,
+            "default": 20,
+            "max": 100,
+            "notes": "Values <1 or >100 are invalid. Returns at most limit events; pagination can report whether more results exist."
+          },
+          {
+            "name": "page_token",
+            "type": "string",
+            "required": false,
+            "notes": "Base64 JSON {sort_by, search_after}; invalid decode or sort_by mismatch (when both sides non-empty) -> invalid_param."
+          },
+          {
+            "name": "with_markets",
+            "type": "boolean",
+            "required": false,
+            "default": false,
+            "notes": "When true, attach available market summaries; when false, omit markets. If attachment is skipped or fails, missing_sources includes markets_index_not_configured|markets_attach_failed and partial remains false."
+          }
         ]
       },
       "logic": [
-        "Registration: live when EventVenueSearchEnabled (opensearch.predictionEventSignalIndex non-empty); placeholder when index unset or predictionSvc nil.",
-        "Validate; default limit=20; status omitted -> active unless query empty and coin set and category empty (then all); sort_by=recently_listed with ES sort fallback.",
-        "OpenSearch predictionEventSignalIndex (dws_prediction_event_signal_hf): bool filter venue.keyword + event_status; must query/coin; category term event_category_primary when set.",
-        "collapse field pk_id so each event returns one row (latest row per sort keys).",
-        "status filter: term event_status (active/closed/resolved aliases: close/closed, open/active, etc.).",
-        "query: wildcard venue_event_title; pure-digit query term venue_event_id.",
-        "category: term event_category_primary; optional market pre-query on dws_prediction_market_hf market_category_primary.",
-        "Category pre-query failure: log warn and continue without market event ids (degraded, not fatal).",
-        "search_after from page_token; next_page_token from hit.sort or rebuilt from _source.",
-        "Map hits: event_ref=venue:venue_event_id; status_tags from status_json_array then status_tags then event_status (normalize close->closed); category from event_category_primary; lead_yes_probability from lead_yes_probability|latest_mid_probability|mid_yes_probability.",
-        "recently_listed sort: create_time, part_hour, then legacy first_seen_time/open_time.",
-        "Response: partial=false on success, missing_sources when with_markets attach skipped/failed, next_page_token|null, events[], duration_ms.",
-        "Missing sort fields -> OpenSearch 400 triggers sort_by fallback chain; MCP client error code internal (no index/status leakage).",
-        "Pagination tie-break: venue.keyword asc, venue_event_id asc.",
-        "coin filter: terms related_coins and symbols only (often empty on signal index -> zero hits, not an error)."
+        "Require query, coin or category and validate the declared enums/bounds. Default limit 20 and sort recently_listed. status defaults active except coin alone defaults all. Query matches title text or a numeric event ID; category and venues filter the public event results. Return one latest result per event, stable venue/event tie breaks and cursor pagination. Coin filters can legitimately return no matches. with_markets controls optional market summaries; attach failure preserves events and reports documented missing_sources. Preserve normalized statuses, public category/probability fields, next_page_token and duration_ms; failures use the documented internal error without storage names."
       ],
       "errors": [
-        { "code": "invalid_param", "when": "query/coin/category all empty; category/sort_by/status/venue invalid; page_token invalid or sort_by mismatch" },
-        { "code": "invalid_size", "when": "limit < 1 or > 100" },
-        { "code": "internal", "when": "signal index search fails after sort fallbacks (MCP client; server logs retain detail)" },
-        { "code": "not_implemented", "when": "opensearch.predictionEventSignalIndex unset or predictionSvc nil (placeholder)" }
+        {
+          "code": "invalid_param",
+          "when": "query/coin/category all empty; category/sort_by/status/venue invalid; page_token invalid or sort_by mismatch"
+        },
+        {
+          "code": "invalid_size",
+          "when": "limit < 1 or > 100"
+        },
+        {
+          "code": "internal",
+          "when": "Event search still fails after supported sort fallbacks; the client receives internal without detailed storage diagnostics."
+        },
+        {
+          "code": "not_implemented",
+          "when": "The event-search capability is unavailable; this placeholder returns not_implemented."
+        }
       ],
       "placeholder_when_unconfigured": true
     },
     {
       "name": "news_prediction_get_event_signal",
       "category": "news_prediction",
-      "description": "[Read] Single event signal from dws_external_event_signal_hf by event_ref (venue:venue_event_id). window 1h/24h/7d (default 24h). Returns outcome_probabilities, volume_flow, directional_context, optional markets[] (default include_markets=true). depth_summary always null—use get_market_orderbook for live depth. daily_ranking when rank index configured. Discover event_ref -> search_events. include_orderbook_summary ignored.",
+      "description": "[Read] Single event signal by event_ref (venue:venue_event_id). window 1h/24h/7d (default 24h). Returns outcome_probabilities, volume_flow, directional_context, and optional markets[] (default include_markets=true). depth_summary is always null; use get_market_orderbook for live depth. daily_ranking is included when ranking data is available. Discover event_ref -> search_events. include_orderbook_summary is ignored.",
       "input_rules": {
         "required_policy": "event_ref is required",
         "params": [
-          { "name": "event_ref", "type": "string", "required": true, "pattern": "^[^:]+:[^:]+$", "notes": "Split on first ':' -> venue + venue_event_id (id may contain further colons). Normalized to venue:venue_event_id. Venue must be polymarket or predict_fun. Index may also store event_ref field." },
-          { "name": "window", "type": "string", "required": false, "default": "24h", "enum": ["1h", "24h", "7d"], "notes": "Case-insensitive. Filters docs: part_hour >= now - window (1h uses extended lookback +3h on part_hour filter)." },
-          { "name": "venue", "type": "string[]", "required": false, "enum": ["polymarket", "predict_fun"], "notes": "Optional; each non-empty value must equal event_ref venue or invalid_param." },
-          { "name": "include_markets", "type": "boolean|null", "required": false, "default": true, "notes": "Omitted/null -> true. Parse markets (external index) or source_markets_json (legacy); if empty, fallback predictionMarketIndex. false omits markets[]. Invalid JSON -> partial + markets_json_invalid." },
-          { "name": "include_orderbook_summary", "type": "boolean", "required": false, "default": false, "notes": "Deprecated/unread in handler." }
+          {
+            "name": "event_ref",
+            "type": "string",
+            "required": true,
+            "pattern": "^[^:]+:[^:]+$",
+            "notes": "Split on the first ':' into venue and venue_event_id (the ID may contain further colons). Normalize to venue:venue_event_id. Venue must be polymarket or predict_fun."
+          },
+          {
+            "name": "window",
+            "type": "string",
+            "required": false,
+            "default": "24h",
+            "enum": [
+              "1h",
+              "24h",
+              "7d"
+            ],
+            "notes": "Case-insensitive. Selects the signal time window. A 1h request may use an additional 3h lookback to locate a fallback result."
+          },
+          {
+            "name": "venue",
+            "type": "string[]",
+            "required": false,
+            "enum": [
+              "polymarket",
+              "predict_fun"
+            ],
+            "notes": "Optional; each non-empty value must equal event_ref venue or invalid_param."
+          },
+          {
+            "name": "include_markets",
+            "type": "boolean|null",
+            "required": false,
+            "default": true,
+            "notes": "Omitted/null -> true. Returns available market summaries, using a supplementary source if the signal has none. false omits markets[]. Invalid serialized market data -> partial + markets_json_invalid."
+          },
+          {
+            "name": "include_orderbook_summary",
+            "type": "boolean",
+            "required": false,
+            "default": false,
+            "notes": "Deprecated; accepted but does not affect the result."
+          }
         ]
       },
       "logic": [
-        "Registration: live when ExternalEventSignalEnabled (opensearch.externalEventSignalIndex non-empty); placeholder when unset or predictionSvc nil.",
-        "Query externalEventSignalIndex (dws_external_event_signal_hf): filter venue.keyword + venue_event_id + part_hour range; sort part_hour desc, etl_time desc; size 1 (8 for 1h). No hit in window -> resource_not_found (detail: event_ref=venue:id). 1h strict miss may use latest doc -> missing_sources signal_window_fallback.",
-        "Map index fields (external primary, legacy fallbacks): status_tags from status_tags JSON string or status_json_array; signal_time from signal_time|signal_minute|part_hour; yes/no from yes_probability|no_probability (mid_* fallback); directional_context from directional_context|directional_context_json; markets from markets|source_markets_json; category_ai_primary top-level; source_data_status from index (e.g. partial_price_gap); depth_summary always null in mapper (use get_market_orderbook for live depth); daily_ranking from index or rank-index enrichment when configured.",
-        "volume_flow.source = dws_external_event_signal_hf.",
-        "Enrichment parallel: predictionMarketIndex when include_markets and embedded markets empty; external index lookup for title/category/status fill; rank index for daily_ranking when configured.",
-        "include_markets=true: empty markets with market_count>0 may set markets_index_empty + partial_markets_gap.",
-        "finalizeEventSignalPartial: may upgrade partial_probability_gap, partial_markets_gap, partial_volume_gap when fields missing.",
-        "MCP client: OpenSearch/API failures return code internal without vendor or HTTP status in message.",
-        "Response: partial, missing_sources, event_identity, signal_time, source_data_status, outcome_probabilities, depth_summary, volume_flow, daily_ranking?, cross_venue_divergence, directional_context, markets? (omitempty when include_markets false), window, duration_ms."
+        "Require event_ref=venue:event_id, split on the first colon and preserve any additional colons in the ID. Accept window 1h|24h|7d, default 24h, case insensitive. Return the latest available signal in the window; a 1h fallback can report signal_window_fallback. Preserve event_identity, timestamps/status, outcome_probabilities, directional_context, volume_flow and optional daily_ranking/markets. include_markets omitted/null defaults true; false omits markets. Unusable supplementary markets preserve documented partial/missing-source codes. depth_summary remains null; use get_market_orderbook for live depth. include_orderbook_summary remains ignored. No matching signal returns resource_not_found."
       ],
       "errors": [
-        { "code": "invalid_param", "when": "event_ref empty; not venue:id shape; venue not allowed; window not 1h/24h/7d; venue[] filter mismatches event_ref venue" },
-        { "code": "internal", "when": "external signal index query fails (server opensearch_query_failed; MCP client receives internal)" },
-        { "code": "resource_not_found", "when": "no document in window (detail: event_ref=venue:id)" },
-        { "code": "not_implemented", "when": "opensearch.externalEventSignalIndex unset or predictionSvc nil (placeholder)" }
+        {
+          "code": "invalid_param",
+          "when": "event_ref empty; not venue:id shape; venue not allowed; window not 1h/24h/7d; venue[] filter mismatches event_ref venue"
+        },
+        {
+          "code": "internal",
+          "when": "Signal retrieval fails; the client receives internal."
+        },
+        {
+          "code": "resource_not_found",
+          "when": "no document in window (detail: event_ref=venue:id)"
+        },
+        {
+          "code": "not_implemented",
+          "when": "The event-signal capability is unavailable; this placeholder returns not_implemented."
+        }
       ],
       "placeholder_when_unconfigured": true
     }

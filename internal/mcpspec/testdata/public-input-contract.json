@@ -1,0 +1,2998 @@
+{
+  "info": {
+    "tools": [
+      {
+        "tool_name": "info_coin_get_coin_info",
+        "domain": "coin",
+        "required": [
+          "query"
+        ],
+        "fields": [
+          {
+            "name": "query",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "query_type",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "auto",
+              "address",
+              "symbol",
+              "name",
+              "project",
+              "gate_symbol",
+              "source_id"
+            ]
+          },
+          {
+            "name": "chain",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "scope",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "basic",
+              "detailed",
+              "full",
+              "with_project",
+              "with_tokenomics"
+            ]
+          },
+          {
+            "name": "size",
+            "type": "int",
+            "required": false
+          },
+          {
+            "name": "fields",
+            "type": "string[]",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_coin_search_coins",
+        "domain": "coin",
+        "required": [],
+        "fields": [
+          {
+            "name": "category",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "chain",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "market_cap_min",
+            "type": "float64",
+            "required": false
+          },
+          {
+            "name": "market_cap_max",
+            "type": "float64",
+            "required": false
+          },
+          {
+            "name": "asset_type",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "crypto",
+              "tradefi",
+              "all"
+            ]
+          },
+          {
+            "name": "sort_by",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "market_cap",
+              "fdv",
+              "circulating_supply"
+            ]
+          },
+          {
+            "name": "limit",
+            "type": "int",
+            "required": false
+          },
+          {
+            "name": "offset",
+            "type": "int",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_coin_get_coin_rankings",
+        "domain": "coin",
+        "required": [
+          "ranking_type"
+        ],
+        "fields": [
+          {
+            "name": "ranking_type",
+            "type": "string",
+            "required": true,
+            "enum": [
+              "popular",
+              "top_gainers",
+              "top_losers",
+              "twitter_hot",
+              "airdrop",
+              "new_listing",
+              "market_pulse_hot"
+            ]
+          },
+          {
+            "name": "limit",
+            "type": "int",
+            "required": false
+          },
+          {
+            "name": "time_range",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "1h",
+              "24h",
+              "7d"
+            ]
+          },
+          {
+            "name": "listing_query",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "listing_from",
+            "type": "int64",
+            "required": false
+          },
+          {
+            "name": "listing_tickers",
+            "type": "string",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_markettrend_get_kline",
+        "domain": "cointrend",
+        "required": [
+          "symbol",
+          "timeframe"
+        ],
+        "fields": [
+          {
+            "name": "symbol",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "timeframe",
+            "type": "string",
+            "required": true,
+            "enum": [
+              "1m",
+              "5m",
+              "15m",
+              "1h",
+              "4h",
+              "1d"
+            ]
+          },
+          {
+            "name": "period",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "1h",
+              "4h",
+              "24h",
+              "7d",
+              "3d",
+              "5d",
+              "10d",
+              "all"
+            ]
+          },
+          {
+            "name": "size",
+            "type": "int",
+            "required": false
+          },
+          {
+            "name": "limit",
+            "type": "int",
+            "required": false
+          },
+          {
+            "name": "start_time",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "end_time",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "with_indicators",
+            "type": "bool",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_markettrend_get_indicator_history",
+        "domain": "cointrend",
+        "required": [
+          "symbol",
+          "indicators",
+          "timeframe"
+        ],
+        "fields": [
+          {
+            "name": "symbol",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "indicators",
+            "type": "string[]",
+            "required": true,
+            "common_values": [
+              "rsi",
+              "macd",
+              "macd_dea",
+              "macd_difference",
+              "ma7",
+              "ma30",
+              "ma120",
+              "ma200",
+              "ema7",
+              "ema30",
+              "ema120",
+              "ema200",
+              "boll_middle_band",
+              "boll_upper_band",
+              "boll_lower_band",
+              "signal_value_k",
+              "signal_value_d",
+              "signal_value_j",
+              "profit_rate_stddev_7d",
+              "profit_rate_stddev_30d",
+              "profit_rate_stddev_90d",
+              "adx",
+              "di_plus",
+              "di_minus",
+              "cci",
+              "wr",
+              "sar",
+              "open_price",
+              "high_price",
+              "low_price",
+              "close_price",
+              "deal_cnt",
+              "amt"
+            ]
+          },
+          {
+            "name": "timeframe",
+            "type": "string",
+            "required": true,
+            "enum": [
+              "15m",
+              "1h",
+              "4h",
+              "1d"
+            ]
+          },
+          {
+            "name": "start_time",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "end_time",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "limit",
+            "type": "int",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_markettrend_get_technical_analysis",
+        "domain": "cointrend",
+        "required": [
+          "symbol"
+        ],
+        "fields": [
+          {
+            "name": "symbol",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "period",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "1h",
+              "4h",
+              "24h",
+              "7d",
+              "3d",
+              "5d",
+              "10d",
+              "all"
+            ]
+          },
+          {
+            "name": "start_time",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "end_time",
+            "type": "string",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_marketsnapshot_get_market_snapshot",
+        "domain": "snapshot",
+        "required": [
+          "symbol"
+        ],
+        "fields": [
+          {
+            "name": "symbol",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "timeframe",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "15m",
+              "1h",
+              "4h",
+              "1d"
+            ]
+          },
+          {
+            "name": "indicator_timeframe",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "15m",
+              "1h",
+              "4h",
+              "1d"
+            ]
+          },
+          {
+            "name": "source",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "alpha",
+              "spot",
+              "future",
+              "fx",
+              "futures"
+            ]
+          },
+          {
+            "name": "quote",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "scope",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "basic",
+              "detailed",
+              "full"
+            ]
+          }
+        ]
+      },
+      {
+        "tool_name": "info_marketsnapshot_batch_market_snapshot",
+        "domain": "snapshot",
+        "required": [
+          "symbols"
+        ],
+        "fields": [
+          {
+            "name": "symbols",
+            "type": "string[]",
+            "required": true
+          },
+          {
+            "name": "timeframe",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "15m",
+              "1h",
+              "4h",
+              "1d"
+            ]
+          },
+          {
+            "name": "source",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "alpha",
+              "spot",
+              "future",
+              "fx",
+              "futures"
+            ]
+          },
+          {
+            "name": "quote",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "scope",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "basic",
+              "detailed",
+              "full"
+            ]
+          }
+        ]
+      },
+      {
+        "tool_name": "info_marketsnapshot_get_market_overview",
+        "domain": "snapshot",
+        "required": [],
+        "fields": []
+      },
+      {
+        "tool_name": "info_marketsnapshot_get_institutional_metrics",
+        "domain": "snapshot",
+        "required": [],
+        "fields": [
+          {
+            "name": "asset",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "BTC",
+              "ETH",
+              "all"
+            ]
+          },
+          {
+            "name": "start_date",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "end_date",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "channel",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "all",
+              "etf",
+              "cme",
+              "cftc"
+            ]
+          },
+          {
+            "name": "limit",
+            "type": "int",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_onchain_get_address_info",
+        "domain": "address",
+        "required": [
+          "address"
+        ],
+        "fields": [
+          {
+            "name": "address",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "chain",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "scope",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "basic",
+              "with_defi",
+              "with_counterparties",
+              "with_pnl",
+              "full",
+              "detailed"
+            ]
+          },
+          {
+            "name": "min_value_usd",
+            "type": "float64",
+            "required": false
+          },
+          {
+            "name": "include_upstream_raw",
+            "type": "bool",
+            "required": false
+          },
+          {
+            "name": "upstream_raw_mode",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "off",
+              "lite",
+              "full"
+            ]
+          }
+        ],
+        "errors": [
+          {
+            "code": "invalid_chain"
+          },
+          {
+            "code": "invalid_address"
+          },
+          {
+            "code": "upstream_not_ready"
+          }
+        ],
+        "response_fields": [
+          "asset_summary",
+          "token_balances",
+          "multi_chain_token_balances",
+          "detected_chains",
+          "duration_ms"
+        ]
+      },
+      {
+        "tool_name": "info_onchain_get_address_transactions",
+        "domain": "transaction",
+        "required": [
+          "address"
+        ],
+        "fields": [
+          {
+            "name": "address",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "chain",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "min_value_usd",
+            "type": "float64",
+            "required": false
+          },
+          {
+            "name": "tx_type",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "transfer",
+              "contract_call",
+              "token_transfer",
+              "all"
+            ]
+          },
+          {
+            "name": "time_range",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "1h",
+              "24h",
+              "1d",
+              "7d",
+              "30d",
+              "90d"
+            ]
+          },
+          {
+            "name": "start_time",
+            "type": "int64",
+            "required": false
+          },
+          {
+            "name": "end_time",
+            "type": "int64",
+            "required": false
+          },
+          {
+            "name": "limit",
+            "type": "int",
+            "required": false
+          },
+          {
+            "name": "from_address",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "to_address",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "nonzero_value",
+            "type": "bool",
+            "required": false
+          },
+          {
+            "name": "include_upstream_raw",
+            "type": "bool",
+            "required": false
+          },
+          {
+            "name": "upstream_raw_mode",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "off",
+              "lite",
+              "full"
+            ]
+          }
+        ],
+        "errors": [
+          {
+            "code": "invalid_chain"
+          },
+          {
+            "code": "invalid_address"
+          },
+          {
+            "code": "partial_upstream_response"
+          },
+          {
+            "code": "upstream_not_ready"
+          }
+        ],
+        "response_fields": [
+          "total",
+          "count",
+          "items",
+          "transactions",
+          "duration_ms"
+        ]
+      },
+      {
+        "tool_name": "info_onchain_get_transaction",
+        "domain": "onchain",
+        "required": [
+          "tx_hash"
+        ],
+        "fields": [
+          {
+            "name": "tx_hash",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "chain",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "include_upstream_raw",
+            "type": "bool",
+            "required": false
+          },
+          {
+            "name": "upstream_raw_mode",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "off",
+              "lite",
+              "full"
+            ]
+          }
+        ]
+      },
+      {
+        "tool_name": "info_onchain_get_token_onchain",
+        "domain": "onchain",
+        "required": [
+          "token"
+        ],
+        "fields": [
+          {
+            "name": "token",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "chain",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "scope",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "holders",
+              "activity",
+              "transfers",
+              "smart_money",
+              "full"
+            ]
+          },
+          {
+            "name": "include_upstream_raw",
+            "type": "bool",
+            "required": false
+          },
+          {
+            "name": "upstream_raw_mode",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "off",
+              "lite",
+              "full"
+            ]
+          }
+        ]
+      },
+      {
+        "tool_name": "info_compliance_check_token_security",
+        "domain": "tokensecurity",
+        "required": [
+          "chain"
+        ],
+        "conditional_required": [
+          "token xor address (one required, not both)"
+        ],
+        "fields": [
+          {
+            "name": "token",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "address",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "chain",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "scope",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "basic",
+              "full"
+            ]
+          },
+          {
+            "name": "lang",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "en",
+              "cn",
+              "tw",
+              "ja",
+              "kr"
+            ]
+          }
+        ]
+      },
+      {
+        "tool_name": "info_platformmetrics_get_platform_info",
+        "domain": "platformmetrics",
+        "required": [
+          "platform_name"
+        ],
+        "fields": [
+          {
+            "name": "platform_name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "scope",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "basic",
+              "with_chain_breakdown",
+              "full",
+              "detailed"
+            ]
+          },
+          {
+            "name": "include_oi_symbol_detail",
+            "type": "bool",
+            "required": false
+          },
+          {
+            "name": "oi_symbol_limit",
+            "type": "int",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_platformmetrics_search_platforms",
+        "domain": "platformmetrics",
+        "required": [],
+        "fields": [
+          {
+            "name": "platform_type",
+            "type": "string",
+            "required": false,
+            "common_values": [
+              "all",
+              "cex",
+              "derivatives",
+              "defi",
+              "dex",
+              "dexs",
+              "dexes",
+              "lending"
+            ]
+          },
+          {
+            "name": "chain",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "sort_by",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "tvl",
+              "volume_24h",
+              "volume_spot_24h",
+              "volume_perps_24h",
+              "volume_perps_7d",
+              "volume_perps_30d",
+              "volume_perps_qtd",
+              "fees_24h"
+            ]
+          },
+          {
+            "name": "sort_order",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "asc",
+              "desc"
+            ]
+          },
+          {
+            "name": "limit",
+            "type": "int64",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_platformmetrics_get_defi_overview",
+        "domain": "platformmetrics",
+        "required": [],
+        "fields": [
+          {
+            "name": "category",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "all",
+              "defi",
+              "spot",
+              "perp",
+              "stablecoin",
+              "bridge"
+            ],
+            "common_values": [
+              "de-fi",
+              "cex",
+              "dex",
+              "dexs",
+              "dexes",
+              "lending",
+              "cdp",
+              "yield",
+              "derivatives",
+              "yield aggregator"
+            ]
+          }
+        ]
+      },
+      {
+        "tool_name": "info_platformmetrics_get_stablecoin_info",
+        "domain": "platformmetrics",
+        "required": [],
+        "fields": [
+          {
+            "name": "symbol",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "chain",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "limit",
+            "type": "int64",
+            "required": false
+          },
+          {
+            "name": "scope",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "basic",
+              "full"
+            ]
+          },
+          {
+            "name": "sections",
+            "type": "string|string[]",
+            "required": false,
+            "enum": [
+              "issuance_flow",
+              "usage_structure",
+              "depeg_events"
+            ]
+          },
+          {
+            "name": "start_date",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "end_date",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "min_deviation",
+            "type": "float64",
+            "required": false
+          },
+          {
+            "name": "review_status",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "candidate",
+              "approved",
+              "rejected"
+            ]
+          }
+        ]
+      },
+      {
+        "tool_name": "info_platformmetrics_get_bridge_metrics",
+        "domain": "platformmetrics",
+        "required": [],
+        "fields": [
+          {
+            "name": "bridge_name",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "chain",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "sort_by",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "volume_24h",
+              "volume_7d",
+              "volume_30d",
+              "deposit_txs_24h"
+            ]
+          },
+          {
+            "name": "limit",
+            "type": "int64",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_platformmetrics_get_cex_orderbook_depth",
+        "domain": "platformmetrics",
+        "required": [
+          "symbol"
+        ],
+        "fields": [
+          {
+            "name": "symbol",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "market_type",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "spot",
+              "perp",
+              "perps",
+              "futures",
+              "future"
+            ]
+          },
+          {
+            "name": "exchange",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "data_scope",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "exchange",
+              "market"
+            ]
+          },
+          {
+            "name": "limit",
+            "type": "int64",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_platformmetrics_get_yield_pools",
+        "domain": "platformmetrics",
+        "required": [],
+        "fields": [
+          {
+            "name": "project",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "chain",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "symbol",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "pool_type",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "sort_by",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "apy",
+              "tvl_usd"
+            ]
+          },
+          {
+            "name": "limit",
+            "type": "int64",
+            "required": false
+          },
+          {
+            "name": "min_tvl_usd",
+            "type": "float64",
+            "required": false
+          },
+          {
+            "name": "scope",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "basic",
+              "full"
+            ]
+          }
+        ]
+      },
+      {
+        "tool_name": "info_platformmetrics_get_platform_history",
+        "domain": "platformmetrics",
+        "required": [],
+        "conditional_required": [
+          "platform_name or exchange_slug (at least one required)"
+        ],
+        "fields": [
+          {
+            "name": "platform_name",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "exchange_slug",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "metrics",
+            "type": "string[]",
+            "required": false,
+            "common_values": [
+              "tvl",
+              "volume",
+              "fees",
+              "revenue",
+              "volume_perps"
+            ]
+          },
+          {
+            "name": "granularity",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "day",
+              "week",
+              "month",
+              "quarter"
+            ]
+          },
+          {
+            "name": "start_date",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "end_date",
+            "type": "string",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_platformmetrics_get_exchange_reserves",
+        "domain": "platformmetrics",
+        "required": [],
+        "fields": [
+          {
+            "name": "exchange",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "asset",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "BTC",
+              "ETH",
+              "USDT",
+              "USDC"
+            ]
+          },
+          {
+            "name": "scope",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "basic",
+              "full"
+            ]
+          },
+          {
+            "name": "include_history",
+            "type": "bool",
+            "required": false
+          },
+          {
+            "name": "history_window",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "quarter"
+            ]
+          },
+          {
+            "name": "include_flows",
+            "type": "bool",
+            "required": false
+          },
+          {
+            "name": "include_events",
+            "type": "bool",
+            "required": false
+          },
+          {
+            "name": "start_date",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "end_date",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "event_type",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "all",
+              "large_flow"
+            ]
+          },
+          {
+            "name": "limit",
+            "type": "int",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_platformmetrics_get_liquidation_heatmap",
+        "domain": "platformmetrics",
+        "required": [
+          "symbol"
+        ],
+        "fields": [
+          {
+            "name": "symbol",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "exchange",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "range",
+            "type": "string",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_platformmetrics_get_chain_activity",
+        "domain": "platformmetrics",
+        "required": [
+          "metric_group"
+        ],
+        "fields": [
+          {
+            "name": "metric_group",
+            "type": "string",
+            "required": true,
+            "enum": [
+              "staking",
+              "l2",
+              "btc_l2"
+            ]
+          },
+          {
+            "name": "chain",
+            "type": "string",
+            "required": false,
+            "common_values": [
+              "ethereum",
+              "eth",
+              "base",
+              "arbitrum",
+              "optimism",
+              "linea",
+              "zksync_era",
+              "blast",
+              "btc"
+            ]
+          },
+          {
+            "name": "project",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "start_date",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "end_date",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "lookback",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "30d",
+              "90d",
+              "1y"
+            ]
+          },
+          {
+            "name": "granularity",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "day"
+            ]
+          },
+          {
+            "name": "limit",
+            "type": "int",
+            "required": false
+          }
+        ],
+        "errors": [
+          {
+            "code": "invalid_param"
+          },
+          {
+            "code": "not_implemented"
+          },
+          {
+            "code": "unsupported_chain_for_metric_group"
+          },
+          {
+            "code": "unsupported_granularity"
+          },
+          {
+            "code": "requires_open_search"
+          }
+        ],
+        "response_fields": [
+          "chain",
+          "metric_group",
+          "normalized_chain",
+          "start_date",
+          "end_date",
+          "lookback",
+          "granularity",
+          "total",
+          "count",
+          "staking_metrics.series",
+          "l2_metrics.series",
+          "btc_l2_metrics.items",
+          "data_status",
+          "range_truncated",
+          "end_date_capped",
+          "start_date_capped",
+          "duration_ms"
+        ],
+        "series_fields": [
+          "date",
+          "validator_active",
+          "total_value_staked_eth",
+          "staking_rate",
+          "eth_supply",
+          "entry_queue_eth",
+          "exit_queue_eth",
+          "entry_wait_days",
+          "exit_wait_days",
+          "staking_apr_7d",
+          "entry_queue_validator_estimate",
+          "exit_queue_validator_estimate",
+          "missing_fields",
+          "data_status",
+          "quality_note"
+        ],
+        "cli": {
+          "binary": "coin-mcp-cli",
+          "subcommand": "platformmetrics",
+          "example": "coin-mcp-cli platformmetrics --request_type chain-activity --metric_group staking --chain ethereum --lookback 30d"
+        }
+      },
+      {
+        "tool_name": "info_macro_get_macro_indicator",
+        "domain": "macro",
+        "required": [
+          "indicator"
+        ],
+        "fields": [
+          {
+            "name": "mode",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "latest",
+              "timeseries"
+            ]
+          },
+          {
+            "name": "indicator",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "country",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "country_code",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "start_time",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "end_time",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "start_date",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "end_date",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "size",
+            "type": "int",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_macro_get_economic_calendar",
+        "domain": "macro",
+        "required": [],
+        "fields": [
+          {
+            "name": "start_date",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "end_date",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "event_type",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "importance",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "size",
+            "type": "int",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_macro_get_macro_summary",
+        "domain": "macro",
+        "required": [],
+        "fields": []
+      },
+      {
+        "tool_name": "info_marketdetail_get_orderbook",
+        "domain": "marketdetail",
+        "required": [
+          "symbol"
+        ],
+        "fields": [
+          {
+            "name": "symbol",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "market_type",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "spot",
+              "futures",
+              "delivery",
+              "options"
+            ]
+          },
+          {
+            "name": "depth",
+            "type": "int",
+            "required": false
+          },
+          {
+            "name": "settle",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "extra",
+            "type": "object",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_marketdetail_get_recent_trades",
+        "domain": "marketdetail",
+        "required": [
+          "symbol"
+        ],
+        "fields": [
+          {
+            "name": "symbol",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "market_type",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "spot",
+              "futures",
+              "delivery",
+              "options"
+            ]
+          },
+          {
+            "name": "limit",
+            "type": "int64",
+            "required": false
+          },
+          {
+            "name": "settle",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "extra",
+            "type": "object",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_marketdetail_get_kline",
+        "domain": "marketdetail",
+        "required": [
+          "symbol",
+          "timeframe"
+        ],
+        "fields": [
+          {
+            "name": "symbol",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "market_type",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "spot",
+              "futures",
+              "delivery",
+              "options"
+            ]
+          },
+          {
+            "name": "timeframe",
+            "type": "string",
+            "required": true,
+            "common_values": [
+              "1s",
+              "1m",
+              "5m",
+              "15m",
+              "1h",
+              "4h",
+              "1d"
+            ]
+          },
+          {
+            "name": "start_time",
+            "type": "int64",
+            "required": false
+          },
+          {
+            "name": "end_time",
+            "type": "int64",
+            "required": false
+          },
+          {
+            "name": "limit",
+            "type": "int64",
+            "required": false
+          },
+          {
+            "name": "settle",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "extra",
+            "type": "object",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_onchain_get_smart_money",
+        "domain": "placeholder",
+        "required": [],
+        "fields": [
+          {
+            "name": "query",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "symbol",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "limit",
+            "type": "int64",
+            "required": false
+          },
+          {
+            "name": "address",
+            "type": "string",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_onchain_get_entity_profile",
+        "domain": "placeholder",
+        "required": [],
+        "fields": [
+          {
+            "name": "query",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "symbol",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "limit",
+            "type": "int64",
+            "required": false
+          },
+          {
+            "name": "address",
+            "type": "string",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_onchain_trace_fund_flow",
+        "domain": "placeholder",
+        "required": [],
+        "fields": [
+          {
+            "name": "query",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "symbol",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "limit",
+            "type": "int64",
+            "required": false
+          },
+          {
+            "name": "address",
+            "type": "string",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_compliance_check_address_risk",
+        "domain": "placeholder",
+        "required": [],
+        "fields": [
+          {
+            "name": "query",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "symbol",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "limit",
+            "type": "int64",
+            "required": false
+          },
+          {
+            "name": "address",
+            "type": "string",
+            "required": false
+          }
+        ]
+      },
+      {
+        "tool_name": "info_compliance_search_regulatory_updates",
+        "domain": "placeholder",
+        "required": [],
+        "fields": [
+          {
+            "name": "query",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "symbol",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "limit",
+            "type": "int64",
+            "required": false
+          },
+          {
+            "name": "address",
+            "type": "string",
+            "required": false
+          }
+        ]
+      }
+    ]
+  },
+  "news": {
+    "version": "2026-07-13",
+    "tools": [
+      {
+        "name": "news_feed_search_news",
+        "category": "news_feed",
+        "input_rules": {
+          "params": [
+            {
+              "name": "query",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "coin",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "platform",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "platform_type",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "lang",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "time_range",
+              "type": "string",
+              "required": false,
+              "enum": [
+                "1h",
+                "24h",
+                "7d",
+                "30d"
+              ]
+            },
+            {
+              "name": "start_time",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "end_time",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "sort_by",
+              "type": "string",
+              "required": false,
+              "default": "time"
+            },
+            {
+              "name": "top_total_score",
+              "type": "integer|null",
+              "required": false
+            },
+            {
+              "name": "limit",
+              "type": "integer",
+              "required": false,
+              "default": 10,
+              "max": 100
+            },
+            {
+              "name": "page",
+              "type": "integer",
+              "required": false,
+              "default": 1
+            },
+            {
+              "name": "similarity_score",
+              "type": "string",
+              "required": false,
+              "default": "0.6 when query non-empty"
+            }
+          ]
+        },
+        "errors": [
+          {
+            "code": "invalid_param"
+          },
+          {
+            "code": "config_load_failed"
+          }
+        ]
+      },
+      {
+        "name": "news_feed_search_ugc",
+        "category": "news_feed",
+        "input_rules": {
+          "params": [
+            {
+              "name": "query",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "coin",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "platform",
+              "type": "string",
+              "required": false,
+              "default": "all",
+              "enum": [
+                "reddit",
+                "discord",
+                "telegram",
+                "youtube",
+                "all"
+              ]
+            },
+            {
+              "name": "domain",
+              "type": "string",
+              "required": false,
+              "default": "all",
+              "enum": [
+                "crypto",
+                "defi",
+                "finance",
+                "macro",
+                "ai_agent",
+                "web3_dev",
+                "all"
+              ]
+            },
+            {
+              "name": "channel",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "quality_tier",
+              "type": "string",
+              "required": false,
+              "default": "A",
+              "enum": [
+                "A",
+                "B",
+                "all"
+              ]
+            },
+            {
+              "name": "time_range",
+              "type": "string",
+              "required": false,
+              "default": "7d",
+              "enum": [
+                "1h",
+                "24h",
+                "7d",
+                "30d",
+                "all"
+              ]
+            },
+            {
+              "name": "sort_by",
+              "type": "string",
+              "required": false,
+              "default": "relevance",
+              "enum": [
+                "relevance",
+                "upvotes",
+                "recent"
+              ]
+            },
+            {
+              "name": "limit",
+              "type": "integer",
+              "required": false,
+              "default": 10,
+              "max": 50
+            }
+          ]
+        },
+        "errors": [
+          {
+            "code": "invalid_param"
+          },
+          {
+            "code": "config_load_failed"
+          }
+        ]
+      },
+      {
+        "name": "news_feed_search_x",
+        "category": "news_feed",
+        "input_rules": {
+          "params": [
+            {
+              "name": "query",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "time_range",
+              "type": "string",
+              "required": false,
+              "default": "24h",
+              "enum": [
+                "1h",
+                "24h",
+                "7d"
+              ]
+            },
+            {
+              "name": "days",
+              "type": "integer",
+              "required": false,
+              "default": 1,
+              "min": 1
+            },
+            {
+              "name": "allowed_handles",
+              "type": "string[]",
+              "required": false,
+              "max_items": 10
+            },
+            {
+              "name": "excluded_handles",
+              "type": "string[]",
+              "required": false,
+              "max_items": 10
+            },
+            {
+              "name": "model",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "enable_image_understanding",
+              "type": "boolean",
+              "required": false,
+              "default": false
+            },
+            {
+              "name": "enable_video_understanding",
+              "type": "boolean",
+              "required": false,
+              "default": false
+            },
+            {
+              "name": "coin",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "platform",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "platform_type",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "lang",
+              "type": "string",
+              "required": false,
+              "default": "zh",
+              "enum": [
+                "zh",
+                "en",
+                "auto"
+              ]
+            },
+            {
+              "name": "start_time",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "end_time",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "sort_by",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "top_total_score",
+              "type": "integer|null",
+              "required": false
+            },
+            {
+              "name": "limit",
+              "type": "integer",
+              "required": false,
+              "default": 10
+            },
+            {
+              "name": "page",
+              "type": "integer",
+              "required": false,
+              "default": 1
+            },
+            {
+              "name": "similarity_score",
+              "type": "string",
+              "required": false
+            }
+          ]
+        },
+        "errors": [
+          {
+            "code": "invalid_param"
+          },
+          {
+            "code": "config_load_failed"
+          }
+        ]
+      },
+      {
+        "name": "news_feed_web_search",
+        "category": "news_feed",
+        "input_rules": {
+          "params": [
+            {
+              "name": "query",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "coin",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "mode",
+              "type": "string",
+              "required": false,
+              "default": "analysis",
+              "enum": [
+                "analysis",
+                "brief"
+              ]
+            },
+            {
+              "name": "time_range",
+              "type": "string",
+              "required": false,
+              "default": "24h",
+              "enum": [
+                "1h",
+                "24h",
+                "7d",
+                "30d"
+              ]
+            },
+            {
+              "name": "lang",
+              "type": "string",
+              "required": false,
+              "default": "zh",
+              "enum": [
+                "zh",
+                "en",
+                "auto"
+              ]
+            },
+            {
+              "name": "limit",
+              "type": "integer",
+              "required": false,
+              "default": 5,
+              "max": 10
+            }
+          ]
+        },
+        "errors": [
+          {
+            "code": "invalid_param"
+          },
+          {
+            "code": "config_load_failed"
+          }
+        ]
+      },
+      {
+        "name": "news_feed_get_exchange_announcements",
+        "category": "news_feed",
+        "input_rules": {
+          "params": [
+            {
+              "name": "exchange",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "platform",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "query",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "coin",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "announcement_type",
+              "type": "string",
+              "required": false,
+              "enum": [
+                "listing",
+                "delisting",
+                "maintenance",
+                "all"
+              ]
+            },
+            {
+              "name": "limit",
+              "type": "integer",
+              "required": false,
+              "max": 100
+            },
+            {
+              "name": "from",
+              "type": "integer",
+              "required": false
+            },
+            {
+              "name": "to",
+              "type": "integer",
+              "required": false
+            }
+          ]
+        },
+        "errors": [
+          {
+            "code": "config_load_failed"
+          }
+        ]
+      },
+      {
+        "name": "news_feed_get_social_sentiment",
+        "category": "news_feed",
+        "input_rules": {
+          "params": [
+            {
+              "name": "coin",
+              "type": "string",
+              "required": false,
+              "default": "BTC"
+            },
+            {
+              "name": "time_range",
+              "type": "string",
+              "required": false,
+              "default": "24h",
+              "enum": [
+                "1h",
+                "24h",
+                "7d"
+              ]
+            }
+          ]
+        },
+        "errors": [
+          {
+            "code": "config_load_failed"
+          }
+        ]
+      },
+      {
+        "name": "news_feed_get_mention_burst",
+        "category": "news_feed",
+        "input_rules": {
+          "params": [
+            {
+              "name": "coin",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "window",
+              "type": "string",
+              "required": false,
+              "default": "24h",
+              "enum": [
+                "24h"
+              ]
+            },
+            {
+              "name": "platforms",
+              "type": "string",
+              "required": false,
+              "default": "all"
+            }
+          ]
+        },
+        "errors": [
+          {
+            "code": "invalid_param"
+          },
+          {
+            "code": "internal"
+          }
+        ]
+      },
+      {
+        "name": "news_feed_get_hot_topics",
+        "category": "news_feed",
+        "input_rules": {
+          "params": [
+            {
+              "name": "coin",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "window",
+              "type": "string",
+              "required": false,
+              "default": "4h",
+              "enum": [
+                "4h"
+              ]
+            },
+            {
+              "name": "limit",
+              "type": "integer",
+              "required": false,
+              "default": 4,
+              "min": 2,
+              "max": 4
+            },
+            {
+              "name": "platforms",
+              "type": "string",
+              "required": false,
+              "default": "all"
+            }
+          ]
+        },
+        "errors": [
+          {
+            "code": "invalid_param"
+          },
+          {
+            "code": "internal"
+          }
+        ]
+      },
+      {
+        "name": "news_events_get_latest_events",
+        "category": "news_events",
+        "input_rules": {
+          "params": [
+            {
+              "name": "event_type",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "coin",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "time_range",
+              "type": "string",
+              "required": false,
+              "enum": [
+                "1h",
+                "24h",
+                "7d"
+              ]
+            },
+            {
+              "name": "start_time",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "end_time",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "cursor",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "limit",
+              "type": "integer",
+              "required": false,
+              "default": 20,
+              "max": 100
+            }
+          ]
+        },
+        "errors": [
+          {
+            "code": "invalid_param"
+          },
+          {
+            "code": "invalid_size"
+          },
+          {
+            "code": "internal"
+          }
+        ],
+        "placeholder_when_unconfigured": true
+      },
+      {
+        "name": "news_events_get_event_detail",
+        "category": "news_events",
+        "input_rules": {
+          "params": [
+            {
+              "name": "event_id",
+              "type": "string",
+              "required": true,
+              "max_length": 512,
+              "pattern": "^[A-Za-z0-9:_-]+$"
+            }
+          ]
+        },
+        "errors": [
+          {
+            "code": "invalid_event_id"
+          },
+          {
+            "code": "resource_not_found"
+          },
+          {
+            "code": "internal"
+          }
+        ],
+        "placeholder_when_unconfigured": true
+      },
+      {
+        "name": "news_events_explain_market_move",
+        "category": "news_events",
+        "input_rules": {
+          "params": [
+            {
+              "name": "query",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "coin",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "time_range",
+              "type": "string",
+              "required": false,
+              "default": "2h",
+              "enum": [
+                "30m",
+                "1h",
+                "2h",
+                "4h",
+                "24h"
+              ]
+            },
+            {
+              "name": "mode",
+              "type": "string",
+              "required": false,
+              "default": "auto",
+              "enum": [
+                "auto",
+                "price_move",
+                "event_impact"
+              ]
+            },
+            {
+              "name": "lang",
+              "type": "string",
+              "required": false,
+              "default": "zh",
+              "enum": [
+                "zh",
+                "en"
+              ]
+            }
+          ]
+        },
+        "errors": [
+          {
+            "code": "invalid_param"
+          },
+          {
+            "code": "missing_coin"
+          },
+          {
+            "code": "internal"
+          }
+        ]
+      },
+      {
+        "name": "news_events_get_market_move_report",
+        "category": "news_events",
+        "input_rules": {
+          "params": [
+            {
+              "name": "symbol",
+              "type": "string",
+              "required": true,
+              "max_length": 20
+            },
+            {
+              "name": "report_id",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "event_id",
+              "type": "string",
+              "required": false
+            }
+          ]
+        },
+        "errors": [
+          {
+            "code": "invalid_param"
+          },
+          {
+            "code": "config_load_failed"
+          },
+          {
+            "code": "internal"
+          }
+        ]
+      },
+      {
+        "name": "news_events_list_market_move_reports",
+        "category": "news_events",
+        "input_rules": {
+          "params": [
+            {
+              "name": "symbol",
+              "type": "string",
+              "required": true,
+              "max_length": 20
+            },
+            {
+              "name": "start_time",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "end_time",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "limit",
+              "type": "integer",
+              "required": false,
+              "default": 20,
+              "min": 0,
+              "max": 100
+            }
+          ]
+        },
+        "errors": [
+          {
+            "code": "invalid_param"
+          },
+          {
+            "code": "invalid_size"
+          },
+          {
+            "code": "config_load_failed"
+          },
+          {
+            "code": "internal"
+          }
+        ]
+      },
+      {
+        "name": "news_prediction_get_volume_delta_ranking",
+        "category": "news_prediction",
+        "input_rules": {
+          "params": [
+            {
+              "name": "date_utc",
+              "type": "string",
+              "required": false,
+              "default": "today_utc (UTC YYYY-MM-DD)",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            {
+              "name": "limit",
+              "type": "integer",
+              "required": false,
+              "default": 20,
+              "max": 100
+            },
+            {
+              "name": "venue",
+              "type": "string[]",
+              "required": false,
+              "enum": [
+                "polymarket",
+                "predict_fun"
+              ]
+            },
+            {
+              "name": "category",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "status",
+              "type": "string",
+              "required": false,
+              "default": "active",
+              "enum": [
+                "active",
+                "closed",
+                "resolved",
+                "all"
+              ]
+            }
+          ]
+        },
+        "errors": [
+          {
+            "code": "invalid_param"
+          },
+          {
+            "code": "invalid_size"
+          },
+          {
+            "code": "internal"
+          },
+          {
+            "code": "not_implemented"
+          }
+        ],
+        "placeholder_when_unconfigured": true
+      },
+      {
+        "name": "news_prediction_get_fastest_rising_ranking",
+        "category": "news_prediction",
+        "input_rules": {
+          "params": [
+            {
+              "name": "date_utc",
+              "type": "string",
+              "required": false,
+              "default": "today_utc (UTC YYYY-MM-DD)",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            {
+              "name": "limit",
+              "type": "integer",
+              "required": false,
+              "default": 20,
+              "max": 100
+            },
+            {
+              "name": "venue",
+              "type": "string[]",
+              "required": false,
+              "enum": [
+                "polymarket",
+                "predict_fun"
+              ]
+            },
+            {
+              "name": "category",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "status",
+              "type": "string",
+              "required": false,
+              "default": "active",
+              "enum": [
+                "active",
+                "closed",
+                "resolved",
+                "all"
+              ]
+            }
+          ]
+        },
+        "errors": [
+          {
+            "code": "invalid_param"
+          },
+          {
+            "code": "invalid_size"
+          },
+          {
+            "code": "internal"
+          },
+          {
+            "code": "not_implemented"
+          }
+        ],
+        "placeholder_when_unconfigured": true
+      },
+      {
+        "name": "news_prediction_get_market_orderbook",
+        "category": "news_prediction",
+        "input_rules": {
+          "params": [
+            {
+              "name": "venue",
+              "type": "string",
+              "required": true,
+              "enum": [
+                "polymarket",
+                "predict_fun"
+              ]
+            },
+            {
+              "name": "market_id",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "depth",
+              "type": "integer",
+              "required": false,
+              "default": 20,
+              "min": 1,
+              "max": 20
+            },
+            {
+              "name": "mode",
+              "type": "string",
+              "required": false,
+              "default": "current (implicit)",
+              "enum": [
+                "current",
+                ""
+              ]
+            },
+            {
+              "name": "granularity",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "start_time",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "end_time",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "page_token",
+              "type": "string",
+              "required": false
+            }
+          ]
+        },
+        "errors": [
+          {
+            "code": "invalid_param"
+          },
+          {
+            "code": "config_load_failed"
+          },
+          {
+            "code": "not_implemented"
+          },
+          {
+            "code": "internal"
+          },
+          {
+            "code": "internal"
+          },
+          {
+            "code": "resource_not_found"
+          },
+          {
+            "code": "(success partial)"
+          }
+        ],
+        "placeholder_when_unconfigured": true
+      },
+      {
+        "name": "news_prediction_search_events",
+        "category": "news_prediction",
+        "input_rules": {
+          "params": [
+            {
+              "name": "query",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "coin",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "category",
+              "type": "string",
+              "required": false,
+              "enum": [
+                "crypto_event",
+                "crypto_price",
+                "culture",
+                "earnings",
+                "elections",
+                "finance",
+                "geopolitics",
+                "macro_economy",
+                "mentions",
+                "other",
+                "politics",
+                "sports",
+                "tech_ai",
+                "weather_climate",
+                "world"
+              ]
+            },
+            {
+              "name": "status",
+              "type": "string",
+              "required": false,
+              "default": "active when omitted (except coin-only with no query/category -> all)",
+              "enum": [
+                "active",
+                "closed",
+                "resolved",
+                "all"
+              ]
+            },
+            {
+              "name": "venue",
+              "type": "string[]",
+              "required": false,
+              "enum": [
+                "polymarket",
+                "predict_fun"
+              ]
+            },
+            {
+              "name": "sort_by",
+              "type": "string",
+              "required": false,
+              "default": "recently_listed",
+              "enum": [
+                "attention",
+                "volume",
+                "liquidity",
+                "recently_listed",
+                "probability_change",
+                "volume_delta_today"
+              ]
+            },
+            {
+              "name": "limit",
+              "type": "integer",
+              "required": false,
+              "default": 20,
+              "max": 100
+            },
+            {
+              "name": "page_token",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "with_markets",
+              "type": "boolean",
+              "required": false,
+              "default": false
+            }
+          ]
+        },
+        "errors": [
+          {
+            "code": "invalid_param"
+          },
+          {
+            "code": "invalid_size"
+          },
+          {
+            "code": "internal"
+          },
+          {
+            "code": "not_implemented"
+          }
+        ],
+        "placeholder_when_unconfigured": true
+      },
+      {
+        "name": "news_prediction_get_event_signal",
+        "category": "news_prediction",
+        "input_rules": {
+          "params": [
+            {
+              "name": "event_ref",
+              "type": "string",
+              "required": true,
+              "pattern": "^[^:]+:[^:]+$"
+            },
+            {
+              "name": "window",
+              "type": "string",
+              "required": false,
+              "default": "24h",
+              "enum": [
+                "1h",
+                "24h",
+                "7d"
+              ]
+            },
+            {
+              "name": "venue",
+              "type": "string[]",
+              "required": false,
+              "enum": [
+                "polymarket",
+                "predict_fun"
+              ]
+            },
+            {
+              "name": "include_markets",
+              "type": "boolean|null",
+              "required": false,
+              "default": true
+            },
+            {
+              "name": "include_orderbook_summary",
+              "type": "boolean",
+              "required": false,
+              "default": false
+            }
+          ]
+        },
+        "errors": [
+          {
+            "code": "invalid_param"
+          },
+          {
+            "code": "internal"
+          },
+          {
+            "code": "resource_not_found"
+          },
+          {
+            "code": "not_implemented"
+          }
+        ],
+        "placeholder_when_unconfigured": true
+      }
+    ]
+  }
+}

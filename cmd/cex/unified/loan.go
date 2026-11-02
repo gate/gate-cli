@@ -105,8 +105,8 @@ func runLoanList(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.UnifiedAPI.ListUnifiedLoans(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/unified/loans", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/unified/loans", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -139,8 +139,7 @@ func runLoanCreate(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.UnifiedAPI.CreateUnifiedLoan(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/unified/loans", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/unified/loans", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -181,8 +180,7 @@ func runLoanRecords(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.UnifiedAPI.ListUnifiedLoanRecords(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/unified/loan_records", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/unified/loan_records", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -235,8 +233,7 @@ func runLoanInterest(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.UnifiedAPI.ListUnifiedLoanInterestRecords(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/unified/interest_records", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/unified/interest_records", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -278,8 +275,7 @@ func runLoanHistoryRate(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.UnifiedAPI.GetHistoryLoanRate(c.Context(), currency, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/unified/history_loan_rate", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/unified/history_loan_rate", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

@@ -44,8 +44,8 @@ func runAccountDetail(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.AccountAPI.GetAccountDetail(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/account/detail", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/account/detail", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -73,8 +73,7 @@ func runAccountKeys(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.AccountAPI.GetAccountMainKeys(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/account/keys", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/account/keys", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -112,8 +111,7 @@ func runAccountRateLimit(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.AccountAPI.GetAccountRateLimit(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/account/rate_limit", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/account/rate_limit", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

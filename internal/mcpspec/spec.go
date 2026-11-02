@@ -1,6 +1,6 @@
 // Package mcpspec embeds MCP tool input documents shipped with the CLI for offline
 // agent/LLM use (parameter enums, defaults, bounds, logic text). Bundled JSON must
-// stay byte-identical to specs/mcp/*.json; see TestBundledMatchesSpecs.
+// preserve the tracked public input contract; see TestBundledMatchesSpecs.
 package mcpspec
 
 import (
@@ -41,7 +41,7 @@ func InfoInputsLogic() (interface{}, error) {
 	return infoParsed, infoParseErr
 }
 
-// NewsToolsArgs returns the parsed News tools args/logic document (same shape as specs/mcp/news-tools-args-and-logic.json).
+// NewsToolsArgs returns the parsed News tools args/logic document (the public News tool contract).
 func NewsToolsArgs() (interface{}, error) {
 	newsParsedOnce.Do(func() {
 		newsParseErr = json.Unmarshal(newsToolsArgsJSON, &newsParsed)

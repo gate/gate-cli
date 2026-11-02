@@ -6,9 +6,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var depositCmd = &cobra.Command{
@@ -54,6 +54,7 @@ func init() {
 	}
 	savedCmd.Flags().String("currency", "", "Currency name (required)")
 	savedCmd.Flags().String("chain", "", "Filter by chain name")
+	savedCmd.Flags().Int32("limit", 20, "Records per page (1-100)")
 	savedCmd.MarkFlagRequired("currency")
 
 	pushOrdersCmd := &cobra.Command{
@@ -83,8 +84,8 @@ func runWalletDepositAddress(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.WalletAPI.GetDepositAddress(c.Context(), currency)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/wallet/deposit_address", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/wallet/deposit_address", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -133,8 +134,7 @@ func runWalletDeposits(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.WalletAPI.ListDeposits(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/wallet/deposits", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/wallet/deposits", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -180,8 +180,7 @@ func runWalletWithdrawals(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.WalletAPI.ListWithdrawals(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/wallet/withdrawals", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/wallet/withdrawals", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -196,6 +195,10 @@ func runWalletWithdrawals(cmd *cobra.Command, args []string) error {
 func runWalletSavedAddress(cmd *cobra.Command, args []string) error {
 	currency, _ := cmd.Flags().GetString("currency")
 	chain, _ := cmd.Flags().GetString("chain")
+	limit, _ := cmd.Flags().GetInt32("limit")
+	if limit < 1 || limit > 100 {
+		return fmt.Errorf("limit must be between 1 and 100")
+	}
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
@@ -205,15 +208,15 @@ func runWalletSavedAddress(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	opts := &gateapi.ListSavedAddressOpts{}
+	// currency从必填位置参数迁移到SDK opts，保留原CLI调用方式。
+	opts := &gateapi.ListSavedAddressOpts{Currency: optional.NewString(currency), Limit: optional.NewString(fmt.Sprint(limit))}
 	if chain != "" {
 		opts.Chain = optional.NewString(chain)
 	}
 
-	result, httpResp, err := c.WalletAPI.ListSavedAddress(c.Context(), currency, opts)
+	result, httpResp, err := c.WalletAPI.ListSavedAddress(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/wallet/saved_address", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/wallet/saved_address", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -255,8 +258,7 @@ func runWalletPushOrders(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.WalletAPI.ListPushOrders(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/wallet/push", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/wallet/push", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

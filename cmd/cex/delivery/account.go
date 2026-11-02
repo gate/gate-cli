@@ -4,9 +4,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var accountCmd = &cobra.Command{
@@ -46,8 +46,8 @@ func runDeliveryAccount(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.ListDeliveryAccounts(c.Context(), settle)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/accounts", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/accounts", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -81,8 +81,7 @@ func runDeliveryAccountBook(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.ListDeliveryAccountBook(c.Context(), settle, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/account_book", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/account_book", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

@@ -48,7 +48,7 @@ func buildInfoAliases() {
 	}
 }
 
-// loadInfoToolSchemas reads the on-disk schema cache once per init (single return path; CR-829).
+// loadInfoToolSchemas reads the on-disk schema cache once per init (single return path; review).
 func loadInfoToolSchemas() map[string]toolschema.ToolSummary {
 	return intelcmd.LoadToolSchemasFromCache("info", func(out map[string]toolschema.ToolSummary) {
 		intelcmd.MergeToolBaselineInto(out, intelfacade.InfoToolBaseline, intelfacade.InfoBaselineInputSchema)

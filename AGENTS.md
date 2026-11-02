@@ -8,8 +8,8 @@
 ## 常用命令
 - 构建: `go build -o gate-cli .`
 - 单元测试: `go test ./...`（**仅** CI 发版 / 全仓 merge 前；日常不要用全量 `./...`）
-- **只跑改动的包**: `./scripts/test-changed-go.sh`（或 `./scripts/test-changed-go.sh origin/main`）
-- Intel / MCP / migrate: `./scripts/test-intel-scope.sh -count=1` 与 `./scripts/test-intel-scope.sh vet`（见 `scripts/test-intel-scope.sh`）
+- 日常定向测试：`go test ./cmd/cex/spot ./internal/client -count=1`；按改动选择包，完整测试留给合并或发布验收。
+- Intel / MCP：`go test ./internal/intelcmd ./internal/mcpclient ./cmd/info ./cmd/news -count=1`。
 - Integration 测试: `go test -tags integration ./internal/integration/... -v`
 - 本地 smoke test（公共 API 无需 key）: `./gate-cli cex spot market ticker --pair BTC_USDT`
 
@@ -36,8 +36,7 @@
 
 ## MCP / Intel（`info` / `news` 已发布；`tool` 仍为规格命名）
 - **用户 CLI**：`gate-cli info` / `gate-cli news`（50 个 MCP 叶子；`info list` / `news list`，`-h` 查 flag）。用户文档：根目录 [`README.md`](README.md)、[`docs/quickstart.md`](docs/quickstart.md)。
-- **规格中的统一主路径（规划）**：`gate-cli tool`（`list` / `call` / `describe`）；与交易 API（`gateapi-go`）**鉴权隔离**：勿用 `GATE_API_KEY` 充当 MCP Bearer。规格与待办：[`specs/README.md`](specs/README.md)（**含「已对读」说明**）、[`specs/open-items-and-dependencies.md`](specs/open-items-and-dependencies.md)；**技术评审只读** [`specs/clidocs/gate-cli-intel-mcp-technical-solution-feishu.md`](specs/clidocs/gate-cli-intel-mcp-technical-solution-feishu.md)；评审摘要：[`docs/plans/2026-04-10-gate-cli-tool-mcp-review.md`](docs/plans/2026-04-10-gate-cli-tool-mcp-review.md)。
-- **Cursor**：默认决策见 [`.cursor/rules/`](.cursor/rules/) — **`gate-cli-cli-layer-conventions.mdc`**（`GetPrinter`/`PrintError`、失败 **stderr** `{"error":...}`，与交易子命令一致；MCP 仅替换 `mcpclient`）、**`gate-cli-intel-mcp-specs.mdc`**、**`mcp-intel-curl-endpoints.mdc`**；Wire **`specs/cli/mcp-wire-appendix.md` v0.4**。
+- 对外说明以已注册命令及公开用户指南为准；使用 `gate-cli info list`、`gate-cli news list` 和叶子 `--help` 查看当前契约。
 
 ## 架构约定
 - 共享 CLI helper（GetPrinter/GetClient）放在 `internal/cmdutil/`，**不要**放 `cmd/root.go`（会循环 import）

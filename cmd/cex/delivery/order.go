@@ -8,9 +8,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var orderCmd = &cobra.Command{
@@ -107,8 +107,8 @@ func runDeliveryOrders(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.ListDeliveryOrders(c.Context(), settle, status, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/orders", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/orders", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -151,8 +151,7 @@ func runDeliveryCreateOrder(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.DeliveryAPI.CreateDeliveryOrder(c.Context(), settle, req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/delivery/"+settle+"/orders", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/delivery/"+settle+"/orders", string(body))
 	}
 	return p.Print(result)
 }
@@ -177,8 +176,7 @@ func runDeliveryCancelOrders(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.CancelDeliveryOrders(c.Context(), settle, contract, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "DELETE", "/api/v4/delivery/"+settle+"/orders", ""))
-		return nil
+		return client.CommandError(err, httpResp, "DELETE", "/api/v4/delivery/"+settle+"/orders", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -204,8 +202,7 @@ func runDeliveryGetOrder(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.GetDeliveryOrder(c.Context(), settle, id)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/orders/"+id, ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/orders/"+id, "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -237,8 +234,7 @@ func runDeliveryCancelOrder(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.CancelDeliveryOrder(c.Context(), settle, id)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "DELETE", "/api/v4/delivery/"+settle+"/orders/"+id, ""))
-		return nil
+		return client.CommandError(err, httpResp, "DELETE", "/api/v4/delivery/"+settle+"/orders/"+id, "")
 	}
 	return p.Print(result)
 }
@@ -266,8 +262,7 @@ func runDeliveryMyTrades(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.GetMyDeliveryTrades(c.Context(), settle, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/my_trades", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/my_trades", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

@@ -87,8 +87,8 @@ func runFuturesPositionGetSingle(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.GetPosition(c.Context(), settle, contract)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/positions/"+contract, ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/positions/"+contract, "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -114,8 +114,7 @@ func runFuturesUpdateSinglePositionMargin(cmd *cobra.Command, args []string) err
 
 	result, httpResp, err := c.FuturesAPI.UpdatePositionMargin(c.Context(), settle, contract, change)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/positions/"+contract+"/margin", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/positions/"+contract+"/margin", "")
 	}
 	return p.Print(result)
 }
@@ -142,8 +141,7 @@ func runFuturesUpdateSinglePositionLeverage(cmd *cobra.Command, args []string) e
 	}
 	result, httpResp, err := c.FuturesAPI.UpdatePositionLeverage(c.Context(), settle, contract, leverage, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/positions/"+contract+"/leverage", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/positions/"+contract+"/leverage", "")
 	}
 	return p.Print(result)
 }
@@ -165,8 +163,7 @@ func runFuturesUpdateSinglePositionCrossMode(cmd *cobra.Command, args []string) 
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.FuturesAPI.UpdatePositionCrossMode(c.Context(), settle, req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/positions/cross_mode", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/positions/cross_mode", string(body))
 	}
 	return p.Print(result)
 }
@@ -186,8 +183,7 @@ func runFuturesUpdateSinglePositionRiskLimit(cmd *cobra.Command, args []string) 
 
 	result, httpResp, err := c.FuturesAPI.UpdatePositionRiskLimit(c.Context(), settle, contract, riskLimit)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/positions/"+contract+"/risk_limit", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/positions/"+contract+"/risk_limit", "")
 	}
 	return p.Print(result)
 }

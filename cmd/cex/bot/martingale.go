@@ -1,7 +1,6 @@
 package bot
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -28,7 +27,7 @@ mapped on this path. Optional create_params.trigger_price is also accepted.`,
 		RunE: runBotMartingaleSpotCreate,
 	}
 	spotCmd.Flags().String("json", "", "JSON body for SpotMartingaleCreateRequest (required)")
-	spotCmd.MarkFlagRequired("json")
+	mustRequireBotFlag(spotCmd, "json")
 
 	contractCmd := &cobra.Command{
 		Use:   "contract",
@@ -39,14 +38,14 @@ Required JSON shape: {strategy_type, market, create_params:{invest_amount,
 price_deviation, max_orders, take_profit_ratio, direction(buy/sell), leverage,
 ...}}.
 
-v7.2.78 note: the SDK still defines create_params.stop_loss_price for backward
-compatibility, but per upstream SDK docs the AIHub contract_martingale path
-does not map this field. Do not include stop_loss_price in --json; follow the
-contract martingale rules of the underlying API instead.`,
+Fixed stop-loss requires stop_loss_price and stop_loss_price_type together;
+price type is last, index or mark. invest_amount is the total budget.
+max_orders counts additional entries,
+excluding the first. Monetary values must be JSON strings.`,
 		RunE: runBotMartingaleContractCreate,
 	}
 	contractCmd.Flags().String("json", "", "JSON body for ContractMartingaleCreateRequest (required)")
-	contractCmd.MarkFlagRequired("json")
+	mustRequireBotFlag(contractCmd, "json")
 
 	martingaleCmd.AddCommand(spotCmd, contractCmd)
 	Cmd.AddCommand(martingaleCmd)
@@ -64,14 +63,13 @@ func runBotMartingaleSpotCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	var body gateapi.SpotMartingaleCreateRequest
-	if err := json.Unmarshal([]byte(jsonStr), &body); err != nil {
+	if err := decodeBotJSON(jsonStr, &body); err != nil {
 		return fmt.Errorf("invalid --json: %w", err)
 	}
 
 	result, httpResp, err := c.BotAPI.PostAIHubSpotMartingaleCreate(c.Context(), body, nil)
-	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/bot/spot/martingale/create", jsonStr))
-		return nil
+	if err := client.BotResultError(result, err, httpResp, "POST", "/api/v4/bot/spot-martingale/create", jsonStr); err != nil {
+		return err
 	}
 	return p.Print(result)
 }
@@ -88,14 +86,16 @@ func runBotMartingaleContractCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	var body gateapi.ContractMartingaleCreateRequest
-	if err := json.Unmarshal([]byte(jsonStr), &body); err != nil {
+	if err := decodeBotJSON(jsonStr, &body); err != nil {
 		return fmt.Errorf("invalid --json: %w", err)
 	}
 
+	if err := validateBotContractStop(body.CreateParams); err != nil {
+		return err
+	}
 	result, httpResp, err := c.BotAPI.PostAIHubContractMartingaleCreate(c.Context(), body, nil)
-	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/bot/contract/martingale/create", jsonStr))
-		return nil
+	if err := client.BotResultError(result, err, httpResp, "POST", "/api/v4/bot/contract-martingale/create", jsonStr); err != nil {
+		return err
 	}
 	return p.Print(result)
 }

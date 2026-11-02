@@ -6,7 +6,7 @@ import (
 )
 
 // DescribePrettyText returns fixed-section human text for describe commands
-// (PRD §3.7.5 / §3.4.1: default stdout avoids protocol-oriented dumps).
+// so default stdout avoids protocol-oriented dumps.
 func DescribePrettyText(tool *ToolSummary) string {
 	if tool == nil {
 		return ""

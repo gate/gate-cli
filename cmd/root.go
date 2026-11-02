@@ -12,14 +12,15 @@ import (
 	"github.com/spf13/cobra"
 
 	cexcmd "github.com/gate/gate-cli/cmd/cex"
-	"github.com/gate/gate-cli/internal/agentfeature"
 	configcmd "github.com/gate/gate-cli/cmd/config"
 	"github.com/gate/gate-cli/cmd/doctor"
 	"github.com/gate/gate-cli/cmd/info"
 	"github.com/gate/gate-cli/cmd/migrate"
 	"github.com/gate/gate-cli/cmd/news"
 	"github.com/gate/gate-cli/cmd/preflight"
+	"github.com/gate/gate-cli/internal/agentfeature"
 	"github.com/gate/gate-cli/internal/cmdhint"
+	"github.com/gate/gate-cli/internal/cmdutil"
 	"github.com/gate/gate-cli/internal/exitcode"
 	"github.com/gate/gate-cli/internal/intelcmd"
 	"github.com/gate/gate-cli/internal/version"
@@ -37,12 +38,20 @@ var rootCmd = &cobra.Command{
 	},
 }
 
+// Cobra and its policy have one startup owner. Repeated setup must reuse the
+// original leaf set, including agent commands registered by build-tag init.
+var executionArgumentPolicy *cmdutil.ArgumentPolicy
+
 const (
 	formatDeprecationEnv = "GATE_CLI_SUPPRESS_FORMAT_NOTICE"
 	formatNoticeForceEnv = "GATE_CLI_FORMAT_NOTICE_FORCE" // non-empty: emit compat notice even when stderr is not a TTY (tests only)
 )
 
 func setupRootForExecute() {
+	if executionArgumentPolicy == nil {
+		executionArgumentPolicy = cmdutil.NewArgumentPolicy(rootCmd)
+	}
+	cmdutil.InstallStrictHelpCommand(rootCmd)
 	intelcmd.SilenceCommandTree(rootCmd)
 	// Print flag/parse errors to stderr for the full tree (cex/config included) so agents
 	// see diagnostics instead of a silent exit when SilenceErrors is enabled.
@@ -63,10 +72,19 @@ func Execute() {
 		cmdhint.PrintDiagnosticWithArgv(os.Stderr, d, os.Args)
 		os.Exit(1)
 	}
-	if newArgs, ok := intelcmd.RewriteFlexBoolSpaceArgs(rootCmd, os.Args[1:]); ok {
-		rootCmd.SetArgs(newArgs)
+	args := os.Args[1:]
+	if newArgs, ok := intelcmd.RewriteFlexBoolSpaceArgs(rootCmd, args); ok {
+		args = newArgs
 	}
-	if err := rootCmd.Execute(); err != nil {
+	args = executionArgumentPolicy.Normalize(rootCmd, args)
+	rootCmd.SetArgs(args)
+	// Cobra can return help before Args validation for non-runnable groups.
+	// Validate group paths first for ordinary execution as well as help flags.
+	err := cmdutil.ValidateCommandPath(rootCmd, args)
+	if err == nil {
+		err = rootCmd.Execute()
+	}
+	if err != nil {
 		d := cmdhint.SuggestFromError(os.Args, err, rootCmd)
 		msg := err.Error()
 		if d != nil && strings.TrimSpace(d.Message) != "" {
@@ -83,13 +101,24 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.AddCommand(&cobra.Command{
+	versionCmd := &cobra.Command{
 		Use:   "version",
 		Short: "Print the version",
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Printf("gate-cli version %s\n", version.Version)
 		},
-	})
+	}
+	// Preserve the old Run and stream when details is absent or explicitly false.
+	versionCmd.Flags().Bool("details", false, "Print explicit build details as JSON or pretty output")
+	versionCmd.RunE = func(cmd *cobra.Command, args []string) error {
+		details, _ := cmd.Flags().GetBool("details")
+		if !details {
+			versionCmd.Run(cmd, args)
+			return nil
+		}
+		return printVersionDetails(cmdutil.GetPrinter(cmd))
+	}
+	rootCmd.AddCommand(versionCmd)
 
 	rootCmd.PersistentFlags().String("format", "pretty", "Output format: json, pretty (default), or table (only for tabular list-style commands)")
 	rootCmd.PersistentFlags().String("profile", "default", "Config profile to use")
@@ -146,7 +175,7 @@ func applyDefaultMaxOutputBytesIfUnset(cmd *cobra.Command) {
 	_ = root.PersistentFlags().Set("max-output-bytes", strconv.FormatInt(def, 10))
 }
 
-// normalizeMaxOutputBytesFlag enforces a non-negative --max-output-bytes (CR-107).
+// normalizeMaxOutputBytesFlag enforces a non-negative --max-output-bytes .
 // Negative or unreadable values warn on stderr and clamp to 0 (unlimited), matching env validation behavior.
 func normalizeMaxOutputBytesFlag(cmd *cobra.Command) {
 	if cmd == nil {

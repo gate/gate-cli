@@ -31,7 +31,7 @@ func getFormat(cmd *cobra.Command) output.Format {
 }
 
 // IntelMCPTransportDiag reports whether info/news MCP clients should emit RPC transport
-// summaries to stderr, and which prefix to use (--debug wins over --verbose; PRD §3.7.13).
+// summaries to stderr, and which prefix to use (--debug wins over --verbose).
 func IntelMCPTransportDiag(cmd *cobra.Command) (enabled bool, tag string) {
 	root := cmd.Root().PersistentFlags()
 	d, _ := root.GetBool("debug")
@@ -85,24 +85,13 @@ func ResolveIntelEndpoint(cmd *cobra.Command, backend string) (*toolconfig.Resol
 // GetClient builds a Gate API client.
 // Priority: --api-key/--api-secret flag > GATE_API_KEY/GATE_API_SECRET env > config file.
 func GetClient(cmd *cobra.Command) (*client.Client, error) {
-	root := cmd.Root().PersistentFlags()
-	profile, _ := root.GetString("profile")
-	debug, _ := root.GetBool("debug")
-	apiKey, _ := root.GetString("api-key")
-	apiSecret, _ := root.GetString("api-secret")
-
-	cfg, err := config.Load(config.Options{
-		Profile:       profile,
-		FlagAPIKey:    apiKey,
-		FlagAPISecret: apiSecret,
-	})
+	cfg, err := GetConfig(cmd)
 	if err != nil {
 		return nil, err
 	}
-	cfg.Debug = debug
 
 	cmdPath := useragent.ExtractCmdPath(cmd.CommandPath())
-	return client.New(cfg, cmdPath)
+	return client.NewWithContext(cmd.Context(), cfg, cmdPath)
 }
 
 // GetSettle returns the futures settlement currency for the given command.
@@ -125,4 +114,19 @@ func GetSettle(cmd *cobra.Command) string {
 	}
 
 	return "usdt"
+}
+
+// GetConfig 统一解析当前profile和命令旗标，授权受众与SDK地址使用同一解析规则。
+func GetConfig(cmd *cobra.Command) (*config.Config, error) {
+	flags := cmd.Root().PersistentFlags()
+	profile, _ := flags.GetString("profile")
+	key, _ := flags.GetString("api-key")
+	secret, _ := flags.GetString("api-secret")
+	debug, _ := flags.GetBool("debug")
+	cfg, err := config.Load(config.Options{Profile: profile, FlagAPIKey: key, FlagAPISecret: secret})
+	if err != nil {
+		return nil, err
+	}
+	cfg.Debug = debug
+	return cfg, nil
 }

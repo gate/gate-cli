@@ -1,0 +1,67 @@
+[
+  {
+    "path": "agent-index",
+    "use": "agent-index",
+    "flags": [
+      {
+        "name": "command",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "details",
+        "type": "bool",
+        "default": "false"
+      },
+      {
+        "name": "domain",
+        "type": "string",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "path": "agent-resolve",
+    "use": "agent-resolve --query <text>",
+    "flags": [
+      {
+        "name": "domain",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int",
+        "default": "5"
+      },
+      {
+        "name": "query",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "path": "agent-search",
+    "use": "agent-search --query <text>",
+    "flags": [
+      {
+        "name": "domain",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "name": "limit",
+        "type": "int",
+        "default": "10"
+      },
+      {
+        "name": "query",
+        "type": "string",
+        "default": "",
+        "required": true
+      }
+    ]
+  }
+]

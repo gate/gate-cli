@@ -3,6 +3,7 @@ package intelcmd
 import (
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -52,7 +53,8 @@ func InstallFlagErrorHook(c *cobra.Command) {
 // printFlagErrorToStderr writes the pflag parse error to the command's stderr so the
 // user sees the diagnostic. When --format json (or pretty), emits the same {"error":…}
 // envelope as PrintError for agent parsers. Returning the error preserves the non-zero
-// exit code while SilenceErrors=true prevents cobra from echoing the same message.
+// exit code. Mark the printed error so Execute also respects this ownership;
+// Cobra's SilenceErrors alone does not silence our root error renderer.
 func printFlagErrorToStderr(cmd *cobra.Command, err error) error {
 	if cmd == nil || err == nil {
 		return err
@@ -63,32 +65,27 @@ func printFlagErrorToStderr(cmd *cobra.Command, err error) error {
 		p := output.NewWithStderr(io.Discard, w, format)
 		ge := output.InvalidArgsError(normalizeFlagErrorMessage(err.Error()))
 		p.PrintError(ge)
-		return err
+		return printedFlagError{cause: err}
 	}
 	_, _ = fmt.Fprintf(w, "Error: %s\n", err.Error())
-	return err
+	return printedFlagError{cause: err}
 }
+
+// Preserve Error/Unwrap for suggestions and errors.Is, while exposing the
+// existing sentinel that makes the root renderer skip an already printed error.
+type printedFlagError struct{ cause error }
+
+func (e printedFlagError) Error() string        { return e.cause.Error() }
+func (e printedFlagError) Unwrap() error        { return e.cause }
+func (e printedFlagError) Is(target error) bool { return target == ErrSilenced }
 
 func resolveOutputFormat(cmd *cobra.Command) output.Format {
 	if cmd == nil {
 		return output.FormatPretty
 	}
-	root := cmd.Root()
-	if root == nil {
-		return output.FormatPretty
-	}
-	f := root.PersistentFlags().Lookup("format")
-	if f == nil {
-		return output.FormatPretty
-	}
-	raw := strings.TrimSpace(f.Value.String())
-	if raw == "" {
-		raw = strings.TrimSpace(f.DefValue)
-	}
-	if raw == "" {
-		return output.FormatPretty
-	}
-	return output.ParseFormat(raw)
+	// Parsing may stop before --format. Share Execute's raw-argv/default policy
+	// so marking the first error as printed cannot discard the requested format.
+	return resolveOutputFormatFromArgv(cmd.Root(), os.Args)
 }
 
 func normalizeFlagErrorMessage(msg string) string {

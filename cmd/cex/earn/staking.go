@@ -86,8 +86,8 @@ func runStakingFind(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnAPI.FindCoin(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/staking/coins", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/staking/coins", "")
 	}
 	return p.Print(result)
 }
@@ -122,8 +122,7 @@ func runStakingOrders(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnAPI.OrderList(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/staking/orders", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/staking/orders", "")
 	}
 	return p.Print(result)
 }
@@ -154,8 +153,7 @@ func runStakingAwards(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnAPI.AwardList(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/staking/awards", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/staking/awards", "")
 	}
 	return p.Print(result)
 }
@@ -180,8 +178,7 @@ func runStakingAssets(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnAPI.AssetList(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/staking/assets", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/staking/assets", "")
 	}
 	return p.Print(result)
 }
@@ -209,8 +206,7 @@ func runStakingSwap(cmd *cobra.Command, args []string) error {
 	bodyJSON, _ := json.Marshal(body)
 	result, httpResp, err := c.EarnAPI.SwapStakingCoin(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/earn/staking/swap", string(bodyJSON)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/earn/staking/swap", string(bodyJSON))
 	}
 	return p.Print(result)
 }

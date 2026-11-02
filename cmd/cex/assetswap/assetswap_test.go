@@ -68,6 +68,7 @@ func silenceStdout(t *testing.T) {
 		_ = devNull.Close()
 	})
 }
+
 var _ = io.Discard // keep the io import useful for future drain helpers
 
 const cobraBashCompOneRequiredFlag = "cobra_annotation_bash_completion_one_required_flag"
@@ -258,16 +259,14 @@ func TestRunOrderGet_RequiresAuth(t *testing.T) {
 	assert.Contains(t, strings.ToLower(err.Error()), "api key")
 }
 
-// --- Public (no-auth) RunE coverage via httptest ---
+// --- SDK RunE coverage via httptest with synthetic credentials ---
 //
-// runAssets / runConfig do not call RequireAuth, so covering them requires a
-// mock HTTP server. We return an empty JSON object which the SDK happily
-// unmarshals into a zero-valued response struct.
+// 共享传输层要求私有路由具备凭据；使用合成 HMAC，让断言确实经过 Mock HTTP。
 
 func TestRunAssets_Succeeds(t *testing.T) {
 	mockGateServer(t, `{}`)
 	silenceStdout(t)
-	root := newTestRoot(t)
+	root := authedTestRoot(t)
 	cmd := &cobra.Command{Use: "assets"}
 	root.AddCommand(cmd)
 
@@ -278,7 +277,7 @@ func TestRunAssets_Succeeds(t *testing.T) {
 func TestRunConfig_Succeeds(t *testing.T) {
 	mockGateServer(t, `{}`)
 	silenceStdout(t)
-	root := newTestRoot(t)
+	root := authedTestRoot(t)
 	cmd := &cobra.Command{Use: "config"}
 	root.AddCommand(cmd)
 
@@ -286,8 +285,7 @@ func TestRunConfig_Succeeds(t *testing.T) {
 	assert.NoError(t, err, "runConfig should succeed against mock server")
 }
 
-// Server returning an HTTP error path exercises the PrintError branch.
-// runAssets returns nil (error swallowed by PrintError) but still covers lines.
+// 服务端失败必须向上传递，不能把已输出的错误当作成功退出。
 func TestRunAssets_ServerError(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -302,12 +300,13 @@ func TestRunAssets_ServerError(t *testing.T) {
 	os.Stderr = devNull
 	t.Cleanup(func() { os.Stderr = oldErr; _ = devNull.Close() })
 
-	root := newTestRoot(t)
+	root := authedTestRoot(t)
 	cmd := &cobra.Command{Use: "assets"}
 	root.AddCommand(cmd)
 
 	err := runAssets(cmd, nil)
-	assert.NoError(t, err, "runAssets swallows SDK errors via PrintError and returns nil")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "boom")
 }
 
 func TestAssetswapOrderListOptionalFlags(t *testing.T) {

@@ -16,8 +16,8 @@ func ApplyOutputLimit(envelope map[string]interface{}, maxBytes int64) map[strin
 
 // ApplyOutputLimitWithData applies output-size limit using caller-provided serialized data.
 // measureJSON must be json.Marshal(envelope["data"]) when non-empty so size checks match what
-// would be printed (CR-903). The second return is JSON bytes to render for "data": when
-// truncated it is the compact encoding of the replacement placeholder (CR-505: avoid an
+// would be printed . The second return is JSON bytes to render for "data": when
+// truncated it is the compact encoding of the replacement placeholder (review: avoid an
 // extra Marshal in the pretty path).
 func ApplyOutputLimitWithData(envelope map[string]interface{}, maxBytes int64, dataJSON []byte) (map[string]interface{}, []byte) {
 	if maxBytes <= 0 {

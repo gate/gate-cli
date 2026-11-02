@@ -81,7 +81,7 @@ func init() {
 		Short: "Query minimum invest amount (public, no auth required)",
 		RunE:  runAutoInvestMinAmount,
 	}
-	minAmountCmd.Flags().String("json", "", "JSON body for min amount query (required)")
+	minAmountCmd.Flags().String("json", "", "JSON body with money, asset_type (1=crypto, 2=TradFi stocks), and items (required)")
 	minAmountCmd.MarkFlagRequired("json")
 
 	configCmd := &cobra.Command{
@@ -137,8 +137,8 @@ func runAutoInvestPlans(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnAPI.ListAutoInvestPlans(c.Context(), status, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/autoinvest/plans/list_info", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/autoinvest/plans/list_info", "")
 	}
 	return p.Print(result)
 }
@@ -156,8 +156,7 @@ func runAutoInvestPlanDetail(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnAPI.GetAutoInvestPlanDetail(c.Context(), planID)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/autoinvest/plans/detail", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/autoinvest/plans/detail", "")
 	}
 	return p.Print(result)
 }
@@ -180,8 +179,7 @@ func runAutoInvestCreate(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnAPI.CreateAutoInvestPlan(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/earn/autoinvest/plans", jsonStr))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/earn/autoinvest/plans", jsonStr)
 	}
 	return p.Print(result)
 }
@@ -204,8 +202,7 @@ func runAutoInvestUpdate(cmd *cobra.Command, args []string) error {
 
 	httpResp, err := c.EarnAPI.UpdateAutoInvestPlan(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "PUT", "/api/v4/earn/autoinvest/plans", jsonStr))
-		return nil
+		return client.CommandError(err, httpResp, "PUT", "/api/v4/earn/autoinvest/plans", jsonStr)
 	}
 	return p.Print(map[string]string{"status": "ok"})
 }
@@ -225,8 +222,7 @@ func runAutoInvestStop(cmd *cobra.Command, args []string) error {
 	bodyJSON, _ := json.Marshal(body)
 	httpResp, err := c.EarnAPI.StopAutoInvestPlan(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/earn/autoinvest/plans/stop", string(bodyJSON)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/earn/autoinvest/plans/stop", string(bodyJSON))
 	}
 	return p.Print(map[string]string{"status": "ok"})
 }
@@ -247,8 +243,7 @@ func runAutoInvestAddPosition(cmd *cobra.Command, args []string) error {
 	bodyJSON, _ := json.Marshal(body)
 	httpResp, err := c.EarnAPI.AddPositionAutoInvestPlan(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/earn/autoinvest/plans/add_position", string(bodyJSON)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/earn/autoinvest/plans/add_position", string(bodyJSON))
 	}
 	return p.Print(map[string]string{"status": "ok"})
 }
@@ -270,29 +265,39 @@ func runAutoInvestCoins(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnAPI.ListAutoInvestCoins(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/autoinvest/coins", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/autoinvest/coins", "")
 	}
 	return p.Print(result)
 }
 
+// parseAutoInvestMinAmount validates the explicit asset family before creating
+// a client. Never default missing input: the API requires callers to choose it.
+func parseAutoInvestMinAmount(raw string) (gateapi.AutoInvestMinInvestAmount, error) {
+	var body gateapi.AutoInvestMinInvestAmount
+	if err := json.Unmarshal([]byte(raw), &body); err != nil {
+		return body, fmt.Errorf("invalid JSON body: %w", err)
+	}
+	if body.AssetType != 1 && body.AssetType != 2 {
+		return body, fmt.Errorf("asset_type is required and must be 1 (cryptocurrency) or 2 (TradFi stocks)")
+	}
+	return body, nil
+}
+
 func runAutoInvestMinAmount(cmd *cobra.Command, args []string) error {
 	jsonStr, _ := cmd.Flags().GetString("json")
+	body, err := parseAutoInvestMinAmount(jsonStr)
+	if err != nil {
+		return err
+	}
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	var body gateapi.AutoInvestMinInvestAmount
-	if err := json.Unmarshal([]byte(jsonStr), &body); err != nil {
-		return fmt.Errorf("invalid JSON body: %w", err)
-	}
-
 	result, httpResp, err := c.EarnAPI.GetAutoInvestMinAmount(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/earn/autoinvest/min_invest_amount", jsonStr))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/earn/autoinvest/min_invest_amount", jsonStr)
 	}
 	return p.Print(result)
 }
@@ -306,8 +311,7 @@ func runAutoInvestConfig(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnAPI.ListAutoInvestConfig(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/autoinvest/config", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/autoinvest/config", "")
 	}
 	return p.Print(result)
 }
@@ -335,8 +339,7 @@ func runAutoInvestRecords(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnAPI.ListAutoInvestPlanRecords(c.Context(), planID, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/autoinvest/plans/records", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/autoinvest/plans/records", "")
 	}
 	return p.Print(result)
 }
@@ -355,8 +358,7 @@ func runAutoInvestOrders(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnAPI.ListAutoInvestOrders(c.Context(), planID, recordID)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/autoinvest/orders", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/autoinvest/orders", "")
 	}
 	return p.Print(result)
 }

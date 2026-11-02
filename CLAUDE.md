@@ -8,8 +8,8 @@
 ## 常用命令
 - 构建: `go build -o gate-cli .`
 - 单元测试: `go test ./...`（**仅** CI 发版 / 全仓 merge 前）
-- **只跑改动的包**: `./scripts/test-changed-go.sh`（见 `scripts/test-changed-go.sh`）
-- Intel / MCP / migrate: `./scripts/test-intel-scope.sh -count=1` 与 `./scripts/test-intel-scope.sh vet`
+- 日常定向测试：`go test ./cmd/cex/spot ./internal/client -count=1`；按改动选择包，完整测试留给合并或发布验收。
+- Intel / MCP：`go test ./internal/intelcmd ./internal/mcpclient ./cmd/info ./cmd/news -count=1`。
 - Integration 测试: `go test -tags integration ./internal/integration/... -v`
 - 本地 smoke test（公共 API 无需 key）: `./gate-cli cex spot market ticker --pair BTC_USDT`
 
@@ -35,9 +35,8 @@
 - `FuturesTrade.CreateTimeMs` → `float64`
 
 ## MCP / Intel（`info` / `news` 已发布；`tool` 仍为规格命名）
-- **用户 CLI**：`gate-cli info` / `gate-cli news`（**46** 个 MCP 叶：`info list` / `news list`，`-h` 查 flag；README、quickstart）。**规划统一命令**：`gate-cli tool`（`list` / `call` / `describe`）；与交易 API **鉴权隔离**（勿用 `GATE_API_KEY` 作 MCP Bearer）。
-- 见 [`specs/README.md`](specs/README.md)（含与实现对读）、[`specs/open-items-and-dependencies.md`](specs/open-items-and-dependencies.md)、[`docs/plans/2026-04-10-gate-cli-tool-mcp-review.md`](docs/plans/2026-04-10-gate-cli-tool-mcp-review.md)。
-- **Cursor**：见 [`.cursor/rules/`](.cursor/rules/)（**`gate-cli-cli-layer-conventions.mdc`** + Intel 规则；`specs/cli/mcp-wire-appendix.md` **v0.4**）。
+- **用户 CLI**：`gate-cli info` / `gate-cli news`（**50** 个 MCP 叶（32 info + 18 news）：`info list` / `news list`，`-h` 查 flag；README、quickstart）。**规划统一命令**：`gate-cli tool`（`list` / `call` / `describe`）；与交易 API **鉴权隔离**（勿用 `GATE_API_KEY` 作 MCP Bearer）。
+- 使用说明见 [`README.md`](README.md)、[`docs/quickstart.md`](docs/quickstart.md) 和 [`docs/quickstart_zh.md`](docs/quickstart_zh.md)。
 
 ## 架构约定
 - 共享 CLI helper（GetPrinter/GetClient）放在 `internal/cmdutil/`，**不要**放 `cmd/root.go`（会循环 import）

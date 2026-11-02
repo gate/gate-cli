@@ -103,12 +103,12 @@ func TestNewClientExposesAllSDKApis(t *testing.T) {
 	assert.NotNil(t, c.MarginUniAPI, "MarginUniAPI")
 	assert.NotNil(t, c.OptionsAPI, "OptionsAPI")
 	assert.NotNil(t, c.UnifiedAPI, "UnifiedAPI")
-	assert.NotNil(t, c.SubAccountAPI, "SubAccountAPI")
 	assert.NotNil(t, c.WalletAPI, "WalletAPI")
 	assert.NotNil(t, c.EarnAPI, "EarnAPI")
 	assert.NotNil(t, c.EarnUniAPI, "EarnUniAPI")
 	assert.NotNil(t, c.RebateAPI, "RebateAPI")
 	assert.NotNil(t, c.AccountAPI, "AccountAPI")
-	assert.NotNil(t, c.LaunchAPI, "LaunchAPI")
+	// Public SDK v164 restores Launch on the same client as existing services.
+	assert.NotNil(t, c.StockAPI, "StockAPI")
 	assert.NotNil(t, c.AssetswapAPI, "AssetswapAPI (added in v7.2.71 sync)")
 }

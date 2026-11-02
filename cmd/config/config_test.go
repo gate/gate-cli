@@ -3,6 +3,7 @@ package configcmd
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -140,16 +141,16 @@ func TestMaskSecrets_BasicYAML(t *testing.T) {
     api_key: mykey
     api_secret: mysecret`
 	out := maskSecrets(input)
-	assert.Contains(t, out, "api_secret: ****")
+	assert.Contains(t, out, `api_secret: "****"`)
 	assert.NotContains(t, out, "mysecret")
-	assert.Contains(t, out, "api_key: ****")
+	assert.Contains(t, out, `api_key: "****"`)
 	assert.NotContains(t, out, "mykey")
 }
 
 func TestMaskSecrets_PreservesIndentation(t *testing.T) {
 	input := "    api_secret: supersecret"
 	out := maskSecrets(input)
-	assert.Equal(t, "    api_secret: ****", out)
+	assert.Equal(t, `api_secret: "****"`, strings.TrimSpace(out))
 }
 
 func TestMaskSecrets_NoCredentialFields(t *testing.T) {
@@ -176,7 +177,7 @@ func TestMaskSecrets_MultipleProfiles(t *testing.T) {
 func TestMaskSecrets_APIKeyMasked(t *testing.T) {
 	input := "    api_key: abc123"
 	out := maskSecrets(input)
-	assert.Equal(t, "    api_key: ****", out)
+	assert.Equal(t, `api_key: "****"`, strings.TrimSpace(out))
 	assert.NotContains(t, out, "abc123")
 }
 
@@ -184,5 +185,19 @@ func TestMaskSecrets_EmptySecret(t *testing.T) {
 	// Empty value should still be masked (no accidental leaks of empty-string marker).
 	input := "    api_secret: \"\""
 	out := maskSecrets(input)
-	assert.Equal(t, "    api_secret: ****", out)
+	assert.Equal(t, `api_secret: "****"`, strings.TrimSpace(out))
+}
+
+// TestRunSetPreservesOAuthAndComments 旧包与根入口都必须经同一个AST写入边界。
+func TestRunSetPreservesOAuthAndComments(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	path := filepath.Join(home, ".gate-cli/config.yaml")
+	require.NoError(t, os.MkdirAll(filepath.Dir(path), 0700))
+	require.NoError(t, os.WriteFile(path, []byte("# keep\noauth2: {token: {access_token: synthetic-at, resource: https://api.gateio.ws/api/v4}}\nprofiles: {}\n"), 0600))
+	require.NoError(t, runSetCmd(t, "api-key", "new-key"))
+	raw, err := os.ReadFile(path)
+	require.NoError(t, err)
+	assert.Contains(t, string(raw), "synthetic-at")
+	assert.Contains(t, string(raw), "# keep")
 }

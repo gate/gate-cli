@@ -111,8 +111,8 @@ func runDualPlans(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnAPI.ListDualInvestmentPlans(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/dual/investment_plan", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/dual/investment_plan", "")
 	}
 	return p.Print(result)
 }
@@ -147,8 +147,7 @@ func runDualOrders(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnAPI.ListDualOrders(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/dual/orders", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/dual/orders", "")
 	}
 	return p.Print(result)
 }
@@ -174,8 +173,7 @@ func runDualPlace(cmd *cobra.Command, args []string) error {
 	bodyJSON, _ := json.Marshal(body)
 	result, httpResp, err := c.EarnAPI.PlaceDualOrder(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/earn/dual/orders", string(bodyJSON)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/earn/dual/orders", string(bodyJSON))
 	}
 	return p.Print(result)
 }
@@ -192,8 +190,7 @@ func runDualBalance(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnAPI.ListDualBalance(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/dual/accounts", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/dual/accounts", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -217,8 +214,7 @@ func runDualRefundPreview(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnAPI.GetDualOrderRefundPreview(c.Context(), orderID)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/dual/order-refund-preview", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/dual/order-refund-preview", "")
 	}
 	return p.Print(result)
 }
@@ -242,8 +238,7 @@ func runDualRefund(cmd *cobra.Command, args []string) error {
 	bodyJSON, _ := json.Marshal(body)
 	httpResp, err := c.EarnAPI.PlaceDualOrderRefund(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/earn/dual/order-refund", string(bodyJSON)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/earn/dual/order-refund", string(bodyJSON))
 	}
 	return p.Print(map[string]string{"status": "ok", "order_id": orderID, "req_id": reqID})
 }
@@ -269,8 +264,7 @@ func runDualModifyReinvest(cmd *cobra.Command, args []string) error {
 	bodyJSON, _ := json.Marshal(body)
 	httpResp, err := c.EarnAPI.ModifyDualOrderReinvest(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/earn/dual/modify-order-reinvest", string(bodyJSON)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/earn/dual/modify-order-reinvest", string(bodyJSON))
 	}
 	return p.Print(map[string]any{"status": "ok", "order_id": orderID, "reinvest": status})
 }
@@ -302,8 +296,7 @@ func runDualRecommend(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnAPI.GetDualProjectRecommend(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/dual/project-recommend", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/dual/project-recommend", "")
 	}
 	return p.Print(result)
 }

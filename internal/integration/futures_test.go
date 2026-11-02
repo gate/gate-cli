@@ -111,8 +111,11 @@ func TestFuturesLeverageUpdate(t *testing.T) {
 	if target == nil {
 		t.Skip("no open futures positions to test leverage update")
 	}
+	// 模式未确认时不进行任何杠杆修改，即使这是集成环境也不能猜测。
+	isDual, err := c.IsDualMode(settle)
+	require.NoError(t, err)
 	t.Logf("using contract=%s leverage=%s cross_leverage_limit=%s (dual_mode=%v)",
-		target.Contract, target.Leverage, target.CrossLeverageLimit, c.IsDualMode(settle))
+		target.Contract, target.Leverage, target.CrossLeverageLimit, isDual)
 
 	// Pick a new cross leverage limit that differs from the current one.
 	originalCrossLimit := target.CrossLeverageLimit

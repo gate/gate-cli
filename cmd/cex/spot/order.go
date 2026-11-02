@@ -7,9 +7,10 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	"github.com/gate/gate-cli/internal/output"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var orderCmd = &cobra.Command{
@@ -140,6 +141,19 @@ func init() {
 	countdownCmd.Flags().String("pair", "", "Limit cancellation to this currency pair")
 	countdownCmd.MarkFlagRequired("timeout")
 
+	// Account selection is per operation; an omitted flag preserves server defaults.
+	for _, leaf := range []*cobra.Command{buyCmd, sellCmd, getCmd, listCmd, cancelCmd, myTradesCmd, amendCmd, allOpenCmd} {
+		addSpotAccountFlag(leaf)
+	}
+	for _, leaf := range []*cobra.Command{buyCmd, sellCmd} {
+		leaf.Flags().Bool("auto-borrow", false, "Borrow a shortfall automatically (margin, unified or cross_margin only)")
+		leaf.Flags().Bool("auto-repay", false, "Repay automatically for this order (unified or cross_margin only)")
+		addSpotProtectionFlags(leaf)
+		leaf.Flags().String("text", "", "Optional t- correlation text (28 suffix bytes); query pending orders with get --id; not idempotency")
+		leaf.Annotations = map[string]string{"gate.effect": "write"}
+	}
+	addSpotProtectionFlags(amendCmd)
+
 	orderCmd.AddCommand(buyCmd, sellCmd, getCmd, listCmd, cancelCmd,
 		myTradesCmd, amendCmd, batchCreateCmd, batchCancelCmd, batchAmendCmd,
 		allOpenCmd, crossLiquidateCmd, countdownCmd)
@@ -190,6 +204,10 @@ func buildSpotOrder(side, pair, amount, price, quote string) (gateapi.Order, err
 }
 
 func runSpotCreateOrder(cmd *cobra.Command, side string) error {
+	text, textErr := cmdutil.OrderText(cmd)
+	if textErr != nil {
+		return textErr
+	}
 	pair, _ := cmd.Flags().GetString("pair")
 	amount, _ := cmd.Flags().GetString("amount")
 	price, _ := cmd.Flags().GetString("price")
@@ -200,6 +218,10 @@ func runSpotCreateOrder(cmd *cobra.Command, side string) error {
 		return err
 	}
 
+	order.Text = text
+	if err := applySpotCreateFlags(cmd, &order); err != nil {
+		return err
+	}
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
@@ -212,8 +234,8 @@ func runSpotCreateOrder(cmd *cobra.Command, side string) error {
 	body, _ := json.Marshal(order)
 	result, httpResp, err := c.SpotAPI.CreateOrder(c.Context(), order, nil)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/spot/orders", string(body)))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "POST", "/api/v4/spot/orders", string(body))
 	}
 	return p.Print(result)
 }
@@ -230,10 +252,9 @@ func runSpotOrderGet(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	order, httpResp, err := c.SpotAPI.GetOrder(c.Context(), id, pair, nil)
+	order, httpResp, err := c.SpotAPI.GetOrder(c.Context(), id, pair, &gateapi.GetOrderOpts{Account: spotAccountOption(cmd)})
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", fmt.Sprintf("/api/v4/spot/orders/%s", id), ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", fmt.Sprintf("/api/v4/spot/orders/%s", id), "")
 	}
 	return p.Print(order)
 }
@@ -252,11 +273,11 @@ func runSpotOrderList(cmd *cobra.Command, args []string) error {
 	}
 
 	orders, httpResp, err := c.SpotAPI.ListOrders(c.Context(), pair, status, &gateapi.ListOrdersOpts{
-		Limit: optional.NewInt32(limit),
+		Limit:   optional.NewInt32(limit),
+		Account: spotAccountOption(cmd),
 	})
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/orders", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/spot/orders", "")
 	}
 	if p.IsJSON() {
 		return p.Print(orders)
@@ -283,10 +304,10 @@ func runSpotOrderCancel(cmd *cobra.Command, args []string) error {
 	if all {
 		cancelled, httpResp, err := c.SpotAPI.CancelOrders(c.Context(), &gateapi.CancelOrdersOpts{
 			CurrencyPair: optional.NewString(pair),
+			Account:      spotAccountOption(cmd),
 		})
 		if err != nil {
-			p.PrintError(client.ParseGateError(err, httpResp, "DELETE", "/api/v4/spot/orders", ""))
-			return nil
+			return client.CommandError(err, httpResp, "DELETE", "/api/v4/spot/orders", "")
 		}
 		return p.Print(cancelled)
 	}
@@ -295,10 +316,9 @@ func runSpotOrderCancel(cmd *cobra.Command, args []string) error {
 	if id == "" {
 		return fmt.Errorf("provide --id <order-id> or --all to cancel all open orders")
 	}
-	result, httpResp, err := c.SpotAPI.CancelOrder(c.Context(), id, pair, nil)
+	result, httpResp, err := c.SpotAPI.CancelOrder(c.Context(), id, pair, &gateapi.CancelOrderOpts{Account: spotAccountOption(cmd)})
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "DELETE", fmt.Sprintf("/api/v4/spot/orders/%s", id), ""))
-		return nil
+		return client.CommandError(err, httpResp, "DELETE", fmt.Sprintf("/api/v4/spot/orders/%s", id), "")
 	}
 	return p.Print(result)
 }
@@ -317,7 +337,7 @@ func runSpotMyTrades(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	opts := &gateapi.ListMyTradesOpts{}
+	opts := &gateapi.ListMyTradesOpts{Account: spotAccountOption(cmd)}
 	if pair != "" {
 		opts.CurrencyPair = optional.NewString(pair)
 	}
@@ -333,8 +353,7 @@ func runSpotMyTrades(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.SpotAPI.ListMyTrades(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/my_trades", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/spot/my_trades", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -360,7 +379,10 @@ func runSpotAmendOrder(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	patch := gateapi.OrderPatch{CurrencyPair: pair}
+	patch := gateapi.OrderPatch{CurrencyPair: pair, Account: spotAccountValue(cmd)}
+	if err := applySpotPatchProtection(cmd, &patch); err != nil {
+		return err
+	}
 	if amount != "" {
 		patch.Amount = amount
 	}
@@ -372,8 +394,7 @@ func runSpotAmendOrder(cmd *cobra.Command, args []string) error {
 		CurrencyPair: optional.NewString(pair),
 	})
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "PATCH", fmt.Sprintf("/api/v4/spot/orders/%s", id), string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "PATCH", fmt.Sprintf("/api/v4/spot/orders/%s", id), string(body))
 	}
 	return p.Print(result)
 }
@@ -393,12 +414,16 @@ func runSpotBatchCreateOrders(cmd *cobra.Command, args []string) error {
 	if err := json.Unmarshal([]byte(ordersJSON), &orders); err != nil {
 		return fmt.Errorf("invalid --orders-json: %w", err)
 	}
+	if len(orders) == 0 {
+		return fmt.Errorf("--orders-json must contain at least one order")
+	}
 	result, httpResp, err := c.SpotAPI.CreateBatchOrders(c.Context(), orders, nil)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/spot/batch_orders", ordersJSON))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/spot/batch_orders", ordersJSON)
 	}
-	return p.Print(result)
+	return printSpotBatchResult(p, result, len(orders), httpResp, func(item gateapi.BatchOrder) bool {
+		return item.Succeeded && item.Label == ""
+	})
 }
 
 func runSpotBatchCancelOrders(cmd *cobra.Command, args []string) error {
@@ -416,12 +441,16 @@ func runSpotBatchCancelOrders(cmd *cobra.Command, args []string) error {
 	if err := json.Unmarshal([]byte(ordersJSON), &orders); err != nil {
 		return fmt.Errorf("invalid --orders-json: %w", err)
 	}
+	if len(orders) == 0 {
+		return fmt.Errorf("--orders-json must contain at least one order")
+	}
 	result, httpResp, err := c.SpotAPI.CancelBatchOrders(c.Context(), orders, nil)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/spot/cancel_batch_orders", ordersJSON))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/spot/cancel_batch_orders", ordersJSON)
 	}
-	return p.Print(result)
+	return printSpotBatchResult(p, result, len(orders), httpResp, func(item gateapi.CancelOrderResult) bool {
+		return item.Succeeded && item.Label == ""
+	})
 }
 
 func runSpotBatchAmendOrders(cmd *cobra.Command, args []string) error {
@@ -439,12 +468,22 @@ func runSpotBatchAmendOrders(cmd *cobra.Command, args []string) error {
 	if err := json.Unmarshal([]byte(ordersJSON), &items); err != nil {
 		return fmt.Errorf("invalid --orders-json: %w", err)
 	}
+	if len(items) == 0 {
+		return fmt.Errorf("--orders-json must contain at least one order")
+	}
+	if err := cmdutil.ValidateBatchJSONKeys(ordersJSON); err != nil {
+		return output.InvalidArgsError(err.Error())
+	}
+	if err := validateBatchProtection(ordersJSON, items); err != nil {
+		return output.InvalidArgsError(err.Error())
+	}
 	result, httpResp, err := c.SpotAPI.AmendBatchOrders(c.Context(), items, nil)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/spot/amend_batch_orders", ordersJSON))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/spot/amend_batch_orders", ordersJSON)
 	}
-	return p.Print(result)
+	return printSpotBatchResult(p, result, len(items), httpResp, func(item gateapi.BatchOrder) bool {
+		return item.Succeeded && item.Label == ""
+	})
 }
 
 func runSpotAllOpenOrders(cmd *cobra.Command, args []string) error {
@@ -458,15 +497,14 @@ func runSpotAllOpenOrders(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	opts := &gateapi.ListAllOpenOrdersOpts{}
+	opts := &gateapi.ListAllOpenOrdersOpts{Account: spotAccountOption(cmd)}
 	if limit != 0 {
 		opts.Limit = optional.NewInt32(limit)
 	}
 
 	result, httpResp, err := c.SpotAPI.ListAllOpenOrders(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/open_orders", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/spot/open_orders", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -495,8 +533,7 @@ func runSpotCrossLiquidate(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.SpotAPI.CreateCrossLiquidateOrder(c.Context(), req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/spot/cross_liquidate_orders", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/spot/cross_liquidate_orders", string(body))
 	}
 	return p.Print(result)
 }
@@ -517,8 +554,7 @@ func runSpotCountdownCancelAll(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.SpotAPI.CountdownCancelAllSpot(c.Context(), req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/spot/countdown_cancel_all", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/spot/countdown_cancel_all", string(body))
 	}
 	if p.IsJSON() {
 		return p.Print(result)

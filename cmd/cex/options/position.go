@@ -6,9 +6,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var positionCmd = &cobra.Command{
@@ -74,8 +74,8 @@ func runOptionsPositions(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.OptionsAPI.ListOptionsPositions(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/options/positions", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/options/positions", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -100,8 +100,7 @@ func runOptionsPosition(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.OptionsAPI.GetOptionsPosition(c.Context(), contract)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/options/positions/"+contract, ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/options/positions/"+contract, "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -131,8 +130,7 @@ func runOptionsPositionClose(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.OptionsAPI.ListOptionsPositionClose(c.Context(), underlying, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/options/position_close", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/options/position_close", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -171,8 +169,7 @@ func runOptionsMyTrades(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.OptionsAPI.ListMyOptionsTrades(c.Context(), underlying, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/options/my_trades", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/options/my_trades", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

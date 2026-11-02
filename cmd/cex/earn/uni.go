@@ -127,8 +127,8 @@ func runUniCurrencies(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnUniAPI.ListUniCurrencies(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/uni/currencies", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/uni/currencies", "")
 	}
 	return p.Print(result)
 }
@@ -143,8 +143,7 @@ func runUniCurrency(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnUniAPI.GetUniCurrency(c.Context(), currency)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/uni/currencies/"+currency, ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/uni/currencies/"+currency, "")
 	}
 	return p.Print(result)
 }
@@ -175,8 +174,7 @@ func runUniLends(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnUniAPI.ListUserUniLends(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/uni/lends", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/uni/lends", "")
 	}
 	return p.Print(result)
 }
@@ -200,8 +198,7 @@ func runUniLend(cmd *cobra.Command, args []string) error {
 	bodyJSON, _ := json.Marshal(body)
 	httpResp, err := c.EarnUniAPI.CreateUniLend(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/earn/uni/lends", string(bodyJSON)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/earn/uni/lends", string(bodyJSON))
 	}
 	return p.Print(map[string]string{"status": "ok"})
 }
@@ -225,8 +222,7 @@ func runUniChange(cmd *cobra.Command, args []string) error {
 	bodyJSON, _ := json.Marshal(body)
 	httpResp, err := c.EarnUniAPI.ChangeUniLend(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "PATCH", "/api/v4/earn/uni/lends", string(bodyJSON)))
-		return nil
+		return client.CommandError(err, httpResp, "PATCH", "/api/v4/earn/uni/lends", string(bodyJSON))
 	}
 	return p.Print(map[string]string{"status": "ok"})
 }
@@ -269,8 +265,7 @@ func runUniRecords(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnUniAPI.ListUniLendRecords(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/uni/lend_records", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/uni/lend_records", "")
 	}
 	return p.Print(result)
 }
@@ -288,8 +283,7 @@ func runUniInterest(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnUniAPI.GetUniInterest(c.Context(), currency)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/uni/interests/"+currency, ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/uni/interests/"+currency, "")
 	}
 	return p.Print(result)
 }
@@ -328,8 +322,7 @@ func runUniInterestRecords(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnUniAPI.ListUniInterestRecords(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/uni/interest_records", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/uni/interest_records", "")
 	}
 	return p.Print(result)
 }
@@ -347,8 +340,7 @@ func runUniInterestStatus(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnUniAPI.GetUniInterestStatus(c.Context(), currency)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/uni/interest_status/"+currency, ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/uni/interest_status/"+currency, "")
 	}
 	return p.Print(result)
 }
@@ -365,8 +357,7 @@ func runUniChart(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnUniAPI.ListUniChart(c.Context(), from, to, currency)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/uni/chart", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/uni/chart", "")
 	}
 	return p.Print(result)
 }
@@ -380,8 +371,7 @@ func runUniRate(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.EarnUniAPI.ListUniRate(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/earn/uni/estimate_rate", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/earn/uni/estimate_rate", "")
 	}
 	return p.Print(result)
 }

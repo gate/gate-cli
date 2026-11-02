@@ -55,8 +55,8 @@ func runGetEntry(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.ActivityAPI.GetMyActivityEntry(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/rewards/activity/my-activity-entry", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/rewards/activity/my-activity-entry", "")
 	}
 	return p.Print(result)
 }
@@ -90,8 +90,7 @@ func runList(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.ActivityAPI.ListActivities(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/rewards/activity/activity-list", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/rewards/activity/activity-list", "")
 	}
 	return p.Print(result)
 }
@@ -105,8 +104,7 @@ func runTypes(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.ActivityAPI.ListActivityTypes(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/rewards/activity/activity-type", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/rewards/activity/activity-type", "")
 	}
 	return p.Print(result)
 }

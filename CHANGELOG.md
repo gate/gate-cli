@@ -1,5 +1,47 @@
 # Changelog
 
+## [v0.9.0] - 2026-11-03
+
+### Added
+
+- `cex auth login`, `status`, `refresh` and `logout`: browser or manual authorization, explicit scope selection, resource-bound credentials and local status fields `issuer`, `resource`, `scopes`, `expires_at` and `remote_checked`.
+- `cex stock`: market, account, transfer, order and position commands with exact int64 identifiers. CFD queries and transfers expose their existing `cex tradfi` parameters, including symbol commissions and order logs.
+- `cex bot smart-position create` and `futures-combo create`; smart-position stop modes `market`, `limit` and `no_close`, plus `--stop-options`; recommendation queries accept `--exclude-recommendation-id`.
+- Spot POV create/list/get/cancel/cancel-all, spot/futures RPI order books, futures `contracts-all` and `adl-risk-states`, and futures chase create/get/list/stop/stop-all commands.
+- Unified Delta-neutral get/set, quick-repayment estimate/execute and account leverage updates.
+- `version --details --format json` exposes build version, revision, Go version, platform and compiled Agent command availability. `config check` reports local configuration checks; `config init --hide-input` hides terminal input.
+- Spot `order buy`/`sell` and futures `order long`/`short`/`add`/`remove` accept optional `--text`; futures `order get-by-text --text` retrieves the matching order.
+- Options `order create --mmp` and CFD `order create --leverage`; Agent `agent-index --domain cex --details` describes registered command parameters and effects.
+
+### Changed
+
+- `config list` hides all custom header values and endpoint userinfo, query and fragment components by default, including aliases. Intel debug errors hide credential-bearing URLs; `info/news mcp-spec` and leaf help expose public contracts without backend source or storage metadata.
+
+- Spot order account selection, automatic borrowing/repayment and attached `stop_profit`/`stop_loss` parameters; options full-close and reduce-only parameters retain explicit values.
+- CEX authorization distinguishes `base`, `spot_trade`, `futures_trade`, `earn`, `cfd` and `stock` operations. CFD and stock trading grants remain independent; actual access depends on the granted permissions and account eligibility.
+- Futures chase responses accept flat or `code`/`message`/`data` envelopes; active queries explicitly select `is_finished=false`. Empty list and stop-all responses retain `orders: []`.
+- `cex earn auto-invest min-amount` requires integer `asset_type`: `1` for cryptocurrency or `2` for TradFi stocks. Fixed-product queries accept `--status` and `--show-status`; fixed lends/history accept `--sub-business` and `--business-filter`, preserving explicit zero/empty values.
+- `cex options account get` returns `position_notional_limit` as a string. Futures/delivery insurance responses preserve exact `b` balances as strings.
+- `cex tradfi market kline --type` defaults to `1m`; supports the documented timeframes and aliases. Spot insurance queries require positive, ordered `--from`/`--to` timestamps.
+- Delivery price-trigger creation requires explicit `--trigger-rule`; futures price-trigger creation accepts optional `--tif`. Spot price-trigger creation accepts explicit `--time-in-force`, defaulting to `ioc`.
+- Spot and futures batch order operations preserve per-item results on stdout and fail on partial or malformed results. Empty arrays, ambiguous duplicate keys and malformed attached-protection objects are rejected before writes.
+- `info`/`news --args-file` must resolve inside the current working directory, including absolute, home-relative and symbolic-link paths. Unknown command paths and unexpected positional arguments return a nonzero status; spaced native boolean values preserve explicit false.
+- CEX responses above 8 MiB or undecodable successful JSON fail explicitly. The independent `--max-output-bytes` option continues to control printed output.
+
+### Fixed
+
+- `cex futures trail create` requires explicit integer `--price-type`: `1` latest, `2` index or `3` mark. Trail identifiers and declared time fields remain strings.
+- Trail list returns `data.orders`; update and stop return `data.order`; log returns `data.change_log` with string `updated_at` and explicitly requests page one when pagination is omitted. Declared nonzero business codes fail even for HTTP 200.
+- Futures price-trigger detail HTTP 205 preserves the backend error. Unsupported API-order TP/SL amendment returns `UNSUPPORTED_OPERATION`, `retryable: false` and an action to stop retrying.
+- Futures long orders reject negative size; add/close preserve signed-position behavior and validate dual-position `--side`. Writes stop when position mode cannot be determined.
+- Missing CEX routes return `API_NOT_FOUND`; table-format errors remain visible, including missing-credential `AUTH_ERROR` with exit code 4. Manual authorization accepts CRLF input.
+
+### Removed
+
+- `cex launch` and its LaunchPool, HODLer Airdrop and CandyDrop query/participation/record commands.
+- `cex sub-account` administration and API-key commands; wallet balance and transfer commands remain available.
+- P2P, CrossEx, activity, coupon and welfare command groups and CEX Exchange Announcement API access. Separate `news` commands remain available.
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
@@ -25,14 +67,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **News MCP baseline expansion** — News grows from **14** to **18** tools (**50** Intel tools total: 32 info + 18 news). The bundled MCP spec, CLI inventory, agent catalog/validation, README, and quick-start guides now include 24h mention bursts, 4h hot topics, and stored market-move report get/list queries.
 - **News argument guardrails** — The four new leaves validate required symbols/coins, fixed windows (`24h` mention burst and `4h` hot topics), supported social platforms, hot-topic limits, market-report time ranges, and report-list limits before calling MCP. Report time filters accept ISO 8601 or `YYYY-MM-DD HH:MM:SS`; timezone-less values are interpreted as UTC0.
 - **`toolargs` spec alignment** — `info macro get-economic-calendar` no longer requires both dates (zero-arg matches MCP default window); `info coin get-coin-rankings` rejects `time_range` unless `top_gainers`/`top_losers` and `listing_*` unless `new_listing`; `info platformmetrics get-defi-overview` stops rejecting unknown `category` (server pass-through).
-- **Info MCP spec resync** — `specs/mcp/info-mcp-tools-inputs-logic.json` → `internal/mcpspec/bundled/`: logic/fields parity across all 37 tools; `info coin get-coin-rankings` adds `market_pulse_hot` to `--ranking-type`; `info platformmetrics get-yield-pools` adds `--scope` (`basic`|`full`). `toolargs` pre-checks updated for both enums.
-- **`info platformmetrics get-chain-activity` MCP spec** — resync `specs/mcp/info-mcp-tools-inputs-logic.json` and bundled logic with upstream GAP-012: `staking_metrics.series[]` now documents full PRD fields (`eth_supply`, `staking_apr_7d`, `entry_wait_days`, `exit_wait_days`); removes `shelved_fields`; adds `errors` / `response_fields` / `series_fields` metadata. CLI flags and `toolargs` pre-check unchanged (pass-through response). **`--format pretty`** now renders staking query context, latest snapshot, and recent series (including the four enriched fields when present).
+- **Info tool contracts** — align the embedded definitions across 37 tools; `info coin get-coin-rankings` adds `market_pulse_hot` to `--ranking-type`; `info platformmetrics get-yield-pools` adds `--scope` (`basic`|`full`). Local validation accepts both updated enums.
+- **`info platformmetrics get-chain-activity`** — `staking_metrics.series[]` documents `eth_supply`, `staking_apr_7d`, `entry_wait_days` and `exit_wait_days`; removes `shelved_fields`; adds `errors`, `response_fields` and `series_fields` metadata. CLI flags and input validation remain unchanged. `--format pretty` renders query context, the latest snapshot and recent series, including these four fields when present.
 
 ### Fixed
 
 - **`+token-risk --symbol`** — align contract resolution with mcp-server `get_coin_info` output: `query`/`query_type=symbol`, prefer `items[0]`, parse `chain` as `string[]`, fallback `token_address[]`, multi-chain slug priority; native coins (e.g. BTC) return a clear error instead of a generic resolve failure.
 - **Intel user-facing errors** — stderr JSON no longer includes MCP wire `tool_name` (`info_*_*`); shortcuts use paths like `info/+token-risk`, leaves use CLI command paths (e.g. `info coin get-coin-info`). Leaf `-h` text no longer embeds MCP tool names. **`info list` / `describe` / agent compact list** output uses CLI command paths only.
-- **`agent-leaves` curated** — **31** intents (+ `info_token_risk_by_address`, `info_token_onchain_by_address` for contract-path agents). README/quickstart counts synced; **`specs/Shortcut/xuqiu.md` §3.9.2** call chains aligned with current CLI (`query`/`query_type`, scope fallbacks, partial shortcuts).
+- **`agent-leaves` curated** — **31** intents, including `info_token_risk_by_address` and `info_token_onchain_by_address` for contract-address queries. Discovery examples use the supported `query`/`query_type`, scope fallbacks and partial-result behavior.
 - **`agent-leaves` `mcp_catalog`** — `intent` fields use CLI path tokens (e.g. `coin-get-coin-info`), not MCP wire names. **`DeferredInfoShortcutPaths`** documents `+address-risk` until baseline ships.
 - **`describe` / `invoke --name`** — accepts CLI command paths (e.g. `info coin get-coin-info`) in addition to MCP wire names; resolved before MCP RPC. Hidden `invoke` help examples use CLI paths.
 - **Info shortcuts `get-coin-info`** — `+coin-overview`, `+coin-compare`, `+token-onchain`, `+token-risk` use explicit `query` + `query_type=symbol` (aligned with mcp-server); address identity lookup uses `query_type=address`.
@@ -45,24 +87,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Stored market-move reports** — `news events get-market-move-report` (aliases `market-move-report`, `get-report`) and `news events list-market-move-reports` (aliases `market-move-reports`, `report-list`). Top-level path corrections guide misplaced report commands to the `news events` group, and `--coin` is corrected to the required `--symbol` flag.
 - **Info shortcuts (partial on-chain)** — `+address-tracker` (`get-address-info` + `get-address-transactions`; `fund_flow_unavailable` until `trace-fund-flow` ships) and `+token-onchain` (`get-token-onchain`; `smart_money_unavailable` until `get-smart-money` ships). `+address-risk` remains deferred (`check-address-risk` not in baseline). **10** info/news shortcuts total for `agent-validate`.
 - **`gate-cli info platformmetrics get-chain-activity`** — new intel leaf for `info_platformmetrics_get_chain_activity` (phase-1: Ethereum staking network activity — validator counts, entry/exit queues). Required `--metric-group staking`; optional `--chain` (eth/ethereum, default ethereum), `--start-date` / `--end-date` (UTC YYYY-MM-DD), `--lookback` (`30d`|`90d`|`1y`, default `30d` when dates omitted). Baseline **32** `info` + **14** `news` = **46** MCP tools total.
-- **`specs/0413/intel-mcp-appendix-e-tool-catalog.md`** — E.1/E.2 对齐当前 **46** 叶 baseline（info **32** + news **14**）；E.2 新增 `get-cex-orderbook-depth`、`get-institutional-metrics`、`get-chain-activity`；占位 tool 移至 E.3。
-- **`internal/mcpspec/bundled/info-mcp-tools-inputs-logic.json`** — resync onchain `get_address_info` / `get_address_transactions` logic with local QC spec (`TestBundledMatchesSpecs` parity).
+- **Intel command catalog** — documents **46** leaves (**32** info + **14** news), including `get-cex-orderbook-depth`, `get-institutional-metrics` and `get-chain-activity`. Placeholder tools remain outside the shipped catalog.
+- **On-chain tool contracts** — align `get_address_info` and `get_address_transactions` input and result handling with the public tool contract.
 - **`toolargs` sweep** — pre-MCP validation for `info_coin_get_coin_info`, `info_marketsnapshot_get_market_snapshot`, `news_feed_get_exchange_announcements`, `news_feed_get_social_sentiment`.
 - **`agent-search`** — `matches[]` with `match_source` / `is_shortcut`; Agent mode adds `agent_resolve_hint`.
 - **`agent-leaves`** — **27** curated intents (+ event detail, prediction orderbook/search).
 - **Freshness** — `meta.freshness_status_cli` derived from MCP `freshness_status` counts or `newest_is_stale`.
 - **`preflight` BLOCK** / **`doctor` fail** — stderr-only `GateError` with agent next-action hints; compact doctor JSON in agent mode.
-- **PRD checklist** — `gate-ai-agent-cli-integration.md` § CLI 实现清单.
+
 - **`toolargs` (batch 2)** — `get_indicator_history`, `marketdetail` orderbook/trades, `search_coins`, `search_platforms` pre-MCP validation.
 - **`preflight` BLOCK** contract test (stderr-only, no stdout).
 - **`release.yaml`** — runs `go test ./...` before goreleaser.
 - **`toolargs` (batch 3)** — onchain 4、macro 2、platformmetrics 5（含 `get-chain-activity`）、`get_coin_rankings`；**46/46** baseline 均有预检。
 - **`agent-index`** — `leaves[]` with `match_source` / `is_shortcut`; agent `agent_resolve_hint`.
 - **Intel MCP errors** — `ParseError` and `GateErrorForIntelToolIsError` call `FillAgentErrorConvergence` (`retryable`, `suggested_next_action`).
-- **PRD appendix** — `GateAI CLI 调用成本与稳定性优化 PRD.md` §附录 A 与 `gate-ai-agent-cli-integration.md` 对读。
+
 - **Path aliases** — info `kline`/`coinanalysis`, news `search-news`/`explain-market-move` cobra aliases; stderr path fixes for `news search`, `info coin analysis`, etc.
 - **`agent-leaves`** — **27** curated intents (institutional metrics, batch snapshot, exchange announcements, event detail, prediction, …).
-- **Local Intel test script** — `./scripts/test-intel-scope.sh` for scoped `go test` / `go vet` during iteration (not wired in CI by default).
+
 - **`gate-cli agent-leaves`** — JSON index of trace-backed high-frequency leaf commands for GateAI agents (replaces root `--help` crawl for the first batch).
 - **`gate-cli agent-search --query`** — keyword search over runnable leaf commands (P1 discovery fallback); optional **`--domain`** (`cex` / `info` / `news` / `config`, aliases `trading` / `intel`) and query synonym expansion (e.g. `redeem` → `records`).
 - **`gate-cli agent-index`** — export full runnable leaf catalog (`count`, `leaves`, `commands`) for offline Skill indexing; optional **`--domain`** filter.
@@ -82,10 +124,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`agent-leaves`** — adds `count_curated`, `mcp_catalog` (45 tools), `scope`, `recommended_flow`; help crawl stderr adds `gate_cli_agent_resolve_hint`.
 - **Agent JSON contract** — `GATE_CLI_AGENT=1` success stdout always `{"data","meta"}`; `freshness_status_cli=unknown` when no timestamps.
 - **`preflight`** — compact JSON fields in agent mode.
-- **`specs/clidocs/gate-ai-agent-cli-integration.md`** — Gate.AI ↔ gate-cli env, discovery commands, diagnostics contract.
+- **GateAI integration documentation** — describes environment variables, discovery commands and the diagnostics contract.
 - **`gate-cli agent-validate`** — CI helper: asserts all **45** `mcp_catalog` + **8** info/news shortcut paths exist in the live cobra tree (`mcp_catalog` / `shortcuts` sections, non-zero exit on drift).
-- **`agent-resolve`** — `resolved_leaves` with `match_source` (`curated` | `mcp_catalog`); PRD adversarial golden tests (earn/markettrend/help/kline/news path).
-- **`scripts/test-intel-scope.sh`** — includes `internal/cmdhint` and `internal/cmdindex`.
+- **`agent-resolve`** — `resolved_leaves` includes `match_source` (`curated` | `mcp_catalog`); regression coverage includes Earn, markettrend, help, kline and News routing.
+
 - **`cex earn uni` shortcuts** — `+redeem-records` and `+lends` for simple-earn agent flows (`--format json` recommended).
 - **`cex spot/alpha` shortcuts** — `cex spot market +ticker`, `cex alpha market +tickers` for agent spot/alpha intents.
 - **`info/news shortcut`** — add deterministic top-level shortcut commands under `gate-cli info` (`+coin-overview`, `+market-overview`, `+coin-compare`, `+trend-analysis`, `+token-risk`) and `gate-cli news` (`+brief`, `+event-explain`, `+community-scan`). Each shortcut uses fixed tools/call chains and returns stable aggregated sections in `pretty/json`.
@@ -99,22 +141,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Tests** — `doctor`/`migrate` agent-fail stderr-only contracts; `agent-resolve --domain` integration test.
 - **`ResolveAgentIntent` / enrich** — skip leaf enrich on blocked path/top-level corrections; only fill `suggested_next_action` when empty.
 - **`internal/toolargs`** — expand CLI pre-check before MCP `tools/call`: `news feed search-x` (handles XOR, `time_range` enum), `search-ugc` / `web-search` (enums and limit caps), `events get-latest-events` (time window rules), `prediction` rankings + orderbook unsupported params, `prediction search-events` (`page_token` base64/sort_by), `info platformmetrics get-cex-orderbook-depth` (`symbol`, enums, limit), `info marketsnapshot batch-market-snapshot` (`symbols` required, max 20).
-- **`doc/tech/cli-first-technical-spec-v3.md`** — Intel baseline counts updated to **31** `info` + **14** `news` (**45** total).
+- **Intel command catalog** — documents **31** `info` + **14** `news` leaves (**45** total).
 - **`internal/toolargs`** — CLI pre-check before MCP `tools/call` for `info marketsnapshot get-institutional-metrics` (`asset` / `channel` / date window / `limit` bounds, including strict integer `limit` via `--params`).
 - **`internal/toolargs`** — CLI pre-check before MCP `tools/call` for `info platformmetrics`: **get-stablecoin-info** (`sections`/`scope`/`dates`/`symbol`/`chain`/`limit`, including `usage_structure`); **get-exchange-reserves** (`include_history` + `history_window` + closed `asset`); **get-platform-info** (`include_oi_symbol_detail` + `oi_symbol_limit` vs `scope`). `limit<=0` defers to server default (no false 400).
 - **`internal/toolargs` / README** — add local XOR validation for `info compliance check-token-security` (`token` or `address`, exactly one) and fix Intel README examples that previously omitted required filters.
 - **`internal/toolrender`** — when MCP returns schema-shaped `structuredContent` with only null/empty values, fall back to parsing `content[].text` so `info platformmetrics get-stablecoin-info --sections usage_structure` does not render an all-null CLI payload when the text content contains the real response.
-- **Docs / agents** — `README.md`, `docs/quickstart*.md`, and `gate-cli news mcp-spec` no longer point leaf `-h` routing text at `specs/mcp/`. **`news feed search-x` example** in README now includes `--query` and time flags (`time_range` 1h|24h|7d; longer lookback via `--days`).
+- **Docs / agents** — README, quick-start guides and `news mcp-spec` describe shipped leaf help directly. The `news feed search-x` example supplies `--query` and time flags (`time_range` 1h|24h|7d; longer lookback via `--days`).
 
 ### Changed
 
 - **Agent cost defaults** — `GATE_CLI_AGENT=1` or `GATE_AI_AGENT=1` sets default `--max-output-bytes` to **65536** when `GATE_MAX_OUTPUT_BYTES` is unset (applies to **all** commands via `GetPrinter`). Parent-command `--help` is blocked in agent mode; use `agent-leaves` / `agent-search` / `agent-index`. Intel leaf `-h` is shortened in agent mode (full MCP field notes still via `GATE_INTEL_LEAF_HELP=full`). Wrong paths print `gate_cli_diagnostic=` (top-level prefix, path correction, fuzzy leaf, cobra flag did-you-mean, auth hint). `GateError.error_type` on API/Intel/validation stderr JSON (`INVALID_ARGS`, `AUTH_ERROR`, …) via `FillAgentErrorType`.
 - **`info markettrend/marketdetail get-kline`** — baseline default **200**, maximum **500**, with CLI validation before MCP call.
-- **Info MCP tool descriptions (release-only)** — English `description` (`[Read]` routing) on every tool in **`internal/mcpspec/bundled/`** only (embedded; leaf `-h` / `info mcp-spec` / agents). Local **`specs/mcp/info-mcp-tools-inputs-logic.json` is not shipped** and must not carry release descriptions (`scripts/patch-info-spec-descriptions.py` strips them from that path). Parity test compares spec vs bundled **excluding** description fields.
+- **Info tool descriptions** — English `description` text, including `[Read]` routing guidance, is embedded for leaf `--help`, `info mcp-spec` and agent discovery. Input-contract consistency checks exclude these presentation-only descriptions.
 - **`internal/intelfacade/info_schema_baseline.go`** — richer English flag help for `get-stablecoin-info`, `get-cex-orderbook-depth`, `check-token-security`, and `batch-market-snapshot` (`symbols` max 20).
 - **`internal/intelfacade/news_schema_baseline.go`** — clearer `-h` for `search-x` (`--query` vs `--coin`, `time_range` enum, platform-only `--limit`).
-- **`specs/mcp/info-mcp-tools-inputs-logic.json`** & **`internal/mcpspec/bundled/`** — `info_marketsnapshot_get_institutional_metrics` logic resync to upstream `InstitutionalChannelMetricsRequest` / `GetInstitutionalChannelMetrics` / `institutionalChannelIndex` (CLI tool name and flat flags unchanged).
-- **`specs/mcp/info-mcp-tools-inputs-logic.json`** (schema **1.1**) & **`internal/mcpspec/bundled/info-mcp-tools-inputs-logic.json`** — resync: `get-stablecoin-info` supports `scope` / `sections` / `start_date` / `end_date` with `issuance_flow` and `usage_structure` logic; limit default **10** max **400**. New leaf `info marketsnapshot get-institutional-metrics` (`info_marketsnapshot_get_institutional_metrics`; upstream `InstitutionalChannelMetricsRequest` / `GetInstitutionalChannelMetrics` / `institutionalChannelIndex`) for ETF/CME/CFTC metrics. MCP tool name `info_marketsnapshot_get_institutional_channel_metrics` is removed (use the new name in scripts and `tools/call`). Five **placeholder** tools remain in the MCP spec document only (not in the shipped **31** `info` baseline).
+- **Institutional metrics** — align the request and response contract for `info_marketsnapshot_get_institutional_metrics`; the CLI tool name and flat flags are unchanged.
+- **Info input contract 1.1** — `get-stablecoin-info` supports `scope`, `sections`, `start_date` and `end_date`, including `issuance_flow` and `usage_structure`; `limit` defaults to **10**, with maximum **400**. Add `info marketsnapshot get-institutional-metrics` (`info_marketsnapshot_get_institutional_metrics`) for ETF/CME/CFTC metrics. Remove the former MCP tool name `info_marketsnapshot_get_institutional_channel_metrics`; callers must use the new name. Five documented placeholder tools are not included in the shipped **31** `info` leaves.
 - **Info MCP spec parity** — mark the 5 placeholder tools as explicit `spec_only_tools`, record the 31-tool CLI baseline count in spec metadata, and fail tests if future spec-only tools drift without an allowlist update.
 - **`internal/intelfacade/info_schema_baseline.go`** — flat flags for `info platformmetrics get-stablecoin-info` aligned with the new wire shape; `sections` now documents `issuance_flow` and `usage_structure`; add flat flags for `info marketsnapshot get-institutional-metrics`; drop stale `source`/`quote` on `get-indicator-history` (not in MCP spec).
 - **`README.md`**, **`docs/quickstart.md`**, **`docs/quickstart_zh.md`** — Intel examples for `get-stablecoin-info` show `scope` / `sections` / date range for supply-flow and usage-structure queries; counts now show **45** total leaves (**31** `info` + **14** `news`).
@@ -128,21 +170,21 @@ Intel-only **`flexBool`** fix: schema-derived boolean flags on `info` / `news` l
 ### Changed — Intel boolean flags (`flexBool`)
 
 - **`internal/toolschema`** — JSON-schema `boolean` fields registered with `ApplyInputSchemaFlags` set `NoOptDefVal="true"` on the underlying `pflag` flag; documented interaction with argv rewriting. Exported **`FlexBoolTypeName`** so `internal/intelcmd` can detect flexBool flags via `Value.Type()` without string drift.
-- **`specs/mcp/news-tools-args-and-logic.json`** (version **2026-05-20-rev2**) & **`internal/mcpspec/bundled/news-tools-args-and-logic.json`** — resync: `[Read]` descriptions, events OS errors as client `internal`, ranking `category` free-form + limit rules, prediction tool logic/errors; `get-event_signal` errors table drops duplicate `opensearch_query_failed` client row.
+- **News tool contracts** — refresh `[Read]` descriptions, public error definitions, free-form ranking `category` and limit rules, and prediction parameters. Events service errors use the client label `internal`; duplicate backend-specific event-signal error metadata is removed.
 - **`internal/intelfacade/news_schema_baseline.go`** — flat-flag descriptions aligned with the new spec (feed/events/prediction), ranking `category` back to free-form string, search-events `status` without CLI/json default (wire omit → MCP coin-only `all`), orderbook `market_id` venue semantics, event-signal `include_orderbook_summary` deprecated.
 
 ### Added
 
 - **`internal/intelcmd.RewriteFlexBoolSpaceArgs`** — For the resolved leaf command only, collapses `--<flexBool-long-flag> <bool-literal>` into `--<flag>=<literal>` when the next token is a boolean literal (`true` | `false` | `1` | `0` | `t` | `f`, case-insensitive); ignores `--` terminator, non-flexBool flags, and native `bool` flags. Wired from **`cmd/root.go`** via `SetArgs` when any rewrite occurs.
 - **`internal/intelcmd.InstallFlagErrorHook`** — Recursively installs `FlagErrorFunc` on Intel subtrees so pflag parse errors are visible on stderr while `SilenceErrors` still suppresses duplicate Cobra banners.
-- **Intel / `gate-cli news prediction`** — register three News MCP tools from `specs/mcp/news-tools-args-and-logic.json`: `news_prediction_get_market_orderbook` (`get-market-orderbook`), `news_prediction_search_events` (`search-events`), and `news_prediction_get_event_signal` (`get-event-signal`). Baseline count is now **44** (30 `info` + 14 `news`).
+- **Intel / `gate-cli news prediction`** — add `news_prediction_get_market_orderbook` (`get-market-orderbook`), `news_prediction_search_events` (`search-events`) and `news_prediction_get_event_signal` (`get-event-signal`). The catalog contains **44** tools (**30** info + **14** news).
 
 ### Fixed
 
 - **Bare flexBool + following flag** — Previously, combining `NoOptDefVal` with spaced values could mis-parse; bare `--with-indicators` followed by `--timeframe` now resolves correctly (see `cmd/info/aliases_flag_wiring_test.go`).
 - **`internal/toolargs`** — CLI pre-check before MCP `tools/call` for News tools with strict or conditional required inputs: `search-ugc` (`query` or `coin`), `web-search` (`query`), `explain-market-move` (`query` + `coin`), `get-event-detail` (`event_id`), `search-events` (`query`, `coin`, or `category`), `get-market-orderbook` (`venue` + `market_id`), `get-event-signal` (`event_ref`). Prediction leaves also validate enums/ranges locally (`venue`, `category`, `status`, `sort_by`, `limit`, `depth`, `event_ref` shape, `window`, optional `venue[]` vs `event_ref`).
 - **`internal/intelfacade/news_schema_baseline.go`** — align `news_feed_web_search` `lang` default (`zh`), `news_feed_search_x` `days` default (`1`), prediction `limit` minimum (`1`), and `search-events` `sort_by` default (`recently_listed`) with `news-tools-args-and-logic.json`.
-- **`specs/qc/news-cli-commands.md`** & **`specs/qc/info-news-command-checklist.md`** — document `news prediction` leaves and `explain-market-move`.
+- **News command documentation** — documents the `news prediction` leaves and `explain-market-move`.
 
 ### Tests
 
@@ -167,7 +209,7 @@ Intel surface bump: **`gate-cli news`** gains one new MCP leaf (`news events exp
 ### Changed — Intel MCP wire specs & baseline schemas
 
 - **`info platformmetrics get-platform-info` / `get-exchange-reserves`** — bundled `internal/mcpspec/bundled/info-mcp-tools-inputs-logic.json` and the `internal/intelfacade` baseline JSON schemas updated to the new wire shapes: `get-platform-info` adds optional `include_oi_symbol_detail` / `oi_symbol_limit` plus richer merge logic; `get-exchange-reserves` replaces `period` with `scope` / `include_history` / `history_window` and a closed `asset` enum. README examples updated (`--scope full --include-oi-symbol-detail --oi-symbol-limit 20`, `--scope full --include-history --asset BTC`).
-- **News baseline** — `news_prediction_get_*_ranking` flat-flag schema: `category` now uses the same closed enum as `specs/mcp/news-tools-args-and-logic.json`; `news_events_explain_market_move` Tavily `days` logic line aligned with `time_range` normalization (no stray `7d` branch).
+- **News baseline** — ranking `category` uses its documented closed enum. `news_events_explain_market_move` normalizes `days` consistently with `time_range`, without a separate `7d` branch.
 
 ### Added — Static argument validation
 
@@ -266,7 +308,7 @@ The CLI flags below are unchanged in name and semantics, but the JSON body sent 
 
 ### Added
 
-- **Intel / `gate-cli news`** — register two News MCP tools from `specs/mcp/news-tools-args-and-logic.json`: `news_prediction_get_volume_delta_ranking` and `news_prediction_get_fastest_rising_ranking` (CLI: `news prediction get-volume-delta-ranking`, `news prediction get-fastest-rising-ranking`). Baseline count is now **40** (30 `info` + 10 `news`).
+- **Intel / `gate-cli news`** — add `news_prediction_get_volume_delta_ranking` and `news_prediction_get_fastest_rising_ranking` (CLI: `news prediction get-volume-delta-ranking` and `news prediction get-fastest-rising-ranking`). The catalog contains **40** tools (**30** info + **10** news).
 
 ### Changed — Intel MCP HTTP client (`internal/mcpclient`)
 
@@ -286,7 +328,7 @@ Docs-only refresh aligning user-facing documentation with the shipped Intel surf
 
 ### Changed — Documentation
 
-- **`README.md`** — New top-level **Intel (Info & News)** Features subsection listing all command groups (`coin`, `marketsnapshot`, `markettrend`, `onchain`, `platformmetrics`, `marketdetail`, `macro`, `compliance`, `feed`, `events`) with discovery hints (`info list`, `news list`, `-h`). Added one minimal `--format json` example per tool covering all 38 leaves. Modules table for `info` / `news` now shows tool counts and group lists; `Intel (info, news)` bottom section rewritten to point at the Features subsection and `specs/intel-config-and-security.md`.
+- **README** — adds the Intel feature summary and command groups (`coin`, `marketsnapshot`, `markettrend`, `onchain`, `platformmetrics`, `marketdetail`, `macro`, `compliance`, `feed`, `events`), discovery examples (`info list`, `news list`, `-h`) and one minimal `--format json` example for each of the 38 tools. Module tables include Info/News tool counts and groups.
 - **`docs/quickstart.md` & `docs/quickstart_zh.md`** — New **Intel (`info` & `news`)** section between futures examples and multi-profile section, documenting groups, discovery commands, config (`intel:` block), and bearer isolation from trading `GATE_API_KEY`. Debugging section amended to note `--debug` / `--verbose` / `--max-output-bytes` behaviour for Intel MCP transport lines (stderr, unchanged stdout JSON shape).
 - **`AGENTS.md` & `CLAUDE.md`** — MCP / Intel section rewritten to reflect that `info` / `news` are **published** (38 MCP leaves, discovery via `list` / `-h`). The planned unified `gate-cli tool` (`list` / `call` / `describe`) remains a spec-only path; auth-isolation guidance versus trading `GATE_API_KEY` reaffirmed.
 - **`internal/intelfacade/inventory.go`** — Source-file comment updated from "Info: 29 tools on public gateway as of 2026-04; News: 8" to "Info: 30; News: 8; total 38. Keep in sync with BaselineToolCount tests." No code change; existing `TestBaselineToolCount` already asserts **38**.
@@ -406,13 +448,13 @@ Updated tests:
 
 ### Fixed
 
-- **CI**: `TestBundledMatchesSpecs` (`internal/mcpspec/spec_test.go`) now `t.Skip`s when `specs/mcp/*.json` is absent (CI / non-author machines) instead of failing with Fatal. The parity check still runs locally where the author keeps the source spec.
+
 
 ## [0.6.1] - 2026-04-20
 
 ### Added
 
-- **`internal/mcpspec/`** — new package that embeds the Info/News MCP spec JSON (`info-mcp-tools-inputs-logic.json`, `news-tools-args-and-logic.json`) for offline agent/LLM consumption. Bundled JSON is validated at init and kept byte-identical to `specs/mcp/*.json` via new parity tests (`internal/intelfacade/spec_baseline_parity_test.go`, `news_spec_baseline_parity_test.go`, `internal/mcpspec/spec_test.go`).
+- **Offline tool contracts** — embed Info/News JSON input documents for offline agent and LLM use, with initialization validation and contract consistency regression coverage.
 - **`gate-cli info mcp-spec`** / **`gate-cli news mcp-spec`** — new leaf commands that print the embedded MCP inputs/spec document (tool names, fields, enums, bounds, logic text) with **no network call**. Table format is unsupported; use `--format json` or `pretty`.
 - **`GATE_INTEL_LEAF_HELP`** — leaf `--help` `Long` text now appends MCP-spec narrative (description / policy / logic / errors) via `mcpspec.InfoLeafLongAppend` / `NewsLeafLongAppend`. Default stays compact (cobra already lists flag type/default/enum/max); set `GATE_INTEL_LEAF_HELP=full` (or `detailed`) to embed per-field notes.
 - **`AnnotationIntelToolName`** (`gate-cli.intel.tool-name`) — cobra annotation attached to every intel leaf alias so tests and tooling can resolve the underlying MCP tool name.
@@ -420,7 +462,7 @@ Updated tests:
 
 ### Changed
 
-- **Info / News baseline schemas** (`internal/intelfacade/info_schema_baseline.go`, `news_schema_baseline.go`) — enrich flat-flag help with `enum`, `default`, `minimum`, `maximum`, `maxLength`, `maxItems`, and `pattern` mirrored from `specs/mcp/*.json` (e.g. Info `query_type` / `scope` / `asset_type` / `sort_by` / `ranking_type` / `time_range` / `timeframe` / `period` / `indicators` / `source`; News `platform` / `domain` / `quality_tier` / `time_range` / `sort_by` / `limit` / `page` / `days` / `allowed_handles` / `excluded_handles`).
+- **Info / News input schemas** — enrich flat-flag help with `enum`, `default`, `minimum`, `maximum`, `maxLength`, `maxItems` and `pattern`. These describe Info selectors such as `query_type`, `scope`, `asset_type`, `sort_by`, `ranking_type`, `time_range`, `timeframe`, `period`, `indicators` and `source`, and News selectors such as `platform`, `domain`, `quality_tier`, `time_range`, `sort_by`, `limit`, `page`, `days`, `allowed_handles` and `excluded_handles`.
 - **`internal/toolschema`** — `ApplyInputSchemaFlags` now coerces `default` from `float64` / `int` / `int64` / `json.Number` for `integer` and `number` fields; flag usage strings append `min`, `max`, `minLen`, `maxLen`, `minItems`, `maxItems`, `pattern` when defined. `verify.valueMatchesType` accepts `int` / `int64` alongside `float64` for integer/number values.
 - **`internal/toolrender/envelope`** — treat empty `structuredContent` (`{}`) as absent and fall back to `content[].text`; matches gateways that attach an empty structured payload.
 - **`internal/intelcmd/leaf_alias.go`** — `LeafAliasConfig` gains `LongAppend`; the default `Long` block now documents `GATE_INTEL_LEAF_HELP=full` alongside the `--params` / `--args-json` / `--args-file` JSON-fallback flags.
@@ -467,21 +509,21 @@ Updated tests:
 ## [0.5.0] - 2026-04-17
 
 ### Fixed
-- **QC 收尾**：`internal/intelcmd/doc.go`；`toolconfig` deniedHeaders 字母序；`toolargs` `expandUserPath` 更清晰的 home 错误；`mcpclient` `callWithRetry` 重试语义 godoc；`migration` `atomicWritePreservePerm` 注释 Windows `Rename`；`toolrender` `ApplyOutputLimitWithData` 测量字节语义注释；scanner `rawLower` 命名。
-- **`internal/toolargs`**：`stringSlice` 与 `stringArray` 一致，归一化后为「全空」时合并 **`[]string{}`** 到 MCP 参数（CR-806 / CR-405）；`TestMergeFromCommand_StringSliceExplicitEmptyPreserved`。
-- **`internal/migration` scanner（CR-207）**：每个配置文件最多 **一次** JSON `Unmarshal`；合法 JSON 不再对全文做 `ToLower`，非 JSON 仍走子串检测。
+- **维护说明**：`internal/intelcmd/doc.go`；`toolconfig` deniedHeaders 字母序；`toolargs` `expandUserPath` 更清晰的 home 错误；`mcpclient` `callWithRetry` 重试语义 godoc；`migration` `atomicWritePreservePerm` 注释 Windows `Rename`；`toolrender` `ApplyOutputLimitWithData` 测量字节语义注释；scanner `rawLower` 命名。
+- **`internal/toolargs`**：`stringSlice` 与 `stringArray` 一致，归一化后为「全空」时合并 **`[]string{}`** 到 MCP 参数；`TestMergeFromCommand_StringSliceExplicitEmptyPreserved`。
+- **`internal/migration` scanner**：每个配置文件最多 **一次** JSON `Unmarshal`；合法 JSON 不再对全文做 `ToLower`，非 JSON 仍走子串检测。
 - **Intel MCP HTTP**：默认 `User-Agent` 与交易 REST 同形态（`internal/useragent`，`intel/{backend}` + `jsonrpc` 后缀）；`GATE_INTEL_EXTRA_HEADERS` 若已设 `User-Agent` 则不覆盖。
-- **`tools/list`（CR-309）**：缓存与返回值对 `Tool.InputSchema` 做 JSON 深拷贝，避免与解码结构或调用方原地修改共享指针。
-- **Intel MCP errors**: response body over the HTTP read limit uses `errors.Is` messaging that separates **transport** `GATE_INTEL_MAX_RESPONSE_BYTES` from **`--max-output-bytes`** (printed output only) (CR-705).
-- **Intel config**: non-empty bearer tokens must be at least 8 characters so trivial values like `"123"` fail fast at resolve time (QC / `toolconfig.Resolve`).
-- **`tools/list` cache**: unit tests cover `shouldInvalidateListCacheOnListError` and recovery after a malformed list result invalidates the snapshot (CR-805).
-- **`--args-file`**: relative paths must stay within the working directory (`filepath.IsLocal` after `Rel`); absolute paths unchanged (CR-1012).
-- **Intel schema cache**: temp write uses `0o600`, then restores prior file permission when rewriting (CR-409); `Rename` failure removes `.tmp`.
-- **CR-811**: Intel leaf aliases share `internal/intelcmd` (`NewLeafAliasCommand`, `LoadToolSchemasFromCache`, `AddFallbackArgFlags`, `MergeToolBaselineInto`, `ReservedMCPJSONFallbackFlags`); `cmd/info` and `cmd/news` only wire backend-specific baselines.
-- **Info `info_coin_get_coin_info` (CR-1002)**: `--symbol` is defined in the frozen baseline input schema; removed the `AfterAliasBuilt` special-case in `cmd/info/aliases.go`.
-- **`internal/toolrender` (CR-505)**: `ApplyOutputLimitWithData` returns display JSON for the truncated placeholder so Pretty mode avoids an extra `json.Marshal` of `data`.
-- **`internal/migration` (CR-211)**: `readFromReaderLimited` centralizes bounded reads (`LimitReader(max+1)`); `scanner` and `backupFile` reuse it.
-- **Root**: format compat notice line uses `io.WriteString` (CR-1005).
+- **`tools/list`**：缓存与返回值对 `Tool.InputSchema` 做 JSON 深拷贝，避免与解码结构或调用方原地修改共享指针。
+- **Intel MCP errors**: response body over the HTTP read limit uses `errors.Is` messaging that separates **transport** `GATE_INTEL_MAX_RESPONSE_BYTES` from **`--max-output-bytes`** (printed output only).
+- **Intel config**: non-empty bearer tokens must be at least 8 characters so trivial values like `"123"` fail fast at resolve time.
+- **`tools/list` cache**: unit tests cover `shouldInvalidateListCacheOnListError` and recovery after a malformed list result invalidates the snapshot.
+- **`--args-file`**: relative paths must stay within the working directory (`filepath.IsLocal` after `Rel`); absolute paths unchanged.
+- **Intel schema cache**: temp write uses `0o600`, then restores prior file permission when rewriting; `Rename` failure removes `.tmp`.
+- **Intel leaf aliases**: Intel leaf aliases share `internal/intelcmd` (`NewLeafAliasCommand`, `LoadToolSchemasFromCache`, `AddFallbackArgFlags`, `MergeToolBaselineInto`, `ReservedMCPJSONFallbackFlags`); `cmd/info` and `cmd/news` only wire backend-specific baselines.
+- **Info `info_coin_get_coin_info`**: `--symbol` is defined in the frozen baseline input schema; removed the `AfterAliasBuilt` special-case in `cmd/info/aliases.go`.
+- **`internal/toolrender`**: `ApplyOutputLimitWithData` returns display JSON for the truncated placeholder so Pretty mode avoids an extra `json.Marshal` of `data`.
+- **`internal/migration`**: `readFromReaderLimited` centralizes bounded reads (`LimitReader(max+1)`); `scanner` and `backupFile` reuse it.
+- **Root**: format compat notice line uses `io.WriteString`.
 - Removed unused `newsObjAny` and dead `pruneGateMarkers` helper so `staticcheck` U1000 stays clean on Intel packages.
 - **Intel MCP**: HTTP response body over the configured read limit now wraps a stable sentinel error for `errors.Is` (size-limit diagnostics).
 - **Migration**: `backupFile` reads via `Open`+`Stat` on the same descriptor and caps read size (reduced TOCTOU vs `ReadFile`+`Stat`).
@@ -489,8 +531,8 @@ Updated tests:
 - **toolschema**: `IsBackendInvoked` documented as deprecated (argv sniffing); schema refresh pointers in `info`/`news` package comments.
 
 ### Added
-- **`scripts/test-changed-go.sh`**: run `go test` / `go vet` only on packages that contain **changed** `.go` files (from `git diff` / `git diff --cached`, or `base...HEAD`), avoiding default `go test ./...` during local iteration.
-- **`scripts/test-intel-scope.sh`**: run `go test` / `go vet` only on Intel/MCP/migrate-related packages plus `./cmd` (avoids scanning the full `./cmd/...` trading subtree during iteration).
+
+
 - **Structured User-Agent header** with environment auto-detection
   - Format: `gate-cli/{version}/{command}/{agent}/{extra} {sdkUA}`
   - Auto-detects 9 environments: Claude Code, Cursor (Agent + CLI), Qoder, Antigravity, Trae, OpenCode, Codex (Desktop + CLI), Windsurf, JetBrains
@@ -545,7 +587,7 @@ Updated tests:
   - `install.sh` for Unix (macOS / Linux) — checksum-verified download, `$HOME/.local/bin` default, PATH hint
   - `install.ps1` for Windows — parity with Unix installer
   - Homebrew tap wiring in goreleaser (`.goreleaser.yaml`) for `brew install gate/tap/gate-cli`
-- **Installation distribution design spec & implementation plan** under `docs/plans/`
+
 
 ### Fixed
 - Run checksum verification inside a TMP subshell so partial downloads cannot pollute the target directory
@@ -559,7 +601,7 @@ Updated tests:
 
 ### Added
 - **`--version` flag and `version` subcommand**: unified version reporting for both top-level flag and subcommand invocations
-- **Install distribution design spec** committed under `docs/plans/`
+
 
 ## [0.2.2]
 

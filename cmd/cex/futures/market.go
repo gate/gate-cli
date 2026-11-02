@@ -7,9 +7,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var marketCmd = &cobra.Command{
@@ -190,8 +190,8 @@ func runFuturesTicker(cmd *cobra.Command, args []string) error {
 		Contract: optional.NewString(contract),
 	})
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/tickers", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/tickers", "")
 	}
 	if p.IsJSON() {
 		return p.Print(tickers)
@@ -213,8 +213,7 @@ func runFuturesTickers(cmd *cobra.Command, args []string) error {
 
 	tickers, httpResp, err := c.FuturesAPI.ListFuturesTickers(c.Context(), settle, nil)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/tickers", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/tickers", "")
 	}
 	if p.IsJSON() {
 		return p.Print(tickers)
@@ -240,8 +239,7 @@ func runFuturesOrderbook(cmd *cobra.Command, args []string) error {
 		Limit: optional.NewInt32(depth),
 	})
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/order_book", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/order_book", "")
 	}
 	return p.Print(ob)
 }
@@ -260,8 +258,7 @@ func runFuturesTrades(cmd *cobra.Command, args []string) error {
 		Limit: optional.NewInt32(limit),
 	})
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/trades", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/trades", "")
 	}
 	if p.IsJSON() {
 		return p.Print(trades)
@@ -289,8 +286,7 @@ func runFuturesCandlesticks(cmd *cobra.Command, args []string) error {
 		Limit:    optional.NewInt32(limit),
 	})
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/candlesticks", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/candlesticks", "")
 	}
 	if p.IsJSON() {
 		return p.Print(candles)
@@ -316,8 +312,7 @@ func runFuturesFundingRate(cmd *cobra.Command, args []string) error {
 		Limit: optional.NewInt32(limit),
 	})
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/funding_rate", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/funding_rate", "")
 	}
 	if p.IsJSON() {
 		return p.Print(rates)
@@ -349,8 +344,7 @@ func runFuturesContracts(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.ListFuturesContracts(c.Context(), settle, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/contracts", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/contracts", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -373,8 +367,7 @@ func runFuturesContract(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.GetFuturesContract(c.Context(), settle, contract)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/contracts/"+contract, ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/contracts/"+contract, "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -402,8 +395,7 @@ func runFuturesPremium(cmd *cobra.Command, args []string) error {
 	}
 	result, httpResp, err := c.FuturesAPI.ListFuturesPremiumIndex(c.Context(), settle, contract, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/premium_index", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/premium_index", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -432,8 +424,7 @@ func runFuturesStats(cmd *cobra.Command, args []string) error {
 	}
 	result, httpResp, err := c.FuturesAPI.ListContractStats(c.Context(), settle, contract, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/contract_stats", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/contract_stats", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -461,8 +452,7 @@ func runFuturesIndexConstituents(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.GetIndexConstituents(c.Context(), settle, index)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/index_constituents/"+index, ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/index_constituents/"+index, "")
 	}
 	return p.Print(result)
 }
@@ -487,8 +477,7 @@ func runFuturesRiskLimitTiers(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.ListFuturesRiskLimitTiers(c.Context(), settle, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/risk_limit_tiers", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/risk_limit_tiers", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -511,8 +500,7 @@ func runFuturesRiskLimitTable(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.GetFuturesRiskLimitTable(c.Context(), settle, tableID)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/risk_limit_table/"+tableID, ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/risk_limit_table/"+tableID, "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -544,8 +532,7 @@ func runFuturesLiquidations(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.ListLiquidatedOrders(c.Context(), settle, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/liq_orders", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/liq_orders", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -573,8 +560,7 @@ func runFuturesInsurance(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.FuturesAPI.ListFuturesInsuranceLedger(c.Context(), settle, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/insurance", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/futures/"+settle+"/insurance", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -599,8 +585,7 @@ func runFuturesBatchFundingRates(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.FuturesAPI.ListBatchFuturesFundingRates(c.Context(), settle, req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/batch_funding_rate", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/futures/"+settle+"/batch_funding_rate", string(body))
 	}
 	if p.IsJSON() {
 		return p.Print(result)

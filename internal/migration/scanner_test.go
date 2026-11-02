@@ -83,7 +83,7 @@ func TestScanProviderClearsErrorWhenEntryFound(t *testing.T) {
 	if items[0].Error != "" {
 		t.Fatalf("expected empty error when entries found, got %q", items[0].Error)
 	}
-	// Second path is a symlink into the first file; scanner follows it within home (CR-1009).
+	// Second path is a symlink into the first file; scanner follows it within home .
 	if len(items[0].Warnings) == 0 {
 		t.Fatalf("expected symlink follow warning, got none")
 	}

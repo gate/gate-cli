@@ -5,7 +5,7 @@ import (
 )
 
 // validateInfoStablecoinInfo mirrors MCP spec cross-field rules for extension sections
-// (see specs/mcp/info-mcp-tools-inputs-logic.json info_platformmetrics_get_stablecoin_info).
+// for info_platformmetrics_get_stablecoin_info.
 func validateInfoStablecoinInfo(arguments map[string]interface{}) error {
 	scope, _, err := infoScopeBasicOrFull(arguments, "scope")
 	if err != nil {

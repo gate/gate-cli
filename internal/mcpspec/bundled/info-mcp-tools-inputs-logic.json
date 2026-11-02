@@ -1,32 +1,31 @@
 {
   "meta": {
     "schema_version": "1.1",
-    "source_repo": "gate/mcp-server",
-    "purpose": "MCP Tool 入参契约清单，供 coin-mcp-cli / 外部 QC CLI 在启动或交互时生成参数模板、校验必填与枚举、展示 logic 摘要；不替代 MCP ListTools 的 JSON Schema（运行时以 mcphost 注册为准）。",
-    "consumer": "CLI 读取本文件后按 tool_name 定位条目，结合 fields/required/conditional_required 构造请求体；调用仍走 MCP HTTP（如 scripts/curl-*.sh）或 coin-mcp-cli 子命令。",
-    "scope": "与 internal/mcphost/toolnames.go 的 RegisteredToolNames 一一对应（当前 37 个）；news-mcp-server、docs-mcp-server 工具不在此文件。",
-    "maintenance": "本目录 specs/QC/ 默认 .gitignore，本地维护；新增/改 Tool 须同步：toolnames.go 注册 → 本 JSON 增改 tools[] → total_tools 与条目数一致 → 跑 go test 相关领域包。logic 字段写服务端真实路由（mcphost → 领域 Fetcher），便于 CLI 排错。",
+    "purpose": "Public tool input contracts for offline CLI help and request validation.",
+    "consumer": "Select a tool by name and construct JSON arguments using the declared fields and constraints.",
+    "scope": "Supported tools and documented placeholders in this public specification.",
+    "maintenance": "Keep the public tool inventory, input constraints and descriptions consistent with supported behavior.",
     "total_tools": 37,
     "tool_entry_keys": {
-      "tool_name": "MCP 工具名，与 ToolName* 常量一致",
-      "domain": "实现包/占位：coin|cointrend|snapshot|address|transaction|onchain|platformmetrics|macro|marketdetail|tokensecurity|placeholder",
-      "request_type": "Go 请求 struct，便于 CLI 对照源码",
-      "required": "JSON 字段名；无 jsonschema required 时以 Go 校验为准",
+      "tool_name": "Public tool identifier",
+      "domain": "Public tool category",
+      "request_type": "JSON object",
+      "required": "Required JSON field names",
       "conditional_required": "人类可读条件（如 platform_name or exchange_slug）；CLI 宜提示而非硬编码",
       "fields": "入参清单；type 为 JSON 类型；enum 为服务端会拒绝的闭集；enum_note/common_values 补充默认与别名",
-      "logic": "handler 路径与关键分支（索引、降级、错误码语义），不含完整出参结构",
+      "logic": "Public behavior, error conditions and data completeness notes",
       "description": "English one-liner for agents and leaf -h ([Read] routing); embedded in gate-cli release binary only."
     },
     "field_type_notes": {
-      "string|string[]": "sections 等字段 MCP 可传逗号分隔字符串或 JSON 数组，服务端 FlexibleSections 解析",
-      "int|int64": "与 Go struct 一致；CLI 传 JSON number",
-      "object": "透传 map（如 marketdetail.extra）"
+      "string|string[]": "A comma-separated string or an array of strings, as supported by the declared parameter contract.",
+      "int|int64": "JSON integer.",
+      "object": "JSON object passed as the declared parameter value."
     },
-    "enum_note": "多数 Request struct 无 jsonschema enum；闭集来自各领域 validate*。空字符串通常表示服务端默认。",
+    "enum_note": "Declared enums describe accepted values. Empty values use the documented default.",
     "items_enum_note": "string[] 的 items_enum 表示元素级闭集（若服务端校验）。",
-    "common_values_note": "common_values 为常见示例，未知值可能仍被接受（如 ES 指标名、platform_type）。",
-    "placeholder_note": "domain=placeholder 的工具调用固定返回 errs.CodeNotImplemented；CLI 可灰显或标注未实现。",
-    "response_note": "本文件主要描述入参与校验；出参字段见各 Tool 的 Go Response struct 或 docs/openapi/mcp-tool-curl.md。",
+    "common_values_note": "Common values are examples rather than an exhaustive accepted set.",
+    "placeholder_note": "Placeholder tools report not_implemented and are not runnable CLI leaves.",
+    "response_note": "Tool entries document public response fields where available.",
     "cli_baseline_tools": 32,
     "spec_only_tools": [
       "info_onchain_get_smart_money",
@@ -40,7 +39,7 @@
     {
       "tool_name": "info_coin_get_coin_info",
       "domain": "coin",
-      "request_type": "coin.CoinQueryRequest",
+      "request_type": "JSON object",
       "required": [
         "query"
       ],
@@ -94,13 +93,13 @@
           "required": false
         }
       ],
-      "logic": "mcphost tools_coin -> coinSearcher.SearchCoins; validates query non-empty (max 512), query_type auto|address|symbol|name|project|gate_symbol|source_id (default auto), scope basic|detailed|full|with_project|with_tokenomics (default basic). size default 3 max 20; auto query_type may expand OS fetch size for rerank. buildOpenSearchQuery by query_type with symbol.keyword boost; chain hint applied for address/auto (0x or 40-hex). effectiveFields from scope+fields; ES index dim_pub_coin_info. Errors: query_empty, invalid_param, invalid query_type/scope.",
+      "logic": "Look up a non-empty query (maximum 512 characters) using query_type auto|address|symbol|name|project|gate_symbol|source_id (default auto) and scope basic|detailed|full|with_project|with_tokenomics (default basic). size defaults to 3, maximum 20. chain may disambiguate address/auto lookups. scope and fields select returned information. Invalid query/type/scope returns the documented error.",
       "description": "[Read] Look up one coin or project by query (symbol, name, address, etc.). Filtered asset lists -> search_coins; leaderboards -> get_coin_rankings."
     },
     {
       "tool_name": "info_coin_search_coins",
       "domain": "coin",
-      "request_type": "coin.SearchCoinsRequest",
+      "request_type": "JSON object",
       "required": [],
       "fields": [
         {
@@ -156,13 +155,13 @@
           "required": false
         }
       ],
-      "logic": "mcphost tools_coin -> coinSearcher.SearchCoinsByFilter; validates sort_by market_cap|fdv|circulating_supply (default market_cap), asset_type crypto|tradefi|all (default crypto), offset>=0. category expands aliases; unknown category returns empty items (not error). limit default 20 max ToolMaxListSize; ES collapse symbol.keyword + cardinality total. Filters: category, chain (normalized aliases), market_cap min/max on market_value|market_cap, asset_type tradefi/crypto exclusion. offset pagination via from.",
+      "logic": "Filter assets by category, normalized chain, market-cap bounds and asset_type crypto|tradefi|all (default crypto). sort_by is market_cap|fdv|circulating_supply (default market_cap). Unknown categories return empty items. offset must be non-negative; limit defaults to 20 and is capped by the service maximum. Duplicate asset symbols are consolidated and total describes the matching assets.",
       "description": "[Read] Search coins by filters (category, chain, market cap, asset type). Single-asset detail -> get_coin_info."
     },
     {
       "tool_name": "info_coin_get_coin_rankings",
       "domain": "coin",
-      "request_type": "coin.GetCoinRankingsRequest",
+      "request_type": "JSON object",
       "required": [
         "ranking_type"
       ],
@@ -185,7 +184,7 @@
           "name": "limit",
           "type": "int",
           "required": false,
-          "enum_note": "default 20; max ToolMaxListSize (400)"
+          "enum_note": "default 20; maximum 400"
         },
         {
           "name": "time_range",
@@ -214,13 +213,13 @@
           "required": false
         }
       ],
-      "logic": "mcphost tools_coin -> coinSearcher.GetCoinRankings; routes: popular->dim_pub ES, airdrop->cryptorank index, top_gainers|top_losers->movers index with time_range 1h|24h|7d, twitter_hot->dedicated index, new_listing->Gaten KQ HTTP (listing_* params), market_pulse_hot->memeMarketPulseIndex latest snapshot_hour sorted by heat_score desc (requires opensearch.memeMarketPulseIndex else not_implemented). time_range forbidden except gainers/losers; listing_* only for new_listing.",
+      "logic": "Select the ranking with ranking_type. top_gainers/top_losers support time_range 1h|24h|7d; time_range is rejected for other rankings. listing_* filters are accepted only for new_listing. market_pulse_hot uses the latest available heat ranking and returns not_implemented when unavailable. Preserve all declared ranking types and request bounds.",
       "description": "[Read] Coin leaderboards (popular, gainers/losers, Twitter hot, airdrop, new listing, market pulse hot). Single coin -> get_coin_info."
     },
     {
       "tool_name": "info_markettrend_get_kline",
       "domain": "cointrend",
-      "request_type": "cointrend.CoinTrendRequest",
+      "request_type": "JSON object",
       "required": [
         "symbol",
         "timeframe"
@@ -286,13 +285,13 @@
           "required": false
         }
       ],
-      "logic": "mcphost tools_trend -> trendFetcherSet.GetCoinTrend (OSWithKlineAPIFetcher when configured). ValidateAndNormalize: symbol upper required, timeframe 1m|5m|15m|1h|4h|1d required, period default 24h or all clears time filter, limit overrides size (default 100 max ToolMaxListSize). OpenSearch trend index with USDT market filter; with_indicators explicit bool adds indicator _source. OS empty + Kline API configured: token-search resolves chain/pair then single /trade/kline fetch mapped to ADS fields (OS error blocks fallback). time field normalized to timestamp in items.",
+      "logic": "Return candlesticks for the required symbol and timeframe 1m|5m|15m|1h|4h|1d. period defaults to 24h; all disables that time filter. limit overrides size, default 100, subject to the service maximum. with_indicators explicitly includes technical indicators. Empty primary results may use an available alternate source; primary errors do not trigger that fallback. Item times are exposed as timestamp.",
       "description": "[Read] OHLCV kline for a symbol with optional bundled indicators. Historical indicator series -> get_indicator_history; TA summary -> get_technical_analysis."
     },
     {
       "tool_name": "info_markettrend_get_indicator_history",
       "domain": "cointrend",
-      "request_type": "cointrend.IndicatorHistoryRequest",
+      "request_type": "JSON object",
       "required": [
         "symbol",
         "indicators",
@@ -343,7 +342,7 @@
             "deal_cnt",
             "amt"
           ],
-          "enum_note": "non-empty list required; names are ES _source fields (see internal/cointrend/ads_es_fields.go), not validated to a fixed enum"
+          "enum_note": "A non-empty list of indicator names is required. Indicator names are not restricted to a fixed enum."
         },
         {
           "name": "timeframe",
@@ -372,13 +371,13 @@
           "required": false
         }
       ],
-      "logic": "mcphost tools_trend -> trendFetcherSet.GetIndicatorHistory (OpenSearch only, no Kline API fallback). ValidateIndicatorHistory: non-empty deduped indicators list (ES _source names, see ads_es_fields.go), timeframe 15m|1h|4h|1d required, limit default 50 max ToolMaxListSize. Query returns timestamp+requested columns sorted desc; time mapped to timestamp. Errors: symbol_empty, indicators_empty, invalid_timeframe, opensearch_trend_query_failed.",
-      "description": "[Read] Historical technical indicator values (ES field names) for a symbol/timeframe. Kline candles -> get_kline; narrative TA -> get_technical_analysis."
+      "logic": "Return timestamp and the requested indicator values, newest first. indicators must contain at least one non-empty distinct name. timeframe is required and accepts 15m|1h|4h|1d. limit defaults to 50, subject to the service maximum. This operation does not fall back to plain candlestick data. Preserve symbol_empty, indicators_empty, invalid_timeframe and the declared query-failure error.",
+      "description": "[Read] Historical technical indicator values for a symbol/timeframe. Kline candles -> get_kline; narrative TA -> get_technical_analysis."
     },
     {
       "tool_name": "info_markettrend_get_technical_analysis",
       "domain": "cointrend",
-      "request_type": "cointrend.TechnicalAnalysisRequest",
+      "request_type": "JSON object",
       "required": [
         "symbol"
       ],
@@ -415,13 +414,13 @@
           "required": false
         }
       ],
-      "logic": "mcphost tools_trend -> cointrend.GetTechnicalAnalysis; NormalizeTechnicalAnalysisTimeWindow: start/end absolute times win over period (default 3d when neither; all disables filter). Parallel GetCoinTrend per 15m/1h/4h/1d with with_indicators=true; per-TF derives rsi_zone, macd_signal, ma_alignment, support/resistance, adx/cci/wr/sar. Root signal bullish|bearish|neutral aggregated from timeframe votes; first TF error fails whole tool.",
+      "logic": "Analyze 15m/1h/4h/1d technical signals. Absolute start/end times override period; when neither is given the default is 3d, while all disables the time filter. Include RSI/MACD/moving-average alignment, support/resistance and other documented indicators. Aggregate bullish|bearish|neutral across timeframes. A failed timeframe fails the operation rather than returning a complete-looking partial analysis.",
       "description": "[Read] Aggregated technical-analysis signal across 15m/1h/4h/1d. Raw klines -> get_kline; per-indicator history -> get_indicator_history."
     },
     {
       "tool_name": "info_marketsnapshot_get_market_snapshot",
       "domain": "snapshot",
-      "request_type": "snapshot.SnapshotRequest",
+      "request_type": "JSON object",
       "required": [
         "symbol"
       ],
@@ -485,13 +484,13 @@
           "enum_note": "omit -> basic; scope=full merges Coinglass derivatives + institutional_channel_summary + market_pulse; scope=detailed 不再返回 derivatives（与 basic 行为一致）"
         }
       ],
-      "logic": "mcphost tools_snapshot -> snapshot.Service.GetSnapshot; scope=full fetches Coinglass derivatives from platformmetrics.indices.snapshotCoinglassDerivatives (dwd_external_coinglass_coin_derivatives_hf) via fetchCoinglassDerivativesDoc, field remap: funding_rate_oi_weighted→funding_rate, open_interest_usd→open_interest, long_short_ratio_global→long_short_ratio, time fields (snapshot_time, etl_time) stripped, sort by part_hour desc. scope=full also fetches institutional_channel_summary for BTC/ETH and market_pulse. scope=detailed|basic no longer fetches derivatives. if snapshot service nil returns snapshot_not_configured.",
+      "logic": "Return the selected market snapshot. scope=full adds derivatives (funding_rate, open_interest, long_short_ratio), institutional_channel_summary for BTC/ETH when available, and market_pulse. basic/detailed omit derivatives. Return snapshot_not_configured when the snapshot capability is unavailable.",
       "description": "[Read] Single-pair market snapshot (price, kline, optional Coinglass derivatives). Batch symbols -> batch_market_snapshot; macro venue flow -> get_institutional_metrics."
     },
     {
       "tool_name": "info_marketsnapshot_batch_market_snapshot",
       "domain": "snapshot",
-      "request_type": "snapshot.BatchMarketSnapshotRequest",
+      "request_type": "JSON object",
       "required": [
         "symbols"
       ],
@@ -540,25 +539,25 @@
             "detailed",
             "full"
           ],
-          "enum_note": "omit -> basic; scope=full adds derivatives per symbol (Coinglass via snapshotCoinglassDerivatives index); scope=detailed no longer returns derivatives"
+          "enum_note": "omit -> basic; scope=full adds derivatives per symbol when available; scope=detailed does not return derivatives"
         }
       ],
-      "logic": "mcphost tools_snapshot -> snapshot.Service.BatchMarketSnapshot; validates symbols(max 20), timeframe/scope/source then msearch kline and enrich realtime/project_info. scope=full fetches Coinglass derivatives per symbol via fetchCoinglassDerivativesDoc (index: platformmetrics.indices.snapshotCoinglassDerivatives, field remap same as get_market_snapshot). scope=detailed|basic skip derivatives fetch. empty derivatives returns {} per symbol.",
+      "logic": "Validate at most 20 symbols and the declared timeframe/scope/source. Return per-symbol snapshots with real-time and project information. scope=full adds derivatives for each symbol; basic/detailed omit them. Missing derivatives remain an empty object for that symbol rather than removing the symbol.",
       "description": "[Read] Batch market snapshots for up to 20 symbols. One symbol -> get_market_snapshot."
     },
     {
       "tool_name": "info_marketsnapshot_get_market_overview",
       "domain": "snapshot",
-      "request_type": "snapshot.GetMarketOverviewRequest",
+      "request_type": "JSON object",
       "required": [],
       "fields": [],
-      "logic": "mcphost tools_snapshot -> snapshot.Service.GetMarketOverview; if market_stats index configured use single-index path, else parallel aggregate CoinGecko + project info + BTC price.",
+      "logic": "Return aggregate market statistics, project context and BTC price using the available market data. Results may combine supported data sources when a complete overview is not available from one source.",
       "description": "[Read] Global/crypto market overview (breadth, BTC context, aggregate stats). Per-symbol snapshot -> get_market_snapshot."
     },
     {
       "tool_name": "info_marketsnapshot_get_institutional_metrics",
       "domain": "snapshot",
-      "request_type": "snapshot.InstitutionalChannelMetricsRequest",
+      "request_type": "JSON object",
       "required": [],
       "fields": [
         {
@@ -582,7 +581,7 @@
           "name": "end_date",
           "type": "string",
           "required": false,
-          "enum_note": "YYYY-MM-DD; omit -> latest part_date from institutionalChannelIndex; invalid date -> invalid_param"
+          "enum_note": "YYYY-MM-DD; omit -> latest available data date; invalid date -> invalid_param"
         },
         {
           "name": "channel",
@@ -594,7 +593,7 @@
             "cme",
             "cftc"
           ],
-          "enum_note": "case-insensitive after trim; omit -> all; channel-specific response nulls unrelated fields and recomputes point data_status; CME Daily Bulletin PDF is not a production source, so channel=cme returns cme_* fields null with cme_source_not_procured/cme_unavailable status"
+          "enum_note": "Case-insensitive after trimming; omit -> all. A channel-specific response nulls unrelated metrics and recomputes each point data_status. CME metrics are unavailable, so channel=cme returns cme_* fields as null with cme_source_not_procured/cme_unavailable status."
         },
         {
           "name": "limit",
@@ -603,13 +602,13 @@
           "enum_note": "default 30; valid range 1..366; invalid -> invalid_param"
         }
       ],
-      "logic": "mcphost tools_snapshot -> snapshot.Service.GetInstitutionalChannelMetrics; requires snapshot service plus OpenSearch endpoint/client and snapshot.institutionalChannelIndex else snapshot_not_configured. Normalizes asset BTC|ETH|all, channel all|etf|cme|cftc, dates as YYYY-MM-DD, rejects start_date>end_date. Fetches latest part_date when end_date omitted, then queries dwd_external_asset_etf_cme_cftc_df by asset/date sorted part_date desc with size=limit; source_fields intentionally exclude CME fields because CME Daily Bulletin free PDF is not a production data source. asset=all runs BTC and ETH separately; response echoes asset/channel/start_date/end_date, total=sum ES totals, count=sum returned series length, assets[].latest=first series point, data_status aggregates ok|partial|missing. ETF and CFTC weekly fields continue; cme_volume/cme_oi/cme_oi_change and CME underlying fields are forced null even if stale index values exist, and all/cme point status uses cme_source_not_procured or cme_unavailable rather than cme_parse_failed/cme_missing. Channel filters null unrelated ETF/CME/CFTC fields; empty latest index returns missing with assets=[].",
+      "logic": "Normalize asset BTC|ETH|all, channel all|etf|cme|cftc and YYYY-MM-DD dates; reject start_date after end_date. With no end_date use the newest available date. asset=all returns BTC and ETH separately. Echo requested filters, aggregate total/count and data_status, and set latest to the first series point. Unavailable CME metrics remain null with cme_source_not_procured/cme_unavailable; ETF and CFTC values remain available. A channel-specific query nulls unrelated metrics. Empty data returns missing with assets=[]. Unavailable capability returns snapshot_not_configured.",
       "description": "[Read] ETF/CFTC institutional channel time series (BTC/ETH); CME fields are null (no procured CME bulletin). Retail pair snapshot -> get_market_snapshot; not CEX orderbook depth."
     },
     {
       "tool_name": "info_onchain_get_address_info",
       "domain": "address",
-      "request_type": "address.AddressInfoRequest",
+      "request_type": "JSON object",
       "required": [
         "address"
       ],
@@ -661,7 +660,7 @@
           "enum_note": "case-insensitive; unknown -> off; include_upstream_raw=true forces full"
         }
       ],
-      "logic": "mcphost tools_address -> addrService.GetAddressInfo; New Explorer first, BlockInfo fallback. Response includes asset_summary (total_usd_value, token_usd_value, token_num, native_balance, native_usd_value, have_multi_chain_asset, exist_address), token_balances[] sorted by value_usd desc (incl. multi-page assets merge), multi_chain_token_balances[] sorted by usd_value desc when token_list HTTP 200 (business code!=0 degrades to [] with warn, not tool error), Solana token_account/mint_account/value_percent/total_value_usd on token_balances. get_holder_info upstream_not_ready fails whole tool only when no other presentable fields; else quality_reasons includes asset_summary_upstream_not_ready. exist_address=false clears token_balances and multi_chain_token_balances. Nine new EVM chains share EVM address validation.",
+      "logic": "Return asset_summary, token_balances sorted by value_usd and multi_chain_token_balances sorted by usd_value. Preserve the documented Solana account/value fields. A failed supplementary balance source can return an empty supplementary list; an upstream-not-ready error fails the whole operation only when no presentable fields remain, otherwise report asset_summary_upstream_not_ready. exist_address=false clears both token lists. Supported EVM chains use the same EVM address validation.",
       "errors": [
         {
           "code": "invalid_chain",
@@ -673,7 +672,7 @@
         },
         {
           "code": "upstream_not_ready",
-          "when": "chain configured but New Explorer endpoint returns 404/501 or chain not in GET /chains"
+          "when": "The requested chain is unsupported, or its configured data service is not ready and returns 404/501."
         }
       ],
       "response_fields": [
@@ -688,7 +687,7 @@
     {
       "tool_name": "info_onchain_get_address_transactions",
       "domain": "transaction",
-      "request_type": "transaction.TxQueryRequest",
+      "request_type": "JSON object",
       "required": [
         "address"
       ],
@@ -782,7 +781,7 @@
           "enum_note": "case-insensitive; unknown -> off; include_upstream_raw=true forces full"
         }
       ],
-      "logic": "mcphost tools_address -> txService.GetTransactions; New Explorer BTC list maps inputs/outputs/tx_status. NE native list applies tx_type filter at merge. partial_upstream_response only when upstream total>0 and NE list empty or zero rows mapped from list (checked before time_range/min_value_usd/tx_type client filters). When upstream total>0 but list cannot be parsed, MCP returns isError with partial_upstream_response (CLI failure: stdout empty).",
+      "logic": "Return transactions with the documented inputs/outputs/status mapping and tx_type filtering. partial_upstream_response is reported when the source claims a positive total but supplies an empty or unparseable transaction list, before client time/value/type filtering. An unparseable positive-total response fails the CLI with empty stdout.",
       "errors": [
         {
           "code": "invalid_chain",
@@ -798,7 +797,7 @@
         },
         {
           "code": "upstream_not_ready",
-          "when": "chain endpoint not ready or unsupported on New Explorer"
+          "when": "The selected chain data is not ready or the chain is unsupported."
         }
       ],
       "response_fields": [
@@ -813,7 +812,7 @@
     {
       "tool_name": "info_onchain_get_transaction",
       "domain": "onchain",
-      "request_type": "onchain.GetTransactionRequest",
+      "request_type": "JSON object",
       "required": [
         "tx_hash"
       ],
@@ -845,13 +844,13 @@
           "enum_note": "case-insensitive; unknown -> off; include_upstream_raw=true forces full"
         }
       ],
-      "logic": "mcphost tools_onchain -> onchain.GetTransaction then getTransactionMCPOutputFrom(upstream_raw_mode). tx_hash required max 128; optional chain validated via explorer known slugs. Route: New Explorer GET .../transactions/{txid} first (UTXO/BTC, TRON account, SOL account branches return early); else parallel BlockInfo v1 detail + ?module=input decode (12s timeout). NE subs enrich (8s); BlockInfo nil returns sparse placeholder not error. include_upstream_raw=true forces full raw; mode off|lite|full strips explorer/blockinfo raw from MCP output. data_quality + sources on response.",
+      "logic": "Require tx_hash up to 128 characters and a supported optional chain. Return transaction data with data_quality and sources; unavailable supplementary data can remain a sparse placeholder. include_upstream_raw=true forces full raw data. Otherwise upstream_raw_mode off|lite|full controls retained raw sections according to the public response contract.",
       "description": "[Read] Single transaction detail by tx_hash. Address activity -> get_address_transactions."
     },
     {
       "tool_name": "info_onchain_get_token_onchain",
       "domain": "onchain",
-      "request_type": "onchain.GetTokenOnchainRequest",
+      "request_type": "JSON object",
       "required": [
         "token"
       ],
@@ -896,13 +895,13 @@
           "enum_note": "case-insensitive; unknown -> off; include_upstream_raw=true forces full"
         }
       ],
-      "logic": "mcphost tools_onchain -> onchain.GetTokenOnchain (20s timeout). scope holders|activity|transfers|smart_money|full (unknown->full). Parallel fetches by scope: holders+token_info via New Explorer GET /tokens/{addr} (+holders page); activity via BlockInfo chain overview; transfers via NE GetTokenTransferEvents when EVM contract or tron/solana else BlockInfo 4.6. smart_money placeholder when scope includes it. BlockInfo disabled returns empty section placeholders not error. upstream_raw_mode controls explorer_*_raw and row source_raw in MCP output.",
+      "logic": "Return token sections selected by scope holders|activity|transfers|smart_money|full; unknown scope normalizes to full. smart_money remains a placeholder when requested. Unavailable supplementary sources return empty section placeholders. upstream_raw_mode controls the documented raw-source sections and row source_raw fields.",
       "description": "[Read] Token on-chain metrics (holders, activity, transfers; scope=smart_money is token analytics, not get_smart_money placeholder). Address/token security -> compliance tools."
     },
     {
       "tool_name": "info_compliance_check_token_security",
       "domain": "tokensecurity",
-      "request_type": "tokensecurity.CheckTokenSecurityRequest",
+      "request_type": "JSON object",
       "required": [
         "chain"
       ],
@@ -949,13 +948,13 @@
           "enum_note": "omit -> en"
         }
       ],
-      "logic": "mcphost tools_compliance -> tokenSecuritySvc.CheckTokenSecurity; registered only when Data API client enabled (non-mock). chain required; token xor address (not both). token-only resolves chain+contract via cointrend token-search (needs tokenSearchBaseURL). Calls risk_infos then optional name/validate; scope basic|full (default basic) gates high/middle/low risk lists, tax_analysis, holders top10. lang en|cn|tw|ja|kr default en. mock mode returns empty risk_summary. Errors: data_api_not_configured, token_security_param, data_api_risk_infos_failed.",
+      "logic": "Require chain and exactly one of token or address. A token symbol is resolved to its contract before analysis. scope basic|full (default basic) controls the risk lists, tax analysis and top holders. lang accepts en|cn|tw|ja|kr (default en). Unavailable security data returns the declared data_api_not_configured/data_api_risk_infos_failed errors; retain token_security_param for invalid inputs.",
       "description": "[Read] Token contract security check; require chain and exactly one of token or address. Not address-risk placeholder check_address_risk."
     },
     {
       "tool_name": "info_platformmetrics_get_platform_info",
       "domain": "platformmetrics",
-      "request_type": "platformmetrics.GetPlatformInfoRequest",
+      "request_type": "JSON object",
       "required": [
         "platform_name"
       ],
@@ -981,7 +980,7 @@
           "name": "include_oi_symbol_detail",
           "type": "bool",
           "required": false,
-          "enum_note": "scope=full only; true adds competition_metrics.oi_symbol_detail[] (OI USD desc) when CEX competition index configured; default false"
+          "enum_note": "scope=full only; true adds competition_metrics.oi_symbol_detail[] sorted by OI USD descending when CEX competition data is available; default false"
         },
         {
           "name": "oi_symbol_limit",
@@ -990,13 +989,13 @@
           "enum_note": "only when include_oi_symbol_detail=true; omit or <=0 uses default 20; values >100 return invalid_param"
         }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.GetPlatformInfo; resolve platform by platform_id|platform_name (recent snapshot_time); scope=full enriches with platform_history (tvl|volume|fees), top_pools (yield limit 5), cexExchangeDerivativesVolume merge (derivatives + period_metrics), then mergeCexCompetitionIntoPlatformInfo when CEX index + CEX row; include_oi_symbol_detail gates oi_symbol_detail slice capped by oi_symbol_limit; applyPlatformInfoScope strips fields for basic|with_chain_breakdown; nil fetcher returns requires_open_search.",
+      "logic": "Resolve platform_id or platform_name to current platform data. scope=full adds history, up to five top yield pools, derivatives/period metrics and available CEX competition metrics. include_oi_symbol_detail selects oi_symbol_detail, capped by oi_symbol_limit. basic and with_chain_breakdown return their documented subset. Unavailable capability returns requires_open_search.",
       "description": "[Read] DeFi/CEX platform profile (TVL, volume, fees; scope=full enriches history/pools). OI symbol detail only when scope=full. Platform list -> search_platforms."
     },
     {
       "tool_name": "info_platformmetrics_search_platforms",
       "domain": "platformmetrics",
-      "request_type": "platformmetrics.SearchPlatformsRequest",
+      "request_type": "JSON object",
       "required": [],
       "fields": [
         {
@@ -1013,7 +1012,7 @@
             "dexes",
             "lending"
           ],
-          "enum_note": "no closed enum validation; empty/all means no filter; unknown values pass through as platform_type term(s)"
+          "enum_note": "No closed enum validation. Empty/all means no filter; unknown values are passed through as platform_type filters."
         },
         {
           "name": "chain",
@@ -1052,13 +1051,13 @@
           "required": false
         }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.SearchPlatforms; platform_type normalization: empty/all=no filter, dex|dexs|dexes -> DEX group, cex keeps CEX/cex variants, defi expands to grouped terms, unknown strings pass through to ES platform_type; sort_order normalized to asc|desc (default desc); nil fetcher returns requires_open_search.",
+      "logic": "Search platforms with platform_type normalization: empty/all means no type filter; dex|dexs|dexes selects DEX; cex and defi select their respective groups. Unknown type strings are passed through as filters. sort_order normalizes to asc|desc, default desc. Unavailable capability returns requires_open_search.",
       "description": "[Read] Rank/filter DeFi or CEX platforms. One platform detail -> get_platform_info."
     },
     {
       "tool_name": "info_platformmetrics_get_defi_overview",
       "domain": "platformmetrics",
-      "request_type": "platformmetrics.GetDefiOverviewRequest",
+      "request_type": "JSON object",
       "required": [],
       "fields": [
         {
@@ -1088,20 +1087,20 @@
           "enum_note": "omit -> all; primary values match jsonschema_description; de-fi/cex/dex/dexs/dexes/lending/cdp/yield/derivatives are alias-expanded by normalizeDefiOverviewCategory; unknown strings are passed through as platform_type filter (no hard reject)"
         }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.GetDefiOverview; optional cex_perps_volume_* from cexExchangeDerivativesVolume index, exchange_usdt_reserve_total from exchange_reserves USDT sum; nil fetcher returns requires_open_search.",
+      "logic": "Return DeFi overview metrics and, when available, CEX perpetual-volume metrics and total USDT exchange reserves. Unavailable capability returns requires_open_search.",
       "description": "[Read] DeFi ecosystem overview aggregates by category. Stablecoin supply/usage detail -> get_stablecoin_info."
     },
     {
       "tool_name": "info_platformmetrics_get_stablecoin_info",
       "domain": "platformmetrics",
-      "request_type": "platformmetrics.GetStablecoinInfoRequest",
+      "request_type": "JSON object",
       "required": [],
       "fields": [
         {
           "name": "symbol",
           "type": "string",
           "required": false,
-          "enum_note": "Basic DefiLlama items: any symbol or omit for ranked list; sections=issuance_flow whitelist USDT|USDC (omit defaults USDT+USDC); sections=usage_structure whitelist USDT|USDC|DAI|FDUSD|PYUSD (omit defaults all five); sections=depeg_events filters by depeg_asset.keyword (case-insensitive uppercased, omit = all assets); unsupported extension symbol -> unsupported_stablecoin_symbol"
+          "enum_note": "Basic stablecoin items: any symbol or omit for a ranked list. sections=issuance_flow allows USDT|USDC (omit defaults USDT+USDC); sections=usage_structure allows USDT|USDC|DAI|FDUSD|PYUSD (omit defaults all five). sections=depeg_events filters by asset symbol (case-insensitive, normalized to uppercase; omit = all assets). Unsupported extension symbol -> unsupported_stablecoin_symbol."
         },
         {
           "name": "chain",
@@ -1166,13 +1165,13 @@
           "enum_note": "depeg_events only: filter by review_status; default approved; invalid value -> invalid_review_status"
         }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.GetStablecoinInfo; validates scope basic|full and sections issuance_flow|usage_structure|depeg_events, rejects sections without scope=full and date params without extension sections. Base items query stablecoinInfo recent snapshots sorted by total_circulating desc; chain filter is applied in Go by parsing chain_circulating (list without chain returns chain_circulating=null, list with chain returns requested chain peggedUSD, detail without chain returns top5+_other_chains_*, detail with chain returns requested chain). scope=full+sections=issuance_flow queries stablecoinIssuanceFlow via ES by_asset terms + by_date date_histogram agg (empty agg -> hit scan fallback) and adds issuance_flows[] with summary/series/chain_breakdown when chain=all; issuance_flow index/query errors degrade to placeholder flow blocks with quality_note. scope=full+sections=usage_structure queries stablecoinRealUsage, resolves latest/default date window, and adds usage_structure{window_start,window_end,items[]} with adjusted_transfer_volume (entity_adjusted first, adjusted fallback), bot_share (derived from entity_adjusted/transfer_volume first, bot_share fallback), retail_transfer_change, stablecoin_trade_volume, reference fields, data_status, missing_fields, row_count; missing usage index or query errors degrade to placeholder usage items. scope=full+sections=depeg_events queries stablecoinDepeg index, filters by depeg_asset (symbol uppercased) and optional review_status (default approved) and min_deviation (max_deviation >= min_deviation, default 0.005); returns depeg_events[] with asset/date/price/deviation values, sorted by max_deviation desc or date desc. range_truncated=true when any extension window is clipped; nil fetcher returns requires_open_search; missing stablecoinInfo index returns not_implemented.",
+      "logic": "Validate scope basic|full and extension sections issuance_flow|usage_structure|depeg_events. Sections require full; extension date filters require extension sections. Rank base items by total_circulating descending. Preserve chain-specific list/detail behavior and top-five plus other-chain totals. issuance_flow adds flows and summary/series/chain_breakdown for chain=all; unavailable flow data returns placeholders with quality_note. usage_structure returns the declared window and metrics, preferring entity-adjusted transfer values and deriving bot_share when possible; missing values retain data_status/missing_fields/row_count. depeg_events normalizes symbols, defaults review_status to approved and min_deviation to 0.005, and sorts by deviation or date. range_truncated marks a clipped extension window. Unavailable base data returns not_implemented; unavailable capability returns requires_open_search.",
       "description": "[Read] Stablecoin circulation and chain breakdown; scope=full + sections issuance_flow|usage_structure|depeg_events for supply, usage, and depeg analytics. DeFi category overview -> get_defi_overview."
     },
     {
       "tool_name": "info_platformmetrics_get_bridge_metrics",
       "domain": "platformmetrics",
-      "request_type": "platformmetrics.GetBridgeMetricsRequest",
+      "request_type": "JSON object",
       "required": [],
       "fields": [
         {
@@ -1203,13 +1202,13 @@
           "required": false
         }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.GetBridgeMetrics; sort_by maps to ES field volume_24h|volume_7d|volume_30d|deposit_txs_24h (unknown -> volume_24h); limit default 10 max 400; bridge_name normalized lowercase; nil fetcher returns requires_open_search.",
+      "logic": "Return bridge metrics sorted by volume_24h|volume_7d|volume_30d|deposit_txs_24h; unknown sort_by uses volume_24h. limit defaults to 10, maximum 400. bridge_name is normalized to lowercase. Unavailable capability returns requires_open_search.",
       "description": "[Read] Cross-chain bridge volume/TVL metrics. Platform-level metrics -> get_platform_info."
     },
     {
       "tool_name": "info_platformmetrics_get_cex_orderbook_depth",
       "domain": "platformmetrics",
-      "request_type": "platformmetrics.GetCexOrderbookDepthRequest",
+      "request_type": "JSON object",
       "required": [
         "symbol"
       ],
@@ -1245,7 +1244,7 @@
             "exchange",
             "market"
           ],
-          "enum_note": "omit: exchange when exchange is set and exchange index exists, else market if market index exists, else exchange; invalid value -> invalid_param; missing target index -> not_implemented"
+          "enum_note": "When omitted: exchange if exchange is set and exchange-level data is available; otherwise market if market-level data is available; otherwise exchange. Invalid value -> invalid_param; unavailable selected data view -> not_implemented."
         },
         {
           "name": "limit",
@@ -1253,13 +1252,13 @@
           "required": false
         }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.GetCexOrderbookDepth; symbol required; limit default 20 max 100; requires orderbookDepthExchange or orderbookDepthMarket index; nil fetcher returns requires_open_search.",
+      "logic": "Require symbol and return CEX order-book-depth metrics. limit defaults to 20, maximum 100. An unavailable requested data view returns not_implemented; unavailable capability returns requires_open_search.",
       "description": "[Read] Aggregated CEX order-book depth from indices (multi-exchange); not Gate live book -> marketdetail get_orderbook."
     },
     {
       "tool_name": "info_platformmetrics_get_yield_pools",
       "domain": "platformmetrics",
-      "request_type": "platformmetrics.GetYieldPoolsRequest",
+      "request_type": "JSON object",
       "required": [],
       "fields": [
         {
@@ -1314,13 +1313,13 @@
           "enum_note": "omit -> basic; full adds apy_base_30d, apy_reward_30d, reward_tokens, market_share per pool"
         }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.GetYieldPools; requires yieldPools index else not_implemented. Filters project/chain (alias expand)/symbol/pool_type; ES fetch oversamples (limit*30 clamp 100..500) then dedupeYieldPoolsLatest, sort apy desc (default) or tvl_usd, trim to limit (default 20 max 400), applyYieldPoolsScope strips fields for basic. nil fetcher -> requires_open_search.",
+      "logic": "Filter yield pools by project, normalized chain aliases, symbol and pool_type; consolidate duplicate pool observations before sorting. sort defaults to apy descending and also supports tvl_usd. limit defaults to 20, maximum 400. basic returns the documented subset. Unavailable data returns not_implemented; unavailable capability returns requires_open_search.",
       "description": "[Read] DeFi yield pool rankings (APY/TVL filters; scope=full adds 30d APY and reward fields). Platform context -> get_platform_info."
     },
     {
       "tool_name": "info_platformmetrics_get_platform_history",
       "domain": "platformmetrics",
-      "request_type": "platformmetrics.GetPlatformHistoryRequest",
+      "request_type": "JSON object",
       "required": [],
       "conditional_required": [
         "platform_name or exchange_slug (at least one required)"
@@ -1347,7 +1346,7 @@
             "revenue",
             "volume_perps"
           ],
-          "enum_note": "omit or empty -> [tvl]; no strict per-element validation in fetcher"
+          "enum_note": "omit or empty -> [tvl]; individual metric names are not restricted to a fixed enum"
         },
         {
           "name": "granularity",
@@ -1359,7 +1358,7 @@
             "month",
             "quarter"
           ],
-          "enum_note": "omit or unknown -> day; affects volume_perps field mapping in derivatives history index"
+          "enum_note": "omit or unknown -> day; selects the time granularity of volume_perps history"
         },
         {
           "name": "start_date",
@@ -1372,34 +1371,106 @@
           "required": false
         }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.GetPlatformHistory; requires platform_name or exchange_slug; defaults metrics=['tvl'] and granularity='day'; when metrics contains volume_perps switches to cexExchangeDerivativesVolume index and maps output field by granularity; nil fetcher returns requires_open_search.",
+      "logic": "Require platform_name or exchange_slug. metrics defaults to [tvl]; granularity defaults to day. volume_perps returns derivative-volume history at the selected granularity. Unavailable capability returns requires_open_search.",
       "description": "[Read] Historical TVL/volume/fees (or perps volume) for a platform_name or exchange_slug (at least one required). Snapshot -> get_platform_info."
     },
     {
       "tool_name": "info_platformmetrics_get_exchange_reserves",
       "domain": "platformmetrics",
-      "request_type": "platformmetrics.GetExchangeReservesRequest",
+      "request_type": "JSON object",
       "required": [],
       "fields": [
-        { "name": "exchange", "type": "string", "required": false, "enum_note": "empty -> all-exchange rollup (mustBoolAllExchangeExchangeName); non-empty expands exchange name terms for ES match" },
-        { "name": "asset", "type": "string", "required": false, "enum": ["BTC", "ETH", "USDT", "USDC"], "enum_note": "omit defaults to BTC; other values -> invalid_param" },
-        { "name": "scope", "type": "string", "required": false, "enum": ["basic", "full"], "enum_note": "omit -> basic; full merges por from exchangeReservesPOR index when configured + optionally flows/events; invalid scope -> invalid_param" },
-        { "name": "include_history", "type": "bool", "required": false, "enum_note": "default false; true only with scope=full else invalid_param; attaches precomputed PoR comparison fields, not raw snapshots" },
-        { "name": "history_window", "type": "string", "required": false, "enum": ["quarter"], "enum_note": "only when include_history=true; omit defaults to quarter; other values -> invalid_param" },
-        { "name": "include_flows", "type": "bool", "required": false, "enum_note": "scope=full only; true returns flows.series[] (daily inflow/outflow/netflow in native+USD); requires exchangeFlow index configured else not_implemented; omit defaults to false" },
-        { "name": "include_events", "type": "bool", "required": false, "enum_note": "scope=full only; true returns events[] (large_flow events with threshold/rolling_30d_std); requires exchangeFlow index; omit defaults to false" },
-        { "name": "start_date", "type": "string", "required": false, "enum_note": "YYYY-MM-DD; only when include_flows=true or include_events=true; omit defaults to end_date - 30d; invalid date -> invalid_param" },
-        { "name": "end_date", "type": "string", "required": false, "enum_note": "YYYY-MM-DD; only when include_flows=true or include_events=true; omit defaults to today; invalid date -> invalid_param" },
-        { "name": "event_type", "type": "string", "required": false, "enum": ["all", "large_flow"], "enum_note": "only when include_events=true; all returns all events (large_flow_event=true+false); large_flow filters large_flow_event=true only; omit defaults to all" },
-        { "name": "limit", "type": "int", "required": false, "enum_note": "only when include_flows=true or include_events=true; max flow rows; default 100, max 400" }
+        {
+          "name": "exchange",
+          "type": "string",
+          "required": false,
+          "enum_note": "empty -> all-exchange rollup; non-empty matches the supplied exchange name and its normalized aliases"
+        },
+        {
+          "name": "asset",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "BTC",
+            "ETH",
+            "USDT",
+            "USDC"
+          ],
+          "enum_note": "omit defaults to BTC; other values -> invalid_param"
+        },
+        {
+          "name": "scope",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "basic",
+            "full"
+          ],
+          "enum_note": "omit -> basic; full adds por when available and optionally flows/events; invalid scope -> invalid_param"
+        },
+        {
+          "name": "include_history",
+          "type": "bool",
+          "required": false,
+          "enum_note": "default false; true only with scope=full else invalid_param; attaches precomputed PoR comparison fields, not raw snapshots"
+        },
+        {
+          "name": "history_window",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "quarter"
+          ],
+          "enum_note": "only when include_history=true; omit defaults to quarter; other values -> invalid_param"
+        },
+        {
+          "name": "include_flows",
+          "type": "bool",
+          "required": false,
+          "enum_note": "scope=full only; true returns flows.series[] with daily inflow/outflow/netflow in native units and USD. Unavailable flow data -> not_implemented. Omitted defaults to false."
+        },
+        {
+          "name": "include_events",
+          "type": "bool",
+          "required": false,
+          "enum_note": "scope=full only; true returns events[] for large flows with threshold/rolling_30d_std fields; requires available flow-event data; omitted defaults to false"
+        },
+        {
+          "name": "start_date",
+          "type": "string",
+          "required": false,
+          "enum_note": "YYYY-MM-DD; only when include_flows=true or include_events=true; omit defaults to end_date - 30d; invalid date -> invalid_param"
+        },
+        {
+          "name": "end_date",
+          "type": "string",
+          "required": false,
+          "enum_note": "YYYY-MM-DD; only when include_flows=true or include_events=true; omit defaults to today; invalid date -> invalid_param"
+        },
+        {
+          "name": "event_type",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "all",
+            "large_flow"
+          ],
+          "enum_note": "only when include_events=true; all returns all events (large_flow_event=true+false); large_flow filters large_flow_event=true only; omit defaults to all"
+        },
+        {
+          "name": "limit",
+          "type": "int",
+          "required": false,
+          "enum_note": "only when include_flows=true or include_events=true; max flow rows; default 100, max 400"
+        }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.GetExchangeReserves; searches exchangeReserves (no default snapshot_time range; latest via sort); scope=full and POR index set runs second query on POR index and enrichExchangeReservesItemsWithPOR. scope=full + include_flows=true queries exchangeFlow index (dwd_external_exchange_net_flow_di) via fetchExchangeFlow and returns flows.series[] (ExchangeFlowPoint per day). scope=full + include_events=true returns events[] (large_flow_event=true or all, with threshold_usd/rolling_30d_std_usd). asset defaults to BTC. requires exchangeReserves index else not_implemented; nil fetcher returns requires_open_search.",
+      "logic": "Return latest exchange reserves, with asset default BTC. scope=full optionally adds proof-of-reserves, flows and events when supported. include_flows returns daily native/USD inflow, outflow and netflow in flows.series. include_events returns the documented large-flow events and threshold/statistical fields. Unavailable required data returns not_implemented; unavailable capability returns requires_open_search.",
       "description": "[Read] Exchange reserve balances (optional asset filter); scope=full for PoR, flows (daily netflow), and large-flow events. Not stablecoin chain breakdown -> get_stablecoin_info."
     },
     {
       "tool_name": "info_platformmetrics_get_liquidation_heatmap",
       "domain": "platformmetrics",
-      "request_type": "platformmetrics.GetLiquidationHeatmapRequest",
+      "request_type": "JSON object",
       "required": [
         "symbol"
       ],
@@ -1413,7 +1484,7 @@
           "name": "exchange",
           "type": "string",
           "required": false,
-          "enum_note": "omit = all exchanges; non-empty expands alias terms on exchange.keyword"
+          "enum_note": "omit = all exchanges; non-empty matches the exchange name and its normalized aliases"
         },
         {
           "name": "range",
@@ -1422,38 +1493,131 @@
           "enum_note": "optional price bucket filter, format min-max e.g. 40000-50000; parse fail = no range filter (not invalid_param)"
         }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.GetLiquidationHeatmap; symbol required; queries liquidationHeatmap index with recent snapshot_time; nil fetcher returns requires_open_search.",
+      "logic": "Require symbol and return the latest liquidation heatmap. An omitted exchange filter includes all exchanges; aliases are normalized. Unavailable capability returns requires_open_search.",
       "description": "[Read] Futures liquidation heatmap by symbol (and optional exchange/range). Order book depth -> get_cex_orderbook_depth or marketdetail get_orderbook."
     },
     {
       "tool_name": "info_platformmetrics_get_chain_activity",
       "domain": "platformmetrics",
-      "request_type": "platformmetrics.GetChainActivityRequest",
+      "request_type": "JSON object",
       "required": [
         "metric_group"
       ],
       "fields": [
-        { "name": "metric_group", "type": "string", "required": true, "enum": ["staking", "l2", "btc_l2"], "enum_note": "phase-1 supported groups; staking=Ethereum beacon daily, l2=L2 ops daily (growthepie+L2Beat), btc_l2=BTC L2 protocol ecosystem; other values -> not_implemented" },
-        { "name": "chain", "type": "string", "required": false, "common_values": ["ethereum", "eth", "base", "arbitrum", "optimism", "linea", "zksync_era", "blast", "btc"], "enum_note": "staking: only eth|ethereum allowed (others -> unsupported_chain); l2: supports base/arbitrum/optimism/linea/zksync_era/blast or empty for all chains; btc_l2: empty defaults to btc (only btc allowed)" },
-        { "name": "project", "type": "string", "required": false, "enum_note": "btc_l2 only: filter by project_key; empty returns whitelist (stacks|rootstock|merlin|bob|bitlayer). Non-whitelist project returns data_status=not_in_scope" },
-        { "name": "start_date", "type": "string", "required": false, "enum_note": "UTC YYYY-MM-DD; with end_date defines inclusive window (ES gte + lt end+1d); start only -> single ES gte query, end from newest hit; span >400d or start-only beyond cap -> range_truncated=true and start_date adjusted to effective oldest returned date; future dates capped to today with start_date_capped" },
-        { "name": "end_date", "type": "string", "required": false, "enum_note": "UTC YYYY-MM-DD; with start_date defines window; omit with start empty and end set -> end anchors lookback window; omit with start only -> derived from newest hit; both dates empty -> ignored (uses lookback-only path); future capped to today with end_date_capped" },
-        { "name": "lookback", "type": "string", "required": false, "enum": ["30d", "90d", "1y"], "enum_note": "when start_date empty: default 30d for lookback-only or end-anchored window; invalid -> invalid_param; ignored when both start_date and end_date set" },
-        { "name": "granularity", "type": "string", "required": false, "enum": ["day"], "enum_note": "l2 only: day (default); hour or minute returns unsupported_granularity; ignored for staking/btc_l2" },
-        { "name": "limit", "type": "int", "required": false, "enum_note": "l2 only: max series rows returned; 0 means no extra cap beyond date window; ignored for staking/btc_l2" }
+        {
+          "name": "metric_group",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "staking",
+            "l2",
+            "btc_l2"
+          ],
+          "enum_note": "phase-1 supported groups; staking=Ethereum beacon daily, l2=L2 ops daily (growthepie+L2Beat), btc_l2=BTC L2 protocol ecosystem; other values -> not_implemented"
+        },
+        {
+          "name": "chain",
+          "type": "string",
+          "required": false,
+          "common_values": [
+            "ethereum",
+            "eth",
+            "base",
+            "arbitrum",
+            "optimism",
+            "linea",
+            "zksync_era",
+            "blast",
+            "btc"
+          ],
+          "enum_note": "staking: only eth|ethereum allowed (others -> unsupported_chain); l2: supports base/arbitrum/optimism/linea/zksync_era/blast or empty for all chains; btc_l2: empty defaults to btc (only btc allowed)"
+        },
+        {
+          "name": "project",
+          "type": "string",
+          "required": false,
+          "enum_note": "btc_l2 only: filter by project_key; empty returns whitelist (stacks|rootstock|merlin|bob|bitlayer). Non-whitelist project returns data_status=not_in_scope"
+        },
+        {
+          "name": "start_date",
+          "type": "string",
+          "required": false,
+          "enum_note": "UTC YYYY-MM-DD. Together with end_date, defines an inclusive date window. With start_date only, include points from that date through the newest available point. A span >400d or a start-only request beyond the cap sets range_truncated=true and adjusts start_date to the effective oldest returned date. Future dates are capped to today with start_date_capped."
+        },
+        {
+          "name": "end_date",
+          "type": "string",
+          "required": false,
+          "enum_note": "UTC YYYY-MM-DD; with start_date defines window; omit with start empty and end set -> end anchors lookback window; omit with start only -> derived from newest hit; both dates empty -> ignored (uses lookback-only path); future capped to today with end_date_capped"
+        },
+        {
+          "name": "lookback",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "30d",
+            "90d",
+            "1y"
+          ],
+          "enum_note": "when start_date empty: default 30d for lookback-only or end-anchored window; invalid -> invalid_param; ignored when both start_date and end_date set"
+        },
+        {
+          "name": "granularity",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "day"
+          ],
+          "enum_note": "l2 only: day (default); hour or minute returns unsupported_granularity; ignored for staking/btc_l2"
+        },
+        {
+          "name": "limit",
+          "type": "int",
+          "required": false,
+          "enum_note": "l2 only: max series rows returned; 0 means no extra cap beyond date window; ignored for staking/btc_l2"
+        }
       ],
-      "logic": "mcphost tools_platformmetrics -> fetcher.GetChainActivity (GAP-012/GAP-009/GAP-0xx). Routes by metric_group: staking->getChainActivityStaking queries platformmetrics.indices.ethStakingNetworkDaily (dwd_external_beaconcha_in_staking_data_di); l2->getChainActivityL2 queries l2Metrics index (dwd_external_l2_metrics_daily_di); btc_l2->getChainActivityBtcL2 queries btcProtocol index (dwd_external_btc_protocol_di). staking: series[].validator_active/entry_queue_eth/exit_queue_eth/eth_supply/staking_rate/staking_apr_7d/entry_wait_days/exit_wait_days with validator_estimate=eth/32; per-row missing_fields+data_status; 2025-05-07..2025-05-21 rows quality_warning; explicit window >400d truncates. l2: series[] per chain with tps_avg_1d/active_addresses_1d/blob_cost_usd_1d/sequencer_revenue_usd_1d/stage_label/tvl_usd/data_source; tx_count/l1_fee_usd 本期不提供; granularity=day required. btc_l2: items[] with project_key/project_name/category/main_chain/tvl_usd/protocol_count/tx_count_1d/active_addresses_1d/bridge_volume_24h_usd/source_refs; project whitelist stacks|rootstock|merlin|bob|bitlayer; missing_required_fields when tvl_usd/protocol_count/tx_count_1d nil; data_status=complete when 3 required fields non-nil. nil fetcher -> requires_open_search.",
+      "logic": "Return staking, l2 or btc_l2 activity for the chosen metric_group. Preserve all declared response_fields/series_fields and project whitelist stacks|rootstock|merlin|bob|bitlayer. Staking returns validator/queue/supply/rate/APR/wait metrics with missing_fields and data_status; rows for 2025-05-07 through 2025-05-21 may include quality_warning. Windows longer than 400 days are truncated. l2 requires granularity=day; tx_count/l1_fee_usd remain unavailable. btc_l2 requires non-null tvl_usd/protocol_count/tx_count_1d for complete status, otherwise missing_required_fields. Unavailable capability returns requires_open_search. Validator estimates derived from ETH use ETH/32.",
       "errors": [
-        { "code": "invalid_param", "when": "metric_group empty, bad YYYY-MM-DD, invalid lookback, or start_date after end_date" },
-        { "code": "not_implemented", "when": "metric_group not in staking|l2|btc_l2 or target index unset" },
-        { "code": "unsupported_chain_for_metric_group", "when": "staking and chain not eth|ethereum; l2 and chain not in supported list; btc_l2 and chain not btc" },
-        { "code": "unsupported_granularity", "when": "l2 granularity not day" },
-        { "code": "requires_open_search", "when": "platformmetrics fetcher or OpenSearch client nil" }
+        {
+          "code": "invalid_param",
+          "when": "metric_group empty, bad YYYY-MM-DD, invalid lookback, or start_date after end_date"
+        },
+        {
+          "code": "not_implemented",
+          "when": "metric_group is not staking|l2|btc_l2, or the requested activity data is unavailable"
+        },
+        {
+          "code": "unsupported_chain_for_metric_group",
+          "when": "staking and chain not eth|ethereum; l2 and chain not in supported list; btc_l2 and chain not btc"
+        },
+        {
+          "code": "unsupported_granularity",
+          "when": "l2 granularity not day"
+        },
+        {
+          "code": "requires_open_search",
+          "when": "The activity-data capability is unavailable."
+        }
       ],
       "response_fields": [
-        "chain", "metric_group", "normalized_chain", "start_date", "end_date", "lookback", "granularity", "total", "count",
-        "staking_metrics.series", "l2_metrics.series", "btc_l2_metrics.items",
-        "data_status", "range_truncated", "end_date_capped", "start_date_capped", "duration_ms"
+        "chain",
+        "metric_group",
+        "normalized_chain",
+        "start_date",
+        "end_date",
+        "lookback",
+        "granularity",
+        "total",
+        "count",
+        "staking_metrics.series",
+        "l2_metrics.series",
+        "btc_l2_metrics.items",
+        "data_status",
+        "range_truncated",
+        "end_date_capped",
+        "start_date_capped",
+        "duration_ms"
       ],
       "series_fields": [
         "date",
@@ -1472,11 +1636,11 @@
         "data_status",
         "quality_note"
       ],
-      "series_fields_note": "eth_supply / staking_apr_7d / entry_wait_days / exit_wait_days mapped from ES _source; missing index writes missing_fields. l2: tx_count/l1_fee_usd 本期不提供. btc_l2: protocol_count is int64, other values float64/int64.",
+      "series_fields_note": "Staking series expose eth_supply, staking_apr_7d, entry_wait_days and exit_wait_days; unavailable values are recorded in missing_fields. l2: tx_count/l1_fee_usd are not provided. btc_l2: protocol_count is int64; other values use float64/int64.",
       "cli": {
         "binary": "coin-mcp-cli",
         "subcommand": "platformmetrics",
-        "request_type": "chain-activity",
+        "request_type": "JSON object",
         "example": "coin-mcp-cli platformmetrics --request_type chain-activity --metric_group staking --chain ethereum --lookback 30d"
       },
       "description": "[Read] Chain-level activity metrics (staking=Ethereum beacon, l2=daily ops, btc_l2=BTC L2 protocol ecosystem). DeFi platform context -> get_platform_info."
@@ -1484,7 +1648,7 @@
     {
       "tool_name": "info_macro_get_macro_indicator",
       "domain": "macro",
-      "request_type": "macro.GetMacroIndicatorRequest",
+      "request_type": "JSON object",
       "required": [
         "indicator"
       ],
@@ -1540,13 +1704,13 @@
           "required": false
         }
       ],
-      "logic": "mcphost tools_macro -> fetcher.GetMacroIndicator; mode latest|timeseries (non-timeseries->latest). indicator required; queries macroIndicatorLatest or macroIndicatorTimeseries index (missing -> not_implemented). ES terms on indicator|indicator_id|slugname keyword variants; optional country/country_code post-filter in Go. timeseries: date range from start_time/end_time aliases start_date/end_date (default gte now-1y); latest: date/part_date range when times given. size default 20 max 400. Output: latest.snapshots or timeseries.observations; empty timeseries sets note hinting try latest. nil fetcher -> requires_open_search.",
+      "logic": "Require indicator. mode latest|timeseries defaults to latest for other values. Preserve country filters and start_time/end_time aliases start_date/end_date. Timeseries defaults to the preceding year; latest applies dates only when provided. size defaults to 20, maximum 400. Return latest.snapshots or timeseries.observations; empty timeseries may suggest latest. Unavailable data returns not_implemented; unavailable capability returns requires_open_search.",
       "description": "[Read] Macro indicator latest or timeseries (CPI, rates, etc.). Calendar events -> get_economic_calendar; dashboard -> get_macro_summary."
     },
     {
       "tool_name": "info_macro_get_economic_calendar",
       "domain": "macro",
-      "request_type": "macro.GetEconomicCalendarRequest",
+      "request_type": "JSON object",
       "required": [],
       "fields": [
         {
@@ -1575,22 +1739,22 @@
           "required": false
         }
       ],
-      "logic": "mcphost tools_macro -> fetcher.GetEconomicCalendar; requires economicCalendar index else not_implemented. Date window UTC YYYY-MM-DD: both omit -> today..today+30d; start only -> start..start+30d; end only -> today..end; validates end>=start. event_type filters unless empty/all; importance filter best-effort if index has field. size default 20 max 400; sorted event_date desc. nil fetcher -> requires_open_search.",
+      "logic": "Return economic calendar events for a UTC YYYY-MM-DD window. Both dates omitted means today through today+30d; start only means start through start+30d; end only means today through end. Reject end before start. Empty/all event_type means no type filter; importance is applied when available. size defaults to 20, maximum 400. Sort by event_date descending. Unavailable data returns not_implemented; unavailable capability returns requires_open_search.",
       "description": "[Read] Economic calendar events. Single indicator series -> get_macro_indicator."
     },
     {
       "tool_name": "info_macro_get_macro_summary",
       "domain": "macro",
-      "request_type": "macro.GetMacroSummaryRequest",
+      "request_type": "JSON object",
       "required": [],
       "fields": [],
-      "logic": "mcphost tools_macro -> fetcher.GetMacroSummary; zero-arg dashboard aggregating macroIndicatorLatest (6 US indicators: federal_funds_rate, cpi_yoy, gdp_growth, unemployment_rate, nonfarm_payroll, pce_yoy via keyword/slug aliases) plus upcoming economicCalendar events (next 5, requires calendar index optional). Requires macroIndicatorLatest index else not_implemented; no standalone macroSummary index. nil fetcher -> requires_open_search.",
+      "logic": "Return a zero-argument macro dashboard for federal_funds_rate, cpi_yoy, gdp_growth, unemployment_rate, nonfarm_payroll and pce_yoy, plus up to five upcoming calendar events when available. Unavailable required macro data returns not_implemented; unavailable capability returns requires_open_search.",
       "description": "[Read] Macro dashboard summary (no inputs). Indicator detail -> get_macro_indicator."
     },
     {
       "tool_name": "info_marketdetail_get_orderbook",
       "domain": "marketdetail",
-      "request_type": "marketdetail.GetOrderbookRequest",
+      "request_type": "JSON object",
       "required": [
         "symbol"
       ],
@@ -1628,13 +1792,13 @@
           "required": false
         }
       ],
-      "logic": "mcphost tools_marketdetail -> marketdetail.Service.GetOrderbook; registered when Gate SDK service configured. symbol required; market_type spot|futures|delivery|options (default spot); depth default 20 max 100; settle default usdt for derivatives. Routes to gate_sdk_spot|futures|delivery|options List*OrderBook; extra map merged into SDK opts. Gate API errors degrade to empty items (not tool error); cex_tool labels upstream. not configured -> public_mcp_not_configured.",
+      "logic": "Require symbol. market_type accepts spot|futures|delivery|options, default spot. depth defaults to 20, maximum 100; derivative settlement defaults to usdt. Pass extra options through to the market-data request. Preserve cex_tool provenance. Upstream market-data errors return empty items; unavailable capability returns public_mcp_not_configured.",
       "description": "[Read] Live Gate order book for a symbol (spot/futures/etc.). Aggregated CEX depth -> platformmetrics get_cex_orderbook_depth."
     },
     {
       "tool_name": "info_marketdetail_get_recent_trades",
       "domain": "marketdetail",
-      "request_type": "marketdetail.GetRecentTradesRequest",
+      "request_type": "JSON object",
       "required": [
         "symbol"
       ],
@@ -1672,13 +1836,13 @@
           "required": false
         }
       ],
-      "logic": "mcphost tools_marketdetail -> marketdetail.Service.GetRecentTrades; registered when Gate SDK configured. symbol required; market_type default spot; limit default 50 max ToolMaxListSize; settle for futures/delivery. gate_sdk List*Trades per market_type; UTC time fields added to items. API errors -> empty items not error; invalid market_type -> invalid_market_type; unconfigured -> public_mcp_not_configured.",
+      "logic": "Require symbol and return recent trades for market_type, default spot. limit defaults to 50, subject to the service maximum; derivative settlement uses settle. Add documented UTC time fields. Invalid market_type returns invalid_market_type. Market-data errors return empty items; unavailable capability returns public_mcp_not_configured.",
       "description": "[Read] Recent Gate trades for a symbol. Kline -> get_kline."
     },
     {
       "tool_name": "info_marketdetail_get_kline",
       "domain": "marketdetail",
-      "request_type": "marketdetail.GetKlineRequest",
+      "request_type": "JSON object",
       "required": [
         "symbol",
         "timeframe"
@@ -1714,7 +1878,7 @@
             "4h",
             "1d"
           ],
-          "enum_note": "required non-empty; passed to Gate API interval; unparseable duration falls back to 1m internally"
+          "enum_note": "Required and non-empty. Selects the Gate API interval; an unparseable duration falls back to 1m."
         },
         {
           "name": "start_time",
@@ -1730,7 +1894,7 @@
           "name": "limit",
           "type": "int64",
           "required": false,
-          "enum_note": "default 100 when no time range; capped by ToolMaxListSize"
+          "enum_note": "default 100 when no time range; capped by the service maximum"
         },
         {
           "name": "settle",
@@ -1743,13 +1907,13 @@
           "required": false
         }
       ],
-      "logic": "mcphost tools_marketdetail -> marketdetail.Service.GetKline; registered when Gate SDK configured. symbol+timeframe required; market_type default spot; no start/end -> latest limit candles (default 100 max ToolMaxListSize) computed from timeframe seconds then reversed desc. With range passes Unix seconds to ListCandlesticks/ListFuturesCandlesticks etc.; extra may override interval. timeframe unparseable -> 60s fallback internally. API errors -> empty items; unconfigured -> public_mcp_not_configured.",
+      "logic": "Require symbol and timeframe. Without start/end return the latest candles, default limit 100 subject to the service maximum, newest first. With a range, pass Unix-second bounds through. extra may override interval; an unparseable timeframe uses 60 seconds. Market-data errors return empty items; unavailable capability returns public_mcp_not_configured.",
       "description": "[Read] Gate API candlesticks (interval/limit/time range). Index/market snapshot klines -> markettrend get_kline or marketsnapshot tools."
     },
     {
       "tool_name": "info_onchain_get_smart_money",
       "domain": "placeholder",
-      "request_type": "mcphost.placeholderArgs",
+      "request_type": "JSON object",
       "required": [],
       "fields": [
         {
@@ -1773,13 +1937,13 @@
           "required": false
         }
       ],
-      "logic": "mcphost tools_placeholder -> notImplemented returns errs.CodeNotImplemented.",
+      "logic": "This tool is not implemented and returns the documented not_implemented error.",
       "description": "[N/A] Not in shipped gate-cli info baseline; MCP returns notImplemented. Token on-chain scope=smart_money -> get_token_onchain."
     },
     {
       "tool_name": "info_onchain_get_entity_profile",
       "domain": "placeholder",
-      "request_type": "mcphost.placeholderArgs",
+      "request_type": "JSON object",
       "required": [],
       "fields": [
         {
@@ -1803,13 +1967,13 @@
           "required": false
         }
       ],
-      "logic": "mcphost tools_placeholder -> notImplemented returns errs.CodeNotImplemented.",
+      "logic": "This tool is not implemented and returns the documented not_implemented error.",
       "description": "[N/A] Not in shipped gate-cli info baseline; MCP returns notImplemented."
     },
     {
       "tool_name": "info_onchain_trace_fund_flow",
       "domain": "placeholder",
-      "request_type": "mcphost.placeholderArgs",
+      "request_type": "JSON object",
       "required": [],
       "fields": [
         {
@@ -1833,13 +1997,13 @@
           "required": false
         }
       ],
-      "logic": "mcphost tools_placeholder -> notImplemented returns errs.CodeNotImplemented.",
+      "logic": "This tool is not implemented and returns the documented not_implemented error.",
       "description": "[N/A] Not in shipped gate-cli info baseline; MCP returns notImplemented. Address/tx tools -> get_address_* / get_transaction."
     },
     {
       "tool_name": "info_compliance_check_address_risk",
       "domain": "placeholder",
-      "request_type": "mcphost.placeholderArgs",
+      "request_type": "JSON object",
       "required": [],
       "fields": [
         {
@@ -1863,13 +2027,13 @@
           "required": false
         }
       ],
-      "logic": "mcphost tools_placeholder -> notImplemented returns errs.CodeNotImplemented.",
+      "logic": "This tool is not implemented and returns the documented not_implemented error.",
       "description": "[N/A] Not in shipped gate-cli info baseline; MCP returns notImplemented. Token security -> check_token_security."
     },
     {
       "tool_name": "info_compliance_search_regulatory_updates",
       "domain": "placeholder",
-      "request_type": "mcphost.placeholderArgs",
+      "request_type": "JSON object",
       "required": [],
       "fields": [
         {
@@ -1893,7 +2057,7 @@
           "required": false
         }
       ],
-      "logic": "mcphost tools_placeholder -> notImplemented returns errs.CodeNotImplemented.",
+      "logic": "This tool is not implemented and returns the documented not_implemented error.",
       "description": "[N/A] Not in shipped gate-cli info baseline; MCP returns notImplemented."
     }
   ]

@@ -73,8 +73,8 @@ func runAdsList(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.P2pAPI.P2pMerchantBooksAdsList(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/p2p/merchant/books/ads_list", jsonStr))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "POST", "/api/v4/p2p/merchant/books/ads_list", jsonStr)
 	}
 	return p.Print(result)
 }
@@ -103,8 +103,7 @@ func runAdsMyList(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.P2pAPI.P2pMerchantBooksMyAdsList(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/p2p/merchant/books/my_ads_list", jsonStr))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/p2p/merchant/books/my_ads_list", jsonStr)
 	}
 	return p.Print(result)
 }
@@ -126,8 +125,7 @@ func runAdsDetail(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.P2pAPI.P2pMerchantBooksAdsDetail(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/p2p/merchant/books/ads_detail", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/p2p/merchant/books/ads_detail", "")
 	}
 	return p.Print(result)
 }
@@ -151,8 +149,7 @@ func runAdsUpdateStatus(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.P2pAPI.P2pMerchantBooksAdsUpdateStatus(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/p2p/merchant/books/ads_update_status", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/p2p/merchant/books/ads_update_status", "")
 	}
 	return p.Print(result)
 }

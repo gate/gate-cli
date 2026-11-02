@@ -95,8 +95,8 @@ func runConfigCollateral(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.UnifiedAPI.SetUnifiedCollateral(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/unified/collateral", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "POST", "/api/v4/unified/collateral", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -116,8 +116,7 @@ func runConfigDiscountTiers(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.UnifiedAPI.ListCurrencyDiscountTiers(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/unified/currency_discount_tiers", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/unified/currency_discount_tiers", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -141,8 +140,7 @@ func runConfigLoanTiers(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.UnifiedAPI.ListLoanMarginTiers(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/unified/loan_margin_tiers", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/unified/loan_margin_tiers", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -169,8 +167,7 @@ func runConfigLeverageConfig(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.UnifiedAPI.GetUserLeverageCurrencyConfig(c.Context(), currency)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/unified/leverage/user_currency_config/"+currency, ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/unified/leverage/user_currency_config/"+currency, "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -204,8 +201,7 @@ func runConfigLeverageGet(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.UnifiedAPI.GetUserLeverageCurrencySetting(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/unified/leverage/user_currency_setting", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/unified/leverage/user_currency_setting", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -236,8 +232,7 @@ func runConfigLeverageSet(cmd *cobra.Command, args []string) error {
 
 	httpResp, err := c.UnifiedAPI.SetUserLeverageCurrencySetting(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/unified/leverage/user_currency_setting", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/unified/leverage/user_currency_setting", "")
 	}
 	if p.IsJSON() {
 		return p.Print(map[string]string{"status": "ok", "currency": currency, "leverage": leverage})

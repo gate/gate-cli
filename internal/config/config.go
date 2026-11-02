@@ -37,6 +37,8 @@ type Config struct {
 	// Intel holds optional ~/.gate-cli/config.yaml "intel" defaults for MCP (info/news).
 	// Non-empty environment variables override these values; see toolconfig.Resolve.
 	Intel IntelFile
+	// OAuth2复用既有PKCE配置与凭据布局，resource由CLI自动绑定。
+	OAuth2 OAuth2File
 }
 
 // IntelFile is the optional "intel" section in config.yaml (MCP base URLs, auth, headers, timeout).
@@ -50,7 +52,36 @@ type IntelFile struct {
 	HTTPTimeout     string            `yaml:"http_timeout,omitempty"`
 }
 
+// OAuth2File 只保存自动生成的凭据。发现入口及手动回调为固定常量，
+// 不提供用户覆盖项；tokens[] 的 discovery_url 仅是历史凭据元数据。
+type OAuth2File struct {
+	// Token 是**正式环境专属**的单例 token。当凭据 issuer 为
+	// https://www.gate.com 时，SaveToken 写入此节点，不序列化 discovery_url；
+	// LoadToken 优先读取此节点，为空再回退到 Tokens[] 里匹配 https://www.gate.com 的条目。
+	Token *TokenEntry `yaml:"token,omitempty"`
+	// Tokens 存储**非正式环境**（测试/预发等）的 token 数组，用短形式 discovery_url
+	// 作主键。生产环境 token 不写入此处；但存量数据在此处也可被读兼容。
+	Tokens []TokenEntry `yaml:"tokens,omitempty"`
+}
+
+// TokenEntry 是 OAuth2File.Tokens 的单条记录，也被 OAuth2File.Token 复用。
+// DiscoveryURL 使用 omitempty —— 在生产环境的单例 oauth2.token 节点下为空，
+// 在 tokens[] 数组下为短形式 URL 主键。
+type TokenEntry struct {
+	// Resource为空表示旧凭据，必须重新授权，不从当前目的地推断。
+	Resource               string   `yaml:"resource,omitempty"`
+	DiscoveryURL           string   `yaml:"discovery_url,omitempty"`
+	ClientID               string   `yaml:"client_id"`
+	AccessToken            string   `yaml:"access_token,omitempty"`
+	RefreshToken           string   `yaml:"refresh_token,omitempty"`
+	TokenType              string   `yaml:"token_type,omitempty"`
+	ExpiresAt              string   `yaml:"expires_at,omitempty"`
+	Scopes                 string   `yaml:"scopes,omitempty"`
+	RegisteredRedirectURIs []string `yaml:"registered_redirect_uris,omitempty"`
+}
+
 type fileConfig struct {
+	OAuth2         OAuth2File         `yaml:"oauth2,omitempty"`
 	DefaultProfile string             `yaml:"default_profile"`
 	DefaultSettle  string             `yaml:"default_settle"`
 	Intel          IntelFile          `yaml:"intel,omitempty"`
@@ -103,6 +134,7 @@ func Load(opts Options) (*Config, error) {
 			}
 		}
 		cfg.Intel = fc.Intel
+		cfg.OAuth2 = fc.OAuth2
 	}
 
 	// Env vars override file

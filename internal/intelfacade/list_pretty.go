@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-// ListCapabilitiesPrettyText renders tool inventory for --format pretty (PRD §3.7.5).
+// ListCapabilitiesPrettyText renders tool inventory for --format pretty.
 func ListCapabilitiesPrettyText(items []ToolSummary) string {
 	if len(items) == 0 {
 		return "Capabilities\n\n(no entries)\n"

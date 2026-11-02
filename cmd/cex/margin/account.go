@@ -84,8 +84,8 @@ func runMarginAccountList(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MarginAPI.ListMarginAccounts(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/margin/accounts", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/margin/accounts", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -139,8 +139,7 @@ func runMarginAccountBook(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MarginAPI.ListMarginAccountBook(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/margin/account_book", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/margin/account_book", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -172,8 +171,7 @@ func runMarginFunding(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MarginAPI.ListFundingAccounts(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/margin/funding_accounts", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/margin/funding_accounts", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -206,8 +204,7 @@ func runMarginTransferable(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MarginAPI.GetMarginTransferable(c.Context(), currency, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/margin/transferable", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/margin/transferable", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -238,8 +235,7 @@ func runMarginUserInfo(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MarginAPI.ListMarginUserAccount(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/margin/user_accounts", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/margin/user_accounts", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

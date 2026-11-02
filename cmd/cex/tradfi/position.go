@@ -7,9 +7,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var positionCmd = &cobra.Command{
@@ -39,7 +39,7 @@ func init() {
 		Short: "Update take-profit and/or stop-loss for a position",
 		RunE:  runTradfiPositionUpdate,
 	}
-	updateCmd.Flags().Int32("id", 0, "Position ID (required)")
+	updateCmd.Flags().Int64("id", 0, "Position ID (required)")
 	updateCmd.Flags().String("tp", "", "New take-profit price")
 	updateCmd.Flags().String("sl", "", "New stop-loss price")
 	updateCmd.MarkFlagRequired("id")
@@ -49,8 +49,8 @@ func init() {
 		Short: "Close a TradFi position",
 		RunE:  runTradfiPositionClose,
 	}
-	closeCmd.Flags().Int32("id", 0, "Position ID (required)")
-	closeCmd.Flags().Int32("close-type", 0, "Close type: 0=full close, 1=partial close (required)")
+	closeCmd.Flags().Int64("id", 0, "Position ID (required)")
+	closeCmd.Flags().Int32("close-type", 0, "Close type: 1=partial close, 2=full close (required)")
 	closeCmd.Flags().String("volume", "", "Volume for partial close (required when close-type=1)")
 	closeCmd.MarkFlagRequired("id")
 	closeCmd.MarkFlagRequired("close-type")
@@ -71,8 +71,7 @@ func runTradfiPositionList(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.TradFiAPI.QueryPositionList(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/tradfi/positions", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/tradfi/positions", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -121,8 +120,7 @@ func runTradfiPositionHistory(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.TradFiAPI.QueryPositionHistoryList(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/tradfi/positions/history", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/tradfi/positions/history", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -142,7 +140,11 @@ func runTradfiPositionHistory(cmd *cobra.Command, args []string) error {
 }
 
 func runTradfiPositionUpdate(cmd *cobra.Command, args []string) error {
-	id, _ := cmd.Flags().GetInt32("id")
+	id, _ := cmd.Flags().GetInt64("id")
+	// SDK使用int64，正数边界必须在发请求前检查。
+	if id <= 0 {
+		return fmt.Errorf("id must be positive")
+	}
 	tp, _ := cmd.Flags().GetString("tp")
 	sl, _ := cmd.Flags().GetString("sl")
 	p := cmdutil.GetPrinter(cmd)
@@ -165,16 +167,25 @@ func runTradfiPositionUpdate(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.TradFiAPI.UpdatePosition(c.Context(), id, req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "PUT", fmt.Sprintf("/tradfi/positions/%d", id), string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "PUT", fmt.Sprintf("/tradfi/positions/%d", id), string(body))
 	}
 	return p.Print(result)
 }
 
 func runTradfiPositionClose(cmd *cobra.Command, args []string) error {
-	id, _ := cmd.Flags().GetInt32("id")
+	id, _ := cmd.Flags().GetInt64("id")
+	// SDK使用int64，正数边界必须在发请求前检查。
+	if id <= 0 {
+		return fmt.Errorf("id must be positive")
+	}
 	closeType, _ := cmd.Flags().GetInt32("close-type")
 	volume, _ := cmd.Flags().GetString("volume")
+	if closeType != 1 && closeType != 2 {
+		return fmt.Errorf("close-type must be 1 or 2")
+	}
+	if (closeType == 1 && volume == "") || (closeType == 2 && volume != "") {
+		return fmt.Errorf("volume is required only for partial close")
+	}
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
@@ -192,8 +203,7 @@ func runTradfiPositionClose(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.TradFiAPI.ClosePosition(c.Context(), id, req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", fmt.Sprintf("/tradfi/positions/%d/close", id), string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", fmt.Sprintf("/tradfi/positions/%d/close", id), string(body))
 	}
 	return p.Print(result)
 }

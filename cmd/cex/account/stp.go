@@ -9,9 +9,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var stpCmd = &cobra.Command{
@@ -85,8 +85,8 @@ func runSTPList(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.AccountAPI.ListSTPGroups(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/account/stp_groups", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/account/stp_groups", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -113,8 +113,7 @@ func runSTPCreate(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.AccountAPI.CreateSTPGroup(c.Context(), req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/account/stp_groups", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/account/stp_groups", string(body))
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -138,8 +137,7 @@ func runSTPUsers(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.AccountAPI.ListSTPGroupsUsers(c.Context(), id)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", fmt.Sprintf("/api/v4/account/stp_groups/%d/users", id), ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", fmt.Sprintf("/api/v4/account/stp_groups/%d/users", id), "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -176,8 +174,7 @@ func runSTPAddUsers(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(userIDs)
 	result, httpResp, err := c.AccountAPI.AddSTPGroupUsers(c.Context(), id, userIDs)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", fmt.Sprintf("/api/v4/account/stp_groups/%d/users", id), string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", fmt.Sprintf("/api/v4/account/stp_groups/%d/users", id), string(body))
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -203,8 +200,7 @@ func runSTPRemoveUser(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.AccountAPI.DeleteSTPGroupUsers(c.Context(), id, userID)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "DELETE", fmt.Sprintf("/api/v4/account/stp_groups/%d/users", id), ""))
-		return nil
+		return client.CommandError(err, httpResp, "DELETE", fmt.Sprintf("/api/v4/account/stp_groups/%d/users", id), "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

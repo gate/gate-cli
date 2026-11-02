@@ -43,8 +43,8 @@ func runAutoRepayGet(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MarginAPI.GetAutoRepayStatus(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/margin/auto_repay", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/margin/auto_repay", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -68,8 +68,7 @@ func runAutoRepaySet(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MarginAPI.SetAutoRepay(c.Context(), status)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/margin/auto_repay", status))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/margin/auto_repay", status)
 	}
 	if p.IsJSON() {
 		return p.Print(result)

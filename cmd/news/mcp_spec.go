@@ -12,7 +12,7 @@ var mcpSpecCmd = &cobra.Command{
 	Short: "Print embedded News MCP tools args/logic JSON (offline, for agents and LLMs)",
 	Long: "Prints the embedded News MCP tools args/logic JSON shipped inside gate-cli (English description per tool, params, logic). " +
 		"No MCP network call; use with --format json or pretty. Leaf -h reads description from this same embedded document. " +
-		"Maintainers sync from gate/mcp-server into internal/mcpspec/bundled/; do not treat specs/mcp/ as a release description source.",
+		"The bundled document describes public inputs and behavior; use leaf help for the corresponding command.",
 	Args: cobra.NoArgs,
 	RunE: runNewsMCPSpec,
 }

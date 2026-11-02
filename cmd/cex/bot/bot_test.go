@@ -2,6 +2,7 @@ package bot
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -16,14 +17,14 @@ import (
 	gateapi "github.com/gate/gateapi-go/v7"
 )
 
-// Test layout for the new cex bot module wired against gateapi-go v7.2.78.
+// Test layout for the cex bot module, including retained historical wire contracts.
 //
-// Layer 1 — command-tree wiring (10 commands across 3 trees).
+// Layer 1 — command-tree wiring (12 commands across 5 trees).
 // Layer 2 — SDK type contracts the bot module is locked to (StrategyType
 //            enum, v7.2.78 SpotMartingale field rename, InfiniteGrid omitempty).
 // Layer 3 — RunE end-to-end against a mock Gate server, asserting the
 //            outbound query/body so wire-level regressions surface.
-// Layer 4 — auth gate (all 10 commands gated by RequireAuth).
+// Layer 4 — auth gate (REQ-7792 process tests also cover the two new creates).
 // Layer 5 — input-validation: invalid --json must error before hitting the SDK.
 
 const cobraRequiredFlagAnnotation = "cobra_annotation_bash_completion_one_required_flag"
@@ -78,8 +79,11 @@ func captureRequest(t *testing.T, respBody string) *captured {
 		cap.URL = r.URL
 		cap.Method = r.Method
 		if r.ContentLength > 0 {
-			buf := make([]byte, r.ContentLength)
-			_, _ = r.Body.Read(buf)
+			// One Read may return a partial body; exercise the complete bounded request.
+			buf, err := io.ReadAll(io.LimitReader(r.Body, 65537))
+			if err != nil {
+				t.Error(err)
+			}
 			cap.Body = string(buf)
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -111,12 +115,14 @@ func TestBotRootCommand(t *testing.T) {
 
 func TestBotFirstLevelSubcommands(t *testing.T) {
 	want := map[string]bool{
-		"recommend":  false,
-		"running":    false,
-		"detail":     false,
-		"stop":       false,
-		"grid":       false,
-		"martingale": false,
+		"recommend":      false,
+		"running":        false,
+		"detail":         false,
+		"stop":           false,
+		"grid":           false,
+		"martingale":     false,
+		"smart-position": false,
+		"futures-combo":  false,
 	}
 	for _, c := range Cmd.Commands() {
 		if _, ok := want[c.Name()]; ok {
@@ -159,7 +165,7 @@ func TestBotMartingaleSubcommands(t *testing.T) {
 }
 
 // Required-flag matrix. detail/stop need both --strategy-id and
-// --strategy-type. All 6 create commands need --json.
+// --strategy-type. All 8 create commands need --json.
 func TestBotDetail_RequiredFlags(t *testing.T) {
 	detail := findBotSub(Cmd, "detail")
 	require.NotNil(t, detail)
@@ -208,6 +214,7 @@ func TestBotCreateCommands_RequireJSON(t *testing.T) {
 	}{
 		{"grid", "spot"}, {"grid", "margin"}, {"grid", "infinite"}, {"grid", "futures"},
 		{"martingale", "spot"}, {"martingale", "contract"},
+		{"smart-position", "create"}, {"futures-combo", "create"},
 	}
 	for _, tc := range cases {
 		grp := findBotSub(Cmd, tc.group)
@@ -235,6 +242,8 @@ func TestStrategyType_EnumStableValues(t *testing.T) {
 	assert.Equal(t, "futures_grid", string(gateapi.FUTURES_GRID))
 	assert.Equal(t, "spot_martingale", string(gateapi.SPOT_MARTINGALE))
 	assert.Equal(t, "contract_martingale", string(gateapi.CONTRACT_MARTINGALE))
+	assert.Equal(t, "smart_position", string(gateapi.SMART_POSITION))
+	assert.Equal(t, "futures_combo", string(gateapi.FUTURES_COMBO))
 }
 
 // v7.2.78 spot martingale wire shape: stop_loss_per_cycle replaces the
@@ -314,7 +323,7 @@ func TestAiHubPortfolioStopRequest_FieldShape(t *testing.T) {
 // ===========================================================================
 
 func TestRunBotRecommend_AllFlags_FlowToQuery(t *testing.T) {
-	cap := captureRequest(t, `{}`)
+	cap := captureRequest(t, `{"code":200,"message":"ok","trace_id":"fixture","data":{"strategy_id":"9223372036854775807","status":"starting"}}`)
 	silenceBotStdout(t)
 	root := authedBotTestRoot(t)
 	cmd := &cobra.Command{Use: "recommend"}
@@ -346,7 +355,7 @@ func TestRunBotRecommend_AllFlags_FlowToQuery(t *testing.T) {
 }
 
 func TestRunBotRecommend_NoFlags_LeavesQueryEmpty(t *testing.T) {
-	cap := captureRequest(t, `{}`)
+	cap := captureRequest(t, `{"code":200,"message":"ok","trace_id":"fixture","data":{"strategy_id":"9223372036854775807","status":"starting"}}`)
 	silenceBotStdout(t)
 	root := authedBotTestRoot(t)
 	cmd := &cobra.Command{Use: "recommend"}
@@ -371,7 +380,7 @@ func TestRunBotRecommend_NoFlags_LeavesQueryEmpty(t *testing.T) {
 }
 
 func TestRunBotRunning_FlowToQuery(t *testing.T) {
-	cap := captureRequest(t, `{}`)
+	cap := captureRequest(t, `{"code":200,"message":"ok","trace_id":"fixture","data":{"strategy_id":"9223372036854775807","status":"starting"}}`)
 	silenceBotStdout(t)
 	root := authedBotTestRoot(t)
 	cmd := &cobra.Command{Use: "running"}
@@ -391,7 +400,7 @@ func TestRunBotRunning_FlowToQuery(t *testing.T) {
 }
 
 func TestRunBotDetail_PathAndQuery(t *testing.T) {
-	cap := captureRequest(t, `{}`)
+	cap := captureRequest(t, `{"code":200,"message":"ok","trace_id":"fixture","data":{"strategy_id":"9223372036854775807","status":"starting"}}`)
 	silenceBotStdout(t)
 	root := authedBotTestRoot(t)
 	cmd := &cobra.Command{Use: "detail"}
@@ -410,7 +419,7 @@ func TestRunBotDetail_PathAndQuery(t *testing.T) {
 }
 
 func TestRunBotStop_BodyShape(t *testing.T) {
-	cap := captureRequest(t, `{}`)
+	cap := captureRequest(t, `{"code":200,"message":"ok","trace_id":"fixture","data":{"strategy_id":"9223372036854775807","status":"starting"}}`)
 	silenceBotStdout(t)
 	root := authedBotTestRoot(t)
 	cmd := &cobra.Command{Use: "stop"}
@@ -475,7 +484,7 @@ func TestRunBotCreate_JSONFlowsToBody(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			cap := captureRequest(t, `{}`)
+			cap := captureRequest(t, `{"code":200,"message":"ok","trace_id":"fixture","data":{"strategy_id":"9223372036854775807","status":"starting"}}`)
 			silenceBotStdout(t)
 			root := authedBotTestRoot(t)
 			cmd := &cobra.Command{Use: tc.name}
@@ -496,7 +505,7 @@ func TestRunBotCreate_JSONFlowsToBody(t *testing.T) {
 // though Layer 2 already pinned the model, this RunE-level test proves
 // the rename survives the full CLI → SDK → HTTP path.
 func TestRunBotMartingaleSpot_StopLossPerCycle_OnWire(t *testing.T) {
-	cap := captureRequest(t, `{}`)
+	cap := captureRequest(t, `{"code":200,"message":"ok","trace_id":"fixture","data":{"strategy_id":"9223372036854775807","status":"starting"}}`)
 	silenceBotStdout(t)
 	root := authedBotTestRoot(t)
 	cmd := &cobra.Command{Use: "spot"}
@@ -516,7 +525,7 @@ func TestRunBotMartingaleSpot_StopLossPerCycle_OnWire(t *testing.T) {
 // JSON (without grid_num/price_type) must reach the server without
 // auto-zero injection.
 func TestRunBotGridInfinite_MinimalJSON_OmitsOptionalInts(t *testing.T) {
-	cap := captureRequest(t, `{}`)
+	cap := captureRequest(t, `{"code":200,"message":"ok","trace_id":"fixture","data":{"strategy_id":"9223372036854775807","status":"starting"}}`)
 	silenceBotStdout(t)
 	root := authedBotTestRoot(t)
 	cmd := &cobra.Command{Use: "infinite"}

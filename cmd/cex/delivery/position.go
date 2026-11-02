@@ -7,9 +7,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var positionCmd = &cobra.Command{
@@ -90,7 +90,9 @@ func init() {
 	Cmd.AddCommand(positionCmd)
 }
 
-func printDeliveryPosition(p interface{ Table([]string, [][]string) error }, pos gateapi.DeliveryPosition) error {
+func printDeliveryPosition(p interface {
+	Table([]string, [][]string) error
+}, pos gateapi.DeliveryPosition) error {
 	return p.Table(
 		[]string{"Contract", "Size", "Leverage", "Entry Price", "Mark Price", "Unrealised PnL"},
 		[][]string{{pos.Contract, fmt.Sprintf("%d", pos.Size), pos.Leverage, pos.EntryPrice, pos.MarkPrice, pos.UnrealisedPnl}},
@@ -110,8 +112,8 @@ func runDeliveryPositions(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.ListDeliveryPositions(c.Context(), settle)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/positions", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/positions", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -137,8 +139,7 @@ func runDeliveryPosition(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.GetDeliveryPosition(c.Context(), settle, contract)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/positions/"+contract, ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/positions/"+contract, "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -161,8 +162,7 @@ func runDeliveryUpdateMargin(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.UpdateDeliveryPositionMargin(c.Context(), settle, contract, change)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/delivery/"+settle+"/positions/"+contract+"/margin", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/delivery/"+settle+"/positions/"+contract+"/margin", "")
 	}
 	return p.Print(result)
 }
@@ -182,8 +182,7 @@ func runDeliveryUpdateLeverage(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.UpdateDeliveryPositionLeverage(c.Context(), settle, contract, leverage)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/delivery/"+settle+"/positions/"+contract+"/leverage", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/delivery/"+settle+"/positions/"+contract+"/leverage", "")
 	}
 	return p.Print(result)
 }
@@ -203,8 +202,7 @@ func runDeliveryUpdateRiskLimit(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.UpdateDeliveryPositionRiskLimit(c.Context(), settle, contract, riskLimit)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/delivery/"+settle+"/positions/"+contract+"/risk_limit", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/delivery/"+settle+"/positions/"+contract+"/risk_limit", "")
 	}
 	return p.Print(result)
 }
@@ -232,8 +230,7 @@ func runDeliveryPositionClose(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.ListDeliveryPositionClose(c.Context(), settle, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/position_close", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/position_close", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -268,8 +265,7 @@ func runDeliveryLiquidates(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.ListDeliveryLiquidates(c.Context(), settle, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/liquidates", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/liquidates", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -304,8 +300,7 @@ func runDeliverySettlements(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.ListDeliverySettlements(c.Context(), settle, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/settlements", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/settlements", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

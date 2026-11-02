@@ -47,8 +47,8 @@ func runLeverageSet(cmd *cobra.Command, args []string) error {
 
 	httpResp, err := c.MarginAPI.SetUserMarketLeverage(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/margin/leverage/user_market_setting", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "POST", "/api/v4/margin/leverage/user_market_setting", "")
 	}
 	return p.Print(map[string]string{
 		"message":       "leverage set successfully",

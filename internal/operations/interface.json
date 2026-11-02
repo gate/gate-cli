@@ -1,0 +1,3563 @@
+{
+  "version": "1",
+  "generated_from": "gateapi-go/v7@v7.2.164/openapi.yaml",
+  "source_sha256": "ca03433659d281f8ebcb8328599ba9e425eb82d0faa6334f4099dbd99c96c422",
+  "operations": [
+    {
+      "method": "GET",
+      "path": "/api/v4/account/debit_fee",
+      "operation_id": "getDebitFee",
+      "module": "account",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/account/debit_fee",
+      "operation_id": "setDebitFee",
+      "module": "account",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/account/detail",
+      "operation_id": "getAccountDetail",
+      "module": "account",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/account/main_keys",
+      "operation_id": "getAccountMainKeys",
+      "module": "account",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/account/rate_limit",
+      "operation_id": "getAccountRateLimit",
+      "module": "account",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/account/stp_groups",
+      "operation_id": "listSTPGroups",
+      "module": "account",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/account/stp_groups",
+      "operation_id": "createSTPGroup",
+      "module": "account",
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/account/stp_groups/{stp_id}/users",
+      "operation_id": "deleteSTPGroupUsers",
+      "module": "account",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/account/stp_groups/{stp_id}/users",
+      "operation_id": "listSTPGroupsUsers",
+      "module": "account",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/account/stp_groups/{stp_id}/users",
+      "operation_id": "addSTPGroupUsers",
+      "module": "account",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/alpha/account_book",
+      "operation_id": "listAlphaAccountBook",
+      "module": "alpha",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/alpha/accounts",
+      "operation_id": "listAlphaAccounts",
+      "module": "alpha",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/alpha/currencies",
+      "operation_id": "listAlphaCurrencies",
+      "module": "alpha",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/alpha/order",
+      "operation_id": "getAlphaOrder",
+      "module": "alpha",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/alpha/orders",
+      "operation_id": "listAlphaOrder",
+      "module": "alpha",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/alpha/orders",
+      "operation_id": "placeAlphaOrder",
+      "module": "alpha",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/alpha/quote",
+      "operation_id": "quoteAlphaOrder",
+      "module": "alpha",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/alpha/tickers",
+      "operation_id": "listAlphaTickers",
+      "module": "alpha",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/alpha/tokens",
+      "operation_id": "listAlphaTokens",
+      "module": "alpha",
+      "auth_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/ann/list_article",
+      "operation_id": "listAnnouncementArticles",
+      "module": "ann",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/asset-swap/asset/list",
+      "operation_id": "listAssetSwapAssets",
+      "module": "asset-swap",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/asset-swap/config",
+      "operation_id": "getAssetSwapConfig",
+      "module": "asset-swap",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/asset-swap/evaluate",
+      "operation_id": "evaluateAssetSwap",
+      "module": "asset-swap",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/asset-swap/order/create",
+      "operation_id": "createAssetSwapOrderV1",
+      "module": "asset-swap",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/asset-swap/order/list",
+      "operation_id": "listAssetSwapOrdersV1",
+      "module": "asset-swap",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/asset-swap/order/preview",
+      "operation_id": "previewAssetSwapOrderV1",
+      "module": "asset-swap",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/asset-swap/order/{order_id}",
+      "operation_id": "getAssetSwapOrderV1",
+      "module": "asset-swap",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/bot/contract-martingale/create",
+      "operation_id": "postAIHubContractMartingaleCreate",
+      "module": "bot",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/bot/futures-grid/create",
+      "operation_id": "postAIHubFuturesGridCreate",
+      "module": "bot",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/bot/infinite-grid/create",
+      "operation_id": "postAIHubInfiniteGridCreate",
+      "module": "bot",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/bot/margin-grid/create",
+      "operation_id": "postAIHubMarginGridCreate",
+      "module": "bot",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/bot/portfolio/detail",
+      "operation_id": "getAIHubPortfolioDetail",
+      "module": "bot",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/bot/portfolio/running",
+      "operation_id": "getAIHubPortfolioRunning",
+      "module": "bot",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/bot/portfolio/stop",
+      "operation_id": "postAIHubPortfolioStop",
+      "module": "bot",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/bot/spot-grid/create",
+      "operation_id": "postAIHubSpotGridCreate",
+      "module": "bot",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/bot/spot-martingale/create",
+      "operation_id": "postAIHubSpotMartingaleCreate",
+      "module": "bot",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/bot/strategy/recommend",
+      "operation_id": "getAIHubStrategyRecommend",
+      "module": "bot",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/coupon/user-coupon-detail",
+      "operation_id": "getUserCouponDetail",
+      "module": "coupon",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/coupon/user-coupon-list",
+      "operation_id": "listUserCoupons",
+      "module": "coupon",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/account_book",
+      "operation_id": "listCrossexAccountBook",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/accounts",
+      "operation_id": "getCrossexAccount",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v4/crossex/accounts",
+      "operation_id": "updateCrossexAccount",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/adl_rank",
+      "operation_id": "listCrossexAdlRank",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/crossex/batch_cancel_orders",
+      "operation_id": "cancelBatchCrossexOrders",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/coin_discount_rate",
+      "operation_id": "listCrossexCoinDiscountRate",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/crossex/convert/orders",
+      "operation_id": "createCrossexConvertOrder",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/crossex/convert/quote",
+      "operation_id": "createCrossexConvertQuote",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/fee",
+      "operation_id": "getCrossexFee",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/history_margin_interests",
+      "operation_id": "listCrossexHistoryMarginInterests",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/history_margin_positions",
+      "operation_id": "listCrossexHistoryMarginPositions",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/history_orders",
+      "operation_id": "listCrossexHistoryOrders",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/history_positions",
+      "operation_id": "listCrossexHistoryPositions",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/history_trades",
+      "operation_id": "listCrossexHistoryTrades",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/interest_rate",
+      "operation_id": "getCrossexInterestRate",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/margin_positions",
+      "operation_id": "listCrossexMarginPositions",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/margin_positions/leverage",
+      "operation_id": "getCrossexMarginPositionsLeverage",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/crossex/margin_positions/leverage",
+      "operation_id": "updateCrossexMarginPositionsLeverage",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/market/funding_info",
+      "operation_id": "listCrossexMarketFundingInfo",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/market/tickers",
+      "operation_id": "listCrossexMarketTickers",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/open_orders",
+      "operation_id": "listCrossexOpenOrders",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/crossex/orders",
+      "operation_id": "createCrossexOrder",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/crossex/orders/{order_id}",
+      "operation_id": "cancelCrossexOrder",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/orders/{order_id}",
+      "operation_id": "getCrossexOrder",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v4/crossex/orders/{order_id}",
+      "operation_id": "updateCrossexOrder",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/crossex/position",
+      "operation_id": "closeCrossexPosition",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/positions",
+      "operation_id": "listCrossexPositions",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/positions/leverage",
+      "operation_id": "getCrossexPositionsLeverage",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/crossex/positions/leverage",
+      "operation_id": "updateCrossexPositionsLeverage",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/crossex/positions/margin",
+      "operation_id": "updateCrossexPositionsMargin",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/positions/margin_mode",
+      "operation_id": "getCrossexPositionsMarginMode",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/crossex/positions/margin_mode",
+      "operation_id": "updateCrossexPositionsMarginMode",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/rule/risk_limits",
+      "operation_id": "listCrossexRuleRiskLimits",
+      "module": "crossex",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/rule/symbols",
+      "operation_id": "listCrossexRuleSymbols",
+      "module": "crossex",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/security_positions",
+      "operation_id": "listCrossexSecurityPositions",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/transfers",
+      "operation_id": "listCrossexTransfers",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/crossex/transfers",
+      "operation_id": "createCrossexTransfer",
+      "module": "crossex",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/crossex/transfers/coin",
+      "operation_id": "listCrossexTransferCoins",
+      "module": "crossex",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/delivery/{settle}/account_book",
+      "operation_id": "listDeliveryAccountBook",
+      "module": "delivery",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/delivery/{settle}/accounts",
+      "operation_id": "listDeliveryAccounts",
+      "module": "delivery",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/delivery/{settle}/candlesticks",
+      "operation_id": "listDeliveryCandlesticks",
+      "module": "delivery",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/delivery/{settle}/contracts",
+      "operation_id": "listDeliveryContracts",
+      "module": "delivery",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/delivery/{settle}/contracts/{contract}",
+      "operation_id": "getDeliveryContract",
+      "module": "delivery",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/delivery/{settle}/insurance",
+      "operation_id": "listDeliveryInsuranceLedger",
+      "module": "delivery",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/delivery/{settle}/liquidates",
+      "operation_id": "listDeliveryLiquidates",
+      "module": "delivery",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/delivery/{settle}/my_trades",
+      "operation_id": "getMyDeliveryTrades",
+      "module": "delivery",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/delivery/{settle}/order_book",
+      "operation_id": "listDeliveryOrderBook",
+      "module": "delivery",
+      "auth_required": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/delivery/{settle}/orders",
+      "operation_id": "cancelDeliveryOrders",
+      "module": "delivery",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/delivery/{settle}/orders",
+      "operation_id": "listDeliveryOrders",
+      "module": "delivery",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/delivery/{settle}/orders",
+      "operation_id": "createDeliveryOrder",
+      "module": "delivery",
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/delivery/{settle}/orders/{order_id}",
+      "operation_id": "cancelDeliveryOrder",
+      "module": "delivery",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/delivery/{settle}/orders/{order_id}",
+      "operation_id": "getDeliveryOrder",
+      "module": "delivery",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/delivery/{settle}/position_close",
+      "operation_id": "listDeliveryPositionClose",
+      "module": "delivery",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/delivery/{settle}/positions",
+      "operation_id": "listDeliveryPositions",
+      "module": "delivery",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/delivery/{settle}/positions/{contract}",
+      "operation_id": "getDeliveryPosition",
+      "module": "delivery",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/delivery/{settle}/positions/{contract}/leverage",
+      "operation_id": "updateDeliveryPositionLeverage",
+      "module": "delivery",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/delivery/{settle}/positions/{contract}/margin",
+      "operation_id": "updateDeliveryPositionMargin",
+      "module": "delivery",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/delivery/{settle}/positions/{contract}/risk_limit",
+      "operation_id": "updateDeliveryPositionRiskLimit",
+      "module": "delivery",
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/delivery/{settle}/price_orders",
+      "operation_id": "cancelPriceTriggeredDeliveryOrderList",
+      "module": "delivery",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/delivery/{settle}/price_orders",
+      "operation_id": "listPriceTriggeredDeliveryOrders",
+      "module": "delivery",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/delivery/{settle}/price_orders",
+      "operation_id": "createPriceTriggeredDeliveryOrder",
+      "module": "delivery",
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/delivery/{settle}/price_orders/{order_id}",
+      "operation_id": "cancelPriceTriggeredDeliveryOrder",
+      "module": "delivery",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/delivery/{settle}/price_orders/{order_id}",
+      "operation_id": "getPriceTriggeredDeliveryOrder",
+      "module": "delivery",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/delivery/{settle}/risk_limit_tiers",
+      "operation_id": "listDeliveryRiskLimitTiers",
+      "module": "delivery",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/delivery/{settle}/settlements",
+      "operation_id": "listDeliverySettlements",
+      "module": "delivery",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/delivery/{settle}/tickers",
+      "operation_id": "listDeliveryTickers",
+      "module": "delivery",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/delivery/{settle}/trades",
+      "operation_id": "listDeliveryTrades",
+      "module": "delivery",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/autoinvest/coins",
+      "operation_id": "listAutoInvestCoins",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/autoinvest/config",
+      "operation_id": "listAutoInvestConfig",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/earn/autoinvest/min_invest_amount",
+      "operation_id": "getAutoInvestMinAmount",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/autoinvest/orders",
+      "operation_id": "listAutoInvestOrders",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/earn/autoinvest/plans/add_position",
+      "operation_id": "addPositionAutoInvestPlan",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/earn/autoinvest/plans/create",
+      "operation_id": "createAutoInvestPlan",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/autoinvest/plans/detail",
+      "operation_id": "getAutoInvestPlanDetail",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/autoinvest/plans/list_info",
+      "operation_id": "listAutoInvestPlans",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/autoinvest/plans/records",
+      "operation_id": "listAutoInvestPlanRecords",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/earn/autoinvest/plans/stop",
+      "operation_id": "stopAutoInvestPlan",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/earn/autoinvest/plans/update",
+      "operation_id": "updateAutoInvestPlan",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/dual/balance",
+      "operation_id": "listDualBalance",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/dual/investment_plan",
+      "operation_id": "listDualInvestmentPlans",
+      "module": "earn",
+      "auth_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/earn/dual/modify-order-reinvest",
+      "operation_id": "modifyDualOrderReinvest",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/earn/dual/order-refund",
+      "operation_id": "placeDualOrderRefund",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/dual/order-refund-preview",
+      "operation_id": "getDualOrderRefundPreview",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/dual/orders",
+      "operation_id": "listDualOrders",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/earn/dual/orders",
+      "operation_id": "placeDualOrder",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/dual/project-recommend",
+      "operation_id": "getDualProjectRecommend",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/dual/stock/balance",
+      "operation_id": "listDualStockBalance",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/dual/stock/investment_plan",
+      "operation_id": "listDualStockInvestmentPlans",
+      "module": "earn",
+      "auth_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/earn/dual/stock/modify-order-reinvest",
+      "operation_id": "modifyDualStockOrderReinvest",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/earn/dual/stock/order-refund",
+      "operation_id": "placeDualStockOrderRefund",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/dual/stock/order-refund-preview",
+      "operation_id": "getDualStockOrderRefundPreview",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/dual/stock/orders",
+      "operation_id": "listDualStockOrders",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/earn/dual/stock/orders",
+      "operation_id": "placeDualStockOrder",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/dual/stock/project-recommend",
+      "operation_id": "getDualStockProjectRecommend",
+      "module": "earn",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/fixed-term/product",
+      "operation_id": "listEarnFixedTermProducts",
+      "module": "earn",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/fixed-term/product/{asset}/list",
+      "operation_id": "listEarnFixedTermProductsByAsset",
+      "module": "earn",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/fixed-term/user/history",
+      "operation_id": "listEarnFixedTermHistory",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/fixed-term/user/lend",
+      "operation_id": "listEarnFixedTermLends",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/earn/fixed-term/user/lend",
+      "operation_id": "createEarnFixedTermLend",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/earn/fixed-term/user/pre-redeem",
+      "operation_id": "createEarnFixedTermPreRedeem",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/staking/assets",
+      "operation_id": "assetList",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/staking/award_list",
+      "operation_id": "awardList",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/staking/coins",
+      "operation_id": "findCoin",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/staking/order_list",
+      "operation_id": "orderList",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/earn/staking/swap",
+      "operation_id": "swapStakingCoin",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/uni/chart",
+      "operation_id": "listUniChart",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/uni/currencies",
+      "operation_id": "listUniCurrencies",
+      "module": "earn",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/uni/currencies/{currency}",
+      "operation_id": "getUniCurrency",
+      "module": "earn",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/uni/interest_records",
+      "operation_id": "listUniInterestRecords",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/uni/interest_status/{currency}",
+      "operation_id": "getUniInterestStatus",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/uni/interests/{currency}",
+      "operation_id": "getUniInterest",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/uni/lend_records",
+      "operation_id": "listUniLendRecords",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/uni/lends",
+      "operation_id": "listUserUniLends",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v4/earn/uni/lends",
+      "operation_id": "changeUniLend",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/earn/uni/lends",
+      "operation_id": "createUniLend",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/earn/uni/rate",
+      "operation_id": "listUniRate",
+      "module": "earn",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/flash_swap/currency_pairs",
+      "operation_id": "listFlashSwapCurrencyPair",
+      "module": "flash_swap",
+      "auth_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/flash_swap/multi-currency/many-to-one/order/create",
+      "operation_id": "createFlashSwapMultiCurrencyManyToOneOrder",
+      "module": "flash_swap",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/flash_swap/multi-currency/many-to-one/order/preview",
+      "operation_id": "previewFlashSwapMultiCurrencyManyToOneOrder",
+      "module": "flash_swap",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/flash_swap/multi-currency/one-to-many/order/create",
+      "operation_id": "createFlashSwapMultiCurrencyOneToManyOrder",
+      "module": "flash_swap",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/flash_swap/multi-currency/one-to-many/order/preview",
+      "operation_id": "previewFlashSwapMultiCurrencyOneToManyOrder",
+      "module": "flash_swap",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/flash_swap/order/create",
+      "operation_id": "createFlashSwapOrderV1",
+      "module": "flash_swap",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/flash_swap/order/preview",
+      "operation_id": "previewFlashSwapOrderV1",
+      "module": "flash_swap",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/flash_swap/orders",
+      "operation_id": "listFlashSwapOrders",
+      "module": "flash_swap",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/flash_swap/orders",
+      "operation_id": "createFlashSwapOrder",
+      "module": "flash_swap",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/flash_swap/orders/preview",
+      "operation_id": "previewFlashSwapOrder",
+      "module": "flash_swap",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/flash_swap/orders/{order_id}",
+      "operation_id": "getFlashSwapOrder",
+      "module": "flash_swap",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/account_book",
+      "operation_id": "listFuturesAccountBook",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/accounts",
+      "operation_id": "listFuturesAccounts",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/adl_risk_states",
+      "operation_id": "listFuturesADLRiskStates",
+      "module": "futures",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/auto_deleverages",
+      "operation_id": "listAutoDeleverages",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/autoorder/v1/chase/create",
+      "operation_id": "createChaseOrder",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/autoorder/v1/chase/detail",
+      "operation_id": "getChaseOrderDetail",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/autoorder/v1/chase/list",
+      "operation_id": "getChaseOrders",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/autoorder/v1/chase/stop",
+      "operation_id": "stopChaseOrder",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/autoorder/v1/chase/stop_all",
+      "operation_id": "stopAllChaseOrders",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/autoorder/v1/trail/change_log",
+      "operation_id": "getTrailOrderChangeLog",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/autoorder/v1/trail/create",
+      "operation_id": "createTrailOrder",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/autoorder/v1/trail/detail",
+      "operation_id": "getTrailOrderDetail",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/autoorder/v1/trail/list",
+      "operation_id": "getTrailOrders",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/autoorder/v1/trail/stop",
+      "operation_id": "stopTrailOrder",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/autoorder/v1/trail/stop_all",
+      "operation_id": "stopAllTrailOrders",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/autoorder/v1/trail/update",
+      "operation_id": "updateTrailOrder",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/batch_amend_orders",
+      "operation_id": "amendBatchFutureOrders",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/batch_cancel_orders",
+      "operation_id": "cancelBatchFutureOrders",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/batch_orders",
+      "operation_id": "createBatchFuturesOrder",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/bbo_orders",
+      "operation_id": "createFuturesBBOOrder",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/candlesticks",
+      "operation_id": "listFuturesCandlesticks",
+      "module": "futures",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/contract_stats",
+      "operation_id": "listContractStats",
+      "module": "futures",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/contracts",
+      "operation_id": "listFuturesContracts",
+      "module": "futures",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/contracts/{contract}",
+      "operation_id": "getFuturesContract",
+      "module": "futures",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/contracts_all",
+      "operation_id": "listFuturesContractsAll",
+      "module": "futures",
+      "auth_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/countdown_cancel_all",
+      "operation_id": "countdownCancelAllFutures",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/dual_comp/positions/cross_mode",
+      "operation_id": "updateDualCompPositionCrossMode",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/dual_comp/positions/{contract}",
+      "operation_id": "getDualModePosition",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/dual_comp/positions/{contract}/leverage",
+      "operation_id": "updateDualModePositionLeverage",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/dual_comp/positions/{contract}/margin",
+      "operation_id": "updateDualModePositionMargin",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/dual_comp/positions/{contract}/risk_limit",
+      "operation_id": "updateDualModePositionRiskLimit",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/dual_mode",
+      "operation_id": "setDualMode",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/fee",
+      "operation_id": "getFuturesFee",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/funding_rate",
+      "operation_id": "listFuturesFundingRateHistory",
+      "module": "futures",
+      "auth_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/funding_rates",
+      "operation_id": "listBatchFuturesFundingRates",
+      "module": "futures",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/get_leverage/{contract}",
+      "operation_id": "getLeverage",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/index_constituents/{index}",
+      "operation_id": "getIndexConstituents",
+      "module": "futures",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/insurance",
+      "operation_id": "listFuturesInsuranceLedger",
+      "module": "futures",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/liq_orders",
+      "operation_id": "listLiquidatedOrders",
+      "module": "futures",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/liquidates",
+      "operation_id": "listLiquidates",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/my_trades",
+      "operation_id": "getMyTrades",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/my_trades_timerange",
+      "operation_id": "getMyTradesWithTimeRange",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/order_book",
+      "operation_id": "listFuturesOrderBook",
+      "module": "futures",
+      "auth_required": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/futures/{settle}/orders",
+      "operation_id": "cancelFuturesOrders",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/orders",
+      "operation_id": "listFuturesOrders",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/orders",
+      "operation_id": "createFuturesOrder",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/futures/{settle}/orders/{order_id}",
+      "operation_id": "cancelFuturesOrder",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/orders/{order_id}",
+      "operation_id": "getFuturesOrder",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v4/futures/{settle}/orders/{order_id}",
+      "operation_id": "amendFuturesOrder",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/orders_timerange",
+      "operation_id": "getOrdersWithTimeRange",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/position_close",
+      "operation_id": "listPositionClose",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/positions",
+      "operation_id": "listPositions",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/positions/cross_mode",
+      "operation_id": "updatePositionCrossMode",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/positions/{contract}",
+      "operation_id": "getPosition",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/positions/{contract}/leverage",
+      "operation_id": "updatePositionLeverage",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/positions/{contract}/margin",
+      "operation_id": "updatePositionMargin",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/positions/{contract}/risk_limit",
+      "operation_id": "updatePositionRiskLimit",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/positions/{contract}/set_leverage",
+      "operation_id": "updateContractPositionLeverage",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/positions_timerange",
+      "operation_id": "listPositionsTimerange",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/premium_index",
+      "operation_id": "listFuturesPremiumIndex",
+      "module": "futures",
+      "auth_required": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/futures/{settle}/price_orders",
+      "operation_id": "cancelPriceTriggeredOrderList",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/price_orders",
+      "operation_id": "listPriceTriggeredOrders",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/price_orders",
+      "operation_id": "createPriceTriggeredOrder",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v4/futures/{settle}/price_orders/amend/{order_id}",
+      "operation_id": "updatePriceTriggeredOrder",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/futures/{settle}/price_orders/{order_id}",
+      "operation_id": "cancelPriceTriggeredOrder",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/price_orders/{order_id}",
+      "operation_id": "getPriceTriggeredOrder",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/risk_limit_table",
+      "operation_id": "getFuturesRiskLimitTable",
+      "module": "futures",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/risk_limit_tiers",
+      "operation_id": "listFuturesRiskLimitTiers",
+      "module": "futures",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/rpi_order_book",
+      "operation_id": "listFuturesRPIOrderBook",
+      "module": "futures",
+      "auth_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/futures/{settle}/set_position_mode",
+      "operation_id": "setPositionMode",
+      "module": "futures",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/tickers",
+      "operation_id": "listFuturesTickers",
+      "module": "futures",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/futures/{settle}/trades",
+      "operation_id": "listFuturesTrades",
+      "module": "futures",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/launch/candydrop/activity-list",
+      "operation_id": "getCandyDropActivityListV4",
+      "module": "launch",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/launch/candydrop/activity-rules",
+      "operation_id": "getCandyDropActivityRulesV4",
+      "module": "launch",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/launch/candydrop/airdrop-records",
+      "operation_id": "getCandyDropAirdropRecordsV4",
+      "module": "launch",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/launch/candydrop/participation-records",
+      "operation_id": "getCandyDropParticipationRecordsV4",
+      "module": "launch",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/launch/candydrop/register",
+      "operation_id": "registerCandyDropV4",
+      "module": "launch",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/launch/candydrop/task-progress",
+      "operation_id": "getCandyDropTaskProgressV4",
+      "module": "launch",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/launch/create-order",
+      "operation_id": "createLaunchPoolOrder",
+      "module": "launch",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/launch/get-user-reward-records",
+      "operation_id": "listLaunchPoolRewardRecords",
+      "module": "launch",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/launch/hodler-airdrop/order",
+      "operation_id": "hodlerAirdropOrder",
+      "module": "launch",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/launch/hodler-airdrop/project-list",
+      "operation_id": "getHodlerAirdropProjectList",
+      "module": "launch",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/launch/hodler-airdrop/user-airdrop-records",
+      "operation_id": "getHodlerAirdropUserAirdropRecords",
+      "module": "launch",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/launch/hodler-airdrop/user-order-records",
+      "operation_id": "getHodlerAirdropUserOrderRecords",
+      "module": "launch",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/launch/project-list",
+      "operation_id": "listLaunchPoolProjects",
+      "module": "launch",
+      "auth_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/launch/redeem",
+      "operation_id": "redeemLaunchPool",
+      "module": "launch",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/launch/user-pledge-records",
+      "operation_id": "listLaunchPoolPledgeRecords",
+      "module": "launch",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/loan/multi_collateral/currencies",
+      "operation_id": "listMultiCollateralCurrencies",
+      "module": "loan",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/loan/multi_collateral/currency_quota",
+      "operation_id": "listUserCurrencyQuota",
+      "module": "loan",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/loan/multi_collateral/current_rate",
+      "operation_id": "getMultiCollateralCurrentRate",
+      "module": "loan",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/loan/multi_collateral/fixed_rate",
+      "operation_id": "getMultiCollateralFixRate",
+      "module": "loan",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/loan/multi_collateral/ltv",
+      "operation_id": "getMultiCollateralLtv",
+      "module": "loan",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/loan/multi_collateral/mortgage",
+      "operation_id": "listMultiCollateralRecords",
+      "module": "loan",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/loan/multi_collateral/mortgage",
+      "operation_id": "operateMultiCollateral",
+      "module": "loan",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/loan/multi_collateral/orders",
+      "operation_id": "listMultiCollateralOrders",
+      "module": "loan",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/loan/multi_collateral/orders",
+      "operation_id": "createMultiCollateral",
+      "module": "loan",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/loan/multi_collateral/orders/{order_id}",
+      "operation_id": "getMultiCollateralOrderDetail",
+      "module": "loan",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/loan/multi_collateral/repay",
+      "operation_id": "listMultiRepayRecords",
+      "module": "loan",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/loan/multi_collateral/repay",
+      "operation_id": "repayMultiCollateralLoan",
+      "module": "loan",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/margin/account_book",
+      "operation_id": "listMarginAccountBook",
+      "module": "margin",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/margin/accounts",
+      "operation_id": "listMarginAccounts",
+      "module": "margin",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/margin/auto_repay",
+      "operation_id": "getAutoRepayStatus",
+      "module": "margin",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/margin/auto_repay",
+      "operation_id": "setAutoRepay",
+      "module": "margin",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/margin/cross/loans",
+      "operation_id": "listCrossMarginLoans",
+      "module": "margin",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/margin/cross/repayments",
+      "operation_id": "listCrossMarginRepayments",
+      "module": "margin",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/margin/funding_accounts",
+      "operation_id": "listFundingAccounts",
+      "module": "margin",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/margin/leverage/user_market_setting",
+      "operation_id": "setUserMarketLeverage",
+      "module": "margin",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/margin/loan_margin_tiers",
+      "operation_id": "getMarketMarginTier",
+      "module": "margin",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/margin/transferable",
+      "operation_id": "getMarginTransferable",
+      "module": "margin",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/margin/uni/borrowable",
+      "operation_id": "getUniBorrowable",
+      "module": "margin",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/margin/uni/currency_pairs",
+      "operation_id": "listUniCurrencyPairs",
+      "module": "margin",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/margin/uni/currency_pairs/{currency_pair}",
+      "operation_id": "getUniCurrencyPair",
+      "module": "margin",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/margin/uni/estimate_rate",
+      "operation_id": "getMarginUniEstimateRate",
+      "module": "margin",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/margin/uni/interest_records",
+      "operation_id": "listUniLoanInterestRecords",
+      "module": "margin",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/margin/uni/loan_records",
+      "operation_id": "listUniLoanRecords",
+      "module": "margin",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/margin/uni/loans",
+      "operation_id": "listUniLoans",
+      "module": "margin",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/margin/uni/loans",
+      "operation_id": "createUniLoan",
+      "module": "margin",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/margin/user/account",
+      "operation_id": "listMarginUserAccount",
+      "module": "margin",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/margin/user/loan_margin_tiers",
+      "operation_id": "getUserMarginTier",
+      "module": "margin",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/options/account_book",
+      "operation_id": "listOptionsAccountBook",
+      "module": "options",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/options/accounts",
+      "operation_id": "listOptionsAccount",
+      "module": "options",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/options/candlesticks",
+      "operation_id": "listOptionsCandlesticks",
+      "module": "options",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/options/contracts",
+      "operation_id": "listOptionsContracts",
+      "module": "options",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/options/contracts/{contract}",
+      "operation_id": "getOptionsContract",
+      "module": "options",
+      "auth_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/options/countdown_cancel_all",
+      "operation_id": "countdownCancelAllOptions",
+      "module": "options",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/options/expirations",
+      "operation_id": "listOptionsExpirations",
+      "module": "options",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/options/mmp",
+      "operation_id": "getOptionsMMP",
+      "module": "options",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/options/mmp",
+      "operation_id": "setOptionsMMP",
+      "module": "options",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/options/mmp/reset",
+      "operation_id": "resetOptionsMMP",
+      "module": "options",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/options/my_settlements",
+      "operation_id": "listMyOptionsSettlements",
+      "module": "options",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/options/my_trades",
+      "operation_id": "listMyOptionsTrades",
+      "module": "options",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/options/order_book",
+      "operation_id": "listOptionsOrderBook",
+      "module": "options",
+      "auth_required": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/options/orders",
+      "operation_id": "cancelOptionsOrders",
+      "module": "options",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/options/orders",
+      "operation_id": "listOptionsOrders",
+      "module": "options",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/options/orders",
+      "operation_id": "createOptionsOrder",
+      "module": "options",
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/options/orders/{order_id}",
+      "operation_id": "cancelOptionsOrder",
+      "module": "options",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/options/orders/{order_id}",
+      "operation_id": "getOptionsOrder",
+      "module": "options",
+      "auth_required": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v4/options/orders/{order_id}",
+      "operation_id": "amendOptionsOrder",
+      "module": "options",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/options/position_close",
+      "operation_id": "listOptionsPositionClose",
+      "module": "options",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/options/positions",
+      "operation_id": "listOptionsPositions",
+      "module": "options",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/options/positions/{contract}",
+      "operation_id": "getOptionsPosition",
+      "module": "options",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/options/settlements",
+      "operation_id": "listOptionsSettlements",
+      "module": "options",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/options/settlements/{contract}",
+      "operation_id": "getOptionsSettlement",
+      "module": "options",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/options/tickers",
+      "operation_id": "listOptionsTickers",
+      "module": "options",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/options/trades",
+      "operation_id": "listOptionsTrades",
+      "module": "options",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/options/underlying/candlesticks",
+      "operation_id": "listOptionsUnderlyingCandlesticks",
+      "module": "options",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/options/underlying/tickers/{underlying}",
+      "operation_id": "listOptionsUnderlyingTickers",
+      "module": "options",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/options/underlyings",
+      "operation_id": "listOptionsUnderlyings",
+      "module": "options",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/otc/bank/bank_supplement_checklist",
+      "operation_id": "getOtcBankSupplementChecklist",
+      "module": "otc",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/otc/bank/create",
+      "operation_id": "createOtcBank",
+      "module": "otc",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/otc/bank/delete",
+      "operation_id": "deleteOtcBank",
+      "module": "otc",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/otc/bank/enterprise/bank_supplement",
+      "operation_id": "submitOtcBankEnterpriseSupplement",
+      "module": "otc",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/otc/bank/list",
+      "operation_id": "getBankListInnerPath",
+      "module": "otc",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/otc/bank/personal/bank_supplement",
+      "operation_id": "submitOtcBankPersonalSupplement",
+      "module": "otc",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/otc/bank/set_default",
+      "operation_id": "setDefaultOtcBank",
+      "module": "otc",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/otc/order/cancel",
+      "operation_id": "cancelOtcOrder",
+      "module": "otc",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/otc/order/create",
+      "operation_id": "createOtcOrder",
+      "module": "otc",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/otc/order/detail",
+      "operation_id": "getOtcOrderDetail",
+      "module": "otc",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/otc/order/list",
+      "operation_id": "listOtcOrders",
+      "module": "otc",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/otc/order/paid",
+      "operation_id": "markOtcOrderPaid",
+      "module": "otc",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/otc/quote",
+      "operation_id": "createOtcQuote",
+      "module": "otc",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/otc/stable_coin/order/create",
+      "operation_id": "createStableCoinOrder",
+      "module": "otc",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/otc/stable_coin/order/list",
+      "operation_id": "listStableCoinOrders",
+      "module": "otc",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/otc/upload/pre_upload",
+      "operation_id": "createOtcUploadPreUpload",
+      "module": "otc",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/p2p/merchant/account/get_counterparty_user_info",
+      "operation_id": "p2pMerchantAccountGetCounterpartyUserInfo",
+      "module": "p2p",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/p2p/merchant/account/get_myself_payment",
+      "operation_id": "p2pMerchantAccountGetMyselfPayment",
+      "module": "p2p",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/p2p/merchant/account/get_user_info",
+      "operation_id": "p2pMerchantAccountGetUserInfo",
+      "module": "p2p",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/p2p/merchant/account/set_merchant_work_hours",
+      "operation_id": "p2pMerchantAccountSetMerchantWorkHours",
+      "module": "p2p",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/p2p/merchant/books/ads_detail",
+      "operation_id": "p2pMerchantBooksAdsDetail",
+      "module": "p2p",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/p2p/merchant/books/ads_list",
+      "operation_id": "p2pMerchantBooksAdsList",
+      "module": "p2p",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/p2p/merchant/books/ads_update_status",
+      "operation_id": "p2pMerchantBooksAdsUpdateStatus",
+      "module": "p2p",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/p2p/merchant/books/my_ads_list",
+      "operation_id": "p2pMerchantBooksMyAdsList",
+      "module": "p2p",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/p2p/merchant/books/place_biz_push_order",
+      "operation_id": "p2pMerchantBooksPlaceBizPushOrder",
+      "module": "p2p",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/p2p/merchant/chat/get_chats_list",
+      "operation_id": "p2pMerchantChatGetChatsList",
+      "module": "p2p",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/p2p/merchant/chat/send_chat_message",
+      "operation_id": "p2pMerchantChatSendChatMessage",
+      "module": "p2p",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/p2p/merchant/chat/upload_chat_file",
+      "operation_id": "p2pMerchantChatUploadChatFile",
+      "module": "p2p",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/p2p/merchant/transaction/cancel",
+      "operation_id": "p2pMerchantTransactionCancel",
+      "module": "p2p",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/p2p/merchant/transaction/confirm-payment",
+      "operation_id": "p2pMerchantTransactionConfirmPayment",
+      "module": "p2p",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/p2p/merchant/transaction/confirm-receipt",
+      "operation_id": "p2pMerchantTransactionConfirmReceipt",
+      "module": "p2p",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/p2p/merchant/transaction/get_completed_transaction_list",
+      "operation_id": "p2pMerchantTransactionGetCompletedTransactionList",
+      "module": "p2p",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/p2p/merchant/transaction/get_pending_transaction_list",
+      "operation_id": "p2pMerchantTransactionGetPendingTransactionList",
+      "module": "p2p",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/p2p/merchant/transaction/get_transaction_details",
+      "operation_id": "p2pMerchantTransactionGetTransactionDetails",
+      "module": "p2p",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/rebate/agency/commission_history",
+      "operation_id": "agencyCommissionsHistory",
+      "module": "rebate",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/rebate/agency/transaction_history",
+      "operation_id": "agencyTransactionHistory",
+      "module": "rebate",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/rebate/broker/commission_history",
+      "operation_id": "rebateBrokerCommissionHistory",
+      "module": "rebate",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/rebate/broker/transaction_history",
+      "operation_id": "rebateBrokerTransactionHistory",
+      "module": "rebate",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/rebate/partner/applications/recent",
+      "operation_id": "getPartnerApplicationRecent",
+      "module": "rebate",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/rebate/partner/commission_history",
+      "operation_id": "partnerCommissionsHistory",
+      "module": "rebate",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/rebate/partner/data/aggregated",
+      "operation_id": "getPartnerAgentDataAggregated",
+      "module": "rebate",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/rebate/partner/eligibility",
+      "operation_id": "getPartnerEligibility",
+      "module": "rebate",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/rebate/partner/sub_list",
+      "operation_id": "partnerSubList",
+      "module": "rebate",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/rebate/partner/transaction_history",
+      "operation_id": "partnerTransactionHistory",
+      "module": "rebate",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/rebate/user/info",
+      "operation_id": "rebateUserInfo",
+      "module": "rebate",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/rebate/user/sub_relation",
+      "operation_id": "userSubRelation",
+      "module": "rebate",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/rewards/activity/activity-list",
+      "operation_id": "listActivities",
+      "module": "rewards",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/rewards/activity/activity-type",
+      "operation_id": "listActivityTypes",
+      "module": "rewards",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/rewards/activity/my-activity-entry",
+      "operation_id": "getMyActivityEntry",
+      "module": "rewards",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/rewards/claimReward",
+      "operation_id": "claimReward",
+      "module": "rewards",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/rewards/claimTask",
+      "operation_id": "claimTask",
+      "module": "rewards",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/rewards/getBeginnerTaskList",
+      "operation_id": "getBeginnerTaskList",
+      "module": "rewards",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/rewards/getUserIdentity",
+      "operation_id": "getUserIdentity",
+      "module": "rewards",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/social/live/tag_coin_live_replay",
+      "operation_id": "listLiveReplay",
+      "module": "social",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/social/message/search",
+      "operation_id": "listSquareAiSearch",
+      "module": "social",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/account_book",
+      "operation_id": "listSpotAccountBook",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/accounts",
+      "operation_id": "listSpotAccounts",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/spot/amend_batch_orders",
+      "operation_id": "amendBatchOrders",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/batch_fee",
+      "operation_id": "getBatchSpotFee",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/spot/batch_orders",
+      "operation_id": "createBatchOrders",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/spot/cancel_batch_orders",
+      "operation_id": "cancelBatchOrders",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/candlesticks",
+      "operation_id": "listCandlesticks",
+      "module": "spot",
+      "auth_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/spot/countdown_cancel_all",
+      "operation_id": "countdownCancelAllSpot",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/spot/cross_liquidate_orders",
+      "operation_id": "createCrossLiquidateOrder",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/currencies",
+      "operation_id": "listCurrencies",
+      "module": "spot",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/currencies/{currency}",
+      "operation_id": "getCurrency",
+      "module": "spot",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/currency_pairs",
+      "operation_id": "listCurrencyPairs",
+      "module": "spot",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/currency_pairs/{currency_pair}",
+      "operation_id": "getCurrencyPair",
+      "module": "spot",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/fee",
+      "operation_id": "getFee",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/insurance_history",
+      "operation_id": "getSpotInsuranceHistory",
+      "module": "spot",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/my_trades",
+      "operation_id": "listMyTrades",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/open_orders",
+      "operation_id": "listAllOpenOrders",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/order_book",
+      "operation_id": "listOrderBook",
+      "module": "spot",
+      "auth_required": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/spot/orders",
+      "operation_id": "cancelOrders",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/orders",
+      "operation_id": "listOrders",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/spot/orders",
+      "operation_id": "createOrder",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/spot/orders/{order_id}",
+      "operation_id": "cancelOrder",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/orders/{order_id}",
+      "operation_id": "getOrder",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v4/spot/orders/{order_id}",
+      "operation_id": "amendOrder",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/spot/pov_orders",
+      "operation_id": "cancelSpotPovOrders",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/pov_orders",
+      "operation_id": "listSpotPovOrders",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/spot/pov_orders",
+      "operation_id": "createSpotPovOrder",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/spot/pov_orders/{order_id}",
+      "operation_id": "cancelSpotPovOrder",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/pov_orders/{order_id}",
+      "operation_id": "getSpotPovOrder",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/spot/price_orders",
+      "operation_id": "cancelSpotPriceTriggeredOrderList",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/price_orders",
+      "operation_id": "listSpotPriceTriggeredOrders",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/spot/price_orders",
+      "operation_id": "createSpotPriceTriggeredOrder",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/spot/price_orders/{order_id}",
+      "operation_id": "cancelSpotPriceTriggeredOrder",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/price_orders/{order_id}",
+      "operation_id": "getSpotPriceTriggeredOrder",
+      "module": "spot",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/rpi_order_book",
+      "operation_id": "listSpotRpiOrderBook",
+      "module": "spot",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/tickers",
+      "operation_id": "listTickers",
+      "module": "spot",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/time",
+      "operation_id": "getSystemTime",
+      "module": "spot",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/spot/trades",
+      "operation_id": "listTrades",
+      "module": "spot",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/stock/exchanges",
+      "operation_id": "queryStockExchanges",
+      "module": "stock",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/stock/fee-rate",
+      "operation_id": "queryStockFeeRate",
+      "module": "stock",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/stock/market/{symbol}/orderbook",
+      "operation_id": "queryStockOrderBook",
+      "module": "stock",
+      "auth_required": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/stock/orders",
+      "operation_id": "deleteAllStockOrders",
+      "module": "stock",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/stock/orders",
+      "operation_id": "queryStockOrderList",
+      "module": "stock",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/stock/orders",
+      "operation_id": "createStockOrder",
+      "module": "stock",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/stock/orders/history",
+      "operation_id": "queryStockOrderHistory",
+      "module": "stock",
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/stock/orders/{order_id}",
+      "operation_id": "deleteStockOrder",
+      "module": "stock",
+      "auth_required": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v4/stock/orders/{order_id}",
+      "operation_id": "updateStockOrder",
+      "module": "stock",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/stock/positions",
+      "operation_id": "queryStockPositions",
+      "module": "stock",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/stock/positions/close",
+      "operation_id": "closeStockPosition",
+      "module": "stock",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/stock/symbols",
+      "operation_id": "queryStockSymbols",
+      "module": "stock",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/stock/symbols/detail",
+      "operation_id": "queryStockSymbolDetail",
+      "module": "stock",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/stock/transactions",
+      "operation_id": "queryStockTransactions",
+      "module": "stock",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/stock/transactions",
+      "operation_id": "createStockTransaction",
+      "module": "stock",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/stock/users/assets",
+      "operation_id": "queryStockUserAssets",
+      "module": "stock",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/sub_accounts",
+      "operation_id": "listSubAccounts",
+      "module": "sub_accounts",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/sub_accounts",
+      "operation_id": "createSubAccounts",
+      "module": "sub_accounts",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/sub_accounts/unified_mode",
+      "operation_id": "listUnifiedMode",
+      "module": "sub_accounts",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/sub_accounts/{user_id}",
+      "operation_id": "getSubAccount",
+      "module": "sub_accounts",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/sub_accounts/{user_id}/keys",
+      "operation_id": "listSubAccountKeys",
+      "module": "sub_accounts",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/sub_accounts/{user_id}/keys",
+      "operation_id": "createSubAccountKeys",
+      "module": "sub_accounts",
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/sub_accounts/{user_id}/keys/{key}",
+      "operation_id": "deleteSubAccountKeys",
+      "module": "sub_accounts",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/sub_accounts/{user_id}/keys/{key}",
+      "operation_id": "getSubAccountKey",
+      "module": "sub_accounts",
+      "auth_required": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v4/sub_accounts/{user_id}/keys/{key}",
+      "operation_id": "updateSubAccountKeys",
+      "module": "sub_accounts",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/sub_accounts/{user_id}/lock",
+      "operation_id": "lockSubAccount",
+      "module": "sub_accounts",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/sub_accounts/{user_id}/unlock",
+      "operation_id": "unlockSubAccount",
+      "module": "sub_accounts",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/tradfi/orders",
+      "operation_id": "queryOrderList",
+      "module": "tradfi",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/tradfi/orders",
+      "operation_id": "createTradFiOrder",
+      "module": "tradfi",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/tradfi/orders/history",
+      "operation_id": "queryOrderHistoryList",
+      "module": "tradfi",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/tradfi/orders/log/{log_id}",
+      "operation_id": "queryOrderLog",
+      "module": "tradfi",
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/tradfi/orders/{order_id}",
+      "operation_id": "deleteOrder",
+      "module": "tradfi",
+      "auth_required": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v4/tradfi/orders/{order_id}",
+      "operation_id": "updateOrder",
+      "module": "tradfi",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/tradfi/positions",
+      "operation_id": "queryPositionList",
+      "module": "tradfi",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/tradfi/positions/history",
+      "operation_id": "queryPositionHistoryList",
+      "module": "tradfi",
+      "auth_required": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v4/tradfi/positions/{position_id}",
+      "operation_id": "updatePosition",
+      "module": "tradfi",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/tradfi/positions/{position_id}/close",
+      "operation_id": "closePosition",
+      "module": "tradfi",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/tradfi/symbols",
+      "operation_id": "querySymbols",
+      "module": "tradfi",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/tradfi/symbols/categories",
+      "operation_id": "queryCategories",
+      "module": "tradfi",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/tradfi/symbols/commissions",
+      "operation_id": "querySymbolCommissions",
+      "module": "tradfi",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/tradfi/symbols/detail",
+      "operation_id": "querySymbolDetail",
+      "module": "tradfi",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/tradfi/symbols/{symbol}/klines",
+      "operation_id": "querySymbolKline",
+      "module": "tradfi",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/tradfi/symbols/{symbol}/tickers",
+      "operation_id": "querySymbolTicker",
+      "module": "tradfi",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/tradfi/transactions",
+      "operation_id": "queryTransaction",
+      "module": "tradfi",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/tradfi/transactions",
+      "operation_id": "createTransaction",
+      "module": "tradfi",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/tradfi/users",
+      "operation_id": "createTradFiUser",
+      "module": "tradfi",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/tradfi/users/assets",
+      "operation_id": "queryUserAssets",
+      "module": "tradfi",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/tradfi/users/mt5-account",
+      "operation_id": "queryMt5AccountInfo",
+      "module": "tradfi",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/unified/accounts",
+      "operation_id": "listUnifiedAccounts",
+      "module": "unified",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/unified/batch_borrowable",
+      "operation_id": "getUnifiedBorrowableList",
+      "module": "unified",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/unified/borrowable",
+      "operation_id": "getUnifiedBorrowable",
+      "module": "unified",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/unified/collateral_currencies",
+      "operation_id": "setUnifiedCollateral",
+      "module": "unified",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/unified/currencies",
+      "operation_id": "listUnifiedCurrencies",
+      "module": "unified",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/unified/currency_discount_tiers",
+      "operation_id": "listCurrencyDiscountTiers",
+      "module": "unified",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/unified/delta_neutral",
+      "operation_id": "getUnifiedDeltaNeutral",
+      "module": "unified",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/unified/delta_neutral",
+      "operation_id": "setUnifiedDeltaNeutral",
+      "module": "unified",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/unified/estimate_rate",
+      "operation_id": "getUnifiedEstimateRate",
+      "module": "unified",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/unified/estimated_quick_repayment",
+      "operation_id": "getEstimatedQuickRepayment",
+      "module": "unified",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/unified/history_loan_rate",
+      "operation_id": "getHistoryLoanRate",
+      "module": "unified",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/unified/interest_records",
+      "operation_id": "listUnifiedLoanInterestRecords",
+      "module": "unified",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/unified/leverage/user_currency_config",
+      "operation_id": "getUserLeverageCurrencyConfig",
+      "module": "unified",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/unified/leverage/user_currency_setting",
+      "operation_id": "getUserLeverageCurrencySetting",
+      "module": "unified",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/unified/leverage/user_currency_setting",
+      "operation_id": "setUserLeverageCurrencySetting",
+      "module": "unified",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/unified/leverage/user_setting",
+      "operation_id": "setUserLeverage",
+      "module": "unified",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/unified/loan_margin_tiers",
+      "operation_id": "listLoanMarginTiers",
+      "module": "unified",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/unified/loan_records",
+      "operation_id": "listUnifiedLoanRecords",
+      "module": "unified",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/unified/loans",
+      "operation_id": "listUnifiedLoans",
+      "module": "unified",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/unified/loans",
+      "operation_id": "createUnifiedLoan",
+      "module": "unified",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/unified/portfolio_calculator",
+      "operation_id": "calculatePortfolioMargin",
+      "module": "unified",
+      "auth_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/unified/quick_repayment",
+      "operation_id": "createQuickRepayment",
+      "module": "unified",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/unified/risk_units",
+      "operation_id": "getUnifiedRiskUnits",
+      "module": "unified",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/unified/transferable",
+      "operation_id": "getUnifiedTransferable",
+      "module": "unified",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/unified/transferables",
+      "operation_id": "getUnifiedTransferables",
+      "module": "unified",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/unified/unified_mode",
+      "operation_id": "getUnifiedMode",
+      "module": "unified",
+      "auth_required": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v4/unified/unified_mode",
+      "operation_id": "setUnifiedMode",
+      "module": "unified",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/wallet/currency_chains",
+      "operation_id": "listCurrencyChains",
+      "module": "wallet",
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/wallet/deposit_address",
+      "operation_id": "getDepositAddress",
+      "module": "wallet",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/wallet/deposits",
+      "operation_id": "listDeposits",
+      "module": "wallet",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/wallet/fee",
+      "operation_id": "getTradeFee",
+      "module": "wallet",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/wallet/getLowCapExchangeList",
+      "operation_id": "getLowCapExchangeList",
+      "module": "wallet",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/wallet/order_status",
+      "operation_id": "getTransferOrderStatus",
+      "module": "wallet",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/wallet/push",
+      "operation_id": "listPushOrders",
+      "module": "wallet",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/wallet/saved_address",
+      "operation_id": "listSavedAddress",
+      "module": "wallet",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/wallet/small_balance",
+      "operation_id": "listSmallBalance",
+      "module": "wallet",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/wallet/small_balance",
+      "operation_id": "convertSmallBalance",
+      "module": "wallet",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/wallet/small_balance_history",
+      "operation_id": "listSmallBalanceHistory",
+      "module": "wallet",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/wallet/sub_account_balances",
+      "operation_id": "listSubAccountBalances",
+      "module": "wallet",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/wallet/sub_account_cross_margin_balances",
+      "operation_id": "listSubAccountCrossMarginBalances",
+      "module": "wallet",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/wallet/sub_account_futures_balances",
+      "operation_id": "listSubAccountFuturesBalances",
+      "module": "wallet",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/wallet/sub_account_margin_balances",
+      "operation_id": "listSubAccountMarginBalances",
+      "module": "wallet",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/wallet/sub_account_to_sub_account",
+      "operation_id": "subAccountToSubAccount",
+      "module": "wallet",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/wallet/sub_account_transfers",
+      "operation_id": "listSubAccountTransfers",
+      "module": "wallet",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/wallet/sub_account_transfers",
+      "operation_id": "transferWithSubAccount",
+      "module": "wallet",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/wallet/total_balance",
+      "operation_id": "getTotalBalance",
+      "module": "wallet",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/wallet/transfers",
+      "operation_id": "getTransfer",
+      "module": "wallet",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/wallet/transfers",
+      "operation_id": "transfer",
+      "module": "wallet",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/wallet/withdraw_status",
+      "operation_id": "listWithdrawStatus",
+      "module": "wallet",
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v4/wallet/withdrawals",
+      "operation_id": "listWithdrawals",
+      "module": "wallet",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/withdrawals",
+      "operation_id": "withdraw",
+      "module": "withdrawals",
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v4/withdrawals/push",
+      "operation_id": "withdrawPushOrder",
+      "module": "withdrawals",
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v4/withdrawals/{withdrawal_id}",
+      "operation_id": "cancelWithdrawal",
+      "module": "withdrawals",
+      "auth_required": true
+    }
+  ]
+}

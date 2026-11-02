@@ -59,7 +59,7 @@ func patchInputSchemaRequiredFromBaseline(dst map[string]interface{}, baseline m
 	return false
 }
 
-// MergeToolBaselineInto fills or patches entries in out using static baseline schemas (CR-811).
+// MergeToolBaselineInto fills or patches entries in out using static baseline schemas .
 func MergeToolBaselineInto(out map[string]toolschema.ToolSummary, toolNames []string, baselineFor func(string) map[string]interface{}) {
 	for _, name := range toolNames {
 		baseline := baselineFor(name)

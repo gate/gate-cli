@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	urlPattern = regexp.MustCompile(`https?://[^\s"]+`)
+	urlPattern = regexp.MustCompile(`(?i)https?://[^\s"]+`)
 )
 
 // ErrorKind indicates which layer failed.
@@ -84,7 +84,7 @@ func sanitizeUserErrorMessage(err error) string {
 	if err == nil {
 		return "intel request failed"
 	}
-	// Prefer stable sentinel over substring checks (CR-705 / CR-1013).
+	// Prefer stable sentinel over substring checks .
 	if errors.Is(err, errIntelHTTPBodyTooLarge) {
 		return "intel HTTP response exceeded the configured maximum read size (raise GATE_INTEL_MAX_RESPONSE_BYTES). " +
 			"--max-output-bytes only limits how much tool output is printed locally; it does not raise this transport read cap."

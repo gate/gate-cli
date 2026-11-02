@@ -7,9 +7,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 func getSettle(_ *cobra.Command) string {
@@ -100,8 +100,8 @@ func runDeliveryContracts(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.ListDeliveryContracts(c.Context(), settle)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/contracts", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/contracts", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -124,8 +124,7 @@ func runDeliveryContract(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.GetDeliveryContract(c.Context(), settle, contract)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/contracts/"+contract, ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/contracts/"+contract, "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -153,8 +152,7 @@ func runDeliveryOrderBook(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.ListDeliveryOrderBook(c.Context(), settle, contract, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/order_book", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/order_book", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -195,8 +193,7 @@ func runDeliveryTrades(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.ListDeliveryTrades(c.Context(), settle, contract, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/trades", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/trades", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -229,8 +226,7 @@ func runDeliveryCandlesticks(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.ListDeliveryCandlesticks(c.Context(), settle, contract, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/candlesticks", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/candlesticks", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -258,8 +254,7 @@ func runDeliveryTickers(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.ListDeliveryTickers(c.Context(), settle, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/tickers", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/tickers", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -287,8 +282,7 @@ func runDeliveryInsurance(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.ListDeliveryInsuranceLedger(c.Context(), settle, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/insurance", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/insurance", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -315,8 +309,7 @@ func runDeliveryRiskLimitTiers(cmd *cobra.Command, args []string) error {
 	}
 	result, httpResp, err := c.DeliveryAPI.ListDeliveryRiskLimitTiers(c.Context(), settle, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/risk_limit_tiers", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/risk_limit_tiers", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

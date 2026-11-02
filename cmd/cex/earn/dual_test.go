@@ -187,6 +187,9 @@ func TestRunDualRecommend_MockServer_AllFlags(t *testing.T) {
 	mockGateServer(t, `[]`)
 	silenceStdout(t)
 	root := newTestRoot(t)
+	// 使用合成凭据，确保真实 SDK 请求到达本地 HTTP 夹具。
+	t.Setenv("GATE_API_KEY", "synthetic-key")
+	t.Setenv("GATE_API_SECRET", "synthetic-secret")
 	cmd := &cobra.Command{Use: "recommend"}
 	cmd.Flags().String("mode", "normal", "")
 	cmd.Flags().String("coin", "BTC", "")
@@ -204,6 +207,9 @@ func TestRunDualRecommend_MockServer_NoFlags(t *testing.T) {
 	mockGateServer(t, `[]`)
 	silenceStdout(t)
 	root := newTestRoot(t)
+	// 使用合成凭据，确保真实 SDK 请求到达本地 HTTP 夹具。
+	t.Setenv("GATE_API_KEY", "synthetic-key")
+	t.Setenv("GATE_API_SECRET", "synthetic-secret")
 	cmd := &cobra.Command{Use: "recommend"}
 	cmd.Flags().String("mode", "", "")
 	cmd.Flags().String("coin", "", "")

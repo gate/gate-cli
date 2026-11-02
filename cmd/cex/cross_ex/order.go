@@ -113,8 +113,8 @@ func runOrderList(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.CrossExAPI.ListCrossexOpenOrders(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/crossex/orders", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/crossex/orders", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -139,8 +139,7 @@ func runOrderGet(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.CrossExAPI.GetCrossexOrder(c.Context(), orderID)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/crossex/orders/"+orderID, ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/crossex/orders/"+orderID, "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -172,8 +171,7 @@ func runOrderCreate(cmd *cobra.Command, args []string) error {
 	}
 	result, httpResp, err := c.CrossExAPI.CreateCrossexOrder(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/crossex/orders", jsonStr))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/crossex/orders", jsonStr)
 	}
 	return p.Print(result)
 }
@@ -200,8 +198,7 @@ func runOrderUpdate(cmd *cobra.Command, args []string) error {
 	}
 	result, httpResp, err := c.CrossExAPI.UpdateCrossexOrder(c.Context(), orderID, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "PUT", "/api/v4/crossex/orders/"+orderID, jsonStr))
-		return nil
+		return client.CommandError(err, httpResp, "PUT", "/api/v4/crossex/orders/"+orderID, jsonStr)
 	}
 	return p.Print(result)
 }
@@ -219,8 +216,7 @@ func runOrderCancel(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.CrossExAPI.CancelCrossexOrder(c.Context(), orderID)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "DELETE", "/api/v4/crossex/orders/"+orderID, ""))
-		return nil
+		return client.CommandError(err, httpResp, "DELETE", "/api/v4/crossex/orders/"+orderID, "")
 	}
 	return p.Print(result)
 }
@@ -259,8 +255,7 @@ func runOrderHistory(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.CrossExAPI.ListCrossexHistoryOrders(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/crossex/history_orders", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/crossex/history_orders", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -306,8 +301,7 @@ func runOrderTrades(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.CrossExAPI.ListCrossexHistoryTrades(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/crossex/history_trades", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/crossex/history_trades", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

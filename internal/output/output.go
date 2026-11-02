@@ -35,7 +35,7 @@ func ParseFormat(s string) Format {
 }
 
 // UnsupportedTableFormatError is returned when --format table is used on a command
-// whose result is not tabular per product output rules (PRD §3.7).
+// whose result is not tabular under the command output contract.
 func UnsupportedTableFormatError() *GateError {
 	return &GateError{
 		Status:  400,
@@ -53,17 +53,28 @@ type RequestInfo struct {
 
 // GateError is a unified error representation for all Gate API errors.
 type GateError struct {
-	Status              int          `json:"status"`
-	ErrorType           string       `json:"error_type,omitempty"`
-	Label               string       `json:"label,omitempty"`
-	Message             string       `json:"message"`
-	Retryable           bool         `json:"retryable"`
-	SuggestedNextAction string       `json:"suggested_next_action,omitempty"`
-	TraceID             string       `json:"trace_id,omitempty"`
-	RequestID           string       `json:"request_id,omitempty"`
-	ToolName            string       `json:"tool_name,omitempty"`
-	JSONRPCCode         *int         `json:"jsonrpc_code,omitempty"`
-	Request             *RequestInfo `json:"request,omitempty"`
+	// Bot keeps the upstream envelope, including partial IDs and recovery facts.
+	BusinessCode        *int            `json:"code,omitempty"`
+	Data                json.RawMessage `json:"data,omitempty"`
+	Status              int             `json:"status"`
+	ErrorType           string          `json:"error_type,omitempty"`
+	Label               string          `json:"label,omitempty"`
+	Message             string          `json:"message"`
+	Retryable           bool            `json:"retryable"`
+	SuggestedNextAction string          `json:"suggested_next_action,omitempty"`
+	TraceID             string          `json:"trace_id,omitempty"`
+	RequestID           string          `json:"request_id,omitempty"`
+	ToolName            string          `json:"tool_name,omitempty"`
+	JSONRPCCode         *int            `json:"jsonrpc_code,omitempty"`
+	Request             *RequestInfo    `json:"request,omitempty"`
+}
+
+// Error 让SDK失败沿标准命令错误链向上传递，避免打印失败后仍以0退出。
+func (gateErr *GateError) Error() string {
+	if gateErr == nil {
+		return "API command failed"
+	}
+	return gateErr.Message
 }
 
 // Printer writes structured output to stdout and errors to stderr.

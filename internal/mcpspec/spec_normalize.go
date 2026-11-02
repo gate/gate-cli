@@ -3,8 +3,8 @@ package mcpspec
 import "encoding/json"
 
 // stripInfoToolDescriptions returns a copy of the info MCP spec with description and
-// description_zh removed from tools and meta.tool_entry_keys. Used to compare local
-// specs/mcp (QC, not shipped) with the embedded bundled document on logic/fields only.
+// description_zh removed from tools and meta.tool_entry_keys. Contract checks
+// compare logic and fields without presentation-only descriptions.
 func stripInfoToolDescriptions(doc interface{}) (interface{}, error) {
 	raw, err := json.Marshal(doc)
 	if err != nil {
@@ -19,7 +19,7 @@ func stripInfoToolDescriptions(doc interface{}) (interface{}, error) {
 			delete(keys, "description")
 			delete(keys, "description_zh")
 		}
-		// gate-cli release extensions; local specs/mcp QC copy does not carry these.
+		// Normalize CLI-specific catalog extensions before comparing input contracts.
 		delete(meta, "cli_baseline_tools")
 		delete(meta, "spec_only_tools")
 	}

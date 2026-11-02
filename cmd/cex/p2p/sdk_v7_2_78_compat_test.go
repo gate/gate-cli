@@ -20,8 +20,7 @@ import (
 //   1. Cobra command/flag wiring updated to match the new SDK surface.
 //   2. SDK model JSON tags so the wire-level rename TradeId → Txid is
 //      observable, not just a Go field rename.
-//   3. RunE behavior end-to-end against a mock Gate server, exercising the
-//      new return types and removed opts arguments.
+//   3. Retained RunE handlers reject requests before the mock Gate server.
 
 const cobraRequiredFlagAnnotation = "cobra_annotation_bash_completion_one_required_flag"
 
@@ -213,17 +212,17 @@ func TestCancelOrder_ReasonFieldsOmitempty(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Layer 3 — RunE end-to-end against a mock Gate server.
-// Exercises the full handler including the SDK call, locking in:
-//   - the new Txid wire field (handlers must not regress on the rename)
-//   - the new return type for P2pMerchantBooksPlaceBizPushOrder
-//   - the removed opts argument for P2pMerchantBooksAdsUpdateStatus
+// Layer 3 — Retained RunE handlers reject requests before the mock Gate server.
+// SDK model and flag compatibility remain independently covered above/below.
 // ---------------------------------------------------------------------------
 
-func TestRunConfirmPayment_Succeeds_AgainstMockServer(t *testing.T) {
-	// Capture the request body to verify the wire payload uses `txid`.
+// TestRunConfirmPayment_RetiredBeforeSend verifies that the retained handler rejects
+// valid flags and synthetic credentials before any API request.
+func TestRunConfirmPayment_RetiredBeforeSend(t *testing.T) {
+	// A captured body would prove that release retirement was bypassed.
 	var captured string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("retired CLI handler reached the API")
 		buf := make([]byte, r.ContentLength)
 		_, _ = r.Body.Read(buf)
 		captured = string(buf)
@@ -242,18 +241,16 @@ func TestRunConfirmPayment_Succeeds_AgainstMockServer(t *testing.T) {
 	root.AddCommand(cmd)
 
 	err := runConfirmPayment(cmd, nil)
-	require.NoError(t, err, "runConfirmPayment must succeed against a mock 200 response")
-
-	// Wire-level proof that the v7.2.78 field rename reaches the server.
-	assert.Contains(t, captured, `"txid":"55555"`,
-		"runConfirmPayment must POST txid (not trade_id) under v7.2.78")
-	assert.NotContains(t, captured, `"trade_id"`)
-	assert.Contains(t, captured, `"payment_method":"bank"`)
+	require.ErrorContains(t, err, "operation unavailable in this CLI release")
+	assert.Empty(t, captured, "retired endpoint must not receive a body")
 }
 
-func TestRunConfirmReceipt_Succeeds_AgainstMockServer(t *testing.T) {
+// TestRunConfirmReceipt_RetiredBeforeSend verifies that the retained handler rejects
+// valid flags and synthetic credentials before any API request.
+func TestRunConfirmReceipt_RetiredBeforeSend(t *testing.T) {
 	var captured string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("retired CLI handler reached the API")
 		buf := make([]byte, r.ContentLength)
 		_, _ = r.Body.Read(buf)
 		captured = string(buf)
@@ -271,15 +268,16 @@ func TestRunConfirmReceipt_Succeeds_AgainstMockServer(t *testing.T) {
 	root.AddCommand(cmd)
 
 	err := runConfirmReceipt(cmd, nil)
-	require.NoError(t, err)
-
-	assert.Contains(t, captured, `"txid":"77777"`)
-	assert.NotContains(t, captured, `"trade_id"`)
+	require.ErrorContains(t, err, "operation unavailable in this CLI release")
+	assert.Empty(t, captured, "retired endpoint must not receive a body")
 }
 
-func TestRunTransactionCancel_Succeeds_AgainstMockServer(t *testing.T) {
+// TestRunTransactionCancel_RetiredBeforeSend verifies that the retained handler rejects
+// valid flags and synthetic credentials before any API request.
+func TestRunTransactionCancel_RetiredBeforeSend(t *testing.T) {
 	var captured string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("retired CLI handler reached the API")
 		buf := make([]byte, r.ContentLength)
 		_, _ = r.Body.Read(buf)
 		captured = string(buf)
@@ -299,20 +297,16 @@ func TestRunTransactionCancel_Succeeds_AgainstMockServer(t *testing.T) {
 	root.AddCommand(cmd)
 
 	err := runTransactionCancel(cmd, nil)
-	require.NoError(t, err)
-
-	assert.Contains(t, captured, `"txid":"11111"`)
-	assert.NotContains(t, captured, `"trade_id"`)
-	assert.Contains(t, captured, `"reason_id":"9"`)
-	assert.Contains(t, captured, `"reason_memo":"test reason"`)
+	require.ErrorContains(t, err, "operation unavailable in this CLI release")
+	assert.Empty(t, captured, "retired endpoint must not receive a body")
 }
 
-// runAdsUpdateStatus dropped the third opts argument in v7.2.78. Locking the
-// happy path proves the handler compiles against the new two-arg signature
-// and exercises the body it sends.
-func TestRunAdsUpdateStatus_Succeeds_AgainstMockServer(t *testing.T) {
+// TestRunAdsUpdateStatus_RetiredBeforeSend verifies that the retained handler rejects
+// valid flags and synthetic credentials before any API request.
+func TestRunAdsUpdateStatus_RetiredBeforeSend(t *testing.T) {
 	var capturedQuery, capturedBody string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("retired CLI handler reached the API")
 		capturedQuery = r.URL.RawQuery
 		buf := make([]byte, r.ContentLength)
 		_, _ = r.Body.Read(buf)
@@ -332,20 +326,20 @@ func TestRunAdsUpdateStatus_Succeeds_AgainstMockServer(t *testing.T) {
 	root.AddCommand(cmd)
 
 	err := runAdsUpdateStatus(cmd, nil)
-	require.NoError(t, err)
-
-	// v7.2.78 removed the trade_type query param; verify it never gets sent.
-	assert.NotContains(t, capturedQuery, "trade_type",
-		"trade_type query param was removed in v7.2.78 and must not appear")
-	assert.Contains(t, capturedBody, `"adv_no":12345`)
-	assert.Contains(t, capturedBody, `"adv_status":1`)
+	require.ErrorContains(t, err, "operation unavailable in this CLI release")
+	assert.Empty(t, capturedQuery)
+	assert.Empty(t, capturedBody)
 }
 
-// runPushOrder's underlying SDK method changed return type from
-// map[string]interface{} to P2pMerchantBooksPlaceBizPushOrderResponse in
-// v7.2.78. A successful round-trip proves the new struct type unmarshals.
-func TestRunPushOrder_Succeeds_AgainstMockServer(t *testing.T) {
-	mockP2pGateServer(t, `{"code":0,"message":"ok","timestamp":1700000000.5,"data":{}}`)
+// TestRunPushOrder_RetiredBeforeSend verifies that the retained handler rejects
+// valid flags and synthetic credentials before any API request.
+func TestRunPushOrder_RetiredBeforeSend(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("retired CLI handler reached the API")
+		w.WriteHeader(http.StatusOK)
+	}))
+	t.Cleanup(srv.Close)
+	t.Setenv("GATE_BASE_URL", srv.URL)
 	silenceP2pStdout(t)
 	root := authedP2pTestRoot(t)
 	cmd := &cobra.Command{Use: "push-order"}
@@ -353,8 +347,7 @@ func TestRunPushOrder_Succeeds_AgainstMockServer(t *testing.T) {
 	root.AddCommand(cmd)
 
 	err := runPushOrder(cmd, nil)
-	assert.NoError(t, err,
-		"push-order must accept the new P2pMerchantBooksPlaceBizPushOrderResponse return type")
+	require.ErrorContains(t, err, "operation unavailable in this CLI release")
 }
 
 // ---------------------------------------------------------------------------
@@ -520,18 +513,12 @@ func TestGetChatsListRequest_PaginationOmitemptyOnZero(t *testing.T) {
 	assert.NotContains(t, s, `"firstreceived"`)
 }
 
-// (b4) End-to-end: when the CLI is invoked with --txid=0 (the documented
-// "give me the latest order" shortcut), the outbound POST body must not
-// carry a `txid` key. Captures the actual wire payload.
-//
-// Note on `MarkFlagRequired`: required only checks whether the flag was set
-// during parsing, not whether the value is non-zero, so `--txid 0` is a
-// valid, accepted CLI invocation. The fact that v7.2.78 also turns this
-// into a meaningful request (rather than a hard-coded txid=0 lookup) is
-// what we lock down below.
-func TestRunChatList_TxidZero_OmitsField_AgainstMockServer(t *testing.T) {
+// TestRunChatList_TxidZero_RetiredBeforeSend verifies that the retained handler rejects
+// valid flags and synthetic credentials before any API request.
+func TestRunChatList_TxidZero_RetiredBeforeSend(t *testing.T) {
 	var captured string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("retired CLI handler reached the API")
 		buf := make([]byte, r.ContentLength)
 		_, _ = r.Body.Read(buf)
 		captured = string(buf)
@@ -551,17 +538,16 @@ func TestRunChatList_TxidZero_OmitsField_AgainstMockServer(t *testing.T) {
 	root.AddCommand(cmd)
 
 	err := runChatList(cmd, nil)
-	require.NoError(t, err)
-
-	assert.NotContains(t, captured, `"txid"`,
-		"runChatList with --txid 0 must POST a body without txid (v7.2.78 'latest order' contract)")
+	require.ErrorContains(t, err, "operation unavailable in this CLI release")
+	assert.Empty(t, captured, "retired endpoint must not receive a body")
 }
 
-// (b5) End-to-end happy path: with a real txid, the field reaches the
-// server. Guards against an over-eager omitempty regression on non-zero.
-func TestRunChatList_TxidNonZero_IsSent_AgainstMockServer(t *testing.T) {
+// TestRunChatList_TxidNonZero_RetiredBeforeSend verifies that the retained handler rejects
+// valid flags and synthetic credentials before any API request.
+func TestRunChatList_TxidNonZero_RetiredBeforeSend(t *testing.T) {
 	var captured string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("retired CLI handler reached the API")
 		buf := make([]byte, r.ContentLength)
 		_, _ = r.Body.Read(buf)
 		captured = string(buf)
@@ -581,8 +567,8 @@ func TestRunChatList_TxidNonZero_IsSent_AgainstMockServer(t *testing.T) {
 	root.AddCommand(cmd)
 
 	err := runChatList(cmd, nil)
-	require.NoError(t, err)
-	assert.Contains(t, captured, `"txid":9876`)
+	require.ErrorContains(t, err, "operation unavailable in this CLI release")
+	assert.Empty(t, captured, "retired endpoint must not receive a body")
 }
 
 // (d1) Reverse direction: a legacy --json blob carrying the now-removed
@@ -621,12 +607,12 @@ func TestPlaceBizPushOrder_LegacyHidePaymentSilentlyDropped(t *testing.T) {
 	assert.Equal(t, "bank", body.PayType)
 }
 
-// (d2) End-to-end: users posting a v7.2.71-style JSON containing
-// `hide_payment` get a silent drop, not a hard failure. The request still
-// goes out, just without that field. This is the CLI-level user contract.
-func TestRunPushOrder_LegacyHidePayment_DroppedOnWire(t *testing.T) {
+// TestRunPushOrder_LegacyHidePayment_RetiredBeforeSend verifies that the retained handler rejects
+// valid flags and synthetic credentials before any API request.
+func TestRunPushOrder_LegacyHidePayment_RetiredBeforeSend(t *testing.T) {
 	var captured string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("retired CLI handler reached the API")
 		buf := make([]byte, r.ContentLength)
 		_, _ = r.Body.Read(buf)
 		captured = string(buf)
@@ -644,23 +630,16 @@ func TestRunPushOrder_LegacyHidePayment_DroppedOnWire(t *testing.T) {
 	root.AddCommand(cmd)
 
 	err := runPushOrder(cmd, nil)
-	require.NoError(t, err,
-		"push-order with a legacy hide_payment field must still succeed (graceful migration for user scripts)")
-
-	assert.NotContains(t, captured, `"hide_payment"`,
-		"v7.2.78 dropped hide_payment; it must not be relayed to the server even if the user supplies it")
-	// The other flags must still reach the server — proves the legacy
-	// field is the only thing that disappears.
-	assert.Contains(t, captured, `"currencyType":"USDT"`)
-	assert.Contains(t, captured, `"payType":"bank"`)
+	require.ErrorContains(t, err, "operation unavailable in this CLI release")
+	assert.Empty(t, captured, "retired endpoint must not receive a body")
 }
 
-// (d3) Forward direction: users passing the v7.2.78-only `team_payment_uid`
-// field must see it pass through to the server. Pairs with (d1) to lock
-// "drops the deprecated field, forwards the new one" behavior.
-func TestRunPushOrder_TeamPaymentUid_ForwardedOnWire(t *testing.T) {
+// TestRunPushOrder_TeamPaymentUid_RetiredBeforeSend verifies that the retained handler rejects
+// valid flags and synthetic credentials before any API request.
+func TestRunPushOrder_TeamPaymentUid_RetiredBeforeSend(t *testing.T) {
 	var captured string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("retired CLI handler reached the API")
 		buf := make([]byte, r.ContentLength)
 		_, _ = r.Body.Read(buf)
 		captured = string(buf)
@@ -678,8 +657,6 @@ func TestRunPushOrder_TeamPaymentUid_ForwardedOnWire(t *testing.T) {
 	root.AddCommand(cmd)
 
 	err := runPushOrder(cmd, nil)
-	require.NoError(t, err)
-
-	assert.Contains(t, captured, `"team_payment_uid":"team-001"`,
-		"v7.2.78 added team_payment_uid; user-supplied value must round-trip into the request")
+	require.ErrorContains(t, err, "operation unavailable in this CLI release")
+	assert.Empty(t, captured, "retired endpoint must not receive a body")
 }

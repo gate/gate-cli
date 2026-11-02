@@ -7,9 +7,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var priceTriggerCmd = &cobra.Command{
@@ -36,10 +36,15 @@ func init() {
 	}
 	createCmd.Flags().String("contract", "", "Futures contract name (required)")
 	createCmd.Flags().String("trigger-price", "", "Trigger price (required)")
+	createCmd.Flags().Int32("trigger-rule", 0, "Trigger condition (required): 1=>=, 2=<=; validated by the service")
 	createCmd.Flags().String("order-price", "", "Order price (0 for market)")
 	createCmd.Flags().Int64("size", 0, "Order size (required)")
 	createCmd.MarkFlagRequired("contract")
 	createCmd.MarkFlagRequired("trigger-price")
+	// An omitted direction must fail locally instead of silently choosing a trading rule.
+	if err := createCmd.MarkFlagRequired("trigger-rule"); err != nil {
+		panic(err)
+	}
 	createCmd.MarkFlagRequired("size")
 
 	cancelListCmd := &cobra.Command{
@@ -98,8 +103,8 @@ func runDeliveryPriceTriggerList(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.ListPriceTriggeredDeliveryOrders(c.Context(), settle, status, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/price_orders", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/price_orders", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -121,6 +126,7 @@ func runDeliveryPriceTriggerCreate(cmd *cobra.Command, args []string) error {
 	settle := getSettle(cmd)
 	contract, _ := cmd.Flags().GetString("contract")
 	triggerPrice, _ := cmd.Flags().GetString("trigger-price")
+	triggerRule, _ := cmd.Flags().GetInt32("trigger-rule")
 	orderPrice, _ := cmd.Flags().GetString("order-price")
 	size, _ := cmd.Flags().GetInt64("size")
 	p := cmdutil.GetPrinter(cmd)
@@ -132,6 +138,7 @@ func runDeliveryPriceTriggerCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// Preserve the caller's rule; price relationships and eligibility are owned by the service.
 	req := gateapi.FuturesPriceTriggeredOrder{
 		Initial: gateapi.FuturesInitialOrder{
 			Contract: contract,
@@ -140,13 +147,13 @@ func runDeliveryPriceTriggerCreate(cmd *cobra.Command, args []string) error {
 		},
 		Trigger: gateapi.FuturesPriceTrigger{
 			Price: triggerPrice,
+			Rule:  triggerRule,
 		},
 	}
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.DeliveryAPI.CreatePriceTriggeredDeliveryOrder(c.Context(), settle, req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/delivery/"+settle+"/price_orders", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/delivery/"+settle+"/price_orders", string(body))
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -168,8 +175,7 @@ func runDeliveryPriceTriggerCancelAll(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.CancelPriceTriggeredDeliveryOrderList(c.Context(), settle, contract)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "DELETE", "/api/v4/delivery/"+settle+"/price_orders", ""))
-		return nil
+		return client.CommandError(err, httpResp, "DELETE", "/api/v4/delivery/"+settle+"/price_orders", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -195,8 +201,7 @@ func runDeliveryPriceTriggerGet(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.GetPriceTriggeredDeliveryOrder(c.Context(), settle, id)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/price_orders/"+id, ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/delivery/"+settle+"/price_orders/"+id, "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -227,8 +232,7 @@ func runDeliveryPriceTriggerCancel(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.DeliveryAPI.CancelPriceTriggeredDeliveryOrder(c.Context(), settle, id)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "DELETE", "/api/v4/delivery/"+settle+"/price_orders/"+id, ""))
-		return nil
+		return client.CommandError(err, httpResp, "DELETE", "/api/v4/delivery/"+settle+"/price_orders/"+id, "")
 	}
 	return p.Print(result)
 }

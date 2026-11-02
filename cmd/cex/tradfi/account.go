@@ -7,9 +7,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var accountCmd = &cobra.Command{
@@ -68,16 +68,15 @@ func runTradfiAccountInfo(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.TradFiAPI.QueryMt5AccountInfo(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/tradfi/users/mt5-account", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/tradfi/users/mt5-account", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
 	}
 	d := result.Data
 	return p.Table(
-		[]string{"MT5 UID", "Leverage", "Stop Out Level", "Status"},
-		[][]string{{fmt.Sprintf("%d", d.Mt5Uid), fmt.Sprintf("%d", d.Leverage), d.StopOutLevel, fmt.Sprintf("%d", d.Status)}},
+		[]string{"Leverage", "Stop Out Level", "Status"},
+		[][]string{{fmt.Sprintf("%d", d.Leverage), d.StopOutLevel, fmt.Sprintf("%d", d.Status)}},
 	)
 }
 
@@ -93,8 +92,7 @@ func runTradfiAccountAssets(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.TradFiAPI.QueryUserAssets(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/tradfi/users/assets", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/tradfi/users/assets", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -137,8 +135,7 @@ func runTradfiTransactions(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.TradFiAPI.QueryTransaction(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/tradfi/users/transactions", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/tradfi/transactions", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -170,8 +167,7 @@ func runTradfiCreateTransaction(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.TradFiAPI.CreateTransaction(c.Context(), req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/tradfi/users/transactions", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/tradfi/transactions", string(body))
 	}
 	return p.Print(result)
 }

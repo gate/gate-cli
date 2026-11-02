@@ -17,10 +17,54 @@ testdata/integration.yaml
 *.out
 coverage.html
 
-# Generated Feishu diagram exports (run scripts/feishu-export-mermaid-png.sh)
+# Generated local documentation and development artifacts.
 specs/
+mcpjson/
 scripts/
 .cursor/
 .tmp*
 .cache/*
+gate-cli-agent
+.github/workflows/ci.yaml
 
+.idea/
+
+# Local publication artifacts and credentials. Public example templates remain visible.
+/build/
+.cr-temp*
+.env
+.env.*
+!.env.example
+!.env.*.example
+.gate-cli/
+/.cache/
+
+# Local configuration documentation is internal, including hidden descendants.
+/docs/config/
+
+# Git metadata can be a file in worktrees. Ignore matching copied metadata;
+# this does not sanitize tracked files or remove reachable commit history.
+.git
+
+# Local key material, credential stores and raw debugging/data captures.
+# Reviewed public templates use an explicit .example suffix instead.
+.git-credentials
+.netrc
+id_rsa
+id_ed25519
+*.key
+*.pem
+*.p12
+*.pfx
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.sql.gz
+*.pcap
+*.pcapng
+*.har
+
+# Python test caches are generated locally, including in internal suites.
+__pycache__/
+*.py[cod]

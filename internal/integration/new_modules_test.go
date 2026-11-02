@@ -271,15 +271,6 @@ func TestCouponList(t *testing.T) {
 	t.Logf("coupons returned")
 }
 
-func TestLaunchProjects(t *testing.T) {
-	c := integration.LoadClient(t)
-	result, httpResp, err := c.LaunchAPI.ListLaunchPoolProjects(c.Context(), nil)
-	skipOnError(t, err, httpResp)
-	assert.Equal(t, 200, httpResp.StatusCode)
-	_ = result
-	t.Logf("launch projects returned")
-}
-
 func TestSquareAiSearch(t *testing.T) {
 	c := integration.LoadClient(t)
 	opts := &gateapi.ListSquareAiSearchOpts{
@@ -331,7 +322,8 @@ func TestAllNewAPIsInitialized(t *testing.T) {
 	assert.NotNil(t, c.WithdrawalAPI)
 	assert.NotNil(t, c.ActivityAPI)
 	assert.NotNil(t, c.CouponAPI)
-	assert.NotNil(t, c.LaunchAPI)
+	// 旧Launch系列已下线，验证新增股票SDK服务接线。
+	assert.NotNil(t, c.StockAPI)
 	assert.NotNil(t, c.SquareAPI)
 	assert.NotNil(t, c.WelfareAPI)
 }

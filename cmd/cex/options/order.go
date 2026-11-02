@@ -41,6 +41,9 @@ func init() {
 	createCmd.Flags().String("price", "", "Order price (0 for market order with ioc)")
 	createCmd.Flags().String("tif", "", "Time in force: gtc, ioc, poc, fok")
 	createCmd.MarkFlagRequired("contract")
+	createCmd.Flags().Bool("close", false, "Close the full position; requires --size 0")
+	createCmd.Flags().Bool("reduce-only", false, "Only reduce an existing position; signed --size specifies the partial close")
+	createCmd.Flags().Bool("mmp", false, "Mark the order as an MMP order; does not configure MMP settings")
 	createCmd.MarkFlagRequired("size")
 
 	cancelAllCmd := &cobra.Command{
@@ -125,8 +128,8 @@ func runOptionsOrders(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.OptionsAPI.ListOptionsOrders(c.Context(), status, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/options/orders", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/options/orders", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -151,6 +154,12 @@ func runOptionsCreateOrder(cmd *cobra.Command, args []string) error {
 	size, _ := cmd.Flags().GetInt64("size")
 	price, _ := cmd.Flags().GetString("price")
 	tif, _ := cmd.Flags().GetString("tif")
+	closePosition, _ := cmd.Flags().GetBool("close")
+	reduceOnly, _ := cmd.Flags().GetBool("reduce-only")
+	mmp, _ := cmd.Flags().GetBool("mmp")
+	if err := validateOptionsClose(size, closePosition); err != nil {
+		return err
+	}
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
@@ -160,17 +169,20 @@ func runOptionsCreateOrder(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// Forward the explicit MMP marker; eligibility and protection stay with the service.
 	req := gateapi.OptionsOrder{
-		Contract: contract,
-		Size:     size,
-		Price:    price,
-		Tif:      tif,
+		Contract:   contract,
+		Close:      closePosition,
+		ReduceOnly: reduceOnly,
+		Mmp:        mmp,
+		Size:       size,
+		Price:      price,
+		Tif:        tif,
 	}
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.OptionsAPI.CreateOptionsOrder(c.Context(), req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/options/orders", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/options/orders", string(body))
 	}
 	return p.Print(result)
 }
@@ -201,8 +213,7 @@ func runOptionsCancelOrders(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.OptionsAPI.CancelOptionsOrders(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "DELETE", "/api/v4/options/orders", ""))
-		return nil
+		return client.CommandError(err, httpResp, "DELETE", "/api/v4/options/orders", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -227,8 +238,7 @@ func runOptionsGetOrder(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.OptionsAPI.GetOptionsOrder(c.Context(), id)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", fmt.Sprintf("/api/v4/options/orders/%d", id), ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", fmt.Sprintf("/api/v4/options/orders/%d", id), "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -269,8 +279,7 @@ func runOptionsAmendOrder(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.OptionsAPI.AmendOptionsOrder(c.Context(), id, req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "PUT", fmt.Sprintf("/api/v4/options/orders/%d", id), string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "PUT", fmt.Sprintf("/api/v4/options/orders/%d", id), string(body))
 	}
 	return p.Print(result)
 }
@@ -288,8 +297,7 @@ func runOptionsCancelOrder(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.OptionsAPI.CancelOptionsOrder(c.Context(), id)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "DELETE", fmt.Sprintf("/api/v4/options/orders/%d", id), ""))
-		return nil
+		return client.CommandError(err, httpResp, "DELETE", fmt.Sprintf("/api/v4/options/orders/%d", id), "")
 	}
 	return p.Print(result)
 }
@@ -313,11 +321,21 @@ func runOptionsCountdownCancelAll(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.OptionsAPI.CountdownCancelAllOptions(c.Context(), req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/options/countdown_cancel_all", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/options/countdown_cancel_all", string(body))
 	}
 	if p.IsJSON() {
 		return p.Print(result)
 	}
 	return p.Table([]string{"Trigger Time"}, [][]string{{fmt.Sprintf("%d", result.TriggerTime)}})
+}
+
+// Zero size is reserved for an explicit full close; partial reductions use reduce_only.
+func validateOptionsClose(size int64, closePosition bool) error {
+	if closePosition && size != 0 {
+		return fmt.Errorf("--close requires --size 0")
+	}
+	if !closePosition && size == 0 {
+		return fmt.Errorf("--size must be nonzero, or use --close --size 0")
+	}
+	return nil
 }

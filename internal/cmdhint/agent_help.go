@@ -5,7 +5,7 @@ package cmdhint
 import "strings"
 
 // ShouldBlockParentHelp reports whether argv is a parent/group --help crawl in agent mode.
-// Leaf help (deep paths) is allowed once after INVALID_ARGS per PRD.
+// Leaf help (deep paths) is allowed once after INVALID_ARGS.
 func ShouldBlockParentHelp(argv []string) bool {
 	if len(argv) < 2 {
 		return false

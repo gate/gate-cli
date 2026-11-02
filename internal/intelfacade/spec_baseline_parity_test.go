@@ -20,7 +20,7 @@ var infoSpecOnlyTools = map[string]struct{}{
 }
 
 // TestInfoBaselineCoversSpecInputFields ensures every spec input field for inventory
-// tools has a matching baseline property so cobra -h lists the flag (CR-815).
+// tools has a matching baseline property so cobra -h lists the flag .
 func TestInfoBaselineCoversSpecInputFields(t *testing.T) {
 	t.Parallel()
 	doc, err := mcpspec.InfoInputsLogic()

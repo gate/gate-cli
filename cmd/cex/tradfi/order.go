@@ -7,9 +7,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var orderCmd = &cobra.Command{
@@ -32,7 +32,7 @@ func init() {
 	historyCmd.Flags().Int64("begin", 0, "Begin timestamp (Unix seconds)")
 	historyCmd.Flags().Int64("end", 0, "End timestamp (Unix seconds)")
 	historyCmd.Flags().String("symbol", "", "Filter by symbol")
-	historyCmd.Flags().Int32("side", 0, "Filter by side: 1=buy, 2=sell")
+	historyCmd.Flags().Int32("side", 0, "Filter by side: 1=sell, 2=buy")
 
 	createCmd := &cobra.Command{
 		Use:   "create",
@@ -40,12 +40,13 @@ func init() {
 		RunE:  runTradfiOrderCreate,
 	}
 	createCmd.Flags().String("symbol", "", "Symbol name, e.g. XAUUSD (required)")
-	createCmd.Flags().Int32("side", 0, "Order side: 1=buy, 2=sell (required)")
+	createCmd.Flags().Int32("side", 0, "Order side: 1=sell, 2=buy (required)")
 	createCmd.Flags().String("volume", "", "Order volume (required)")
 	createCmd.Flags().String("price", "0", "Order price (use 0 for market orders)")
-	createCmd.Flags().String("price-type", "0", "Price type: 0=market, 1=limit")
+	createCmd.Flags().String("price-type", "market", "Price type: market or trigger")
 	createCmd.Flags().String("tp", "", "Take-profit price")
 	createCmd.Flags().String("sl", "", "Stop-loss price")
+	createCmd.Flags().Int32("leverage", 0, "Optional leverage multiplier; 0 is omitted by the SDK; allowed values are validated by the service")
 	createCmd.MarkFlagRequired("symbol")
 	createCmd.MarkFlagRequired("side")
 	createCmd.MarkFlagRequired("volume")
@@ -55,7 +56,7 @@ func init() {
 		Short: "Update a TradFi order (price, TP, SL)",
 		RunE:  runTradfiOrderUpdate,
 	}
-	updateCmd.Flags().Int32("id", 0, "Order ID (required)")
+	updateCmd.Flags().Int64("id", 0, "Order ID (required)")
 	updateCmd.Flags().String("price", "", "New price (required)")
 	updateCmd.Flags().String("tp", "", "New take-profit price")
 	updateCmd.Flags().String("sl", "", "New stop-loss price")
@@ -67,7 +68,7 @@ func init() {
 		Short: "Cancel a TradFi order",
 		RunE:  runTradfiOrderCancel,
 	}
-	cancelCmd.Flags().Int32("id", 0, "Order ID (required)")
+	cancelCmd.Flags().Int64("id", 0, "Order ID (required)")
 	cancelCmd.MarkFlagRequired("id")
 
 	orderCmd.AddCommand(listCmd, historyCmd, createCmd, updateCmd, cancelCmd)
@@ -86,8 +87,7 @@ func runTradfiOrderList(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.TradFiAPI.QueryOrderList(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/tradfi/orders", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/tradfi/orders", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -136,8 +136,7 @@ func runTradfiOrderHistory(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.TradFiAPI.QueryOrderHistoryList(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/tradfi/orders/history", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/tradfi/orders/history", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -162,8 +161,15 @@ func runTradfiOrderCreate(cmd *cobra.Command, args []string) error {
 	volume, _ := cmd.Flags().GetString("volume")
 	price, _ := cmd.Flags().GetString("price")
 	priceType, _ := cmd.Flags().GetString("price-type")
+	if priceType != "market" && priceType != "trigger" {
+		return fmt.Errorf("price-type must be market or trigger")
+	}
+	if side != 1 && side != 2 {
+		return fmt.Errorf("side must be 1 (sell) or 2 (buy)")
+	}
 	tp, _ := cmd.Flags().GetString("tp")
 	sl, _ := cmd.Flags().GetString("sl")
+	leverage, _ := cmd.Flags().GetInt32("leverage")
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
@@ -173,12 +179,14 @@ func runTradfiOrderCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// Preserve SDK omission semantics and leave symbol/account rules to the service.
 	req := gateapi.TradFiOrderRequest{
 		Symbol:    symbol,
 		Side:      side,
 		Volume:    volume,
 		Price:     price,
 		PriceType: priceType,
+		Leverage:  leverage,
 	}
 	if tp != "" {
 		req.PriceTp = tp
@@ -190,14 +198,17 @@ func runTradfiOrderCreate(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.TradFiAPI.CreateTradFiOrder(c.Context(), req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/tradfi/orders", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/tradfi/orders", string(body))
 	}
 	return p.Print(result)
 }
 
 func runTradfiOrderUpdate(cmd *cobra.Command, args []string) error {
-	id, _ := cmd.Flags().GetInt32("id")
+	id, _ := cmd.Flags().GetInt64("id")
+	// SDK使用int64，正数边界必须在发请求前检查。
+	if id <= 0 {
+		return fmt.Errorf("id must be positive")
+	}
 	price, _ := cmd.Flags().GetString("price")
 	tp, _ := cmd.Flags().GetString("tp")
 	sl, _ := cmd.Flags().GetString("sl")
@@ -221,14 +232,17 @@ func runTradfiOrderUpdate(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.TradFiAPI.UpdateOrder(c.Context(), id, req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "PUT", fmt.Sprintf("/tradfi/orders/%d", id), string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "PUT", fmt.Sprintf("/tradfi/orders/%d", id), string(body))
 	}
 	return p.Print(result)
 }
 
 func runTradfiOrderCancel(cmd *cobra.Command, args []string) error {
-	id, _ := cmd.Flags().GetInt32("id")
+	id, _ := cmd.Flags().GetInt64("id")
+	// SDK使用int64，正数边界必须在发请求前检查。
+	if id <= 0 {
+		return fmt.Errorf("id must be positive")
+	}
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
@@ -240,8 +254,7 @@ func runTradfiOrderCancel(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.TradFiAPI.DeleteOrder(c.Context(), id)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "DELETE", fmt.Sprintf("/tradfi/orders/%d", id), ""))
-		return nil
+		return client.CommandError(err, httpResp, "DELETE", fmt.Sprintf("/tradfi/orders/%d", id), "")
 	}
 	return p.Print(result)
 }

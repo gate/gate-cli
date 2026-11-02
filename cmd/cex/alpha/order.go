@@ -7,9 +7,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var orderCmd = &cobra.Command{
@@ -23,7 +23,7 @@ func init() {
 		Short: "List Alpha orders",
 		RunE:  runAlphaOrderList,
 	}
-	listCmd.Flags().String("currency", "", "Filter by currency symbol")
+	listCmd.Flags().String("currency", "", currencyIDHelp)
 	listCmd.Flags().String("side", "", "Filter by side: buy or sell")
 	listCmd.Flags().Int32("status", 0, "Filter by status: 0=all, 1=processing, 2=successful, 3=failed, 4=cancelled")
 	listCmd.Flags().Int64("from", 0, "Start timestamp (Unix seconds)")
@@ -44,7 +44,7 @@ func init() {
 		Short: "Get a quote for an Alpha order",
 		RunE:  runAlphaOrderQuote,
 	}
-	quoteCmd.Flags().String("currency", "", "Currency symbol (required)")
+	quoteCmd.Flags().String("currency", "", currencyIDHelp+" (required)")
 	quoteCmd.Flags().String("side", "", "Order side: buy or sell (required)")
 	quoteCmd.Flags().String("amount", "", "Trade amount (required)")
 	quoteCmd.Flags().String("gas-mode", "speed", "Trading mode: speed (smart) or custom")
@@ -58,7 +58,7 @@ func init() {
 		Short: "Place an Alpha order using a quote ID",
 		RunE:  runAlphaOrderPlace,
 	}
-	placeCmd.Flags().String("currency", "", "Currency symbol (required)")
+	placeCmd.Flags().String("currency", "", currencyIDHelp+" (required)")
 	placeCmd.Flags().String("side", "", "Order side: buy or sell (required)")
 	placeCmd.Flags().String("amount", "", "Trade amount (required)")
 	placeCmd.Flags().String("gas-mode", "speed", "Trading mode: speed (smart) or custom")
@@ -112,8 +112,8 @@ func runAlphaOrderList(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.AlphaAPI.ListAlphaOrder(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/alpha/orders", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/alpha/orders", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -138,8 +138,7 @@ func runAlphaOrderGet(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.AlphaAPI.GetAlphaOrder(c.Context(), id)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/alpha/orders/"+id, ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/alpha/orders/"+id, "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -178,8 +177,7 @@ func runAlphaOrderQuote(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.AlphaAPI.QuoteAlphaOrder(c.Context(), req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/alpha/orders/quote", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/alpha/orders/quote", string(body))
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -220,8 +218,7 @@ func runAlphaOrderPlace(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.AlphaAPI.PlaceAlphaOrder(c.Context(), req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/alpha/orders", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/alpha/orders", string(body))
 	}
 	return p.Print(result)
 }

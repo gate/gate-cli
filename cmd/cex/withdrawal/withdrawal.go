@@ -82,8 +82,8 @@ func runCreate(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.WithdrawalAPI.Withdraw(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/withdrawals", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "POST", "/api/v4/withdrawals", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -116,8 +116,7 @@ func runPushOrder(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.WithdrawalAPI.WithdrawPushOrder(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/withdrawals/push", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/withdrawals/push", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -142,8 +141,7 @@ func runCancel(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.WithdrawalAPI.CancelWithdrawal(c.Context(), id)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "DELETE", fmt.Sprintf("/api/v4/withdrawals/%s", id), ""))
-		return nil
+		return client.CommandError(err, httpResp, "DELETE", fmt.Sprintf("/api/v4/withdrawals/%s", id), "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

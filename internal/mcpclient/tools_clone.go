@@ -3,7 +3,7 @@ package mcpclient
 import "encoding/json"
 
 // cloneToolsForList returns a deep copy of tools so InputSchema maps are not shared
-// with the JSON decoder's internal structures or across cache entries (CR-309).
+// with the JSON decoder's internal structures or across cache entries .
 func cloneToolsForList(in []Tool) []Tool {
 	if len(in) == 0 {
 		return []Tool{}
@@ -19,7 +19,7 @@ func cloneToolsForList(in []Tool) []Tool {
 	return out
 }
 
-// cloneInputSchemaAny deep-copies schema-shaped JSON via round-trip (CR-308: no manual
+// cloneInputSchemaAny deep-copies schema-shaped JSON via round-trip (review: no manual
 // recursive walk; encoding/json applies safe nesting limits on decode).
 func cloneInputSchemaAny(v interface{}) interface{} {
 	if v == nil {

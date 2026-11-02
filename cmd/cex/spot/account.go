@@ -74,8 +74,8 @@ func runSpotAccountList(cmd *cobra.Command, args []string) error {
 
 	accounts, httpResp, err := c.SpotAPI.ListSpotAccounts(c.Context(), nil)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/accounts", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/spot/accounts", "")
 	}
 
 	if p.IsJSON() {
@@ -115,8 +115,7 @@ func runSpotAccountGet(cmd *cobra.Command, args []string) error {
 		Currency: optional.NewString(currency),
 	})
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/accounts", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/spot/accounts", "")
 	}
 	if p.IsJSON() {
 		return p.Print(accounts)
@@ -146,8 +145,7 @@ func runSpotAccountFee(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.SpotAPI.GetFee(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/fee", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/spot/fee", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -171,8 +169,7 @@ func runSpotAccountBatchFee(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.SpotAPI.GetBatchSpotFee(c.Context(), pairs)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/batch_fee", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/spot/batch_fee", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -214,8 +211,7 @@ func runSpotAccountBook(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.SpotAPI.ListSpotAccountBook(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/account_book", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/spot/account_book", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

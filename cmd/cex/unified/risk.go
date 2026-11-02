@@ -49,8 +49,8 @@ func runRiskUnits(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.UnifiedAPI.GetUnifiedRiskUnits(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/unified/risk_units", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/unified/risk_units", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -87,8 +87,7 @@ func runRiskCalculate(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.UnifiedAPI.CalculatePortfolioMargin(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/unified/portfolio_calculator", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/unified/portfolio_calculator", "")
 	}
 	// Complex nested output, prefer JSON-like print for both formats
 	return p.Print(result)

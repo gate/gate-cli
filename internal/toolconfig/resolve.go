@@ -20,7 +20,7 @@ const minIntelBearerLen = 8
 
 var (
 	headerNamePattern = regexp.MustCompile(`^[A-Za-z0-9-]+$`)
-	// Keys sorted alphabetically (CR-822 readability).
+	// Keys sorted alphabetically (review readability).
 	deniedHeaders = map[string]struct{}{
 		"authorization":       {},
 		"content-length":      {},

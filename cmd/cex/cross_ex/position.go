@@ -141,8 +141,8 @@ func runPositionList(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.CrossExAPI.ListCrossexPositions(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/crossex/positions", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/crossex/positions", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -176,8 +176,7 @@ func runMarginPositionList(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.CrossExAPI.ListCrossexMarginPositions(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/crossex/margin_positions", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/crossex/margin_positions", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -210,8 +209,7 @@ func runPositionClose(cmd *cobra.Command, args []string) error {
 	}
 	result, httpResp, err := c.CrossExAPI.CloseCrossexPosition(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/crossex/close_position", jsonStr))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/crossex/close_position", jsonStr)
 	}
 	return p.Print(result)
 }
@@ -236,8 +234,7 @@ func runPositionLeverage(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.CrossExAPI.GetCrossexPositionsLeverage(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/crossex/positions/leverage", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/crossex/positions/leverage", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -270,8 +267,7 @@ func runPositionSetLeverage(cmd *cobra.Command, args []string) error {
 	}
 	result, httpResp, err := c.CrossExAPI.UpdateCrossexPositionsLeverage(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/crossex/positions/leverage", jsonStr))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/crossex/positions/leverage", jsonStr)
 	}
 	return p.Print(result)
 }
@@ -296,8 +292,7 @@ func runMarginPositionLeverage(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.CrossExAPI.GetCrossexMarginPositionsLeverage(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/crossex/margin_positions/leverage", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/crossex/margin_positions/leverage", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -330,8 +325,7 @@ func runMarginPositionSetLeverage(cmd *cobra.Command, args []string) error {
 	}
 	result, httpResp, err := c.CrossExAPI.UpdateCrossexMarginPositionsLeverage(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/crossex/margin_positions/leverage", jsonStr))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/crossex/margin_positions/leverage", jsonStr)
 	}
 	return p.Print(result)
 }
@@ -349,17 +343,13 @@ func runAdlRank(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.CrossExAPI.ListCrossexAdlRank(c.Context(), symbol)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/crossex/adl_rank", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/crossex/adl_rank", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
 	}
-	rows := make([][]string, len(result))
-	for i, r := range result {
-		rows[i] = []string{r.Symbol, r.CrossexAdlRank, r.ExchangeAdlRank}
-	}
-	return p.Table([]string{"Symbol", "CrossEx ADL Rank", "Exchange ADL Rank"}, rows)
+	// v7.2.161返回单对象，不能再按数组展开。
+	return p.Table([]string{"Symbol", "CrossEx ADL Rank", "Exchange ADL Rank"}, [][]string{{result.Symbol, result.CrossexAdlRank, result.ExchangeAdlRank}})
 }
 
 func runPositionHistory(cmd *cobra.Command, args []string) error {
@@ -396,8 +386,7 @@ func runPositionHistory(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.CrossExAPI.ListCrossexHistoryPositions(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/crossex/history_positions", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/crossex/history_positions", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -443,8 +432,7 @@ func runMarginPositionHistory(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.CrossExAPI.ListCrossexHistoryMarginPositions(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/crossex/history_margin_positions", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/crossex/history_margin_positions", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -494,8 +482,7 @@ func runMarginInterests(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.CrossExAPI.ListCrossexHistoryMarginInterests(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/crossex/history_margin_interests", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/crossex/history_margin_interests", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

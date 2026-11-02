@@ -22,15 +22,17 @@ irm https://raw.githubusercontent.com/gate/gate-cli/main/install.ps1 | iex
 
 ### Pin to a specific version
 
+Replace `<release-tag>` with a published tag that provides the required commands.
+
 ```sh
 # Unix
-curl -fsSL https://raw.githubusercontent.com/gate/gate-cli/main/install.sh | sh -s -- --version v0.4.0
+curl -fsSL https://raw.githubusercontent.com/gate/gate-cli/main/install.sh | sh -s -- --version '<release-tag>'
 
 # Windows
-$env:GATE_CLI_VERSION="v0.4.0"; irm https://raw.githubusercontent.com/gate/gate-cli/main/install.ps1 | iex
+$env:GATE_CLI_VERSION="<release-tag>"; irm https://raw.githubusercontent.com/gate/gate-cli/main/install.ps1 | iex
 ```
 
-### Build from source (requires Go 1.21+)
+### Build from source (requires Go 1.24+)
 
 ```bash
 git clone https://github.com/gate/gate-cli.git
@@ -60,9 +62,26 @@ export GATE_API_SECRET=your-api-secret
 
 ### Option C — One-off flag
 
+Flags are visible in process arguments and may enter shell history. Prefer
+interactive setup for secrets; the placeholders below only show flag syntax.
+
 ```bash
 gate-cli cex spot account list --api-key your-key --api-secret your-secret
 ```
+
+### API server address
+
+API base URLs accept both HTTP and HTTPS, including non-loopback test gateways.
+HTTPS remains the default. HTTP traffic is unencrypted; use HTTPS for public and production access.
+
+```bash
+# Use the API origin; the CLI appends /api/v4.
+export GATE_BASE_URL="https://api.gateio.ws"
+```
+
+OAuth credentials remain bound to the complete API resource, including its scheme,
+host, port and path. Changing the destination requires authorization for that resource.
+Changing the API origin does not change the OAuth issuer. Use HTTPS for public access.
 
 ### Credential priority
 
@@ -97,6 +116,12 @@ gate-cli cex spot market candlesticks --pair BTC_USDT --interval 1h --limit 48
 gate-cli cex futures market ticker --contract BTC_USDT
 gate-cli cex futures market funding-rate --contract BTC_USDT
 gate-cli cex futures market candlesticks --contract BTC_USDT --interval 1h
+
+# Additional market data; obey the deployed service's smaller page/depth limits.
+gate-cli cex spot market rpi-orderbook --pair BTC_USDT --limit 10
+gate-cli cex futures market rpi-orderbook --contract BTC_USDT --limit 10
+gate-cli cex futures market contracts-all --limit 100 --offset 0
+gate-cli cex futures market adl-risk-states --format json --max-output-bytes 1048576
 ```
 
 ---
@@ -115,6 +140,11 @@ gate-cli cex futures position get --contract BTC_USDT
 ---
 
 ## Spot trading
+
+Writes execute immediately. The examples require authority for the selected
+account, instrument and amount; inspect balances, precision and minimum notional
+first. These documents describe this source tree, so check the installed leaf's
+`--help` when using a public release.
 
 ### Limit orders
 
@@ -146,6 +176,28 @@ gate-cli cex spot order get    --pair BTC_USDT --id 123456789
 gate-cli cex spot order cancel --pair BTC_USDT --id 123456789
 gate-cli cex spot order cancel --pair BTC_USDT --all          # cancel all open orders
 ```
+
+### Account selection and attached protection
+
+Use `--account spot|margin|unified|cross_margin` on supported order reads/writes.
+Automatic borrowing needs an explicit eligible account; order-level auto-repay
+supports unified/cross-margin. Both need borrowing/repayment authority.
+
+```bash
+# Authorized unified-account limit buy with separate take profit and stop loss.
+gate-cli cex spot order buy --pair BTC_USDT --account unified --amount 0.001 --price 60000 \
+  --stop-profit-json '{"trigger_price":"66000","order_price":"65900"}' \
+  --stop-loss-json '{"trigger_price":"57000","order_price":"56900"}'
+
+# Requires authority to set the parent price as well as clear its stop loss.
+gate-cli cex spot order amend --pair BTC_USDT --account unified --id 123456789 \
+  --price 60000 --stop-loss-json '{}'
+```
+
+On amendment, omission or JSON `null` preserves a protection; only `{}` clears it.
+The API also requires a parent amount or price. Do not silently add an old value.
+Check both protections afterward and minimum notional for all affected orders.
+See the [extension guide](cex-gap-commands.md) for automatic borrowing and native POV.
 
 ---
 
@@ -193,27 +245,30 @@ gate-cli cex futures order cancel --contract BTC_USDT --all
 
 ## Delivery futures
 
-Delivery futures follow the same pattern as perpetual futures. Only USDT settlement is supported.
+Delivery supports USDT settlement. Use signed sizes with `order create`; the perpetual `long/close` helpers do not apply. Discover an active contract first; names and IDs below are illustrative. `position close` reads history.
 
 ```bash
 # Market data (public)
 gate-cli cex delivery market contracts
-gate-cli cex delivery market ticker   --contract BTC_USDT_20260327
-gate-cli cex delivery market orderbook --contract BTC_USDT_20260327
+gate-cli cex delivery market tickers   --contract BTC_USDT_20261225
+gate-cli cex delivery market order-book --contract BTC_USDT_20261225
 
 # Account & positions
 gate-cli cex delivery account get
 gate-cli cex delivery position list
 
 # Orders
-gate-cli cex delivery order long  --contract BTC_USDT_20260327 --size 5 --price 80000
-gate-cli cex delivery order close --contract BTC_USDT_20260327
-gate-cli cex delivery order list  --contract BTC_USDT_20260327
+gate-cli cex delivery order create  --contract BTC_USDT_20261225 --size 5 --price 80000
+gate-cli cex delivery order cancel --id 123456789
+gate-cli cex delivery order list --contract BTC_USDT_20261225 --status open
 ```
 
 ---
 
 ## Options
+
+Discover an active contract first; the contract names and order IDs below are
+illustrative and must be replaced with the intended live objects.
 
 ```bash
 # Market data (public)
@@ -222,19 +277,27 @@ gate-cli cex options market contracts --underlying BTC_USDT
 gate-cli cex options market tickers   --underlying BTC_USDT
 
 # Account & positions
-gate-cli cex options account list
+gate-cli cex options account get
 gate-cli cex options position list
 
 # Orders
-gate-cli cex options order create --contract BTC_USDT-20260327-80000-C --size 1 --price 500
-gate-cli cex options order list
-gate-cli cex options order cancel --order-id 123456789
+gate-cli cex options order create --contract BTC_USDT-20261225-60000-C --size 1 --price 500
+gate-cli cex options order list --underlying BTC_USDT --status open
+gate-cli cex options order cancel --id 123456789
+
+# Partial long reduction and full close, subject to position and liquidity checks.
+gate-cli cex options order create --contract BTC_USDT-20261225-60000-C --size -1 --reduce-only --price 0 --tif ioc
+gate-cli cex options order create --contract BTC_USDT-20261225-60000-C --size 0 --close --price 0 --tif ioc
 
 # Market Maker Protection
 gate-cli cex options mmp get   --underlying BTC_USDT
-gate-cli cex options mmp set   --underlying BTC_USDT --window 5000 --freeze-period 30000 --qty-limit 100 --delta-limit 50
+gate-cli cex options mmp set   --underlying BTC_USDT --window 5000 --frozen-period 30000 --qty-limit 100 --delta-limit 50
 gate-cli cex options mmp reset --underlying BTC_USDT
 ```
+
+Full close uses `--close --size 0`; partial reduction uses a signed nonzero size
+with `--reduce-only`. Price 0 requires IOC. `options position close` reads close
+history and does not place a closing order.
 
 ---
 
@@ -244,17 +307,17 @@ gate-cli cex options mmp reset --underlying BTC_USDT
 # Balances
 gate-cli cex wallet balance total                         # total balance across all accounts
 gate-cli cex wallet balance small                         # list dust balances
-gate-cli cex wallet balance sa --sa-uid 12345             # sub-account balance
+gate-cli cex wallet balance sub --sub-uid 12345             # sub-account balance
 
 # Deposits & withdrawals
-gate-cli cex wallet deposit address --currency USDT --chain TRX
+gate-cli cex wallet deposit address --currency USDT
 gate-cli cex wallet deposit list    --currency USDT --limit 20
-gate-cli cex wallet withdraw list   --currency USDT --limit 20
-gate-cli cex wallet withdraw status                       # supported currencies and chain info
+gate-cli cex wallet deposit withdrawals   --currency USDT --limit 20
+gate-cli cex wallet market withdraw-status                       # supported currencies and chain info
 
 # Transfers
 gate-cli cex wallet transfer create --currency USDT --amount 100 --from spot --to futures
-gate-cli cex wallet transfer sa     --currency USDT --amount 100 --sa-uid 12345 --direction to
+gate-cli cex wallet transfer to-sub --currency USDT --amount 100 --sub-account 12345 --direction to
 ```
 
 ---
@@ -264,7 +327,7 @@ gate-cli cex wallet transfer sa     --currency USDT --amount 100 --sa-uid 12345 
 ```bash
 gate-cli cex account detail                       # UID, email, tier, KYC status
 gate-cli cex account rate-limit                   # API rate limit info
-gate-cli cex account main-keys                    # list main account API keys
+gate-cli cex account keys                    # list main account API keys
 
 # STP (Self-Trade Prevention) groups
 gate-cli cex account stp list
@@ -290,25 +353,30 @@ gate-cli cex spot price-trigger cancel-all --market BTC_USDT
 # Futures
 gate-cli cex futures price-trigger list
 gate-cli cex futures price-trigger create \
-  --contract BTC_USDT --trigger-price 90000 --price 0 --size -10
+  --contract BTC_USDT --trigger-price 90000 --price 0 --size -10 --tif ioc
 gate-cli cex futures price-trigger get    --id 456
-gate-cli cex futures price-trigger update --id 456 --trigger-price 91000
+gate-cli cex futures price-trigger update --id 456 --body-order-id 789 --trigger-price 91000
 gate-cli cex futures price-trigger cancel --id 456
 ```
+
+Spot triggered limit orders default `--time-in-force` to `ioc`: when triggered, execute immediately and cancel any unfilled remainder. Explicit `gtc` remains available under the SDK contract, subject to server support; the CLI never silently rewrites or retries it as another policy. Other values fail before a request is sent.
+Spot `order batch-create`, `batch-amend` and `batch-cancel` preserve the SDK per-item result array. Any failed item returns a nonzero exit status and a success/failure count on stderr. Reconcile per-item outcomes; do not automatically retry the entire batch.
+
 
 ---
 
 ## Trailing stop orders (futures)
 
 Trail the market by a ratio or price distance; order triggers automatically when the market reverses.
+Creation requires an explicit `--price-type`: `1` for latest price, `2` for index price, or `3` for mark price. Returned Trail IDs and related time fields are strings.
 
 ```bash
 gate-cli cex futures trail create \
-  --contract BTC_USDT --amount -10 --price-offset 0.02   # trail short by 2%
+  --contract BTC_USDT --amount -10 --price-type 1 --price-offset '2%'   # sell order with a 2% callback
 
 gate-cli cex futures trail list
 gate-cli cex futures trail get    --id 789
-gate-cli cex futures trail update --id 789 --price-offset 0.015
+gate-cli cex futures trail update --id 789 --price-offset '1.5%'
 gate-cli cex futures trail log    --id 789                    # change history
 gate-cli cex futures trail stop   --id 789
 gate-cli cex futures trail stop-all --contract BTC_USDT
@@ -318,10 +386,12 @@ gate-cli cex futures trail stop-all --contract BTC_USDT
 
 ## Output formats
 
-### Table (default, human-friendly)
+### Pretty (default) and explicit table output
+
+The default format is `pretty`. Use `--format table` explicitly on commands that support tabular output; non-tabular results use the shared JSON renderer. Errors remain on stderr with a non-zero exit code.
 
 ```bash
-gate-cli cex spot market ticker --pair BTC_USDT
+gate-cli cex spot market ticker --pair BTC_USDT --format table
 ```
 
 ```
@@ -345,14 +415,14 @@ Market intelligence and news are shipped as **50** MCP-style CLI tools (**32** `
 
 **`info` groups:** `coin`, `marketsnapshot`, `markettrend`, `onchain`, `platformmetrics`, `marketdetail`, `macro`, `compliance`.
 
-**`news` groups:** `feed` (platform news, UGC, X, web research, sentiment, exchange announcements), `events` (latest events, detail by `event_id`, market-move explain, stored market-move report get/list), and `prediction` (UTC rankings on `predictionRankIndex`; `search-events` on `dws_prediction_event_signal_hf` with collapse per `pk_id`; `get-event-signal` on `dws_external_event_signal_hf`; live `get-market-orderbook` for polymarket CLOB + predict.fun). CLI pre-check: `search-ugc` and `search-events` need at least one filter flag. Unconfigured OpenSearch indices return `not_implemented`. Leaf `-h` and `gate-cli news mcp-spec` use the **embedded** spec (English `description` per tool). Prediction commands also run local enum/range checks before MCP.
+**`news` groups:** `feed` (news, UGC, X, web research, sentiment and announcements), `events` (event lists/details, market-move explanations and saved reports), and `prediction` (rankings, event search, snapshots and live books). `search-ugc` requires `--query` or `--coin`; `search-events` requires at least one of `--query`, `--coin`, `--category`. Inspect partial-result status and metadata. Use each command's `--help` or `gate-cli news mcp-spec` for parameters.
 
 **`info` help text:** each leaf `-h` starts with an English **`description`** (`[Read]` routing) from the spec embedded in the binary; set `GATE_INTEL_LEAF_HELP=full` for per-field notes. Same document: `gate-cli info mcp-spec --format json`.
 
 List tool ids: `gate-cli info list`, `gate-cli news list`. Flags and env vars: `gate-cli info -h`, `gate-cli news -h`.
 Deterministic shortcut flows: `gate-cli info +coin-overview --symbol BTC` and `gate-cli news +brief --coin BTC`.
 
-Optional Intel defaults go under `intel:` in `~/.gate-cli/config.yaml`. Gate trading `--api-key` / `GATE_API_KEY` are **not** used as the Intel bearer; follow your Intel/MCP backend if a bearer or base URL is required. Env vars, URLs, and timeouts: [`specs/intel-config-and-security.md`](../specs/intel-config-and-security.md).
+Optional Intel defaults go under `intel:` in `~/.gate-cli/config.yaml`. Gate trading `--api-key` / `GATE_API_KEY` are **not** used as the Intel bearer; follow your Intel/MCP backend if a bearer or base URL is required. See the [README Intel configuration](../README.md#intel-info-news) for environment variables, URLs and timeouts.
 
 ```bash
 gate-cli info coin get-coin-info --query BTC --format json
@@ -370,16 +440,21 @@ One minimal example per tool (all 50) is in the repository **README.md**.
 
 ### GateAI agent mode
 
-For Gate.AI / Skill runners, set `GATE_CLI_AGENT=1` (bounded stdout, no parent `--help` crawl). Prefer discovery over `--help`:
+The `agent-*` commands require a binary built with `-tags agent`; standard builds
+do not register them, and setting the environment variable alone is insufficient.
+Build from a trusted source checkout, then enable agent defaults:
 
 ```bash
+# From the source checkout; use this binary for the following examples.
+go build -tags agent -o gate-cli .
+export PATH="$PWD:$PATH"
 export GATE_CLI_AGENT=1
 gate-cli agent-resolve --query "BTC news brief" --format json
 gate-cli agent-leaves --format json          # 31 curated intents + 50 MCP tools
-gate-cli agent-validate --format json        # CI: baseline MCP paths + 10 shortcuts
+gate-cli agent-validate --format json        # Check command availability
 ```
 
-Details: [`specs/clidocs/gate-ai-agent-cli-integration.md`](../specs/clidocs/gate-ai-agent-cli-integration.md).
+For standard builds, use `info list`, `news list` and the selected leaf's `--help`. Scripts should set JSON format and an explicit output bound.
 
 ---
 
@@ -400,7 +475,7 @@ gate-cli cex spot account list --profile sub
 
 ```bash
 gate-cli cex spot market ticker --pair BTC_USDT --debug
-# Prints full HTTP request and response to stderr
+# CEX transport logs method, status and elapsed time; query/headers/body are omitted
 ```
 
 For **`info`** / **`news`**, root `--debug` and `--verbose` print Intel MCP transport lines on **stderr** (stdout JSON shape unchanged). Cap printed bytes with `--max-output-bytes` or `GATE_MAX_OUTPUT_BYTES`. See the **Global flags** table in the repository `README.md`.
@@ -413,13 +488,55 @@ For **`info`** / **`news`**, root `--debug` and `--verbose` print Intel MCP tran
 # Extract a field with jq
 gate-cli cex spot market ticker --pair BTC_USDT --format json | jq -r '.last'
 
-# Wait for a fill, then act
-while true; do
-  status=$(gate-cli cex spot order get --pair BTC_USDT --id 123 --format json | jq -r '.status')
-  [ "$status" = "closed" ] && break
-  sleep 5
-done
+# Read completion evidence; status alone does not prove a full fill.
+gate-cli cex spot order get --pair BTC_USDT --id 123 --format json | jq '{status, finish_as, left}'
 
 # Use BTC-settled futures
 gate-cli cex futures market ticker --contract BTC_USD --settle btc
 ```
+
+Keep stdout, stderr and exit status separate. Bound process duration, output,
+pagination and polling; never automatically replay a write after a timeout or
+lost response. A chase HTTP 200 business rejection is a failed CLI call; an empty
+active chase list is `{"orders":[]}`. See [result handling](cex-gap-commands.md#results-and-recovery).
+
+## Agentic subaccount, CFD and stock
+
+```sh
+# Inspect local authorization before starting a browser login.
+gate-cli cex auth status --format json
+# Request account access and stock trading; confirm the grant in the browser.
+gate-cli cex auth login --scope base,stock
+# Public stock and CFD market queries need no login.
+gate-cli cex stock market symbols --exchange us --page 1 --page-size 10
+gate-cli cex tradfi market kline --symbol XAUUSD --type 1h --limit 100
+# Private queries require base permission.
+gate-cli cex stock account assets --format json
+gate-cli cex tradfi market commissions --symbols XAUUSD --format json
+```
+
+Without `--scope`, login requests `base spot_trade futures_trade earn cfd stock`; browser consent determines the grant. `--manual` lets you copy the URL and paste the code; `--force` starts new authorization. `auth refresh` refreshes credentials; `auth logout` clears local credentials and attempts remote revocation. A revocation error requires disconnecting the connection on Gate.
+
+`auth status` is a local check (`remote_checked: false`), and cannot prove remote access. Credentials are bound to the API resource; authorize again when it changes. A complete API key/secret pair takes priority over OAuth; Intel credentials are separate. This source uses public Gate Go SDK `v7.2.178`.
+
+Private CFD and stock queries use `base`. CFD trading and transfers use `cfd`; stock order changes and position closes use `stock`; stock account transfers use `base`. See the [complete authorization, CFD and stock guide](auth-cfd-stock.md) for the command tables, stock order/session combinations, close parameters, reference IDs and pagination. The [CEX reference](cex-gap-commands.md) covers POV/chase, Earn filters, order references and partial failures.
+
+## Unavailable commands
+
+Sub-account management, LaunchPool, HODLer and CandyDrop commands are unavailable, as are P2P, CrossEx, welfare, activity and coupon groups. Authorizing an Agentic subaccount through `cex auth` remains available. Use the Gate website to manage products without a CLI command.
+
+## Explicit CEX and CLI diagnostics
+
+`version` and `--version` retain their existing output. Use `version --details --format json` for the revision, Go version, platform and compiled agent command capability. A missing revision is reported as `unknown`; runtime environment variables do not change the compiled capability.
+
+`config check --format json` explicitly checks local configuration file type, read access and permissions without reading credential contents or changing files. It does not verify YAML syntax, API authorization or Windows ACLs. Exit 0 means pass; warnings/failures exit 1.
+
+`config init --hide-input` hides all fields, including the profile, on a real terminal. Piped input uses ordinary input behavior. Ctrl-C/TERM/input failure restore the terminal before any configuration write; a force-killed process cannot guarantee restoration.
+
+Ordinary spot buy/sell and futures long/short/add/remove accept optional `--text t-reference` (ASCII alphanumeric, `_`, `-`, `.`, at most 28 bytes after `t-`). It is a correlation reference, not a server-side idempotency guarantee. Spot can query pending orders with `cex spot order get --id t-reference --pair BTC_USDT`; use numeric IDs for completed orders. Futures adds `cex futures order get-by-text --text t-reference`; server historical/status limits apply (cancelled unfilled orders have a 60-second text lookup limit). A failed lookup does not prove a write was never submitted, and must not trigger automatic resubmission.
+
+Futures batch create/amend/cancel keep the original returned result array. Any decoded failed item now produces exit 1 and an error summary on stderr; all-success results retain exit 0. Inspect successful IDs and failed items separately; do not resubmit the entire batch. Use explicit `--max-output-bytes 0` if the complete result is required, since the existing cap may replace an oversized JSON payload with its placeholder.
+
+Agent builds additionally support `agent-index --domain cex --details --format json` and an optional canonical `--command 'cex spot order buy'`. The report describes registered parameters, unconditional required flags and explicitly known read/write effects. `unknown` is not a safety classification; conditional requirements are not claimed complete. It does not execute or authorize the described command. Standard builds retain their existing command availability.
+
+For upgrades, select an explicitly verified release version using the existing installation method, retain the previous binary, and compare `version --details` before/after installation. Roll back by restoring that binary; do not replay any uncertain trade as part of rollback.

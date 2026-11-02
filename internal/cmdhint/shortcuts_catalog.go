@@ -1,6 +1,6 @@
 package cmdhint
 
-// InfoNewsShortcutPaths are shipped deterministic shortcuts (see specs/Shortcut/xuqiu.md §3.9.0).
+// Public command behavior is documented by the bundled contracts and leaf help.
 var InfoNewsShortcutPaths = []string{
 	"info +coin-overview",
 	"info +market-overview",

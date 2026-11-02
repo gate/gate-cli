@@ -1,0 +1,834 @@
+[
+  {
+    "path": "info coin get-coin-info",
+    "tool": "info_coin_get_coin_info",
+    "arguments": {
+      "query": "BTC",
+      "query_type": "symbol"
+    },
+    "reply": {
+      "fixture": "info_coin_get_coin_info",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_coin_get_coin_info",
+      "items"
+    ]
+  },
+  {
+    "path": "info marketsnapshot get-market-snapshot",
+    "tool": "info_marketsnapshot_get_market_snapshot",
+    "arguments": {
+      "symbol": "BTC_USDT"
+    },
+    "reply": {
+      "fixture": "info_marketsnapshot_get_market_snapshot",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_marketsnapshot_get_market_snapshot",
+      "items"
+    ]
+  },
+  {
+    "path": "info markettrend get-kline",
+    "tool": "info_markettrend_get_kline",
+    "arguments": {
+      "symbol": "BTC_USDT",
+      "timeframe": "1h",
+      "size": 200
+    },
+    "reply": {
+      "fixture": "info_markettrend_get_kline",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_markettrend_get_kline",
+      "items"
+    ]
+  },
+  {
+    "path": "info markettrend get-indicator-history",
+    "tool": "info_markettrend_get_indicator_history",
+    "arguments": {
+      "symbol": "BTC_USDT",
+      "indicators": [
+        "rsi"
+      ],
+      "timeframe": "1h"
+    },
+    "reply": {
+      "fixture": "info_markettrend_get_indicator_history",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_markettrend_get_indicator_history",
+      "items"
+    ]
+  },
+  {
+    "path": "info markettrend get-technical-analysis",
+    "tool": "info_markettrend_get_technical_analysis",
+    "arguments": {
+      "symbol": "BTC_USDT"
+    },
+    "reply": {
+      "fixture": "info_markettrend_get_technical_analysis",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_markettrend_get_technical_analysis",
+      "items"
+    ]
+  },
+  {
+    "path": "info onchain get-address-info",
+    "tool": "info_onchain_get_address_info",
+    "arguments": {
+      "address": "0x1111111111111111111111111111111111111111"
+    },
+    "reply": {
+      "fixture": "info_onchain_get_address_info",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_onchain_get_address_info",
+      "items"
+    ]
+  },
+  {
+    "path": "info onchain get-address-transactions",
+    "tool": "info_onchain_get_address_transactions",
+    "arguments": {
+      "address": "0x1111111111111111111111111111111111111111",
+      "nonzero_value": false
+    },
+    "reply": {
+      "address": "0x1111111111111111111111111111111111111111",
+      "chain": "ethereum",
+      "total": 0,
+      "count": 0,
+      "items": []
+    },
+    "pretty_contains": [
+      "Address Transactions",
+      "0x1111111111111111111111111111111111111111",
+      "chain: ethereum",
+      "total: 0",
+      "count: 0",
+      "No transactions in this page."
+    ]
+  },
+  {
+    "path": "info onchain get-transaction",
+    "tool": "info_onchain_get_transaction",
+    "arguments": {
+      "tx_hash": "0x2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    "reply": {
+      "fixture": "info_onchain_get_transaction",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_onchain_get_transaction",
+      "items"
+    ]
+  },
+  {
+    "path": "info onchain get-token-onchain",
+    "tool": "info_onchain_get_token_onchain",
+    "arguments": {
+      "token": "USDT"
+    },
+    "reply": {
+      "fixture": "info_onchain_get_token_onchain",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_onchain_get_token_onchain",
+      "items"
+    ]
+  },
+  {
+    "path": "info platformmetrics get-platform-info",
+    "tool": "info_platformmetrics_get_platform_info",
+    "arguments": {
+      "platform_name": "uniswap"
+    },
+    "reply": {
+      "fixture": "info_platformmetrics_get_platform_info",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_platformmetrics_get_platform_info",
+      "items"
+    ]
+  },
+  {
+    "path": "info platformmetrics search-platforms",
+    "tool": "info_platformmetrics_search_platforms",
+    "arguments": {},
+    "reply": {
+      "fixture": "info_platformmetrics_search_platforms",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_platformmetrics_search_platforms",
+      "items"
+    ]
+  },
+  {
+    "path": "info platformmetrics get-defi-overview",
+    "tool": "info_platformmetrics_get_defi_overview",
+    "arguments": {},
+    "reply": {
+      "fixture": "info_platformmetrics_get_defi_overview",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_platformmetrics_get_defi_overview",
+      "items"
+    ]
+  },
+  {
+    "path": "info platformmetrics get-stablecoin-info",
+    "tool": "info_platformmetrics_get_stablecoin_info",
+    "arguments": {},
+    "reply": {
+      "fixture": "info_platformmetrics_get_stablecoin_info",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_platformmetrics_get_stablecoin_info",
+      "items"
+    ]
+  },
+  {
+    "path": "info platformmetrics get-bridge-metrics",
+    "tool": "info_platformmetrics_get_bridge_metrics",
+    "arguments": {},
+    "reply": {
+      "fixture": "info_platformmetrics_get_bridge_metrics",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_platformmetrics_get_bridge_metrics",
+      "items"
+    ]
+  },
+  {
+    "path": "info platformmetrics get-cex-orderbook-depth",
+    "tool": "info_platformmetrics_get_cex_orderbook_depth",
+    "arguments": {
+      "symbol": "BTC_USDT"
+    },
+    "reply": {
+      "fixture": "info_platformmetrics_get_cex_orderbook_depth",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_platformmetrics_get_cex_orderbook_depth",
+      "items"
+    ]
+  },
+  {
+    "path": "info platformmetrics get-yield-pools",
+    "tool": "info_platformmetrics_get_yield_pools",
+    "arguments": {},
+    "reply": {
+      "fixture": "info_platformmetrics_get_yield_pools",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_platformmetrics_get_yield_pools",
+      "items"
+    ]
+  },
+  {
+    "path": "info platformmetrics get-platform-history",
+    "tool": "info_platformmetrics_get_platform_history",
+    "arguments": {
+      "platform_name": "uniswap"
+    },
+    "reply": {
+      "fixture": "info_platformmetrics_get_platform_history",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_platformmetrics_get_platform_history",
+      "items"
+    ]
+  },
+  {
+    "path": "info platformmetrics get-exchange-reserves",
+    "tool": "info_platformmetrics_get_exchange_reserves",
+    "arguments": {},
+    "reply": {
+      "fixture": "info_platformmetrics_get_exchange_reserves",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_platformmetrics_get_exchange_reserves",
+      "items"
+    ]
+  },
+  {
+    "path": "info platformmetrics get-liquidation-heatmap",
+    "tool": "info_platformmetrics_get_liquidation_heatmap",
+    "arguments": {
+      "symbol": "BTC_USDT"
+    },
+    "reply": {
+      "fixture": "info_platformmetrics_get_liquidation_heatmap",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_platformmetrics_get_liquidation_heatmap",
+      "items"
+    ]
+  },
+  {
+    "path": "info platformmetrics get-chain-activity",
+    "tool": "info_platformmetrics_get_chain_activity",
+    "arguments": {
+      "metric_group": "staking",
+      "chain": "eth"
+    },
+    "reply": {
+      "metric_group": "staking",
+      "chain": "eth",
+      "staking_metrics": {
+        "series": [
+          {
+            "date": "2026-11-01",
+            "eth_supply": "120000000",
+            "staking_apr_7d": "3.25",
+            "entry_wait_days": "0",
+            "exit_wait_days": "2"
+          }
+        ]
+      }
+    },
+    "pretty_contains": [
+      "Chain Activity (Staking)",
+      "chain: eth",
+      "Latest Snapshot",
+      "2026-11-01",
+      "eth_supply",
+      "120000000",
+      "staking_apr_7d",
+      "3.25",
+      "entry_wait_days",
+      "exit_wait_days"
+    ]
+  },
+  {
+    "path": "info marketdetail get-orderbook",
+    "tool": "info_marketdetail_get_orderbook",
+    "arguments": {
+      "symbol": "BTC_USDT"
+    },
+    "reply": {
+      "fixture": "info_marketdetail_get_orderbook",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_marketdetail_get_orderbook",
+      "items"
+    ]
+  },
+  {
+    "path": "info marketdetail get-recent-trades",
+    "tool": "info_marketdetail_get_recent_trades",
+    "arguments": {
+      "symbol": "BTC_USDT"
+    },
+    "reply": {
+      "fixture": "info_marketdetail_get_recent_trades",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_marketdetail_get_recent_trades",
+      "items"
+    ]
+  },
+  {
+    "path": "info marketdetail get-kline",
+    "tool": "info_marketdetail_get_kline",
+    "arguments": {
+      "symbol": "BTC_USDT",
+      "timeframe": "1h",
+      "limit": 200
+    },
+    "reply": {
+      "fixture": "info_marketdetail_get_kline",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_marketdetail_get_kline",
+      "items"
+    ]
+  },
+  {
+    "path": "info macro get-macro-indicator",
+    "tool": "info_macro_get_macro_indicator",
+    "arguments": {
+      "indicator": "CPI"
+    },
+    "reply": {
+      "fixture": "info_macro_get_macro_indicator",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_macro_get_macro_indicator",
+      "items"
+    ]
+  },
+  {
+    "path": "info macro get-economic-calendar",
+    "tool": "info_macro_get_economic_calendar",
+    "arguments": {},
+    "reply": {
+      "fixture": "info_macro_get_economic_calendar",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_macro_get_economic_calendar",
+      "items"
+    ]
+  },
+  {
+    "path": "info macro get-macro-summary",
+    "tool": "info_macro_get_macro_summary",
+    "arguments": {},
+    "reply": {
+      "fixture": "info_macro_get_macro_summary",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_macro_get_macro_summary",
+      "items"
+    ]
+  },
+  {
+    "path": "info coin search-coins",
+    "tool": "info_coin_search_coins",
+    "arguments": {
+      "category": "defi"
+    },
+    "reply": {
+      "fixture": "info_coin_search_coins",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_coin_search_coins",
+      "items"
+    ]
+  },
+  {
+    "path": "info coin get-coin-rankings",
+    "tool": "info_coin_get_coin_rankings",
+    "arguments": {
+      "ranking_type": "popular"
+    },
+    "reply": {
+      "fixture": "info_coin_get_coin_rankings",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_coin_get_coin_rankings",
+      "items"
+    ]
+  },
+  {
+    "path": "info marketsnapshot batch-market-snapshot",
+    "tool": "info_marketsnapshot_batch_market_snapshot",
+    "arguments": {
+      "symbols": [
+        "BTC_USDT"
+      ]
+    },
+    "reply": {
+      "fixture": "info_marketsnapshot_batch_market_snapshot",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_marketsnapshot_batch_market_snapshot",
+      "items"
+    ]
+  },
+  {
+    "path": "info marketsnapshot get-market-overview",
+    "tool": "info_marketsnapshot_get_market_overview",
+    "arguments": {},
+    "reply": {
+      "fixture": "info_marketsnapshot_get_market_overview",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_marketsnapshot_get_market_overview",
+      "items"
+    ]
+  },
+  {
+    "path": "info marketsnapshot get-institutional-metrics",
+    "tool": "info_marketsnapshot_get_institutional_metrics",
+    "arguments": {},
+    "reply": {
+      "fixture": "info_marketsnapshot_get_institutional_metrics",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_marketsnapshot_get_institutional_metrics",
+      "items"
+    ]
+  },
+  {
+    "path": "info compliance check-token-security",
+    "tool": "info_compliance_check_token_security",
+    "arguments": {
+      "token": "USDT",
+      "chain": "eth"
+    },
+    "reply": {
+      "fixture": "info_compliance_check_token_security",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "info_compliance_check_token_security",
+      "items"
+    ]
+  },
+  {
+    "path": "news feed search-news",
+    "tool": "news_feed_search_news",
+    "arguments": {
+      "query": "BTC",
+      "time_range": "24h",
+      "limit": 20
+    },
+    "reply": {
+      "fixture": "news_feed_search_news",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "news_feed_search_news",
+      "items"
+    ]
+  },
+  {
+    "path": "news feed search-ugc",
+    "tool": "news_feed_search_ugc",
+    "arguments": {
+      "query": "BTC",
+      "time_range": "24h",
+      "limit": 10
+    },
+    "reply": {
+      "fixture": "news_feed_search_ugc",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "news_feed_search_ugc",
+      "items"
+    ]
+  },
+  {
+    "path": "news feed search-x",
+    "tool": "news_feed_search_x",
+    "arguments": {
+      "query": "BTC",
+      "time_range": "24h"
+    },
+    "reply": {
+      "fixture": "news_feed_search_x",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "news_feed_search_x",
+      "items"
+    ]
+  },
+  {
+    "path": "news feed web-search",
+    "tool": "news_feed_web_search",
+    "arguments": {
+      "query": "BTC",
+      "time_range": "24h",
+      "limit": 5
+    },
+    "reply": {
+      "fixture": "news_feed_web_search",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "news_feed_web_search",
+      "items"
+    ]
+  },
+  {
+    "path": "news feed get-social-sentiment",
+    "tool": "news_feed_get_social_sentiment",
+    "arguments": {
+      "coin": "BTC",
+      "time_range": "24h"
+    },
+    "reply": {
+      "fixture": "news_feed_get_social_sentiment",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "news_feed_get_social_sentiment",
+      "items"
+    ]
+  },
+  {
+    "path": "news feed get-exchange-announcements",
+    "tool": "news_feed_get_exchange_announcements",
+    "arguments": {
+      "coin": "BTC"
+    },
+    "reply": {
+      "fixture": "news_feed_get_exchange_announcements",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "news_feed_get_exchange_announcements",
+      "items"
+    ]
+  },
+  {
+    "path": "news feed get-mention-burst",
+    "tool": "news_feed_get_mention_burst",
+    "arguments": {
+      "coin": "BTC",
+      "window": "24h"
+    },
+    "reply": {
+      "fixture": "news_feed_get_mention_burst",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "news_feed_get_mention_burst",
+      "items"
+    ]
+  },
+  {
+    "path": "news feed get-hot-topics",
+    "tool": "news_feed_get_hot_topics",
+    "arguments": {
+      "coin": "BTC",
+      "window": "4h",
+      "limit": 3
+    },
+    "reply": {
+      "fixture": "news_feed_get_hot_topics",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "news_feed_get_hot_topics",
+      "items"
+    ]
+  },
+  {
+    "path": "news events get-latest-events",
+    "tool": "news_events_get_latest_events",
+    "arguments": {
+      "time_range": "24h",
+      "limit": 20
+    },
+    "reply": {
+      "fixture": "news_events_get_latest_events",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "news_events_get_latest_events",
+      "items"
+    ]
+  },
+  {
+    "path": "news events get-event-detail",
+    "tool": "news_events_get_event_detail",
+    "arguments": {
+      "event_id": "synthetic-event"
+    },
+    "reply": {
+      "fixture": "news_events_get_event_detail",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "news_events_get_event_detail",
+      "items"
+    ]
+  },
+  {
+    "path": "news events explain-market-move",
+    "tool": "news_events_explain_market_move",
+    "arguments": {
+      "query": "BTC rise",
+      "coin": "BTC",
+      "time_range": "2h"
+    },
+    "reply": {
+      "fixture": "news_events_explain_market_move",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "news_events_explain_market_move",
+      "items"
+    ]
+  },
+  {
+    "path": "news events get-market-move-report",
+    "tool": "news_events_get_market_move_report",
+    "arguments": {
+      "symbol": "BTC"
+    },
+    "reply": {
+      "fixture": "news_events_get_market_move_report",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "news_events_get_market_move_report",
+      "items"
+    ]
+  },
+  {
+    "path": "news events list-market-move-reports",
+    "tool": "news_events_list_market_move_reports",
+    "arguments": {
+      "symbol": "BTC",
+      "start_time": "2026-11-01 00:00:00",
+      "end_time": "2026-11-02 00:00:00",
+      "limit": 20
+    },
+    "reply": {
+      "fixture": "news_events_list_market_move_reports",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "news_events_list_market_move_reports",
+      "items"
+    ]
+  },
+  {
+    "path": "news prediction get-volume-delta-ranking",
+    "tool": "news_prediction_get_volume_delta_ranking",
+    "arguments": {},
+    "reply": {
+      "fixture": "news_prediction_get_volume_delta_ranking",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "news_prediction_get_volume_delta_ranking",
+      "items"
+    ]
+  },
+  {
+    "path": "news prediction get-fastest-rising-ranking",
+    "tool": "news_prediction_get_fastest_rising_ranking",
+    "arguments": {},
+    "reply": {
+      "fixture": "news_prediction_get_fastest_rising_ranking",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "news_prediction_get_fastest_rising_ranking",
+      "items"
+    ]
+  },
+  {
+    "path": "news prediction get-market-orderbook",
+    "tool": "news_prediction_get_market_orderbook",
+    "arguments": {
+      "venue": "polymarket",
+      "market_id": "synthetic-market"
+    },
+    "reply": {
+      "fixture": "news_prediction_get_market_orderbook",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "news_prediction_get_market_orderbook",
+      "items"
+    ]
+  },
+  {
+    "path": "news prediction search-events",
+    "tool": "news_prediction_search_events",
+    "arguments": {
+      "query": "BTC"
+    },
+    "reply": {
+      "fixture": "news_prediction_search_events",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "news_prediction_search_events",
+      "items"
+    ]
+  },
+  {
+    "path": "news prediction get-event-signal",
+    "tool": "news_prediction_get_event_signal",
+    "arguments": {
+      "event_ref": "polymarket:synthetic-event"
+    },
+    "reply": {
+      "fixture": "news_prediction_get_event_signal",
+      "items": []
+    },
+    "pretty_contains": [
+      "Result",
+      "news_prediction_get_event_signal",
+      "items"
+    ]
+  }
+]

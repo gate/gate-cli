@@ -72,8 +72,8 @@ func runQueryBorrowable(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.UnifiedAPI.GetUnifiedBorrowable(c.Context(), currency)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/unified/borrowable", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/unified/borrowable", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -98,8 +98,7 @@ func runQueryBorrowableList(cmd *cobra.Command, args []string) error {
 	list := strings.Split(currencies, ",")
 	result, httpResp, err := c.UnifiedAPI.GetUnifiedBorrowableList(c.Context(), list)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/unified/borrowable_list", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/unified/borrowable_list", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -124,8 +123,7 @@ func runQueryTransferable(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.UnifiedAPI.GetUnifiedTransferable(c.Context(), currency)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/unified/transferable", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/unified/transferable", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -149,8 +147,7 @@ func runQueryTransferables(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.UnifiedAPI.GetUnifiedTransferables(c.Context(), currencies)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/unified/transferables", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/unified/transferables", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -176,8 +173,7 @@ func runQueryEstimateRate(cmd *cobra.Command, args []string) error {
 	list := strings.Split(currencies, ",")
 	result, httpResp, err := c.UnifiedAPI.GetUnifiedEstimateRate(c.Context(), list)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/unified/estimate_rate", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/unified/estimate_rate", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

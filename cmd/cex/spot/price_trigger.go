@@ -7,9 +7,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var priceTriggerCmd = &cobra.Command{
@@ -41,6 +41,8 @@ func init() {
 	createCmd.Flags().String("price", "", "Order price (required)")
 	createCmd.Flags().String("amount", "", "Order amount (required)")
 	createCmd.Flags().String("account", "normal", "Account type: normal, margin, unified")
+	// Prefer the policy accepted by the test service; do not rewrite explicit caller intent.
+	createCmd.Flags().String("time-in-force", "ioc", "Time in force: ioc or gtc (subject to server support)")
 	createCmd.MarkFlagRequired("market")
 	createCmd.MarkFlagRequired("trigger-price")
 	createCmd.MarkFlagRequired("side")
@@ -101,8 +103,8 @@ func runSpotPriceTriggerList(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.SpotAPI.ListSpotPriceTriggeredOrders(c.Context(), status, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/price_orders", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/spot/price_orders", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -123,6 +125,11 @@ func runSpotPriceTriggerCreate(cmd *cobra.Command, args []string) error {
 	price, _ := cmd.Flags().GetString("price")
 	amount, _ := cmd.Flags().GetString("amount")
 	account, _ := cmd.Flags().GetString("account")
+	// The SDK serializes this required field even when empty; validate before auth or HTTP.
+	timeInForce, _ := cmd.Flags().GetString("time-in-force")
+	if err := validateSpotTriggerTimeInForce(timeInForce); err != nil {
+		return err
+	}
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
 	if err != nil {
@@ -140,17 +147,17 @@ func runSpotPriceTriggerCreate(cmd *cobra.Command, args []string) error {
 			Expiration: triggerExp,
 		},
 		Put: gateapi.SpotPricePutOrder{
-			Side:    side,
-			Price:   price,
-			Amount:  amount,
-			Account: account,
+			Side:        side,
+			Price:       price,
+			Amount:      amount,
+			Account:     account,
+			TimeInForce: timeInForce,
 		},
 	}
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.SpotAPI.CreateSpotPriceTriggeredOrder(c.Context(), req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/spot/price_orders", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/spot/price_orders", string(body))
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -179,8 +186,7 @@ func runSpotPriceTriggerCancelAll(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.SpotAPI.CancelSpotPriceTriggeredOrderList(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "DELETE", "/api/v4/spot/price_orders", ""))
-		return nil
+		return client.CommandError(err, httpResp, "DELETE", "/api/v4/spot/price_orders", "")
 	}
 	return p.Print(result)
 }
@@ -198,8 +204,7 @@ func runSpotPriceTriggerGet(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.SpotAPI.GetSpotPriceTriggeredOrder(c.Context(), id)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/spot/price_orders/"+id, ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/spot/price_orders/"+id, "")
 	}
 	return p.Print(result)
 }
@@ -217,8 +222,16 @@ func runSpotPriceTriggerCancel(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.SpotAPI.CancelSpotPriceTriggeredOrder(c.Context(), id)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "DELETE", "/api/v4/spot/price_orders/"+id, ""))
-		return nil
+		return client.CommandError(err, httpResp, "DELETE", "/api/v4/spot/price_orders/"+id, "")
 	}
 	return p.Print(result)
+}
+
+// validateSpotTriggerTimeInForce follows the triggered-order SDK contract, which
+// permits gtc/ioc only; ordinary spot orders support additional policies.
+func validateSpotTriggerTimeInForce(value string) error {
+	if value != "gtc" && value != "ioc" {
+		return fmt.Errorf("--time-in-force must be gtc or ioc")
+	}
+	return nil
 }

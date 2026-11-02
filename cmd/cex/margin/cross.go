@@ -67,8 +67,8 @@ func runCrossLoans(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MarginAPI.ListCrossMarginLoans(c.Context(), status, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/margin/cross/loans", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/margin/cross/loans", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -106,8 +106,7 @@ func runCrossRepayments(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MarginAPI.ListCrossMarginRepayments(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/margin/cross/repayments", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/margin/cross/repayments", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

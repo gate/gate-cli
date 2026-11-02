@@ -21,7 +21,7 @@ import (
 // v7.2.78 for the cross_ex module. Coverage:
 //   1. The new --statement-type flag on `account book`.
 //   2. JSON wire-tag for CrossexAccountBookRecord (Type → StatementType).
-//   3. End-to-end RunE: query param plumbing and the new field rendering.
+//   3. Retained RunE handlers reject requests under release retirement.
 //   4. RequireAuth gate still trips when no credentials are configured.
 
 const cobraRequiredFlagAnnotation = "cobra_annotation_bash_completion_one_required_flag"
@@ -138,8 +138,7 @@ func TestCrossexAccountBookRecord_LegacyTypeKeyDoesNotBind(t *testing.T) {
 
 // ListCrossexAccountBookOpts must accept StatementType and serialize it as
 // the `statement_type` query-param. We can only directly inspect the struct,
-// not the URL it produces, so couple the struct check with the RunE
-// integration test below.
+// not the URL it produces. CLI execution below independently checks retirement.
 func TestListCrossexAccountBookOpts_StatementTypeField(t *testing.T) {
 	opts := gateapi.ListCrossexAccountBookOpts{
 		StatementType: optional.NewString("TRANSACTION"),
@@ -150,15 +149,15 @@ func TestListCrossexAccountBookOpts_StatementTypeField(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Layer 3 — RunE end-to-end. Cover three branches:
-//   - all flags including the new --statement-type
-//   - no flags at all (zero-value branch)
-//   - --statement-type only (proves the new opt reaches the wire)
+// Layer 3 — Retained RunE handlers are blocked with full, empty and partial flags.
 // ---------------------------------------------------------------------------
 
-func TestRunAccountBook_AllFlags_Succeeds(t *testing.T) {
+// TestRunAccountBook_AllFlags_RetiredBeforeSend verifies that the retained handler rejects
+// valid flags and synthetic credentials before any API request.
+func TestRunAccountBook_AllFlags_RetiredBeforeSend(t *testing.T) {
 	var capturedURL *url.URL
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("retired CLI handler reached the API")
 		capturedURL = r.URL
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -179,22 +178,16 @@ func TestRunAccountBook_AllFlags_Succeeds(t *testing.T) {
 	root.AddCommand(cmd)
 
 	err := runAccountBook(cmd, nil)
-	require.NoError(t, err)
-
-	require.NotNil(t, capturedURL)
-	q := capturedURL.Query()
-	assert.Equal(t, "TRADING_FEE", q.Get("statement_type"),
-		"--statement-type must reach the SDK as the statement_type query param")
-	assert.Equal(t, "USDT", q.Get("coin"))
-	assert.Equal(t, "2", q.Get("page"))
-	assert.Equal(t, "50", q.Get("limit"))
-	assert.Equal(t, "1700000000", q.Get("from"))
-	assert.Equal(t, "1700001000", q.Get("to"))
+	require.ErrorContains(t, err, "operation unavailable in this CLI release")
+	assert.Nil(t, capturedURL, "retired endpoint must not receive a request")
 }
 
-func TestRunAccountBook_NoFlags_Succeeds(t *testing.T) {
+// TestRunAccountBook_NoFlags_RetiredBeforeSend verifies that the retained handler rejects
+// valid flags and synthetic credentials before any API request.
+func TestRunAccountBook_NoFlags_RetiredBeforeSend(t *testing.T) {
 	var capturedURL *url.URL
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("retired CLI handler reached the API")
 		capturedURL = r.URL
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -215,22 +208,16 @@ func TestRunAccountBook_NoFlags_Succeeds(t *testing.T) {
 	root.AddCommand(cmd)
 
 	err := runAccountBook(cmd, nil)
-	require.NoError(t, err)
-
-	require.NotNil(t, capturedURL)
-	q := capturedURL.Query()
-	// Empty / zero flag values must not become "" query params; verifies
-	// the .IsSet() guards in runAccountBook.
-	assert.Empty(t, q.Get("statement_type"))
-	assert.Empty(t, q.Get("coin"))
-	assert.Empty(t, q.Get("page"))
-	assert.Empty(t, q.Get("limit"))
+	require.ErrorContains(t, err, "operation unavailable in this CLI release")
+	assert.Nil(t, capturedURL, "retired endpoint must not receive a request")
 }
 
-// Set --statement-type only and verify nothing else leaks into the URL.
-func TestRunAccountBook_StatementTypeOnly_Succeeds(t *testing.T) {
+// TestRunAccountBook_StatementTypeOnly_RetiredBeforeSend verifies that the retained handler rejects
+// valid flags and synthetic credentials before any API request.
+func TestRunAccountBook_StatementTypeOnly_RetiredBeforeSend(t *testing.T) {
 	var capturedURL *url.URL
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("retired CLI handler reached the API")
 		capturedURL = r.URL
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -251,20 +238,15 @@ func TestRunAccountBook_StatementTypeOnly_Succeeds(t *testing.T) {
 	root.AddCommand(cmd)
 
 	err := runAccountBook(cmd, nil)
-	require.NoError(t, err)
-
-	require.NotNil(t, capturedURL)
-	q := capturedURL.Query()
-	assert.Equal(t, "FUNDING_FEE", q.Get("statement_type"))
-	assert.Empty(t, q.Get("coin"))
-	assert.Empty(t, q.Get("page"))
+	require.ErrorContains(t, err, "operation unavailable in this CLI release")
+	assert.Nil(t, capturedURL, "retired endpoint must not receive a request")
 }
 
-// Drives the JSON output branch, which now reads StatementType (was Type).
-// Asserts the rename did not break the table-rendering path used in non-JSON
-// mode — both code paths should accept the new field.
-func TestRunAccountBook_TableRendering_UsesStatementType(t *testing.T) {
+// TestRunAccountBook_TableRendering_RetiredBeforeSend verifies that the retained handler rejects
+// valid flags and synthetic credentials before any API request.
+func TestRunAccountBook_TableRendering_RetiredBeforeSend(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("retired CLI handler reached the API")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`[{"id":"r1","statement_type":"AUTO_REPAY","coin":"USDT","exchange_type":"GATE","change":"-0.01","balance":"42","create_time":"now"}]`))
@@ -272,14 +254,8 @@ func TestRunAccountBook_TableRendering_UsesStatementType(t *testing.T) {
 	t.Cleanup(srv.Close)
 	t.Setenv("GATE_BASE_URL", srv.URL)
 
-	// Capture stdout to assert the table contents under the new field.
-	r, w, _ := os.Pipe()
-	oldOut := os.Stdout
-	os.Stdout = w
-	t.Cleanup(func() { os.Stdout = oldOut })
-
 	root := authedCrossexTestRoot(t)
-	// Default --format=text triggers the table path; switch away from json.
+	// Output format must not affect the release-level execution denial.
 	require.NoError(t, root.PersistentFlags().Set("format", "text"))
 
 	cmd := &cobra.Command{Use: "book"}
@@ -292,16 +268,7 @@ func TestRunAccountBook_TableRendering_UsesStatementType(t *testing.T) {
 	root.AddCommand(cmd)
 
 	err := runAccountBook(cmd, nil)
-	_ = w.Close()
-	captured := make([]byte, 4096)
-	n, _ := r.Read(captured)
-	output := string(captured[:n])
-
-	require.NoError(t, err)
-	assert.Contains(t, output, "AUTO_REPAY",
-		"table output must render the new StatementType field value")
-	assert.Contains(t, output, "Statement Type",
-		"v7.2.78 column header must use 'Statement Type', not legacy 'Type'")
+	require.ErrorContains(t, err, "operation unavailable in this CLI release")
 }
 
 // ---------------------------------------------------------------------------

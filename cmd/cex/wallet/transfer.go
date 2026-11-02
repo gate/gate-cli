@@ -8,9 +8,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 // futuresSettle maps a currency to its futures settlement currency.
@@ -142,8 +142,8 @@ func runWalletTransfer(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.WalletAPI.Transfer(c.Context(), req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/wallet/transfers", string(body)))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "POST", "/api/v4/wallet/transfers", string(body))
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -182,8 +182,7 @@ func runWalletSubTransfer(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.WalletAPI.TransferWithSubAccount(c.Context(), req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/wallet/sub_account_transfers", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/wallet/sub_account_transfers", string(body))
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -224,8 +223,7 @@ func runWalletSubToSub(cmd *cobra.Command, args []string) error {
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.WalletAPI.SubAccountToSubAccount(c.Context(), req)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/wallet/sub_account_to_sub_account", string(body)))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/wallet/sub_account_to_sub_account", string(body))
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -255,8 +253,7 @@ func runWalletTransferStatus(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.WalletAPI.GetTransferOrderStatus(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/wallet/order_status", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/wallet/order_status", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -301,8 +298,7 @@ func runWalletSubTransfers(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.WalletAPI.ListSubAccountTransfers(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/wallet/sub_account_transfers", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/wallet/sub_account_transfers", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

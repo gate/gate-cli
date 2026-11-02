@@ -6,9 +6,9 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	gateapi "github.com/gate/gateapi-go/v7"
 	"github.com/gate/gate-cli/internal/client"
 	"github.com/gate/gate-cli/internal/cmdutil"
+	gateapi "github.com/gate/gateapi-go/v7"
 )
 
 var marketCmd = &cobra.Command{
@@ -22,7 +22,7 @@ func init() {
 		Short: "List Alpha currencies",
 		RunE:  runAlphaCurrencies,
 	}
-	currenciesCmd.Flags().String("currency", "", "Filter by currency symbol")
+	currenciesCmd.Flags().String("currency", "", currencyIDHelp)
 	currenciesCmd.Flags().Int32("limit", 100, "Maximum number of records")
 	currenciesCmd.Flags().Int32("page", 1, "Page number")
 
@@ -31,7 +31,7 @@ func init() {
 		Short: "List Alpha tickers",
 		RunE:  runAlphaTickers,
 	}
-	tickersCmd.Flags().String("currency", "", "Filter by currency symbol")
+	tickersCmd.Flags().String("currency", "", currencyIDHelp)
 	tickersCmd.Flags().Int32("limit", 100, "Maximum number of records")
 	tickersCmd.Flags().Int32("page", 1, "Page number")
 
@@ -69,8 +69,8 @@ func runAlphaCurrencies(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.AlphaAPI.ListAlphaCurrencies(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/alpha/currencies", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/alpha/currencies", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -102,8 +102,7 @@ func runAlphaTickers(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.AlphaAPI.ListAlphaTickers(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/alpha/tickers", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/alpha/tickers", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -141,8 +140,7 @@ func runAlphaTokens(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.AlphaAPI.ListAlphaTokens(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/alpha/tokens", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/alpha/tokens", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)

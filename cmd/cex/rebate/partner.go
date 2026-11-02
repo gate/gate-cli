@@ -111,8 +111,8 @@ func runPartnerTransactions(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.RebateAPI.PartnerTransactionHistory(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/rebate/partner/transaction_history", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/rebate/partner/transaction_history", "")
 	}
 	return p.Print(result)
 }
@@ -155,8 +155,7 @@ func runPartnerCommissions(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.RebateAPI.PartnerCommissionsHistory(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/rebate/partner/commission_history", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/rebate/partner/commission_history", "")
 	}
 	return p.Print(result)
 }
@@ -187,8 +186,7 @@ func runPartnerSubList(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.RebateAPI.PartnerSubList(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/rebate/partner/sub_list", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/rebate/partner/sub_list", "")
 	}
 	return p.Print(result)
 }
@@ -205,8 +203,7 @@ func runPartnerEligibility(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.RebateAPI.GetPartnerEligibility(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/rebate/partner/eligibility", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/rebate/partner/eligibility", "")
 	}
 	return p.Print(result)
 }
@@ -223,8 +220,7 @@ func runPartnerApplication(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.RebateAPI.GetPartnerApplicationRecent(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/rebate/partner/application_recent", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/rebate/partner/application_recent", "")
 	}
 	return p.Print(result)
 }
@@ -255,8 +251,7 @@ func runPartnerAgentData(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.RebateAPI.GetPartnerAgentDataAggregated(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/rebate/partner/agent_data_aggregated", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/rebate/partner/agent_data_aggregated", "")
 	}
 	return p.Print(result)
 }

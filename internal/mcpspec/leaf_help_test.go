@@ -17,7 +17,7 @@ func TestInfoLeafLongAppendCoinInfo_defaultCompact(t *testing.T) {
 	if !strings.Contains(s, "[Read]") || !strings.Contains(s, "get_coin_rankings") {
 		t.Fatalf("expected English description from spec: %s", s)
 	}
-	if !strings.Contains(s, "Logic:") || !strings.Contains(s, "coinSearcher") {
+	if !strings.Contains(s, "Logic:") || !strings.Contains(s, "maximum 512") {
 		t.Fatalf("expected logic from spec: %s", s)
 	}
 }
@@ -41,7 +41,7 @@ func TestInfoLeafLongAppendInstitutionalMetrics_routingDescription(t *testing.T)
 func TestNewsLeafLongAppendSearchNews_defaultCompact(t *testing.T) {
 	t.Setenv("GATE_INTEL_LEAF_HELP", "")
 	s := NewsLeafLongAppend("news_feed_search_news")
-	if !strings.Contains(s, "platform news index") {
+	if !strings.Contains(s, "platform news collection") {
 		t.Fatalf("missing description: %s", s)
 	}
 	if strings.Contains(s, "Parameters:") {
@@ -56,7 +56,7 @@ func TestInfoLeafLongAppendOnchainAddressInfo_ErrorsSection(t *testing.T) {
 	t.Setenv("GATE_INTEL_LEAF_HELP", "")
 	s := InfoLeafLongAppend("info_onchain_get_address_info")
 	if !strings.Contains(s, "Errors:") || !strings.Contains(s, "invalid_chain") {
-		t.Fatalf("expected onchain NE errors in help: %s", s)
+		t.Fatalf("expected onchain errors in help: %s", s)
 	}
 	if !strings.Contains(s, "asset_summary") {
 		t.Fatalf("expected updated logic mentioning asset_summary: %s", s)

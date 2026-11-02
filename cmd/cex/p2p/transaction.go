@@ -100,8 +100,8 @@ func runTransactionPending(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.P2pAPI.P2pMerchantTransactionGetPendingTransactionList(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/p2p/merchant/transaction/get_pending_transaction_list", jsonStr))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "POST", "/api/v4/p2p/merchant/transaction/get_pending_transaction_list", jsonStr)
 	}
 	return p.Print(result)
 }
@@ -124,8 +124,7 @@ func runTransactionCompleted(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.P2pAPI.P2pMerchantTransactionGetCompletedTransactionList(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/p2p/merchant/transaction/get_completed_transaction_list", jsonStr))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/p2p/merchant/transaction/get_completed_transaction_list", jsonStr)
 	}
 	return p.Print(result)
 }
@@ -151,8 +150,7 @@ func runTransactionDetail(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.P2pAPI.P2pMerchantTransactionGetTransactionDetails(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/p2p/merchant/transaction/get_transaction_details", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/p2p/merchant/transaction/get_transaction_details", "")
 	}
 	return p.Print(result)
 }
@@ -176,8 +174,7 @@ func runConfirmPayment(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.P2pAPI.P2pMerchantTransactionConfirmPayment(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/p2p/merchant/transaction/confirm_payment", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/p2p/merchant/transaction/confirm_payment", "")
 	}
 	return p.Print(result)
 }
@@ -199,8 +196,7 @@ func runConfirmReceipt(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.P2pAPI.P2pMerchantTransactionConfirmReceipt(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/p2p/merchant/transaction/confirm_receipt", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/p2p/merchant/transaction/confirm_receipt", "")
 	}
 	return p.Print(result)
 }
@@ -230,8 +226,7 @@ func runTransactionCancel(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.P2pAPI.P2pMerchantTransactionCancel(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/p2p/merchant/transaction/cancel", ""))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/p2p/merchant/transaction/cancel", "")
 	}
 	return p.Print(result)
 }
@@ -254,8 +249,7 @@ func runPushOrder(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.P2pAPI.P2pMerchantBooksPlaceBizPushOrder(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/p2p/merchant/books/place_biz_push_order", jsonStr))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/p2p/merchant/books/place_biz_push_order", jsonStr)
 	}
 	return p.Print(result)
 }

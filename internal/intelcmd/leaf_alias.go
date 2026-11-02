@@ -12,7 +12,7 @@ import (
 // (e.g. info_markettrend_get_indicator_history) for intel leaf aliases. Used by tests and tooling.
 const AnnotationIntelToolName = "gate-cli.intel.tool-name"
 
-// LeafAliasConfig builds one info/news-style shortcut leaf command (CR-811).
+// LeafAliasConfig builds one info/news-style shortcut leaf command .
 type LeafAliasConfig struct {
 	// BackendCLI is the top-level Cobra command name for examples, e.g. "info" or "news".
 	BackendCLI string

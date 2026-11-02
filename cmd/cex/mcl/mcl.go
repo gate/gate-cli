@@ -136,8 +136,8 @@ func runCurrencies(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MultiCollateralLoanAPI.ListMultiCollateralCurrencies(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/loan/multi_collateral/currencies", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/loan/multi_collateral/currencies", "")
 	}
 	return p.Print(result)
 }
@@ -156,8 +156,7 @@ func runQuota(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MultiCollateralLoanAPI.ListUserCurrencyQuota(c.Context(), typ, currency)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/loan/multi_collateral/currency_quota", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/loan/multi_collateral/currency_quota", "")
 	}
 	return p.Print(result)
 }
@@ -171,8 +170,7 @@ func runLtv(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MultiCollateralLoanAPI.GetMultiCollateralLtv(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/loan/multi_collateral/ltv", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/loan/multi_collateral/ltv", "")
 	}
 	return p.Print(result)
 }
@@ -195,8 +193,7 @@ func runCurrentRate(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MultiCollateralLoanAPI.GetMultiCollateralCurrentRate(c.Context(), currencies, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/loan/multi_collateral/current_rate", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/loan/multi_collateral/current_rate", "")
 	}
 	return p.Print(result)
 }
@@ -210,8 +207,7 @@ func runFixRate(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MultiCollateralLoanAPI.GetMultiCollateralFixRate(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/loan/multi_collateral/fixed_rate", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/loan/multi_collateral/fixed_rate", "")
 	}
 	return p.Print(result)
 }
@@ -246,8 +242,7 @@ func runOrders(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MultiCollateralLoanAPI.ListMultiCollateralOrders(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/loan/multi_collateral/orders", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/loan/multi_collateral/orders", "")
 	}
 	return p.Print(result)
 }
@@ -265,8 +260,7 @@ func runOrder(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MultiCollateralLoanAPI.GetMultiCollateralOrderDetail(c.Context(), id)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", fmt.Sprintf("/api/v4/loan/multi_collateral/orders/%s", id), ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", fmt.Sprintf("/api/v4/loan/multi_collateral/orders/%s", id), "")
 	}
 	return p.Print(result)
 }
@@ -288,8 +282,7 @@ func runCreate(cmd *cobra.Command, args []string) error {
 	}
 	result, httpResp, err := c.MultiCollateralLoanAPI.CreateMultiCollateral(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/loan/multi_collateral/orders", jsonStr))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/loan/multi_collateral/orders", jsonStr)
 	}
 	return p.Print(result)
 }
@@ -311,8 +304,7 @@ func runRepay(cmd *cobra.Command, args []string) error {
 	}
 	result, httpResp, err := c.MultiCollateralLoanAPI.RepayMultiCollateralLoan(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/loan/multi_collateral/repay", jsonStr))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/loan/multi_collateral/repay", jsonStr)
 	}
 	return p.Print(result)
 }
@@ -352,8 +344,7 @@ func runRepayRecords(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MultiCollateralLoanAPI.ListMultiRepayRecords(c.Context(), typ, opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/loan/multi_collateral/repay", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/loan/multi_collateral/repay", "")
 	}
 	return p.Print(result)
 }
@@ -392,8 +383,7 @@ func runRecords(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.MultiCollateralLoanAPI.ListMultiCollateralRecords(c.Context(), opts)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/loan/multi_collateral/mortgage", ""))
-		return nil
+		return client.CommandError(err, httpResp, "GET", "/api/v4/loan/multi_collateral/mortgage", "")
 	}
 	return p.Print(result)
 }
@@ -415,8 +405,7 @@ func runCollateral(cmd *cobra.Command, args []string) error {
 	}
 	result, httpResp, err := c.MultiCollateralLoanAPI.OperateMultiCollateral(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "POST", "/api/v4/loan/multi_collateral/mortgage", jsonStr))
-		return nil
+		return client.CommandError(err, httpResp, "POST", "/api/v4/loan/multi_collateral/mortgage", jsonStr)
 	}
 	return p.Print(result)
 }

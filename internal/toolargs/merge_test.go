@@ -151,6 +151,8 @@ func TestMergeFromCommand_StringSliceExplicitEmptyPreserved(t *testing.T) {
 
 func TestMergeFromCommand_ArgsFileExpandsHome(t *testing.T) {
 	home := t.TempDir()
+	// Home expansion remains supported when its target belongs to cwd.
+	t.Chdir(home)
 	t.Setenv("HOME", home)
 	path := filepath.Join(home, "args.json")
 	require.NoError(t, os.WriteFile(path, []byte(`{"query":"BTC"}`), 0o600))

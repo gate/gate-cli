@@ -46,8 +46,8 @@ func runModeGet(cmd *cobra.Command, args []string) error {
 
 	result, httpResp, err := c.UnifiedAPI.GetUnifiedMode(c.Context())
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "GET", "/api/v4/unified/unified_mode", ""))
-		return nil
+		// 服务端拒绝必须传播为命令失败，避免Agentic鉴权错误被自动化当作执行成功。
+		return client.CommandError(err, httpResp, "GET", "/api/v4/unified/unified_mode", "")
 	}
 	if p.IsJSON() {
 		return p.Print(result)
@@ -81,8 +81,7 @@ func runModeSet(cmd *cobra.Command, args []string) error {
 
 	httpResp, err := c.UnifiedAPI.SetUnifiedMode(c.Context(), body)
 	if err != nil {
-		p.PrintError(client.ParseGateError(err, httpResp, "PUT", "/api/v4/unified/unified_mode", ""))
-		return nil
+		return client.CommandError(err, httpResp, "PUT", "/api/v4/unified/unified_mode", "")
 	}
 	if p.IsJSON() {
 		return p.Print(map[string]string{"status": "ok", "mode": mode})
