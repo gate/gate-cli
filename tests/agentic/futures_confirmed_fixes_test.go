@@ -27,7 +27,7 @@ import (
 )
 
 // Independent wire fixtures, never derived from the implementation's catalog.
-// Trail stop/update/log use the published v178 envelopes and quoted log time.
+// Trail responses use their published envelopes, including SDK179 stop-all.
 type futuresConfirmedCase struct {
 	name, method, path, query, body, response, identity string
 	args                                                []string
@@ -39,7 +39,7 @@ func futuresConfirmedCases() []futuresConfirmedCase {
 	return []futuresConfirmedCase{
 		{"trail-create", "POST", prefix + "create", "", `{"contract":"SYNTH_USDT","amount":"1","activation_price":"0","price_type":1,"price_offset":"1%"}`, `{"code":0,"message":"ok","data":{"id":"` + id + `"}}`, id, []string{"trail", "create", "--contract", "SYNTH_USDT", "--amount", "1", "--price-offset", "1%", "--price-type", "1"}},
 		{"trail-stop", "POST", prefix + "stop", "", `{"id":` + id + `}`, `{"code":0,"message":"ok","data":{"order":{"id":"` + id + `","contract":"SYNTH_USDT"}}}`, id, []string{"trail", "stop", "--id", id}},
-		{"trail-stop-all", "POST", prefix + "stop_all", "", `{"contract":"SYNTH_USDT"}`, `{"orders":[{"id":"` + id + `","contract":"SYNTH_USDT"}]}`, id, []string{"trail", "stop-all", "--contract", "SYNTH_USDT"}},
+		{"trail-stop-all", "POST", prefix + "stop_all", "", `{"contract":"SYNTH_USDT"}`, `{"code":0,"message":"ok","data":{"orders":[{"id":"` + id + `","contract":"SYNTH_USDT","status_code":"cancelled"}]},"timestamp":1700000001837}`, id, []string{"trail", "stop-all", "--contract", "SYNTH_USDT"}},
 		{"trail-list", "GET", prefix + "list", "contract=SYNTH_USDT&end_at=1793538000&is_finished=true&page_size=2&start_at=1793534400", "", `{"code":0,"message":"ok","data":{"orders":[{"id":"` + id + `","contract":"SYNTH_USDT"}]},"timestamp":1793582374966743}`, id, []string{"trail", "list", "--contract", "SYNTH_USDT", "--finished", "--start-at", "1793534400", "--end-at", "1793538000", "--limit", "2"}},
 		{"trail-get", "GET", prefix + "detail", "id=" + id, "", `{"code":0,"message":"ok","data":{"order":{"id":"` + id + `","contract":"SYNTH_USDT"}}}`, id, []string{"trail", "get", "--id", id}},
 		{"trail-update", "POST", prefix + "update", "", `{"id":` + id + `,"amount":"2"}`, `{"code":0,"message":"ok","data":{"order":{"id":"` + id + `","contract":"SYNTH_USDT","amount":"2"}}}`, id, []string{"trail", "update", "--id", id, "--amount", "2"}},

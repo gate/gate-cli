@@ -2,7 +2,9 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -24,7 +26,7 @@ func normalizeFuturesResponse(response *http.Response, method, route string) {
 		return
 	}
 	switch op.OperationID {
-	case "createTrailOrder", "getTrailOrders", "updateTrailOrder", "stopTrailOrder", "getTrailOrderChangeLog", "createPriceTriggeredOrder", "updatePriceTriggeredOrder":
+	case "createTrailOrder", "getTrailOrders", "updateTrailOrder", "stopTrailOrder", "stopAllTrailOrders", "getTrailOrderChangeLog", "createPriceTriggeredOrder", "updatePriceTriggeredOrder":
 	default:
 		return
 	}
@@ -44,6 +46,15 @@ func normalizeFuturesResponse(response *http.Response, method, route string) {
 	raw, readErr := io.ReadAll(response.Body)
 	closeErr := response.Body.Close()
 	if readErr != nil || closeErr != nil {
+		// A deadline can expire after HTTP200 while the body is still arriving.
+		// Keep only safe context sentinels so SDK callers retain cancellation
+		// semantics without exposing peer addresses or private read diagnostics.
+		for _, cause := range []error{context.Canceled, context.DeadlineExceeded} {
+			if errors.Is(readErr, cause) {
+				response.Body = &apiResponseReadError{err: cause}
+				return
+			}
+		}
 		fail("INVALID_RESPONSE", "futures response could not be read or closed; reconcile any write outcome", nil, nil)
 		return
 	}
@@ -59,9 +70,9 @@ func normalizeFuturesResponse(response *http.Response, method, route string) {
 	if !complete {
 		return
 	} // Keep malformed/unknown JSON on the existing SDK path.
-	// SDK v178 now declares these envelopes. Preserve native success decoding,
+	// Preserve native decoding for declared SDK envelopes, including bulk stop,
 	// but do not turn a backend business rejection into a successful CLI exit.
-	declaredEnvelope := op.OperationID == "createTrailOrder" || op.OperationID == "updateTrailOrder" || op.OperationID == "stopTrailOrder" || op.OperationID == "getTrailOrderChangeLog"
+	declaredEnvelope := op.OperationID == "createTrailOrder" || op.OperationID == "updateTrailOrder" || op.OperationID == "stopTrailOrder" || op.OperationID == "stopAllTrailOrders" || op.OperationID == "getTrailOrderChangeLog"
 	declaredCode := declaredEnvelope && fields.count[0] > 0
 	knownListError := op.OperationID == "getTrailOrders" && fields.minusOne
 	labelError := fields.hasLabel && fields.hasMessage

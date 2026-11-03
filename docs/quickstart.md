@@ -526,7 +526,7 @@ gate-cli cex tradfi market commissions --symbols XAUUSD --format json
 
 Without `--scope`, login requests `base spot_trade futures_trade earn cfd stock`; browser consent determines the grant. `--manual` lets you copy the URL and paste the code; `--force` starts new authorization. `auth refresh` refreshes credentials; `auth logout` clears local credentials and attempts remote revocation. A revocation error requires disconnecting the connection on Gate.
 
-`auth status` is a local check (`remote_checked: false`), and cannot prove remote access. Credentials are bound to the API resource; authorize again when it changes. A complete API key/secret pair takes priority over OAuth; Intel credentials are separate. This source uses public Gate Go SDK `v7.2.178`.
+`auth status` is a local check (`remote_checked: false`), and cannot prove remote access. Credentials are bound to the API resource; authorize again when it changes. A complete API key/secret pair takes priority over OAuth; Intel credentials are separate. This source uses public Gate Go SDK `v7.2.179`.
 
 Private CFD and stock queries use `base`. CFD trading and transfers use `cfd`; stock order changes and position closes use `stock`; stock account transfers use `base`. See the [complete authorization, CFD and stock guide](auth-cfd-stock.md) for the command tables, stock order/session combinations, close parameters, reference IDs and pagination. The [CEX reference](cex-gap-commands.md) covers POV/chase, Earn filters, order references and partial failures.
 

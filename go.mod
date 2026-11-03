@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/gate/gateapi-go/v7 v7.2.178
+	github.com/gate/gateapi-go/v7 v7.2.179
 	github.com/gofrs/flock v0.12.1
 	github.com/mattn/go-isatty v0.0.20
 	github.com/olekukonko/tablewriter v1.1.3

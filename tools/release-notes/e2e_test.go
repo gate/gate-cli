@@ -66,7 +66,8 @@ func TestReleaseNotesWorkflowE2E(t *testing.T) {
 		{"matching public section", "v1.2.3", "# Changelog\nprivate preamble\n## [v1.2.30]\n- other version\n## [v1.2.3]\n\n### Added\n\n- Public feature.\n## [v1.2.2]\n- older version\n", "### Added\n\n- Public feature.\n", false},
 		{"legacy heading", "v1.2.3", "## [1.2.3]\n- Public feature.\n", "- Public feature.\n", false},
 		{"previous public changelog", "v0.8.0", string(readFixture(t, "../../CHANGELOG.md")), "", false},
-		{"current public changelog", "v0.9.0", string(readFixture(t, "../../CHANGELOG.md")), "", false},
+		{"previous minor changelog", "v0.9.0", string(readFixture(t, "../../CHANGELOG.md")), "", false},
+		{"current public changelog", "v0.9.1", string(readFixture(t, "../../CHANGELOG.md")), "", false},
 		{"missing version", "v1.2.3", "## [v1.2.30]\n- wrong version\n", "", true},
 		{"empty version", "v1.2.3", "## [v1.2.3]\n\n## [v1.2.2]\n- older\n", "", true},
 		{"duplicate version", "v1.2.3", "## [v1.2.3]\n- first\n## [1.2.3]\n- second\n", "", true},
@@ -126,7 +127,7 @@ func TestReleaseNotesWorkflowE2E(t *testing.T) {
 			if tc.name == "previous public changelog" && !strings.Contains(body, "argument isolation") {
 				t.Fatalf("published history was lost: %s", body)
 			}
-			if tc.name == "current public changelog" {
+			if tc.name == "previous minor changelog" {
 				for _, token := range []string{"data.change_log", "--price-type", "cex auth", "cex stock", "UNSUPPORTED_OPERATION"} {
 					if !strings.Contains(body, token) {
 						t.Errorf("missing public release change %q: %s", token, body)
@@ -134,6 +135,18 @@ func TestReleaseNotesWorkflowE2E(t *testing.T) {
 				}
 				if strings.Contains(body, "v0.11.") || strings.Contains(body, "subsequently removed") {
 					t.Fatalf("internal release history reached public notes: %s", body)
+				}
+			}
+			// The patch release must expose its own API-field correction, without
+			// accidentally publishing the preceding minor release's full notes.
+			if tc.name == "current public changelog" {
+				for _, token := range []string{"cex futures trail stop-all", "data.orders", "timestamp", "code"} {
+					if !strings.Contains(body, token) {
+						t.Errorf("missing patch response-field change %q: %s", token, body)
+					}
+				}
+				if strings.Contains(body, "cex auth login") {
+					t.Fatal("patch release included the preceding minor release notes")
 				}
 			}
 			for _, forbidden := range []string{"PRIVATE_INTERNAL_DECISION", "private preamble", "other version", "older version"} {
@@ -197,5 +210,17 @@ func runProcess(t *testing.T, dir string, env []string, name string, args ...str
 	cmd.Dir, cmd.Env = dir, env
 	if output, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("%s failed: %v\n%s", name, err, output)
+	}
+}
+
+// The public document is itself a release input: implementation paths,
+// dependency and test reports must not leak through historical sections either.
+func TestPublicChangelogExcludesDevelopmentDetails(t *testing.T) {
+	text := strings.ToLower(string(readFixture(t, "../../CHANGELOG.md")))
+	// Match engineering metadata without embedding private infrastructure or incident identifiers.
+	for _, forbidden := range []string{"internal/", ".go`", "gateapi-go", "sdk", "goreleaser", "go test", "### tests", "### dependencies", "### unchanged", "unit tests", "test coverage", "git@", "ssh://", "source_repo", "source_of_truth", "/users/", "homebrew_tap_token"} {
+		if strings.Contains(text, forbidden) {
+			t.Errorf("public changelog contains development detail %q", forbidden)
+		}
 	}
 }

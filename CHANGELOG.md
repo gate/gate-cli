@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.9.1] - 2026-11-03
+
+### Fixed
+
+- `cex futures trail stop-all` preserves cancelled orders in `data.orders`, together with the response `message` and `timestamp`. A nonzero `code` is reported as an API error.
+
 ## [v0.9.0] - 2026-11-03
 
 ### Added
@@ -9,13 +15,13 @@
 - `cex bot smart-position create` and `futures-combo create`; smart-position stop modes `market`, `limit` and `no_close`, plus `--stop-options`; recommendation queries accept `--exclude-recommendation-id`.
 - Spot POV create/list/get/cancel/cancel-all, spot/futures RPI order books, futures `contracts-all` and `adl-risk-states`, and futures chase create/get/list/stop/stop-all commands.
 - Unified Delta-neutral get/set, quick-repayment estimate/execute and account leverage updates.
-- `version --details --format json` exposes build version, revision, Go version, platform and compiled Agent command availability. `config check` reports local configuration checks; `config init --hide-input` hides terminal input.
+- `version --details --format json` exposes the public fields `version`, `revision`, `go`, `os`, `arch` and `agent_commands`. `config check` reports local configuration checks; `config init --hide-input` hides terminal input.
 - Spot `order buy`/`sell` and futures `order long`/`short`/`add`/`remove` accept optional `--text`; futures `order get-by-text --text` retrieves the matching order.
 - Options `order create --mmp` and CFD `order create --leverage`; Agent `agent-index --domain cex --details` describes registered command parameters and effects.
 
 ### Changed
 
-- `config list` hides all custom header values and endpoint userinfo, query and fragment components by default, including aliases. Intel debug errors hide credential-bearing URLs; `info/news mcp-spec` and leaf help expose public contracts without backend source or storage metadata.
+- `config list` hides all custom header values and endpoint userinfo, query and fragment components by default, including aliases. Intel debug errors hide credential-bearing URLs; `info/news mcp-spec` and leaf help expose public command contracts.
 
 - Spot order account selection, automatic borrowing/repayment and attached `stop_profit`/`stop_loss` parameters; options full-close and reduce-only parameters retain explicit values.
 - CEX authorization distinguishes `base`, `spot_trade`, `futures_trade`, `earn`, `cfd` and `stock` operations. CFD and stock trading grants remain independent; actual access depends on the granted permissions and account eligibility.
@@ -42,627 +48,269 @@
 - `cex sub-account` administration and API-key commands; wallet balance and transfer commands remain available.
 - P2P, CrossEx, activity, coupon and welfare command groups and CEX Exchange Announcement API access. Separate `news` commands remain available.
 
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-
 ## [v0.8.0]
 
 ### Fixed
 
-- **Intel MCP argument isolation** — `info` / `news` leaf commands and hidden `invoke` calls no longer forward CLI-only flags (`--format`, `--profile`, `--debug`, `--verbose`, `--max-output-bytes`, `--api-key`, `--api-secret`, and `--help`) as MCP tool arguments. This prevents strict backends from rejecting calls such as `--format json` and keeps trading credential flags out of MCP argument payloads. Keys explicitly supplied in `--params`, `--args-json`, or `--args-file` remain unchanged.
-
-### Changed
-
-- **English and Chinese quick-start guides** — align the documented inventory with the existing **50** Intel tools (**32** info + **18** news); add staking activity, X search, stored market-move report, and shortcut examples. Clarify embedded-spec help, `GATE_INTEL_LEAF_HELP=full`, and GateAI agent discovery with `agent-resolve`, `agent-leaves`, and `agent-validate`.
-
-### Added
-
-- **MCP argument regression coverage** — tests cover filtering inherited CLI globals, preserving explicitly supplied JSON keys and flat-flag precedence, and reserving `invoke --name` alongside global and JSON fallback flags.
+- **Intel MCP argument isolation**: `info` / `news` and `invoke` keep CLI-only flags (`--format`, `--profile`, `--debug`, `--verbose`, `--max-output-bytes`, `--api-key`, `--api-secret`, `--help`) separate from tool arguments. Explicit keys in `--params`, `--args-json` and `--args-file` are preserved.
 
 ## [v0.7.9]
 
-### Changed
-
-- **News MCP baseline expansion** — News grows from **14** to **18** tools (**50** Intel tools total: 32 info + 18 news). The bundled MCP spec, CLI inventory, agent catalog/validation, README, and quick-start guides now include 24h mention bursts, 4h hot topics, and stored market-move report get/list queries.
-- **News argument guardrails** — The four new leaves validate required symbols/coins, fixed windows (`24h` mention burst and `4h` hot topics), supported social platforms, hot-topic limits, market-report time ranges, and report-list limits before calling MCP. Report time filters accept ISO 8601 or `YYYY-MM-DD HH:MM:SS`; timezone-less values are interpreted as UTC0.
-- **`toolargs` spec alignment** — `info macro get-economic-calendar` no longer requires both dates (zero-arg matches MCP default window); `info coin get-coin-rankings` rejects `time_range` unless `top_gainers`/`top_losers` and `listing_*` unless `new_listing`; `info platformmetrics get-defi-overview` stops rejecting unknown `category` (server pass-through).
-- **Info tool contracts** — align the embedded definitions across 37 tools; `info coin get-coin-rankings` adds `market_pulse_hot` to `--ranking-type`; `info platformmetrics get-yield-pools` adds `--scope` (`basic`|`full`). Local validation accepts both updated enums.
-- **`info platformmetrics get-chain-activity`** — `staking_metrics.series[]` documents `eth_supply`, `staking_apr_7d`, `entry_wait_days` and `exit_wait_days`; removes `shelved_fields`; adds `errors`, `response_fields` and `series_fields` metadata. CLI flags and input validation remain unchanged. `--format pretty` renders query context, the latest snapshot and recent series, including these four fields when present.
-
-### Fixed
-
-- **`+token-risk --symbol`** — align contract resolution with mcp-server `get_coin_info` output: `query`/`query_type=symbol`, prefer `items[0]`, parse `chain` as `string[]`, fallback `token_address[]`, multi-chain slug priority; native coins (e.g. BTC) return a clear error instead of a generic resolve failure.
-- **Intel user-facing errors** — stderr JSON no longer includes MCP wire `tool_name` (`info_*_*`); shortcuts use paths like `info/+token-risk`, leaves use CLI command paths (e.g. `info coin get-coin-info`). Leaf `-h` text no longer embeds MCP tool names. **`info list` / `describe` / agent compact list** output uses CLI command paths only.
-- **`agent-leaves` curated** — **31** intents, including `info_token_risk_by_address` and `info_token_onchain_by_address` for contract-address queries. Discovery examples use the supported `query`/`query_type`, scope fallbacks and partial-result behavior.
-- **`agent-leaves` `mcp_catalog`** — `intent` fields use CLI path tokens (e.g. `coin-get-coin-info`), not MCP wire names. **`DeferredInfoShortcutPaths`** documents `+address-risk` until baseline ships.
-- **`describe` / `invoke --name`** — accepts CLI command paths (e.g. `info coin get-coin-info`) in addition to MCP wire names; resolved before MCP RPC. Hidden `invoke` help examples use CLI paths.
-- **Info shortcuts `get-coin-info`** — `+coin-overview`, `+coin-compare`, `+token-onchain`, `+token-risk` use explicit `query` + `query_type=symbol` (aligned with mcp-server); address identity lookup uses `query_type=address`.
-- **Info/news shortcuts** — `get-coin-info` no longer forces `scope=full` (MCP default `basic`); `+token-risk --symbol` retries `scope=detailed` for contract resolution; market snapshot / token security fall back from `full` on MCP `isError`. Shared `internal/intelcmd/shortcut_call.go` maps `isError` to `GateErrorForIntelToolIsError`. Missing shortcut flags (`--symbol`, `--symbols`) emit JSON `{"error":…}` in agent/json mode.
-- **Intel flag parse errors** — `InstallFlagErrorHook` emits `PrintError` JSON/pretty envelope for unknown-flag parse failures; `EmitExecuteErrorEnvelope` covers `MarkFlagRequired` / cobra validation errors (e.g. `info describe --format json` without `--name`).
-
 ### Added
 
-- **News social-insight tools** — `news feed get-mention-burst` and `news feed get-hot-topics`, with short aliases `mention-burst` and `hot-topics`.
-- **Stored market-move reports** — `news events get-market-move-report` (aliases `market-move-report`, `get-report`) and `news events list-market-move-reports` (aliases `market-move-reports`, `report-list`). Top-level path corrections guide misplaced report commands to the `news events` group, and `--coin` is corrected to the required `--symbol` flag.
-- **Info shortcuts (partial on-chain)** — `+address-tracker` (`get-address-info` + `get-address-transactions`; `fund_flow_unavailable` until `trace-fund-flow` ships) and `+token-onchain` (`get-token-onchain`; `smart_money_unavailable` until `get-smart-money` ships). `+address-risk` remains deferred (`check-address-risk` not in baseline). **10** info/news shortcuts total for `agent-validate`.
-- **`gate-cli info platformmetrics get-chain-activity`** — new intel leaf for `info_platformmetrics_get_chain_activity` (phase-1: Ethereum staking network activity — validator counts, entry/exit queues). Required `--metric-group staking`; optional `--chain` (eth/ethereum, default ethereum), `--start-date` / `--end-date` (UTC YYYY-MM-DD), `--lookback` (`30d`|`90d`|`1y`, default `30d` when dates omitted). Baseline **32** `info` + **14** `news` = **46** MCP tools total.
-- **Intel command catalog** — documents **46** leaves (**32** info + **14** news), including `get-cex-orderbook-depth`, `get-institutional-metrics` and `get-chain-activity`. Placeholder tools remain outside the shipped catalog.
-- **On-chain tool contracts** — align `get_address_info` and `get_address_transactions` input and result handling with the public tool contract.
-- **`toolargs` sweep** — pre-MCP validation for `info_coin_get_coin_info`, `info_marketsnapshot_get_market_snapshot`, `news_feed_get_exchange_announcements`, `news_feed_get_social_sentiment`.
-- **`agent-search`** — `matches[]` with `match_source` / `is_shortcut`; Agent mode adds `agent_resolve_hint`.
-- **`agent-leaves`** — **27** curated intents (+ event detail, prediction orderbook/search).
-- **Freshness** — `meta.freshness_status_cli` derived from MCP `freshness_status` counts or `newest_is_stale`.
-- **`preflight` BLOCK** / **`doctor` fail** — stderr-only `GateError` with agent next-action hints; compact doctor JSON in agent mode.
-
-- **`toolargs` (batch 2)** — `get_indicator_history`, `marketdetail` orderbook/trades, `search_coins`, `search_platforms` pre-MCP validation.
-- **`preflight` BLOCK** contract test (stderr-only, no stdout).
-- **`release.yaml`** — runs `go test ./...` before goreleaser.
-- **`toolargs` (batch 3)** — onchain 4、macro 2、platformmetrics 5（含 `get-chain-activity`）、`get_coin_rankings`；**46/46** baseline 均有预检。
-- **`agent-index`** — `leaves[]` with `match_source` / `is_shortcut`; agent `agent_resolve_hint`.
-- **Intel MCP errors** — `ParseError` and `GateErrorForIntelToolIsError` call `FillAgentErrorConvergence` (`retryable`, `suggested_next_action`).
-
-- **Path aliases** — info `kline`/`coinanalysis`, news `search-news`/`explain-market-move` cobra aliases; stderr path fixes for `news search`, `info coin analysis`, etc.
-- **`agent-leaves`** — **27** curated intents (institutional metrics, batch snapshot, exchange announcements, event detail, prediction, …).
-
-- **`gate-cli agent-leaves`** — JSON index of trace-backed high-frequency leaf commands for GateAI agents (replaces root `--help` crawl for the first batch).
-- **`gate-cli agent-search --query`** — keyword search over runnable leaf commands (P1 discovery fallback); optional **`--domain`** (`cex` / `info` / `news` / `config`, aliases `trading` / `intel`) and query synonym expansion (e.g. `redeem` → `records`).
-- **`gate-cli agent-index`** — export full runnable leaf catalog (`count`, `leaves`, `commands`) for offline Skill indexing; optional **`--domain`** filter.
-- **`gate-cli agent-resolve --query`** — layer-2 intent resolution: curated `agent-leaves` matches plus `agent-search`-style leaf hits (`--domain info|news`).
-- **`agent-leaves` (info/news only)** — curated intents plus **`mcp_catalog` (45 baseline tools)**; CEX via `agent-search --domain cex` (separate ownership).
-- **`internal/toolargs`** — pre-MCP validation for `news_feed_search_news` (query/coin, `time_range`, `limit`≤100) and `news_events_explain_market_move` `time_range` enum.
-- **Agent diagnostics** — `gate_cli_diagnostic` may include a matched `agent-leaves` command when `GATE_CLI_AGENT=1` (help block / early errors).
-- **Agent Intel defaults** — `GATE_CLI_AGENT=1` injects safe `time_range` / `limit` / kline `size` defaults before MCP `tools/call` (news freshness + stdout bounds).
-- **News freshness meta** — `news_*` success responses include `meta.freshness_hints` (and `agent_reminder` in agent mode); JSON stdout is `{data, meta}` when meta is present.
-- **`info list` / `news list`** — agent + `--format json` returns compact `{name, path}` catalog instead of full tool objects.
-- **`info`/`news` shortcuts** — output uses same stdout limits and `meta` (freshness / `EMPTY_RESULT`) as MCP leaves; internal tool calls run `PrepareToolArguments` (agent defaults + validation).
-- **`agent-resolve`** — default search scope is **info + news only** (no cex/config noise).
-- **Routing** — mistaken top-level `intel` / `intelligence` maps to `info`; `search-x` requires `query` or handle filters.
-- **Agent discovery scope** — `agent-search` / `agent-index` / `agent-resolve` default to **info+news** leaves when `GATE_CLI_AGENT=1` and `--domain` is unset.
-- **Freshness `meta.freshness_summary`** — aggregates `published_at` ages and `freshness_status` counts when present in MCP payloads.
-- **`info describe` / `news describe`** — agent + `--format json` returns compact `{name, description, has_input_schema}`.
-- **`agent-leaves`** — adds `count_curated`, `mcp_catalog` (45 tools), `scope`, `recommended_flow`; help crawl stderr adds `gate_cli_agent_resolve_hint`.
-- **Agent JSON contract** — `GATE_CLI_AGENT=1` success stdout always `{"data","meta"}`; `freshness_status_cli=unknown` when no timestamps.
-- **`preflight`** — compact JSON fields in agent mode.
-- **GateAI integration documentation** — describes environment variables, discovery commands and the diagnostics contract.
-- **`gate-cli agent-validate`** — CI helper: asserts all **45** `mcp_catalog` + **8** info/news shortcut paths exist in the live cobra tree (`mcp_catalog` / `shortcuts` sections, non-zero exit on drift).
-- **`agent-resolve`** — `resolved_leaves` includes `match_source` (`curated` | `mcp_catalog`); regression coverage includes Earn, markettrend, help, kline and News routing.
-
-- **`cex earn uni` shortcuts** — `+redeem-records` and `+lends` for simple-earn agent flows (`--format json` recommended).
-- **`cex spot/alpha` shortcuts** — `cex spot market +ticker`, `cex alpha market +tickers` for agent spot/alpha intents.
-- **`info/news shortcut`** — add deterministic top-level shortcut commands under `gate-cli info` (`+coin-overview`, `+market-overview`, `+coin-compare`, `+trend-analysis`, `+token-risk`) and `gate-cli news` (`+brief`, `+event-explain`, `+community-scan`). Each shortcut uses fixed tools/call chains and returns stable aggregated sections in `pretty/json`.
-
-### Fixed
-
-- **`agent-resolve`** — `--domain` filters `resolved_leaves`; curated/MCP dedupe by CLI path (no duplicate `info … get-kline` entries).
-- **Agent help** — allow `info|news list|describe -h`; shortcut `+…` unchanged; help-crawl diagnostics no longer overwritten by leaf enrich.
-- **`doctor` fail** — stderr message includes first failing check; agent mode still stdout-empty on fail.
-- **`migrate` fail** — aligned with `doctor`: agent JSON envelope, `MIGRATE_FAILED` stderr convergence, agent fail stdout-empty; non-agent still prints report then stderr.
-- **Tests** — `doctor`/`migrate` agent-fail stderr-only contracts; `agent-resolve --domain` integration test.
-- **`ResolveAgentIntent` / enrich** — skip leaf enrich on blocked path/top-level corrections; only fill `suggested_next_action` when empty.
-- **`internal/toolargs`** — expand CLI pre-check before MCP `tools/call`: `news feed search-x` (handles XOR, `time_range` enum), `search-ugc` / `web-search` (enums and limit caps), `events get-latest-events` (time window rules), `prediction` rankings + orderbook unsupported params, `prediction search-events` (`page_token` base64/sort_by), `info platformmetrics get-cex-orderbook-depth` (`symbol`, enums, limit), `info marketsnapshot batch-market-snapshot` (`symbols` required, max 20).
-- **Intel command catalog** — documents **31** `info` + **14** `news` leaves (**45** total).
-- **`internal/toolargs`** — CLI pre-check before MCP `tools/call` for `info marketsnapshot get-institutional-metrics` (`asset` / `channel` / date window / `limit` bounds, including strict integer `limit` via `--params`).
-- **`internal/toolargs`** — CLI pre-check before MCP `tools/call` for `info platformmetrics`: **get-stablecoin-info** (`sections`/`scope`/`dates`/`symbol`/`chain`/`limit`, including `usage_structure`); **get-exchange-reserves** (`include_history` + `history_window` + closed `asset`); **get-platform-info** (`include_oi_symbol_detail` + `oi_symbol_limit` vs `scope`). `limit<=0` defers to server default (no false 400).
-- **`internal/toolargs` / README** — add local XOR validation for `info compliance check-token-security` (`token` or `address`, exactly one) and fix Intel README examples that previously omitted required filters.
-- **`internal/toolrender`** — when MCP returns schema-shaped `structuredContent` with only null/empty values, fall back to parsing `content[].text` so `info platformmetrics get-stablecoin-info --sections usage_structure` does not render an all-null CLI payload when the text content contains the real response.
-- **Docs / agents** — README, quick-start guides and `news mcp-spec` describe shipped leaf help directly. The `news feed search-x` example supplies `--query` and time flags (`time_range` 1h|24h|7d; longer lookback via `--days`).
+- `news feed get-mention-burst` / `get-hot-topics`, with `mention-burst` / `hot-topics` aliases; market-move report get/list commands under `news events`, including `market-move-report`, `get-report`, `market-move-reports` and `report-list` aliases. Report queries use `--symbol`.
+- `info platformmetrics get-chain-activity` for Ethereum staking activity. Required `--metric-group staking`; optional `--chain`, `--start-date`, `--end-date` and `--lookback` (`30d`, `90d`, `1y`, default `30d`). Responses include `staking_metrics.series[]` fields `eth_supply`, `staking_apr_7d`, `entry_wait_days` and `exit_wait_days`.
+- Info shortcuts `+coin-overview`, `+market-overview`, `+coin-compare`, `+trend-analysis`, `+token-risk`, `+address-tracker` and `+token-onchain`; News shortcuts `+brief`, `+event-explain` and `+community-scan`. Partial on-chain results expose unavailable-section hints.
+- `agent-leaves`, `agent-search --query`, `agent-index`, `agent-resolve --query` and `agent-validate` for command discovery. Search/index accept `--domain`; result metadata includes `match_source`, `is_shortcut`, `resolved_leaves`, `count_curated`, `scope` and `recommended_flow`.
+- In Agent mode, discovery defaults to Info/News when `--domain` is omitted. `info list` / `news list` return compact `{name, path}` entries in Agent JSON mode; describe output includes `{name, description, has_input_schema}`.
+- Agent responses expose `{data, meta}`, freshness hints and `meta.freshness_summary`; missing timestamps produce `freshness_status_cli=unknown`. Preflight, doctor and migrate failures remain stderr-only and provide next-action hints.
+- `cex earn uni +redeem-records` / `+lends`, `cex spot market +ticker` and `cex alpha market +tickers` shortcuts.
 
 ### Changed
 
-- **Agent cost defaults** — `GATE_CLI_AGENT=1` or `GATE_AI_AGENT=1` sets default `--max-output-bytes` to **65536** when `GATE_MAX_OUTPUT_BYTES` is unset (applies to **all** commands via `GetPrinter`). Parent-command `--help` is blocked in agent mode; use `agent-leaves` / `agent-search` / `agent-index`. Intel leaf `-h` is shortened in agent mode (full MCP field notes still via `GATE_INTEL_LEAF_HELP=full`). Wrong paths print `gate_cli_diagnostic=` (top-level prefix, path correction, fuzzy leaf, cobra flag did-you-mean, auth hint). `GateError.error_type` on API/Intel/validation stderr JSON (`INVALID_ARGS`, `AUTH_ERROR`, …) via `FillAgentErrorType`.
-- **`info markettrend/marketdetail get-kline`** — baseline default **200**, maximum **500**, with CLI validation before MCP call.
-- **Info tool descriptions** — English `description` text, including `[Read]` routing guidance, is embedded for leaf `--help`, `info mcp-spec` and agent discovery. Input-contract consistency checks exclude these presentation-only descriptions.
-- **`internal/intelfacade/info_schema_baseline.go`** — richer English flag help for `get-stablecoin-info`, `get-cex-orderbook-depth`, `check-token-security`, and `batch-market-snapshot` (`symbols` max 20).
-- **`internal/intelfacade/news_schema_baseline.go`** — clearer `-h` for `search-x` (`--query` vs `--coin`, `time_range` enum, platform-only `--limit`).
-- **Institutional metrics** — align the request and response contract for `info_marketsnapshot_get_institutional_metrics`; the CLI tool name and flat flags are unchanged.
-- **Info input contract 1.1** — `get-stablecoin-info` supports `scope`, `sections`, `start_date` and `end_date`, including `issuance_flow` and `usage_structure`; `limit` defaults to **10**, with maximum **400**. Add `info marketsnapshot get-institutional-metrics` (`info_marketsnapshot_get_institutional_metrics`) for ETF/CME/CFTC metrics. Remove the former MCP tool name `info_marketsnapshot_get_institutional_channel_metrics`; callers must use the new name. Five documented placeholder tools are not included in the shipped **31** `info` leaves.
-- **Info MCP spec parity** — mark the 5 placeholder tools as explicit `spec_only_tools`, record the 31-tool CLI baseline count in spec metadata, and fail tests if future spec-only tools drift without an allowlist update.
-- **`internal/intelfacade/info_schema_baseline.go`** — flat flags for `info platformmetrics get-stablecoin-info` aligned with the new wire shape; `sections` now documents `issuance_flow` and `usage_structure`; add flat flags for `info marketsnapshot get-institutional-metrics`; drop stale `source`/`quote` on `get-indicator-history` (not in MCP spec).
-- **`README.md`**, **`docs/quickstart.md`**, **`docs/quickstart_zh.md`** — Intel examples for `get-stablecoin-info` show `scope` / `sections` / date range for supply-flow and usage-structure queries; counts now show **45** total leaves (**31** `info` + **14** `news`).
+- In Agent mode (`GATE_CLI_AGENT=1` or `GATE_AI_AGENT=1`), `--max-output-bytes` defaults to 65536 when `GATE_MAX_OUTPUT_BYTES` is unset. Parent `--help` is blocked by default with command-discovery guidance; `info` / `news` list and describe help remain available.
+- `info markettrend get-kline` (`size` / `limit`) and `info marketdetail get-kline` (`limit`) default to 200 bars, capped at 500.
+- News queries validate symbols, time windows (`24h`, `4h`), platforms, limits and report time ranges. ISO 8601 and `YYYY-MM-DD HH:MM:SS` are accepted; timezone-less times use UTC0.
+- `info macro get-economic-calendar` accepts omitted dates. Coin rankings accept `time_range` only for top gainers/losers and `listing_*` only for new listings. DeFi overview accepts free-form `category`.
+- Coin rankings add `market_pulse_hot`; yield-pool queries add `--scope basic|full`.
+- Stablecoin queries expose `scope`, `sections`, date, symbol, chain and limit selectors, including `issuance_flow` and `usage_structure`; default `limit` is 10, maximum 400. Institutional metrics queries support asset, channel and date filters. Indicator history no longer accepts obsolete `source` / `quote` parameters.
+- Platform-info queries support `include_oi_symbol_detail` / `oi_symbol_limit`. Exchange-reserve queries support `scope`, `include_history`, `history_window` and the documented asset values.
+- News prediction/search queries validate required fields, venue/category/status, sorting, depth and limits. `get-event-signal` deprecates `include_orderbook_summary`; search-event status is omitted when unspecified.
+
+### Fixed
+
+- `+token-risk --symbol` resolves symbol queries, address lists, and multi-chain priorities. Native assets without a contract return a clear error. `get-coin-info` shortcuts use explicit `query` / `query_type`; address shortcuts use `query_type=address`.
+- `get-coin-info` no longer forces a scope. Token-risk queries can request detailed results; market overview and token-security shortcuts accept basic results when full results are unavailable.
+- Errors and help show public CLI paths. Unknown flags and missing required arguments produce visible structured errors; misplaced commands provide corrected paths.
+- `agent-resolve --domain` filters results and removes duplicate command paths. Discovery output describes unavailable address-risk functionality without advertising it as runnable.
+- News/Info argument checks cover search, market snapshots, on-chain queries, economic data and platform metrics. Batch market snapshots require `symbols` with at most 20 entries; security checks require exactly one token or address.
+- `get-platform-history` accepts either `platform_name` or `exchange_slug`. Empty structured responses no longer hide nonempty result data.
+- Doctor/migrate failures preserve the first failing check, stderr-only failure output and nonzero status. Agent error metadata includes `retryable` and `suggested_next_action`.
 
 ## [v0.7.3] - 2026-05-13
 
-### Summary
+### Fixed
 
-Intel-only **`flexBool`** fix: schema-derived boolean flags on `info` / `news` leaves now use `NoOptDefVal="true"` so bare `--flag` means **true** without swallowing the next argv token (for example `--with-indicators` then `--timeframe 4h`). Legacy spaced invocations `--flag true|false` are rewritten to `--flag=value` **before** Cobra parses, so old scripts keep working. **Flag error diagnostics** for `info`, `news`, `preflight`, `doctor`, and `migrate` print to stderr via a scoped `FlagErrorFunc`; **`cex` / `config`** parsing and error-print behavior are unchanged (Intel guardrail).
-
-### Changed — Intel boolean flags (`flexBool`)
-
-- **`internal/toolschema`** — JSON-schema `boolean` fields registered with `ApplyInputSchemaFlags` set `NoOptDefVal="true"` on the underlying `pflag` flag; documented interaction with argv rewriting. Exported **`FlexBoolTypeName`** so `internal/intelcmd` can detect flexBool flags via `Value.Type()` without string drift.
-- **News tool contracts** — refresh `[Read]` descriptions, public error definitions, free-form ranking `category` and limit rules, and prediction parameters. Events service errors use the client label `internal`; duplicate backend-specific event-signal error metadata is removed.
-- **`internal/intelfacade/news_schema_baseline.go`** — flat-flag descriptions aligned with the new spec (feed/events/prediction), ranking `category` back to free-form string, search-events `status` without CLI/json default (wire omit → MCP coin-only `all`), orderbook `market_id` venue semantics, event-signal `include_orderbook_summary` deprecated.
+- Info/News boolean flags accept bare flags, `--flag=value` and legacy `--flag true|false`, preserving explicit false without consuming the next flag.
+- Info/News, preflight, doctor and migrate flag errors remain visible on stderr.
+- News search and prediction queries validate their required arguments, enums, ranges and venue-specific filters. `search-x` and `web-search` retain documented defaults; prediction `limit` has minimum 1.
 
 ### Added
 
-- **`internal/intelcmd.RewriteFlexBoolSpaceArgs`** — For the resolved leaf command only, collapses `--<flexBool-long-flag> <bool-literal>` into `--<flag>=<literal>` when the next token is a boolean literal (`true` | `false` | `1` | `0` | `t` | `f`, case-insensitive); ignores `--` terminator, non-flexBool flags, and native `bool` flags. Wired from **`cmd/root.go`** via `SetArgs` when any rewrite occurs.
-- **`internal/intelcmd.InstallFlagErrorHook`** — Recursively installs `FlagErrorFunc` on Intel subtrees so pflag parse errors are visible on stderr while `SilenceErrors` still suppresses duplicate Cobra banners.
-- **Intel / `gate-cli news prediction`** — add `news_prediction_get_market_orderbook` (`get-market-orderbook`), `news_prediction_search_events` (`search-events`) and `news_prediction_get_event_signal` (`get-event-signal`). The catalog contains **44** tools (**30** info + **14** news).
+- `news prediction get-market-orderbook`, `search-events` and `get-event-signal`.
 
-### Fixed
+### Changed
 
-- **Bare flexBool + following flag** — Previously, combining `NoOptDefVal` with spaced values could mis-parse; bare `--with-indicators` followed by `--timeframe` now resolves correctly (see `cmd/info/aliases_flag_wiring_test.go`).
-- **`internal/toolargs`** — CLI pre-check before MCP `tools/call` for News tools with strict or conditional required inputs: `search-ugc` (`query` or `coin`), `web-search` (`query`), `explain-market-move` (`query` + `coin`), `get-event-detail` (`event_id`), `search-events` (`query`, `coin`, or `category`), `get-market-orderbook` (`venue` + `market_id`), `get-event-signal` (`event_ref`). Prediction leaves also validate enums/ranges locally (`venue`, `category`, `status`, `sort_by`, `limit`, `depth`, `event_ref` shape, `window`, optional `venue[]` vs `event_ref`).
-- **`internal/intelfacade/news_schema_baseline.go`** — align `news_feed_web_search` `lang` default (`zh`), `news_feed_search_x` `days` default (`1`), prediction `limit` minimum (`1`), and `search-events` `sort_by` default (`recently_listed`) with `news-tools-args-and-logic.json`.
-- **News command documentation** — documents the `news prediction` leaves and `explain-market-move`.
-
-### Tests
-
-- **`internal/intelcmd/argv_rewrite_test.go`** — rewriter edge cases (equals form, `--`, unknown subcommand, native bool untouched, end-to-end parse).
-- **`cmd/info/aliases_flag_wiring_test.go`** — `markettrend get-kline` flexBool wiring, bare flag, `=false`, and bool-then-next-flag ordering.
-
-### Unchanged
-
-- **`gateapi-go/v7 v7.2.78`** — no SDK bump.
-- Tool inventory remains **41** (30 `info` + 11 `news`); no new MCP leaves in this release.
+- News ranking `category` accepts a free-form string. Search-event `status` is omitted when unspecified; order-book `market_id` follows venue semantics. `include_orderbook_summary` is deprecated for event signals.
 
 ## [v0.7.2] - 2026-05-12
 
-### Summary
+### Added
 
-Intel surface bump: **`gate-cli news`** gains one new MCP leaf (`news events explain-market-move`), taking the baseline to **41** tools (**30** `info` + **11** `news`). Also realigns the bundled MCP wire specs and `internal/intelfacade` baseline schemas for `info platformmetrics` (`get-platform-info` / `get-exchange-reserves` shape changes), adds a pre-`tools/call` static check for `info platformmetrics get-platform-history`, and fixes a stale top-level `required` array leaking from the gateway into XOR / `conditional_required` tools. SDK unchanged (`gateapi-go/v7 v7.2.78`); no `cex` command changes. **1 new command + static argument validation + MCP spec/baseline sync + 1 fix.**
+- `news events explain-market-move` requires `--query` and `--coin`; optional `--time-range`, `--mode` and `--lang`.
 
-### Added — Intel (`gate-cli news`)
+### Changed
 
-- **`gate-cli news events explain-market-move`** — new MCP leaf (`news_events_explain_market_move`): synthesizes market-move evidence (Tavily search + internal event pool). Requires `--query` and `--coin`; optional `--time-range`, `--mode`, `--lang`. Baseline tool count is now **41** (30 `info` + 11 `news`); README, both quickstarts, and the module tables updated to match (e.g. `news events` group description now mentions "market-move evidence synthesis").
-
-### Changed — Intel MCP wire specs & baseline schemas
-
-- **`info platformmetrics get-platform-info` / `get-exchange-reserves`** — bundled `internal/mcpspec/bundled/info-mcp-tools-inputs-logic.json` and the `internal/intelfacade` baseline JSON schemas updated to the new wire shapes: `get-platform-info` adds optional `include_oi_symbol_detail` / `oi_symbol_limit` plus richer merge logic; `get-exchange-reserves` replaces `period` with `scope` / `include_history` / `history_window` and a closed `asset` enum. README examples updated (`--scope full --include-oi-symbol-detail --oi-symbol-limit 20`, `--scope full --include-history --asset BTC`).
-- **News baseline** — ranking `category` uses its documented closed enum. `news_events_explain_market_move` normalizes `days` consistently with `time_range`, without a separate `7d` branch.
-
-### Added — Static argument validation
-
-- **`internal/toolargs` + `internal/intelcmd`** — `info_platformmetrics_get_platform_history` is now validated before `tools/call`: `platform_name` and `exchange_slug` must not both be empty (matching the MCP spec `conditional_required`), returning **400 + INVALID_ARGUMENTS** locally instead of a gateway round-trip.
+- `info platformmetrics get-platform-info` adds `include_oi_symbol_detail` and `oi_symbol_limit`.
+- `info platformmetrics get-exchange-reserves` replaces `period` with `scope`, `include_history` and `history_window`, and documents accepted `asset` values.
 
 ### Fixed
 
-- **`internal/intelcmd`** — when merging static JSON Schema baselines into a cached `tools/list` input schema (and again before `MissingRequiredArguments` on `info` / `news` invoke), drop a stale top-level **`required`** array if the committed baseline intentionally omits `required` — so XOR / `conditional_required` tools such as `info_platformmetrics_get_platform_history` are not blocked by an outdated `required: ["platform_name"]` from the gateway when the caller supplies **`exchange_slug`** only.
-
-### Tests
-
-- `internal/intelcmd/merge_baseline_test.go`, `internal/intelfacade/info_schema_baseline_test.go`, `internal/intelfacade/news_schema_baseline_test.go`, `internal/intelfacade/inventory_test.go`, `internal/toolargs/validate_test.go` — cover the new `explain-market-move` leaf and the 41-tool baseline, the stale-`required` drop, the `platformmetrics` spec changes, and the `get-platform-history` XOR check.
-
-### Unchanged
-
-- `gateapi-go/v7 v7.2.78` (no SDK bump); the `v0.7.1` tag itself only trims a redundant line from `go.sum`.
-- No `cex` command, flag, output-format, or exit-code changes; trading ↔ Intel auth isolation unchanged.
+- `info platformmetrics get-platform-history` accepts either `platform_name` or `exchange_slug`; requests missing both return `INVALID_ARGUMENTS`.
 
 ## [v0.7.0] - 2026-05-06
 
-### Summary
+### Added
 
-Syncs gate-cli to **gateapi-go/v7 v7.2.78** (from v7.2.71) and ships a new top-level **`gate-cli cex bot`** module that exposes every method on `BotApiService` (10 AI Hub / quant-strategy endpoints — recommend, running, detail, stop + 4 grid + 2 martingale create flows). Targeted forward-compat tweaks cover the v7.2.78 wire-shape changes across `cross_ex`, `p2p`, and `spot`. **10 new commands + 1 new flag + 1 new column + 41 new unit tests + 1 breaking flag removal.**
+- `cex bot` recommendation, running-strategy, detail and stop commands; spot, margin, infinite and futures grid creation; spot and contract martingale creation. Recommendation filters include market, strategy type, direction, investment amount, scene, refresh recommendation ID, limits, maximum drawdown and backtest APR.
+- `cex cross-ex account book --statement-type`; spot account-book responses add `code` alongside the deprecated `type` field.
 
-### Added — AI Hub (Quant Strategies) module
+### Changed
 
-- **`gate-cli cex bot`** — new top-level command group wrapping `BotApiService`. Previously the CLI had no quant/AI Hub coverage. SDK methods backing each subcommand:
-  - `cex bot recommend [--market] [--strategy-type] [--direction] [--invest-amount] [--scene] [--refresh-recommendation-id] [--limit] [--max-drawdown-lte] [--backtest-apr-gte]` → `BotAPI.GetAIHubStrategyRecommend`
-  - `cex bot running [--strategy-type] [--market] [--page] [--page-size]` → `BotAPI.GetAIHubPortfolioRunning`
-  - `cex bot detail --strategy-id <id> --strategy-type <type>` → `BotAPI.GetAIHubPortfolioDetail`
-  - `cex bot stop --strategy-id <id> --strategy-type <type>` → `BotAPI.PostAIHubPortfolioStop`
-  - `cex bot grid spot --json '<SpotGridCreateRequest>'` → `BotAPI.PostAIHubSpotGridCreate`
-  - `cex bot grid margin --json '<MarginGridCreateRequest>'` → `BotAPI.PostAIHubMarginGridCreate`
-  - `cex bot grid infinite --json '<InfiniteGridCreateRequest>'` → `BotAPI.PostAIHubInfiniteGridCreate`
-  - `cex bot grid futures --json '<FuturesGridCreateRequest>'` → `BotAPI.PostAIHubFuturesGridCreate`
-  - `cex bot martingale spot --json '<SpotMartingaleCreateRequest>'` → `BotAPI.PostAIHubSpotMartingaleCreate`
-  - `cex bot martingale contract --json '<ContractMartingaleCreateRequest>'` → `BotAPI.PostAIHubContractMartingaleCreate`
-- **`internal/client.Client`** — added `BotAPI` field (wrapping `gateapi.BotApiService`) so the new bot commands can invoke SDK methods via the standard client accessor.
+- `cex p2p chat list --txid 0` returns the latest order with chat for the current user.
+- Cross-exchange account-book output uses `statement_type` and the `Statement Type` heading.
+- P2P advertisement status accepts `1=listed`, `3=delisted`, `4=closed`.
+- Contract martingale creation does not support `stop_loss_price`; omit it from `--json`.
+- P2P transaction confirm-payment, confirm-receipt and cancel requests use `txid` instead of `trade_id`. CLI flag names retain their meaning.
 
-### Added — SDK v7.2.78 sync (CEX)
+### Removed
 
-- **`gate-cli cex cross-ex account book --statement-type <type>`** — new optional filter exposing the v7.2.78 `ListCrossexAccountBookOpts.StatementType` query parameter (e.g. `TRANSACTION`, `TRADING_FEE`, `FUNDING_FEE`, `LIQUIDATION_FEE`, `TRANSFER_IN`, `TRANSFER_OUT`, `BANKRUPT_COMPENSATION`, `AUTO_REPAY`).
-- **`gate-cli cex spot account book`** — added a `Code` column to the table output. v7.2.78 marks `SpotAccountBook.Type` as deprecated and exposes the new authoritative `Code` field; both columns now render so downstream tooling can migrate at its own pace.
-
-### Changed — User-visible behavior
-
-- **`gate-cli cex p2p chat list --txid 0`** — `--txid` help text now documents the v7.2.78 server contract: passing `0` returns the latest order with chat for the current user (the SDK added `omitempty` to `GetChatsListRequest.Txid`, so the field is elided on the wire when zero). The flag remains required at the cobra layer.
-- **`gate-cli cex cross-ex account book`** — output table column header renamed `Type` → `Statement Type` to match the SDK rename `CrossexAccountBookRecord.Type` → `StatementType`.
-- **`gate-cli cex p2p ads update-status`** — flag descriptions aligned with v7.2.78 SDK docs (`Ad number` → `Advertisement ID`, status enum reworded to `1=listed, 3=delisted, 4=closed`).
-- **`gate-cli cex bot martingale contract`** — long help warns that v7.2.78 SDK still defines `create_params.stop_loss_price` for backward compatibility but the AIHub `contract_martingale` creation path does not map it; users should not include `stop_loss_price` in `--json`.
-
-### Changed — Wire-level SDK field renames (CLI flags unchanged)
-
-The CLI flags below are unchanged in name and semantics, but the JSON body sent to the Gate API now uses the v7.2.78 field names:
-
-| Command | Wire field | v7.2.71 → v7.2.78 |
-|---------|-----------|--------------------|
-| `cex p2p transaction confirm-payment` body | order ID | `trade_id` → `txid` |
-| `cex p2p transaction confirm-receipt` body | order ID | `trade_id` → `txid` |
-| `cex p2p transaction cancel` body | order ID | `trade_id` → `txid` |
-| `cex cross-ex account book` row response | bill type | `type` → `statement_type` |
-
-### Removed — Breaking flag removal
-
-- **`gate-cli cex p2p ads update-status`** — removed `--trade-type` flag. v7.2.78 dropped the `TradeType` query parameter from `P2pMerchantBooksAdsUpdateStatus`. **Any scripts passing `--trade-type` must drop the flag.**
-
-### Fixed
-
-- **`internal/cmdutil/cmdutil_test.go::TestGetClient_NoCredentials`** — added missing `t.Setenv("HOME", t.TempDir())` so the test is isolated from a real `~/.gate-cli/config.yaml` on the developer's machine. Pre-existing bug surfaced while running the full suite; not a regression of this release.
-
-### Tests — 41 new unit tests covering v7.2.78 contracts
-
-- **`cmd/cex/bot/bot_test.go`** — 33 cases across 5 layers: command tree wiring (9), SDK type contracts (5: `StrategyType` enum stability, `SpotMartingaleCreateParams` new fields, `InfiniteGridCreateParams` omitempty, `AiHubPortfolioStopRequest` shape), RunE end-to-end with query/body capture (11), `RequireAuth` gate (10), and invalid-`--json` input validation (6).
-- **`cmd/cex/p2p/sdk_v7_2_78_compat_test.go`** — locks the `TradeId → Txid` rename at both model layer (JSON tags) and wire level (mock-server captures); pins `omitempty` and the v7.2.78 `P2pTransactionActionResponse` shape (`Timestamp` `int32 → float32`, new `Method/Data/Version`); covers `PlaceBizPushOrder.HidePayment` silent drop and `team_payment_uid` forwarding for legacy `--json` blobs; protects `GetChatsListRequest.Txid` omitempty for `chat list --txid 0`.
-- **`cmd/cex/cross_ex/sdk_v7_2_78_compat_test.go`** — pins the new `--statement-type` flag wiring, the `CrossexAccountBookRecord.StatementType` JSON tag, the rejected legacy `type` JSON key, and the renamed `Statement Type` table header.
-- **`cmd/cex/spot/sdk_v7_2_78_compat_test.go`** — pins the new `Code` column rendering and the `SpotAccountBook.code` wire-tag binding.
-- All 506 tests pass; zero failures across 42 test packages.
-
-### Unchanged
-
-- No new CLI flags on the existing cex modules beyond those listed above.
-- Output formats, exit codes, profile/config layout, and Intel (`info`/`news`) baseline (40 tools) unchanged.
-- No public API changes outside the `cmd/cex/bot/` namespace.
+- `cex p2p ads update-status --trade-type`; scripts must omit this flag.
 
 ## [v0.6.8]
 
 ### Changed
 
-- **`docs/quickstart.md` & `docs/quickstart_zh.md`** — Intel (`info` & `news`) section updated to **40** MCP-style tools (**30** `info` + **10** `news`) and documents the **`prediction`** news subgroup (prediction-market venue rankings).
-
-### Fixed
-
-- **Intel / `gate-cli news prediction`** — `category` on `get-volume-delta-ranking` and `get-fastest-rising-ranking` is an optional free-form string filter in `internal/intelfacade/news_schema_baseline.go` (no closed enum); bundled `internal/mcpspec/bundled/news-tools-args-and-logic.json` validation and error tables aligned.
+- News prediction volume-delta and fastest-rising rankings accept optional free-form `category`.
 
 ## [v0.6.7] - 2026-04-30
 
 ### Added
 
-- **Intel / `gate-cli news`** — add `news_prediction_get_volume_delta_ranking` and `news_prediction_get_fastest_rising_ranking` (CLI: `news prediction get-volume-delta-ranking` and `news prediction get-fastest-rising-ranking`). The catalog contains **40** tools (**30** info + **10** news).
-
-### Changed — Intel MCP HTTP client (`internal/mcpclient`)
-
-- Reject MCP JSON-RPC responses whose `id` does not match the outbound request (`tools/list`, `tools/call`, `initialize`, etc.).
-- Require `initialize` to return a non-empty JSON `result` that unmarshals into a JSON object (not a bare scalar or missing `result`).
-- While a warm `tools/list` cache exists, resolve tool names via an indexed map so repeated `DescribeTool` calls avoid scanning the whole tool list; the index tracks cache invalidation.
+- `news prediction get-volume-delta-ranking` and `get-fastest-rising-ranking`.
 
 ### Fixed
 
-- **`internal/mcpclient`** — when `tools/list` temporarily fails after cache expiry but the client falls back to the last-good snapshot for that request, **`toolByName` is rebuilt** together with restored `listCache`, keeping describe-by-name lookups consistent with the fallback data.
-
-## [v0.6.6] - 2026-04-23
-
-### Summary
-
-Docs-only refresh aligning user-facing documentation with the shipped Intel surface: `gate-cli info` / `gate-cli news` now documents **38** MCP-backed tools (**30** `info` + **8** `news`). No behavioural changes; no SDK bump; no new commands.
-
-### Changed — Documentation
-
-- **README** — adds the Intel feature summary and command groups (`coin`, `marketsnapshot`, `markettrend`, `onchain`, `platformmetrics`, `marketdetail`, `macro`, `compliance`, `feed`, `events`), discovery examples (`info list`, `news list`, `-h`) and one minimal `--format json` example for each of the 38 tools. Module tables include Info/News tool counts and groups.
-- **`docs/quickstart.md` & `docs/quickstart_zh.md`** — New **Intel (`info` & `news`)** section between futures examples and multi-profile section, documenting groups, discovery commands, config (`intel:` block), and bearer isolation from trading `GATE_API_KEY`. Debugging section amended to note `--debug` / `--verbose` / `--max-output-bytes` behaviour for Intel MCP transport lines (stderr, unchanged stdout JSON shape).
-- **`AGENTS.md` & `CLAUDE.md`** — MCP / Intel section rewritten to reflect that `info` / `news` are **published** (38 MCP leaves, discovery via `list` / `-h`). The planned unified `gate-cli tool` (`list` / `call` / `describe`) remains a spec-only path; auth-isolation guidance versus trading `GATE_API_KEY` reaffirmed.
-- **`internal/intelfacade/inventory.go`** — Source-file comment updated from "Info: 29 tools on public gateway as of 2026-04; News: 8" to "Info: 30; News: 8; total 38. Keep in sync with BaselineToolCount tests." No code change; existing `TestBaselineToolCount` already asserts **38**.
-
-### Unchanged
-
-- `gateapi-go/v7 v7.2.71` (no SDK version bump).
-- No new commands, flags, or breaking renames.
-- No behavioural changes in any command; exit codes, output formats, and error surfaces are identical to v0.6.5.
+- Info/News calls reject mismatched response IDs and invalid initialization results. Describe queries continue to return consistent results after temporary tool-list failures.
 
 ## [v0.6.5] - 2026-04-22
 
-### Summary
+### Added
 
-Syncs gate-cli to **gateapi-go/v7 v7.2.71** (from v7.2.57) and closes every remaining CLI ↔ SDK gap across the 11 core CEX modules plus the newly-surfaced `assetswap` module and `launch` Candy Drop / HODLer Airdrop V4 subtrees. **28 new commands + 1 parameter addition + 5 breaking renames + 66 new unit tests.** One existing dependency upgrade with zero behavioural regressions.
+- `cex assetswap` assets, config, evaluate, order create/preview/list/get commands. Evaluation supports `--max-value`, `--cursor`, `--size`; order lists support time, status, offset, size, sorting and ordering filters.
+- `cex launch hodler` projects, order, order-records and airdrop-records; project queries support status, keyword, join and pagination, and records support keyword, time range and pagination.
+- `cex launch candy-drop` activities, rules, register, progress, participations and airdrops; registration accepts currency and optional activity ID.
+- `cex earn dual refund-preview`, `refund`, `modify-reinvest` and `recommend`. Refund uses `--order-id` and the preview's `--req-id`; reinvest supports status and duration; recommendations support mode, coin, type and history IDs.
+- One-way futures position get, update-margin, update-leverage, update-cross-mode and update-risk-limit; market `risk-limit-table <table-id>`.
+- `cex wallet sub --page --limit` pagination.
 
-### Added — MCP gap closure (assetswap + launch CandyDrop)
+### Changed
 
-- **`gate-cli cex assetswap`** — new top-level command group for Gate's Portfolio Optimization (asset-swap) APIs. Previously CLI had no assetswap coverage. SDK methods backing each subcommand:
-  - `cex assetswap assets` → `AssetswapAPI.ListAssetSwapAssets`
-  - `cex assetswap config` → `AssetswapAPI.GetAssetSwapConfig`
-  - `cex assetswap evaluate [--max-value] [--cursor] [--size]` → `AssetswapAPI.EvaluateAssetSwap`
-  - `cex assetswap order create --json '<body>'` → `AssetswapAPI.CreateAssetSwapOrderV1`
-  - `cex assetswap order preview --json '<body>'` → `AssetswapAPI.PreviewAssetSwapOrderV1`
-  - `cex assetswap order list [--from --to --status --offset --size --sort-mode --order-by]` → `AssetswapAPI.ListAssetSwapOrdersV1`
-  - `cex assetswap order get <order-id>` → `AssetswapAPI.GetAssetSwapOrderV1`
-- **`gate-cli cex launch hodler`** — new subtree under the existing `launch` module exposing HODLer Airdrop V4:
-  - `cex launch hodler projects [--status --keyword --join --page --size]` → `LaunchAPI.GetHodlerAirdropProjectList` (public; logged-in users get extra info)
-  - `cex launch hodler order --hodler-id <id>` → `LaunchAPI.HodlerAirdropOrder` (participate in activity)
-  - `cex launch hodler order-records [--keyword --start-timest --end-timest --page --size]` → `LaunchAPI.GetHodlerAirdropUserOrderRecords`
-  - `cex launch hodler airdrop-records [--keyword --start-timest --end-timest --page --size]` → `LaunchAPI.GetHodlerAirdropUserAirdropRecords`
-- **`gate-cli cex launch candy-drop`** — new subtree under the existing `launch` module exposing Candy Drop V4:
-  - `cex launch candy-drop activities` → `LaunchAPI.GetCandyDropActivityListV4`
-  - `cex launch candy-drop rules` → `LaunchAPI.GetCandyDropActivityRulesV4`
-  - `cex launch candy-drop register --currency <name> [--activity-id]` → `LaunchAPI.RegisterCandyDropV4`
-  - `cex launch candy-drop progress` → `LaunchAPI.GetCandyDropTaskProgressV4`
-  - `cex launch candy-drop participations` → `LaunchAPI.GetCandyDropParticipationRecordsV4`
-  - `cex launch candy-drop airdrops` → `LaunchAPI.GetCandyDropAirdropRecordsV4`
-- **`internal/client.Client`** — added `AssetswapAPI` field (wrapping `gateapi.AssetswapApiService`) so the new assetswap commands can invoke SDK methods via the standard client accessor.
+- Hedge-mode position commands are renamed; scripts must use the corresponding dual-mode names:
 
-### Added — SDK v7.2.71 sync (CEX)
-
-- **`gate-cli cex earn dual refund-preview <order-id>`** — preview early-redemption of a dual-investment order (`EarnAPI.GetDualOrderRefundPreview`, new in SDK v7.2.58+).
-- **`gate-cli cex earn dual refund --order-id <id> --req-id <id>`** — execute early-redemption using the `req_id` obtained from `refund-preview` (`EarnAPI.PlaceDualOrderRefund`).
-- **`gate-cli cex earn dual modify-reinvest --order-id <id> --status <0|1> [--duration <secs>]`** — toggle or adjust reinvest setting on a dual-investment order (`EarnAPI.ModifyDualOrderReinvest`).
-- **`gate-cli cex earn dual recommend [--mode] [--coin] [--type] [--history-pids]`** — fetch recommended dual-investment projects (`EarnAPI.GetDualProjectRecommend`).
-- **`gate-cli cex futures position get`** — get one-way (single-mode) position for a contract (`FuturesAPI.GetPosition`). Previously unavailable in the CLI.
-- **`gate-cli cex futures position update-margin|update-leverage|update-cross-mode|update-risk-limit`** — new one-way position-mode update commands backed by SDK's bare `UpdatePosition*` methods. Previously unavailable in the CLI.
-- **`gate-cli cex futures market risk-limit-table <table-id>`** — query a specific futures risk-limit table (`FuturesAPI.GetFuturesRiskLimitTable`). Previously unavailable.
-- **`gate-cli cex wallet sub --page <n> --limit <n>`** — added pagination flags to sub-account balance listing (SDK v7.2.71 extended `ListSubAccountBalancesOpts` with `Page`/`Limit`).
-
-### Changed — Futures dual-mode naming (breaking)
-
-Dual-mode (hedge) position commands have been renamed to free up the unprefixed names for the new one-way (single-mode) variants. **Any scripts using these commands must be updated.**
-
-| Old command | New command | Backing SDK method (unchanged) |
-|-------------|-------------|-------------------------------|
-| `cex futures position get` | `cex futures position get-dual` | `FuturesAPI.GetDualModePosition` |
-| `cex futures position update-margin` | `cex futures position update-dual-margin` | `FuturesAPI.UpdateDualModePositionMargin` |
-| `cex futures position update-leverage` | `cex futures position update-dual-leverage` | `FuturesAPI.UpdateDualModePositionLeverage` |
-| `cex futures position update-cross-mode` | `cex futures position update-dual-cross-mode` | `FuturesAPI.UpdateDualCompPositionCrossMode` |
-| `cex futures position update-risk-limit` | `cex futures position update-dual-risk-limit` | `FuturesAPI.UpdateDualModePositionRiskLimit` |
-
-`cex futures position update-contract-leverage` is unchanged (it maps to the contract-based `UpdateContractPositionLeverage`, a third mode that is distinct from both dual and one-way).
-
-### Dependencies
-
-- **`github.com/gate/gateapi-go/v7`**: `v7.2.57` → `v7.2.71`. Verified zero breaking changes to methods already in use; the upgrade unlocks the dual-investment refund/recommend methods and SDK-level pagination fields listed above.
-
-### Tests — 66 new unit tests, coverage lifted across every affected package
-
-Coverage strategy is three-layered: (1) cobra structural checks (subcommand tree, required flag annotations, positional-arg contracts), (2) direct RunE invocation with no credentials to exercise the `cmdutil.GetClient` / `RequireAuth` paths, (3) `httptest.NewServer` + `GATE_BASE_URL` redirection so no-auth public endpoints and downstream `opts` / JSON-unmarshal branches are covered end-to-end.
-
-Package-level coverage delta (statements):
-
-| Package | Before | After |
-|---------|-------:|-------:|
-| `cmd/cex/assetswap` | 17.4% | **59.4%** |
-| `cmd/cex/launch` | 21.0% | **50.2%** |
-| `cmd/cex/futures` | 22.7% | **26.6%** |
-| `cmd/cex/earn` | 19.9% | **24.6%** |
-| `cmd/cex/wallet` | 17.3% | **18.6%** |
-| `internal/client` | 55.2% | **55.2%** (stable, guarded by new API-accessor non-nil test) |
-
-New test files:
-
-- `cmd/cex/assetswap/assetswap_test.go` (18 tests) — structural, RequireAuth, invalid-`--json`, httptest success + server-error branches
-- `cmd/cex/launch/candy_drop_test.go` (11 tests), `cmd/cex/launch/hodler_airdrop_test.go` (9 tests) — structural, RequireAuth, httptest all-flags / no-flags matrices
-- `cmd/cex/earn/dual_test.go` (10 tests) — structural, positional-args, RequireAuth, httptest for `runDualRecommend`
-- `cmd/cex/futures/position_test.go` (4 tests) — full 17-command subtree guard + route-β rename regression via Short-field assertions
-- `cmd/cex/futures/position_single_test.go` (7 tests) — RequireAuth for all single-mode + 2 dual-mode regression handlers
-- `cmd/cex/futures/market_test.go` (3 tests) — `risk-limit-table` registration, Args contract, httptest success path
-- `cmd/cex/wallet/balance_test.go` (4 tests) — new `--page` / `--limit` flags (non-zero + zero) + subcommand regression
-
-Updated tests:
-
-- `cmd/cex/launch/launch_test.go` — `candy-drop` and `hodler` added to the structural guard list
-- `internal/client/client_test.go` — new `TestNewClientExposesAllSDKApis` asserts all 15 wrapped `*ApiService` fields (including the newly-added `AssetswapAPI`) are non-nil after `client.New`
+| Previous command | Dual-mode command |
+| --- | --- |
+| `cex futures position get` | `cex futures position get-dual` |
+| `cex futures position update-margin` | `cex futures position update-dual-margin` |
+| `cex futures position update-leverage` | `cex futures position update-dual-leverage` |
+| `cex futures position update-cross-mode` | `cex futures position update-dual-cross-mode` |
+| `cex futures position update-risk-limit` | `cex futures position update-dual-risk-limit` |
 
 ## [0.6.4] - 2026-04-22
 
 ### Added
 
-- **`gate-cli info platformmetrics get-cex-orderbook-depth`** — new intel leaf exposing the `info_platformmetrics_get_cex_orderbook_depth` MCP tool (CEX orderbook depth lookup). Inputs: required `symbol`; optional `market_type` (enum: `perp` [default], `spot`, `perps`, `futures`, `future`), `exchange`, `data_scope` (enum: `exchange`, `market`), `limit` (default `20`, max `100`). Registered in `internal/intelfacade/inventory.go` (`InfoToolBaseline`); schema added to `internal/intelfacade/info_schema_baseline.go`; bundled spec (`internal/mcpspec/bundled/info-mcp-tools-inputs-logic.json`) refreshed; `internal/intelfacade/inventory_test.go` baseline count updated (37 → 38).
+- `info platformmetrics get-cex-orderbook-depth`: required `symbol`; optional `market_type` (`perp`, `spot`, `perps`, `futures`, `future`), `exchange`, `data_scope` (`exchange`, `market`) and `limit` (default 20, maximum 100).
 
 ### Changed
 
-- **Info `platformmetrics_search_platforms.sort_by`** (`internal/intelfacade/info_schema_baseline.go`) — enum extended with `volume_perps_7d`, `volume_perps_30d`, `volume_perps_qtd` (in addition to existing `tvl` [default], `volume_24h`, `volume_spot_24h`, `volume_perps_24h`, `fees_24h`).
-- **Info `platformmetrics_get_defi_overview.category`** — enum adds `dexs` alias alongside existing `dex` / `dexes`.
-- **Info `platformmetrics_get_platform_history`** inputs gain `exchange_slug` (string) and `granularity` (enum: `day` [default], `week`, `month`, `quarter`).
+- Platform search `sort_by` adds `volume_perps_7d`, `volume_perps_30d` and `volume_perps_qtd`.
+- DeFi overview `category` adds `dexs` alongside `dex` / `dexes`.
+- Platform-history queries add `exchange_slug` and `granularity` (`day`, `week`, `month`, `quarter`, default `day`).
 
 ### Fixed
 
-- **`migration doctor` / `preflight`** — `MinDoctorVersion` bumped from `0.3.0` → `0.6.0` (`internal/migration/doctor.go`); `internal/migration/preflight_test.go` fixtures aligned to `0.6.0` so `version_ok` checks gate on the 0.6 line.
-
-## [0.6.2] - 2026-04-20
-
-### Fixed
-
-
+- `doctor` / `preflight` report `version_ok` against the minimum migration-compatible CLI version 0.6.0.
 
 ## [0.6.1] - 2026-04-20
 
 ### Added
 
-- **Offline tool contracts** — embed Info/News JSON input documents for offline agent and LLM use, with initialization validation and contract consistency regression coverage.
-- **`gate-cli info mcp-spec`** / **`gate-cli news mcp-spec`** — new leaf commands that print the embedded MCP inputs/spec document (tool names, fields, enums, bounds, logic text) with **no network call**. Table format is unsupported; use `--format json` or `pretty`.
-- **`GATE_INTEL_LEAF_HELP`** — leaf `--help` `Long` text now appends MCP-spec narrative (description / policy / logic / errors) via `mcpspec.InfoLeafLongAppend` / `NewsLeafLongAppend`. Default stays compact (cobra already lists flag type/default/enum/max); set `GATE_INTEL_LEAF_HELP=full` (or `detailed`) to embed per-field notes.
-- **`AnnotationIntelToolName`** (`gate-cli.intel.tool-name`) — cobra annotation attached to every intel leaf alias so tests and tooling can resolve the underlying MCP tool name.
-- **Intel `isError` helpers** — new `internal/intelcmd/intel_result_error_classify.go` and `is_error_message.go` with unit tests classify tool-side failures and extract a human-readable message from the MCP payload.
+- `info mcp-spec` / `news mcp-spec` provide offline public input contracts in JSON or pretty format; table format is unsupported.
+- `GATE_INTEL_LEAF_HELP=full|detailed` enables detailed field descriptions in leaf help, including enums, defaults, bounds and patterns.
 
 ### Changed
 
-- **Info / News input schemas** — enrich flat-flag help with `enum`, `default`, `minimum`, `maximum`, `maxLength`, `maxItems` and `pattern`. These describe Info selectors such as `query_type`, `scope`, `asset_type`, `sort_by`, `ranking_type`, `time_range`, `timeframe`, `period`, `indicators` and `source`, and News selectors such as `platform`, `domain`, `quality_tier`, `time_range`, `sort_by`, `limit`, `page`, `days`, `allowed_handles` and `excluded_handles`.
-- **`internal/toolschema`** — `ApplyInputSchemaFlags` now coerces `default` from `float64` / `int` / `int64` / `json.Number` for `integer` and `number` fields; flag usage strings append `min`, `max`, `minLen`, `maxLen`, `minItems`, `maxItems`, `pattern` when defined. `verify.valueMatchesType` accepts `int` / `int64` alongside `float64` for integer/number values.
-- **`internal/toolrender/envelope`** — treat empty `structuredContent` (`{}`) as absent and fall back to `content[].text`; matches gateways that attach an empty structured payload.
-- **`internal/intelcmd/leaf_alias.go`** — `LeafAliasConfig` gains `LongAppend`; the default `Long` block now documents `GATE_INTEL_LEAF_HELP=full` alongside the `--params` / `--args-json` / `--args-file` JSON-fallback flags.
-- **`internal/intelfacade/inventory.go`** — comment documents the News baseline at 8 tools (Info: 29, public gateway as of 2026-04).
+- Info/News flags expose documented field types and constraints, including query, scope, sorting, time, platform, pagination and handle filters.
 
 ### Fixed
 
-- **Intel `isError` classification** (`internal/intelcmd/run_tool_call.go` — `GateErrorForIntelToolIsError`) — tool-side argument / validation failures now surface as **HTTP 400 + `INVALID_ARGUMENTS`** (based on 4xx `http_status` / `status_code` fields, well-known error codes such as `INVALID_ARGUMENT` / `BAD_REQUEST` / `VALIDATION_ERROR` / `OUT_OF_RANGE`, or snake_case `"<param> not supported"` wording). Transport / server errors stay at **502 + `INTEL_RESULT_ERROR`**, so scripts can distinguish caller-fixable input from backend outages.
-- **Intel error messages** — surface a trimmed, redacted summary (≤ 2048 runes) from `structuredContent` / `content[].text` / raw payload instead of the generic `"tool returned isError=true"`; bearer tokens in the message are redacted to `Bearer [redacted]`.
+- Info/News argument failures return HTTP 400 with `INVALID_ARGUMENTS`; service failures retain HTTP 502 with `INTEL_RESULT_ERROR`.
+- Errors retain concise, redacted messages. Empty structured responses no longer hide available text results.
 
 ## [0.6.0] - 2026-04-20
 
-### Breaking
-
-- **CEX command namespace**: All centralized-exchange CLI groups (spot, futures, wallet, earn, margin, unified, etc.) are registered under a single parent command **`gate-cli cex`**. Replace former invocations such as `gate-cli spot …` with **`gate-cli cex spot …`** (same pattern for other groups). Top-level commands unchanged: **`config`**, **`news`**, **`info`**, **`preflight`**, **`doctor`**, **`migrate`**.
-
-### Added
-
-- **`cmd/cex/`** tree: `cex.go` wires every CEX domain package (`spot`, `futures`, `wallet`, `earn`, …) under **`gate-cli cex`**. Trading/account implementations now live under **`cmd/cex/<domain>/`** (moved from the former top-level **`cmd/<domain>/`** layout).
-- **Skill / MCP alignment docs** (for mapping Exchange skills and legacy MCP names to CLI):
-  - `cmd/cex/GATE_EXCHANGE_SKILLS_MCP_TO_GATE_CLI.md` — skill token → `gate-cli` invocation
-  - `cmd/cex/MCP_LEGACY_TOOL_RESOLUTION.md` — legacy `cex_*` tool resolution
-  - `cmd/cex/COMMAND_API_MAP.md` — API ↔ command reference
-- **`bin/`** — prebuilt `gate-cli` binaries for **darwin / linux** (**arm64**, **x86_64**) for bundled or offline installs (e.g. skills / OpenClaw workflows).
-
 ### Changed
 
-- **README**, **docs/quickstart.md**, **docs/quickstart_zh.md** — examples and navigation updated for the **`cex`** prefix and skill-oriented usage.
-- **Go**: `go.mod` **`go 1.24`**; indirect dependency bumps (e.g. `olekukonko/tablewriter` stack, `clipperhouse/*`, `cespare/xxhash/v2`).
-- **`internal/useragent`** — minor behavior / test updates.
-- **`.agent/skills/gate-cli-add-module/SKILL.md`**, **AGENTS.md**, **CLAUDE.md** — paths and guidance aligned with the `cmd/cex` layout.
+- Trading and account commands move under `gate-cli cex`: use `gate-cli cex spot`, `cex futures`, `cex wallet`, `cex earn`, `cex margin`, `cex unified`, and the corresponding domain groups. Top-level config, Info/News, preflight, doctor and migrate commands retain their names.
 
 ## [0.5.2] - 2026-04-18
 
 ### Removed
-- **Info baseline**: retire 5 frozen baseline commands that are no longer supported upstream — `info_onchain_get_smart_money`, `info_onchain_get_entity_profile`, `info_onchain_trace_fund_flow`, `info_compliance_check_address_risk`, `info_compliance_search_regulatory_updates`. Updates `cmd/info/aliases.go`, `internal/intelfacade/info_schema_baseline.go`, and the corresponding inventory/tests.
 
-## [0.5.1] - 2026-04-17
-
-### Changed
-- **README**: add `info` / `news` to the command table; document the `--max-output-bytes` global flag; refresh `--verbose` / `--debug` descriptions for Intel backend transport.
-- **README**: collapse stale "Intel MCP" / "Intel Migration Notes" sections into a concise "Intel (`info`, `news`)" pointer — behaviour, flags, and environment variables are now maintained in `gate-cli info -h` / `gate-cli news -h` and the `intel:` block of `config.yaml`.
+- Unsupported Info contracts for smart-money, entity-profile, fund-flow tracing, address-risk checks and regulatory-update search.
 
 ## [0.5.0] - 2026-04-17
 
-### Fixed
-- **维护说明**：`internal/intelcmd/doc.go`；`toolconfig` deniedHeaders 字母序；`toolargs` `expandUserPath` 更清晰的 home 错误；`mcpclient` `callWithRetry` 重试语义 godoc；`migration` `atomicWritePreservePerm` 注释 Windows `Rename`；`toolrender` `ApplyOutputLimitWithData` 测量字节语义注释；scanner `rawLower` 命名。
-- **`internal/toolargs`**：`stringSlice` 与 `stringArray` 一致，归一化后为「全空」时合并 **`[]string{}`** 到 MCP 参数；`TestMergeFromCommand_StringSliceExplicitEmptyPreserved`。
-- **`internal/migration` scanner**：每个配置文件最多 **一次** JSON `Unmarshal`；合法 JSON 不再对全文做 `ToLower`，非 JSON 仍走子串检测。
-- **Intel MCP HTTP**：默认 `User-Agent` 与交易 REST 同形态（`internal/useragent`，`intel/{backend}` + `jsonrpc` 后缀）；`GATE_INTEL_EXTRA_HEADERS` 若已设 `User-Agent` 则不覆盖。
-- **`tools/list`**：缓存与返回值对 `Tool.InputSchema` 做 JSON 深拷贝，避免与解码结构或调用方原地修改共享指针。
-- **Intel MCP errors**: response body over the HTTP read limit uses `errors.Is` messaging that separates **transport** `GATE_INTEL_MAX_RESPONSE_BYTES` from **`--max-output-bytes`** (printed output only).
-- **Intel config**: non-empty bearer tokens must be at least 8 characters so trivial values like `"123"` fail fast at resolve time.
-- **`tools/list` cache**: unit tests cover `shouldInvalidateListCacheOnListError` and recovery after a malformed list result invalidates the snapshot.
-- **`--args-file`**: relative paths must stay within the working directory (`filepath.IsLocal` after `Rel`); absolute paths unchanged.
-- **Intel schema cache**: temp write uses `0o600`, then restores prior file permission when rewriting; `Rename` failure removes `.tmp`.
-- **Intel leaf aliases**: Intel leaf aliases share `internal/intelcmd` (`NewLeafAliasCommand`, `LoadToolSchemasFromCache`, `AddFallbackArgFlags`, `MergeToolBaselineInto`, `ReservedMCPJSONFallbackFlags`); `cmd/info` and `cmd/news` only wire backend-specific baselines.
-- **Info `info_coin_get_coin_info`**: `--symbol` is defined in the frozen baseline input schema; removed the `AfterAliasBuilt` special-case in `cmd/info/aliases.go`.
-- **`internal/toolrender`**: `ApplyOutputLimitWithData` returns display JSON for the truncated placeholder so Pretty mode avoids an extra `json.Marshal` of `data`.
-- **`internal/migration`**: `readFromReaderLimited` centralizes bounded reads (`LimitReader(max+1)`); `scanner` and `backupFile` reuse it.
-- **Root**: format compat notice line uses `io.WriteString`.
-- Removed unused `newsObjAny` and dead `pruneGateMarkers` helper so `staticcheck` U1000 stays clean on Intel packages.
-- **Intel MCP**: HTTP response body over the configured read limit now wraps a stable sentinel error for `errors.Is` (size-limit diagnostics).
-- **Migration**: `backupFile` reads via `Open`+`Stat` on the same descriptor and caps read size (reduced TOCTOU vs `ReadFile`+`Stat`).
-- **CLI**: default `--format` compatibility notice prints only on an interactive stderr TTY (or when `GATE_CLI_FORMAT_NOTICE_FORCE` is set for tests); avoids noisy stderr in pipelines.
-- **toolschema**: `IsBackendInvoked` documented as deprecated (argv sniffing); schema refresh pointers in `info`/`news` package comments.
-
 ### Added
 
-
-- **Structured User-Agent header** with environment auto-detection
-  - Format: `gate-cli/{version}/{command}/{agent}/{extra} {sdkUA}`
-  - Auto-detects 9 environments: Claude Code, Cursor (Agent + CLI), Qoder, Antigravity, Trae, OpenCode, Codex (Desktop + CLI), Windsurf, JetBrains
-  - Falls back to `TERM_PROGRAM` (e.g. iTerm, VSCode) or `terminal`
-  - Supports explicit override via `GATE_CLI_AGENT` / `GATE_CLI_AGENT_VERSION` env vars
-  - New package: `internal/useragent` with full unit tests
-- **15 new modules** to align with gate-local-mcp feature coverage (~190 new commands):
-  - `margin` — margin accounts, funding, cross-margin loans, uni lending, auto-repay, leverage (20 commands)
-  - `unified` — unified account mode, borrowing, risk units, portfolio margin, collateral config (22 commands)
-  - `sub-account` — sub-account CRUD, lock/unlock, API key management (11 commands)
-  - `earn` — dual investment, staking, fixed-term lending, auto-invest plans, uni simple earn (37 commands)
-  - `flash-swap` — instant token swaps, multi-currency many-to-one / one-to-many (11 commands)
-  - `mcl` — multi-collateral borrowing, repayment, collateral management (12 commands)
-  - `cross-ex` — cross-exchange trading, positions, orders, convert (31 commands)
-  - `p2p` — merchant ads, transactions, chat, payment methods (17 commands)
-  - `rebate` — partner/broker/agency commissions and transaction history (12 commands)
-  - `withdrawal` — create withdrawal, push order (UID transfer), cancel (3 commands)
-  - `activity` — platform activities and promotions (3 commands)
-  - `coupon` — user coupons and details (2 commands)
-  - `launch` — launch pool projects, pledge, redeem, records (5 commands)
-  - `square` — AI search, live replay (2 commands)
-  - `welfare` — user identity, beginner tasks (2 commands)
-- Integration tests for all new modules
-- Unit tests for all 15 new modules (command structure and flag validation)
+- Margin, unified, sub-account, earn, flash-swap, multi-collateral lending, cross-exchange, P2P, rebate, withdrawal, activity, coupon, launch, square and welfare command groups.
+- Request `User-Agent` includes CLI version, command and detected environment. `GATE_CLI_AGENT` / `GATE_CLI_AGENT_VERSION` allow explicit environment identification.
+- Leverage commands expose `--pos-margin-mode` / `--dual-side`; price-trigger order identifiers accept 64-bit values.
 
 ### Changed
-- **Intel (`info` / `news`)**: default root `--format` is `pretty` (was `table` in older snapshots). Scripts should pass `--format json` explicitly for stable machine output. Optional stderr notice can be suppressed with `GATE_CLI_SUPPRESS_FORMAT_NOTICE=1`.
-- **Intel**: the `--refresh-schema` flag was removed; force a one-off schema refresh with environment variable `GATE_INTEL_REFRESH_SCHEMA=1` (see README Intel migration notes).
-- **SDK upgraded** from `gateapi-go/v7` v7.2.40 to v7.2.57
-  - `InlineObject` / `InlineObject1` replaced with named types (`UpdateDualCompPositionCrossModeRequest`, `AmendOptionsOrderRequest`)
-  - `InlineResponse*` types replaced with semantic names (`TrailOrderResponse`, `CreateTrailOrderResponse`, etc.)
-  - `GetLeverage` changed from Opts pattern to required params; new `--pos-margin-mode` and `--dual-side` flags added
-  - Price trigger order ID type widened from `int32` to `int64`
-  - `Currency2` renamed to `AlphaCurrency`, `Ticker2` to `TradFiTicker`
-  - Earn: `SwapETH2`, `RateListETH2`, `ListStructuredProducts/Orders`, `PlaceStructuredOrder` removed upstream; replaced by fixed-term and auto-invest APIs
-- **Go version** bumped from 1.21 to 1.23 (go.mod and CI workflow)
-- **Client struct** extended with 17 new API service fields
-- **README** rewritten with full module listing and categorized features
+
+- Info/News default output is `pretty`; scripts can request `--format json`. `GATE_CLI_SUPPRESS_FORMAT_NOTICE=1` suppresses the compatibility notice.
+- `--refresh-schema` is replaced by `GATE_INTEL_REFRESH_SCHEMA=1` for a one-off schema refresh.
+- ETH2 swap/rate and structured-product/order interfaces are retired in favor of fixed-term and auto-invest interfaces.
+
+### Fixed
+
+- Explicit empty list arguments remain empty. Nonempty Intel bearer tokens shorter than eight characters are rejected.
+- Relative `--args-file` paths stay within the working directory. Schema updates preserve file permissions.
+- HTTP response-size errors distinguish `GATE_INTEL_MAX_RESPONSE_BYTES` from the printed-output limit `--max-output-bytes`.
+- Format notices are emitted only on interactive stderr, keeping pipelines quiet. Coin-info queries accept `--symbol`.
 
 ## [0.4.1]
 
 ### Fixed
-- **Homebrew tap**: move generated formula into `Formula/` directory so `brew tap` can discover it (`2d7106d`)
 
-### Changed
-- **README**: update installation sections to reflect v0.4.0 distribution channels (`5b2795e`)
+- `brew tap gate/tap` discovers the `gate-cli` formula correctly.
 
 ## [0.4.0]
 
 ### Added
-- **One-line install scripts**
-  - `install.sh` for Unix (macOS / Linux) — checksum-verified download, `$HOME/.local/bin` default, PATH hint
-  - `install.ps1` for Windows — parity with Unix installer
-  - Homebrew tap wiring in goreleaser (`.goreleaser.yaml`) for `brew install gate/tap/gate-cli`
 
+- Unix and Windows installation commands with checksum verification; Unix defaults to `$HOME/.local/bin` and provides a PATH hint.
+- `brew install gate/tap/gate-cli`.
 
 ### Fixed
-- Run checksum verification inside a TMP subshell so partial downloads cannot pollute the target directory
-- Pass `HOMEBREW_TAP_TOKEN` through to goreleaser in the release workflow
-- Harden install scripts: strict checksum guard, CRLF normalization for Windows, PATH deduplication
 
-### Changed
-- Refresh README installation instructions to cover Homebrew, one-line installer, and manual download paths
+- Installation rejects checksum failures and handles Windows CRLF input without duplicating PATH entries.
 
 ## [0.3.2]
 
 ### Added
-- **`--version` flag and `version` subcommand**: unified version reporting for both top-level flag and subcommand invocations
 
+- `--version` and `version` report the same CLI version.
 
 ## [0.2.2]
 
 ### Fixed
-- `wallet transfer`: auto-infer settle currency from currency symbol for futures transfers
-- `futures position update-margin`: require `--dual-side` flag in dual-position mode
+
+- `wallet transfer` infers futures settlement currency from the currency symbol.
+- Dual-position `futures position update-margin` requires `--dual-side`.
 
 ## [0.2.1]
 
-### Fixed
-- `delivery`: remove `--settle` flag, enforce USDT-only settlement
-
 ### Changed
-- Updated README and quickstart guides for v0.2.0
+
+- Delivery commands remove `--settle` and use USDT settlement only.
 
 ## [0.2.0]
 
 ### Added
-- `futures`: expand to full SDK coverage (market, order, position, trail, price-trigger)
-- `spot`: expand to full SDK coverage (batch orders, countdown cancel, cross-liquidate)
-- `delivery`: full API coverage (contracts, orders, positions, price-triggers)
-- `options`: full API coverage (underlyings, contracts, orders, positions, MMP)
-- `wallet`: full API coverage (balances, deposits, withdrawals, transfers, small balance)
-- `account`: full API coverage (detail, rate limits, STP groups, debit fee)
-- `alpha`: alpha token market data, account, orders
-- `tradfi`: MT5 account, symbols, positions, orders, transactions
+
+- Futures market/order/position/Trail/price-trigger commands; spot batch orders, countdown cancellation and cross-liquidation; delivery contracts/orders/positions/price-trigger commands; options underlyings/contracts/orders/positions/MMP; wallet balances/deposits/withdrawals/transfers/small balances; account details/rate limits/STP/debit fees; Alpha and TradFi market/account/trading commands.
 
 ### Changed
-- Refactored futures position commands to use `dual_comp` APIs for unified single/dual mode handling
-- Grouped subcommands into category groups for options, delivery, wallet
+
+- Futures position commands support single- and dual-position modes.
 
 ## [0.1.4]
 
 ### Fixed
-- Set `time_in_force=ioc` for all market orders (spot and futures)
+
+- Spot and futures market orders use `time_in_force=ioc`.
 
 ## [0.1.3]
 
 ### Fixed
-- `ParseGateError`: correctly extract trace ID from response header
 
-## [0.1.2]
-
-### Fixed
-- Lower minimum Go version from 1.25.1 to 1.21
+- Error responses retain the request trace ID.
 
 ## [0.1.1]
 
 ### Added
-- Custom User-Agent header for all API requests (`gate-cli/{version}`)
+
+- API requests identify the CLI through `User-Agent`.
 
 ### Fixed
-- `config set`: respect `default_profile` when `--profile` is not specified
+
+- `config set` uses `default_profile` when `--profile` is omitted.
 
 ## [0.1.0]
 
 ### Added
-- Initial release
-- Core modules: spot, futures with market data, orders, positions
-- Config management with multi-profile support (file/env/flag priority)
-- Dual output modes: table (human) and JSON (scripting)
-- Transparent dual-position mode support for futures
-- Integration test framework with testnet support
-- GoReleaser pipeline for multi-platform builds (linux/darwin/windows, amd64/arm64)
+
+- Spot/futures market-data, order and position commands; multi-profile configuration; table and JSON output; futures dual-position support.

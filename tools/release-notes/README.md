@@ -4,7 +4,7 @@ This tool prints only the body of the CHANGELOG section matching an explicit rel
 
 ```sh
 # Preview one version without publishing or creating a release.
-go run ./tools/release-notes --version v0.9.0 --changelog CHANGELOG.md
+go run ./tools/release-notes --version v0.9.1 --changelog CHANGELOG.md
 ```
 
 `--version` is required; `--changelog` defaults to `CHANGELOG.md`. Notes go to stdout; errors go to stderr and return exit 1. Missing, duplicate or empty sections, invalid UTF-8 and oversized input files stop extraction. The input file is limited to 1 MiB. Markdown fenced-code examples are preserved and do not create version boundaries.

@@ -1,0 +1,51 @@
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "orders": [
+      {
+        "id": "71001",
+        "user_id": "42",
+        "contract": "BTC_USDT",
+        "settle": "usdt",
+        "amount": "0.01",
+        "is_gte": false,
+        "activation_price": "7711",
+        "price_type": 1,
+        "price_offset": "1%",
+        "text": "api",
+        "reduce_only": false,
+        "position_related": false,
+        "created_at": "1700000000",
+        "activated_at": "0",
+        "finished_at": "1700000001",
+        "reason": "",
+        "suborder_text": "t-auto-trail-fixture",
+        "is_dual_mode": false,
+        "trigger_price": "",
+        "suborder_id": "0",
+        "side_label": "Buy",
+        "original_status": 5,
+        "status": "finished",
+        "user": "42",
+        "create_time": "1700000000",
+        "active_time": "0",
+        "finish_time": "1700000001",
+        "position_side_output": "Buy",
+        "updated_at": "1700000000",
+        "extremum_price": "0",
+        "default_leverage": "",
+        "status_code": "cancelled",
+        "status_label": "Canceled",
+        "finished_at_precise": "1700000001824189",
+        "activated_at_precise": "1700000000991000",
+        "pos_margin_mode": "",
+        "position_mode": "single",
+        "error_label": "",
+        "created_at_precise": "1700000000991000",
+        "leverage": ""
+      }
+    ]
+  },
+  "timestamp": 1700000001827
+}

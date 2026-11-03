@@ -332,7 +332,7 @@ Entry points: `gate-cli info list` / `gate-cli news list`, and `gate-cli info -h
 
 ## Source installation
 
-Source builds require Go 1.24 or later and use the public Gate Go SDK `v7.2.178`.
+Source builds require Go 1.24 or later and use the public Gate Go SDK `v7.2.179`.
 
 ```sh
 # Run from a source checkout to build the CLI.

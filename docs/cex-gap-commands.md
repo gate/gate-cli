@@ -7,7 +7,7 @@ and API permissions. Write commands submit immediately: verify the account, mark
 amount before running them. A transport failure can mean an unknown write outcome;
 reconcile the existing order or settings before trying again.
 
-This source uses public SDK `v7.2.178`. Published binaries may expose an earlier
+This source uses public SDK `v7.2.179`. Published binaries may expose an earlier
 command set; inspect the installed command's `--help` instead of assuming support
 from this guide. Account eligibility, scope grants and deployed backend support
 are separate requirements.

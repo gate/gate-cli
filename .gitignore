@@ -42,6 +42,18 @@ gate-cli-agent
 # Local configuration documentation is internal, including hidden descendants.
 /docs/config/
 
+# Private engineering evidence and environment-only suites are not public exports.
+# Product packages under internal/ and public user guides remain tracked.
+/docs/cr/
+/docs/qa/
+/docs/tech/
+/docs/operations/
+/docs/plans/
+/docs/superpowers/
+/doc/tech/
+/tests/internal/
+/tests/agentic/dev_read_live_test.go
+
 # Git metadata can be a file in worktrees. Ignore matching copied metadata;
 # this does not sanitize tracked files or remove reachable commit history.
 .git

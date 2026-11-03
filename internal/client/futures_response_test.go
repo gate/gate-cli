@@ -264,14 +264,13 @@ func TestFuturesResponseProtocol(t *testing.T) {
 	}
 }
 
-// SDK v178 declares the stop/update/log envelopes; their nonzero-code paths
-// are covered by TestSDK178. This table retains only untouched contracts.
+// SDK178/179 declare stop/update/log/stop-all envelopes; their business paths
+// have dedicated regressions. This table retains only untouched contracts.
 func TestFuturesResponseScope(t *testing.T) {
 	for _, tc := range []struct {
 		method, route string
 		status        int
 	}{
-		{"POST", "/api/v4/futures/usdt/autoorder/v1/trail/stop_all", 200},
 		{"GET", "/api/v4/futures/usdt/autoorder/v1/trail/detail", 200},
 		{"GET", "/api/v4/futures/usdt/price_orders/1", 200},
 		{"POST", "/api/v4/bot/portfolio/stop", 200},
