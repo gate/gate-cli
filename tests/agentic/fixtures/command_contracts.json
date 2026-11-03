@@ -3769,6 +3769,11 @@
         "required": true
       },
       {
+        "name": "is-gte",
+        "type": "bool",
+        "default": "false"
+      },
+      {
         "name": "price-offset",
         "type": "string",
         "default": "",
@@ -3814,6 +3819,11 @@
         "default": ""
       },
       {
+        "name": "end-at",
+        "type": "int64",
+        "default": "0"
+      },
+      {
         "name": "finished",
         "type": "bool",
         "default": "false"
@@ -3827,6 +3837,11 @@
         "name": "settle",
         "type": "string",
         "default": "usdt"
+      },
+      {
+        "name": "start-at",
+        "type": "int64",
+        "default": "0"
       }
     ]
   },
@@ -3908,6 +3923,11 @@
         "type": "int64",
         "default": "0",
         "required": true
+      },
+      {
+        "name": "is-gte",
+        "type": "bool",
+        "default": "false"
       },
       {
         "name": "price-offset",

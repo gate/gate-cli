@@ -3,6 +3,7 @@ package futures
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
@@ -29,6 +30,7 @@ func init() {
 	createCmd.Flags().String("activation-price", "0", "Activation price (0 = trigger immediately)")
 	createCmd.Flags().String("price-offset", "", "Callback ratio or price distance, e.g. 0.1 or 0.1% (required)")
 	createCmd.Flags().Int32("price-type", 0, "Activation price reference: 1=latest, 2=index, 3=mark (required)")
+	createCmd.Flags().Bool("is-gte", false, "Activate when market price >= activation price if true, <= if false (default false)")
 	createCmd.MarkFlagRequired("contract")
 	createCmd.MarkFlagRequired("amount")
 	createCmd.MarkFlagRequired("price-offset")
@@ -59,7 +61,9 @@ func init() {
 	}
 	listCmd.Flags().String("contract", "", "Filter by contract name")
 	listCmd.Flags().Bool("finished", false, "Show finished orders (default: active)")
-	listCmd.Flags().Int32("limit", 0, "Number of records per page")
+	listCmd.Flags().Int64("start-at", 0, "History start time in Unix seconds; required with --finished and --end-at")
+	listCmd.Flags().Int64("end-at", 0, "History end time in Unix seconds; required with --finished and --start-at")
+	listCmd.Flags().Int32("limit", 0, "Number of records per page: 1-100 (0 uses service default)")
 	addSettleFlag(listCmd)
 
 	getCmd := &cobra.Command{
@@ -80,6 +84,7 @@ func init() {
 	updateCmd.Flags().String("amount", "", "New amount")
 	updateCmd.Flags().String("activation-price", "", "New activation price")
 	updateCmd.Flags().String("price-offset", "", "New callback ratio or price distance")
+	updateCmd.Flags().Bool("is-gte", false, "Activate at market price >= activation price if true, <= if false; omitted means unchanged")
 	updateCmd.MarkFlagRequired("id")
 	addSettleFlag(updateCmd)
 
@@ -108,6 +113,10 @@ func runFuturesTrailCreate(cmd *cobra.Command, args []string) error {
 	amount, _ := cmd.Flags().GetString("amount")
 	activationPrice, _ := cmd.Flags().GetString("activation-price")
 	priceOffset, _ := cmd.Flags().GetString("price-offset")
+	isGte, err := cmd.Flags().GetBool("is-gte")
+	if err != nil {
+		return output.InvalidArgsError("--is-gte must be true or false")
+	}
 	settle := cmdutil.GetSettle(cmd)
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
@@ -124,6 +133,7 @@ func runFuturesTrailCreate(cmd *cobra.Command, args []string) error {
 		ActivationPrice: activationPrice,
 		PriceOffset:     priceOffset,
 		PriceType:       priceType,
+		IsGte:           isGte,
 	}
 	body, _ := json.Marshal(req)
 	result, httpResp, err := c.FuturesAPI.CreateTrailOrder(c.Context(), settle, req)
@@ -184,6 +194,22 @@ func runFuturesTrailList(cmd *cobra.Command, args []string) error {
 	contract, _ := cmd.Flags().GetString("contract")
 	finished, _ := cmd.Flags().GetBool("finished")
 	limit, _ := cmd.Flags().GetInt32("limit")
+	startAt, startErr := cmd.Flags().GetInt64("start-at")
+	endAt, endErr := cmd.Flags().GetInt64("end-at")
+	startSet, endSet := cmd.Flags().Changed("start-at"), cmd.Flags().Changed("end-at")
+	// Keep time validation before client/auth creation: malformed input must
+	// not refresh credentials or reach the backend. Calendar bounds reject
+	// modern millisecond timestamps without guessing or converting units.
+	const maxUnixSecond = int64(253402300799) // 9999-12-31T23:59:59Z, the RFC3339 calendar boundary.
+	if startErr != nil || endErr != nil || (finished && (!startSet || !endSet || startAt <= 0 || endAt <= startAt || endAt > maxUnixSecond)) {
+		return output.InvalidArgsError("--finished requires --start-at and --end-at in Unix seconds (years 1970-9999), with 0 < start-at < end-at; do not use milliseconds")
+	}
+	if !finished && (startSet || endSet) {
+		return output.InvalidArgsError("--start-at and --end-at are only supported with --finished")
+	}
+	if limit < 0 || limit > 100 {
+		return output.InvalidArgsError("--limit must be 0 (service default) or between 1 and 100")
+	}
 	settle := cmdutil.GetSettle(cmd)
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
@@ -200,6 +226,8 @@ func runFuturesTrailList(cmd *cobra.Command, args []string) error {
 	}
 	if finished {
 		opts.IsFinished = optional.NewBool(true)
+		opts.StartAt = optional.NewInt64(startAt)
+		opts.EndAt = optional.NewInt64(endAt)
 	}
 	if limit != 0 {
 		opts.PageSize = optional.NewInt32(limit)
@@ -246,6 +274,10 @@ func runFuturesTrailUpdate(cmd *cobra.Command, args []string) error {
 	amount, _ := cmd.Flags().GetString("amount")
 	activationPrice, _ := cmd.Flags().GetString("activation-price")
 	priceOffset, _ := cmd.Flags().GetString("price-offset")
+	isGte, err := cmd.Flags().GetBool("is-gte")
+	if err != nil {
+		return output.InvalidArgsError("--is-gte must be true or false")
+	}
 	settle := cmdutil.GetSettle(cmd)
 	p := cmdutil.GetPrinter(cmd)
 	c, err := cmdutil.GetClient(cmd)
@@ -257,6 +289,11 @@ func runFuturesTrailUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	req := gateapi.UpdateTrailOrder{Id: id}
+	// The SDK uses a string tri-state: empty preserves direction, whereas
+	// "false" explicitly changes it. Never use the bool value as presence.
+	if cmd.Flags().Changed("is-gte") {
+		req.IsGteStr = strconv.FormatBool(isGte)
+	}
 	if amount != "" {
 		req.Amount = amount
 	}

@@ -12,6 +12,19 @@ make test-cli-agent
 
 The suite covers normal responses, invalid inputs, missing credentials, resource isolation, dependency failures, partial results and safe output. It does not certify live account permissions, remote authorization policy or trading success. Temporary profiles and owned subprocesses are cleaned up by the test framework.
 
+## Trail parameters and account prerequisites
+
+`trail_account_parameters_test.go` uses the existing real CLI process, both HMAC
+and synthetic OAuth, the published SDK and the output/exit-code chain. Only the
+remote HTTP peer is replaced. It covers historical Unix-second windows and local
+rejection boundaries, the create/update true/false/omitted direction semantics,
+single-field updates, all output formats, business/transport failures without
+write replay, and account-precondition versus auth/permission/network errors.
+The historical `futures_confirmed_fixes_test.go` fixture supplies a valid time
+window for finished lists. These tests run through `make test-cli-e2e` and both
+standard/Agent paths in `make test-cli`; no live account or private service is
+needed, and HTTP-fixture success does not certify actual order activation.
+
 ## 跨模块协议回归
 
 `cmd/github_sync_regression_test.go` 检查完整命令树的名称/别名所有权、基础/CEX/Intel入口及退役边界，使用真实继承flag验证Intel参数合并：CLI鉴权和输出flag不透传、显式JSON保留、坏JSON拒绝。

@@ -29,6 +29,11 @@ func confirmedFuturesLeaf(t *testing.T) *cobra.Command {
 	cmd.Flags().Int32("price-type", 0, "")
 	cmd.Flags().Int32("limit", 2, "")
 	cmd.Flags().Bool("finished", false, "")
+	// Mirror Trail's optional parameters so handler tests exercise real SDK
+	// encoding without mutating the process-wide registered command tree.
+	cmd.Flags().Int64("start-at", 0, "")
+	cmd.Flags().Int64("end-at", 0, "")
+	cmd.Flags().Bool("is-gte", false, "")
 	root.AddCommand(cmd)
 	t.Setenv("GATE_API_KEY", "fixture-key")
 	t.Setenv("GATE_API_SECRET", "fixture-secret")

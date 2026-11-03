@@ -4,12 +4,26 @@ import (
 	"net/http"
 
 	"github.com/gate/gate-cli/internal/agentfeature"
+	"github.com/gate/gate-cli/internal/operations"
 )
 
 // FillAgentErrorType sets ErrorType when omitted so PrintError JSON is agent-convergable.
 func FillAgentErrorType(ge *GateError) {
 	if ge == nil || ge.ErrorType != "" {
 		return
+	}
+	// Reuse the canonical operation catalog instead of fuzzy URL/message
+	// matching. Unknown metadata keeps UNKNOWN, never a fabricated account
+	// initialization instruction. Explicit types and auth statuses still win.
+	if ge.Status == http.StatusBadRequest && ge.Label == "USER_NOT_FOUND" && ge.Request != nil && ge.Request.Method == http.MethodGet {
+		op, err := operations.Lookup(ge.Request.Method, ge.Request.URL)
+		if err == nil && op != nil {
+			switch op.OperationID {
+			case "listFuturesAccounts", "listFuturesOrders", "listDeliveryAccounts", "listDeliveryOrders":
+				ge.ErrorType = "ACCOUNT_NOT_READY"
+				return
+			}
+		}
 	}
 	ge.ErrorType = ClassifyCLIError(ge.Status, ge.Label, ge.Message)
 }
@@ -61,6 +75,8 @@ func defaultSuggestedNextAction(errorType, label string) string {
 		return "fix migrate failures (backup, provider config); do not retry migrate until resolved"
 	}
 	switch errorType {
+	case "ACCOUNT_NOT_READY":
+		return "stop retrying; verify that the product account is enabled or initialized through the official account workflow; do not change flags or transfer funds automatically"
 	case "UNSUPPORTED_OPERATION":
 		// API-order TP/SL updates remain unsupported after correcting arguments.
 		return "stop retrying; API orders do not support editing, adding or deleting TP/SL conditions; changing flags cannot enable this operation"

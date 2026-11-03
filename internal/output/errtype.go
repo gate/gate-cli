@@ -7,6 +7,17 @@ import (
 
 // ClassifyGateAPIError maps HTTP status and Gate labels to agent-facing error_type values.
 func ClassifyGateAPIError(status int, label, message string) string {
+	// USER_NOT_FOUND does not identify an empty query or a correctable flag.
+	// Only request metadata can establish which account prerequisite failed;
+	// a 5xx bearing the same label must remain a service failure.
+	if label == "USER_NOT_FOUND" {
+		if status == http.StatusBadRequest {
+			return "UNKNOWN"
+		}
+		if status >= 500 {
+			return "NETWORK_ERROR"
+		}
+	}
 	switch status {
 	case http.StatusBadRequest:
 		// This explicit capability rejection cannot be fixed by changing flags.

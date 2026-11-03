@@ -369,18 +369,27 @@ Spot `order batch-create`, `batch-amend` and `batch-cancel` preserve the SDK per
 
 Trail the market by a ratio or price distance; order triggers automatically when the market reverses.
 Creation requires an explicit `--price-type`: `1` for latest price, `2` for index price, or `3` for mark price. Returned Trail IDs and related time fields are strings.
+For a nonzero activation price, `--is-gte=true` activates when the selected reference price is greater than or equal to that price; `false` uses less than or equal. Creation defaults to `false`. Updating without this flag preserves the direction; use `--is-gte=false` explicitly to change it to the lower-price condition. An activation price above the current market is not a guarantee that the condition will wait.
+
+Historical lists require `--finished --start-at --end-at`, with positive Unix seconds and start strictly before end. Do not pass milliseconds. Time filters are rejected on active lists because the service does not apply them. `--limit` supports 1–100; omitted or 0 keeps the service default. No additional maximum time-span rule is imposed by the CLI.
 
 ```bash
 gate-cli cex futures trail create \
   --contract BTC_USDT --amount -10 --price-type 1 --price-offset '2%'   # sell order with a 2% callback
 
 gate-cli cex futures trail list
+# Query a specific historical time window in Unix seconds.
+gate-cli cex futures trail list --finished --start-at 1793534400 --end-at 1793538000 --limit 20
 gate-cli cex futures trail get    --id 789
 gate-cli cex futures trail update --id 789 --price-offset '1.5%'
+# Explicit false changes direction; omitting the flag leaves it unchanged.
+gate-cli cex futures trail update --id 789 --is-gte=false
 gate-cli cex futures trail log    --id 789                    # change history
 gate-cli cex futures trail stop   --id 789
 gate-cli cex futures trail stop-all --contract BTC_USDT
 ```
+
+When a futures/delivery account or order-list query returns `USER_NOT_FOUND`, the CLI reports `ACCOUNT_NOT_READY` with `retryable=false`, preserving the upstream reason. Check whether the product account is enabled or initialized through its official workflow; do not repeat the same request, change flags, or transfer funds automatically. A matching label on an unrecognized operation remains `UNKNOWN`; it is not an empty account result. Authentication, permission and service failures retain their own error types and exit codes.
 
 ---
 

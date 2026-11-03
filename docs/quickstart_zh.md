@@ -354,18 +354,27 @@ gate-cli cex futures price-trigger cancel --id 456
 ## 跟踪委托（合约）
 
 跟踪委托以固定比例或价格距离追踪市场，当行情反转时自动触发。
+创建必须显式提供 `--price-type`：1 最新价、2 指数价、3 标记价。激活价非零时，`--is-gte=true` 表示所选参考价大于等于激活价时激活，`false` 表示小于等于；创建默认 false。更新时不传此参数保持原方向，显式 `--is-gte=false` 才修改为向下条件。激活价高于当前行情并不保证条件尚未满足。
+
+历史查询必须同时提供 `--finished --start-at --end-at`，时间为正整数 Unix 秒且开始早于结束，不能传毫秒。活动列表不接受时间过滤，避免产生筛选已生效的误解。`--limit` 为 1–100，省略或 0 沿用服务端默认值；CLI 不额外规定最大时间跨度。
 
 ```bash
 gate-cli cex futures trail create \
-  --contract BTC_USDT --amount -10 --price-offset '2%'   # 卖出委托，回调幅度 2%
+  --contract BTC_USDT --amount -10 --price-type 1 --price-offset '2%'   # 卖出委托，回调幅度 2%
 
 gate-cli cex futures trail list
+# 按明确的 Unix 秒时间窗查询历史委托。
+gate-cli cex futures trail list --finished --start-at 1793534400 --end-at 1793538000 --limit 20
 gate-cli cex futures trail get    --id 789
 gate-cli cex futures trail update --id 789 --price-offset '1.5%'
+# 显式 false 修改方向；不传该参数则保持原方向。
+gate-cli cex futures trail update --id 789 --is-gte=false
 gate-cli cex futures trail log    --id 789                    # 变更记录
 gate-cli cex futures trail stop   --id 789
 gate-cli cex futures trail stop-all --contract BTC_USDT
 ```
+
+合约/交割账户和订单列表查询返回 `USER_NOT_FOUND` 时，CLI 输出 `ACCOUNT_NOT_READY`、`retryable=false` 并保留后端原因。应通过官方账户流程核实业务是否开通或初始化，不要重复请求、修改 flags 或自动转账。其它不能确认前置原因的操作保留 `UNKNOWN`，不冒充空账户；认证、权限及服务故障保持各自错误类型和退出码。
 
 ---
 
