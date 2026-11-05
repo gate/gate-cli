@@ -1,5 +1,23 @@
 # Changelog
 
+## [v0.9.4] - 2026-11-05
+
+### Fixed
+
+- Bug fixes.
+
+## [v0.9.3] - 2026-11-05
+
+### Fixed
+
+- Bug fixes.
+
+## [v0.9.2] - 2026-11-05
+
+### Fixed
+
+- Bug fixes.
+
 ## [v0.9.1] - 2026-11-03
 
 ### Fixed

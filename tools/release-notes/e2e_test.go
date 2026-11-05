@@ -68,6 +68,10 @@ func TestReleaseNotesWorkflowE2E(t *testing.T) {
 		{"previous public changelog", "v0.8.0", string(readFixture(t, "../../CHANGELOG.md")), "", false},
 		{"previous minor changelog", "v0.9.0", string(readFixture(t, "../../CHANGELOG.md")), "", false},
 		{"current public changelog", "v0.9.1", string(readFixture(t, "../../CHANGELOG.md")), "", false},
+		// The three patch tags must each publish only the approved generic note.
+		{"patch changelog v0.9.2", "v0.9.2", string(readFixture(t, "../../CHANGELOG.md")), "### Fixed\n\n- Bug fixes.\n", false},
+		{"patch changelog v0.9.3", "v0.9.3", string(readFixture(t, "../../CHANGELOG.md")), "### Fixed\n\n- Bug fixes.\n", false},
+		{"patch changelog v0.9.4", "v0.9.4", string(readFixture(t, "../../CHANGELOG.md")), "### Fixed\n\n- Bug fixes.\n", false},
 		{"missing version", "v1.2.3", "## [v1.2.30]\n- wrong version\n", "", true},
 		{"empty version", "v1.2.3", "## [v1.2.3]\n\n## [v1.2.2]\n- older\n", "", true},
 		{"duplicate version", "v1.2.3", "## [v1.2.3]\n- first\n## [1.2.3]\n- second\n", "", true},
