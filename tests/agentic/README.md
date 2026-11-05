@@ -69,3 +69,19 @@ go test -tags agentic_e2e,agent ./tests/agentic -run '^TestGitHubSync' -count=1
 ```sh
 make test-cli
 ```
+
+## Verify an official release artifact
+
+To test a downloaded standard release instead of building the source executable,
+verify its official checksum and provenance, then pass its absolute path explicitly:
+
+```sh
+# Remote API peers and credentials are synthetic; the selected executable is real.
+go test -tags agentic_e2e ./tests/agentic -run 'TestWithdrawalRetirement|TestReleaseVersionCLI' -args -published-cli-binary /absolute/path/to/verified/gate-cli
+```
+
+The explicit mode does not build, replace or delete that artifact. A missing,
+relative, non-file or non-executable path fails instead of falling back to a source
+build. It rejects an Agent-tagged harness because an official standard binary
+cannot verify an Agent build. Existing unit, HTTP contract and failure suites can
+be selected with the same flag; positive transfer cases use only loopback fixtures.

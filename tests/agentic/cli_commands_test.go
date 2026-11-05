@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"github.com/gate/gate-cli/internal/agentfeature"
 	"io"
@@ -24,12 +25,28 @@ import (
 
 var cliBinary string
 
+// Explicit opt-in keeps release-artifact verification separate from source builds.
+var publishedCLI = flag.String("published-cli-binary", "", "Absolute path to a trusted, checksum-verified standard CLI release binary")
+
 // Reuse the exact toolchain selected for TestMain's CLI build. Test fixtures
 // must not resolve a different Go from PATH (the OAuth issuer owns that PATH).
 var cliBuildGo string
 
-// TestMain 构建真正的CLI子进程；构建失败必须失败，不能跳过端到端验证。
+// TestMain builds the real CLI by default, or explicitly selects a verified release artifact.
 func TestMain(m *testing.M) {
+	flag.Parse()
+	//nolint:staticcheck // Fixtures stay local and must use the outer test toolchain, even when OAuth tests replace PATH.
+	cliBuildGo = filepath.Join(runtime.GOROOT(), "bin", "go")
+	if *publishedCLI != "" {
+		var err error
+		cliBinary, err = publishedBinaryPath(*publishedCLI, agentfeature.Commands)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		fmt.Fprintf(os.Stderr, "published CLI under test: %s (source build disabled)\n", cliBinary)
+		os.Exit(m.Run())
+	}
 	dir, err := os.MkdirTemp("", "gate-agentic-e2e-")
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
