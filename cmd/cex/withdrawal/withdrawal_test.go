@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// The remaining UID transfer keeps its exact command path and required inputs.
 func TestWithdrawalCommandStructure(t *testing.T) {
 	assert.Equal(t, "withdrawal", Cmd.Use)
 	assert.NotEmpty(t, Cmd.Short)
@@ -17,9 +18,8 @@ func TestWithdrawalCommandStructure(t *testing.T) {
 		subs[c.Use] = true
 	}
 
-	for _, name := range []string{"create", "push-order", "cancel"} {
-		assert.True(t, subs[name], "missing sub-command: %s", name)
-	}
+	assert.Len(t, subs, 1)
+	assert.True(t, subs["push-order"], "missing UID transfer command")
 }
 
 func TestWithdrawalRequiredFlags(t *testing.T) {
@@ -27,13 +27,9 @@ func TestWithdrawalRequiredFlags(t *testing.T) {
 		cmdName string
 		flag    string
 	}{
-		{"create", "currency"},
-		{"create", "amount"},
-		{"create", "address"},
 		{"push-order", "receive-uid"},
 		{"push-order", "currency"},
 		{"push-order", "amount"},
-		{"cancel", "id"},
 	}
 
 	for _, tt := range tests {

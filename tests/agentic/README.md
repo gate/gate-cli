@@ -12,6 +12,22 @@ make test-cli-agent
 
 The suite covers normal responses, invalid inputs, missing credentials, resource isolation, dependency failures, partial results and safe output. It does not certify live account permissions, remote authorization policy or trading success. Temporary profiles and owned subprocesses are cleaned up by the test framework.
 
+## Withdrawal command removal
+
+`withdrawal_retirement_test.go` runs the real CLI with isolated profiles and
+synthetic anonymous/HMAC/OAuth/combined credentials. Cached withdrawal creation
+and cancellation paths, complete old arguments, missing arguments, unknown flags,
+direct help and `help` paths must fail without an API call. Help and completion
+must retain UID transfers and omit the removed leaves. Only the remote peer and
+credentials are replaced; parsing, discovery, exit codes and process execution
+remain real.
+
+The shared command and HTTP fixtures remove only these two positive contracts.
+`TestAllCEXCommandContracts`, input/dependency-failure cases and the existing
+handler unit suite continue to exercise UID transfers, withdrawal queries and
+all other retained operations. `make test-cli` runs both standard and Agent
+variants through the existing unified entry point.
+
 ## Trail parameters and account prerequisites
 
 `trail_account_parameters_test.go` uses the existing real CLI process, both HMAC

@@ -7710,52 +7710,6 @@
     ]
   },
   {
-    "path": "cex withdrawal cancel",
-    "use": "cancel",
-    "flags": [
-      {
-        "name": "id",
-        "type": "string",
-        "default": "",
-        "required": true
-      }
-    ]
-  },
-  {
-    "path": "cex withdrawal create",
-    "use": "create",
-    "flags": [
-      {
-        "name": "address",
-        "type": "string",
-        "default": "",
-        "required": true
-      },
-      {
-        "name": "amount",
-        "type": "string",
-        "default": "",
-        "required": true
-      },
-      {
-        "name": "chain",
-        "type": "string",
-        "default": ""
-      },
-      {
-        "name": "currency",
-        "type": "string",
-        "default": "",
-        "required": true
-      },
-      {
-        "name": "memo",
-        "type": "string",
-        "default": ""
-      }
-    ]
-  },
-  {
     "path": "cex withdrawal push-order",
     "use": "push-order",
     "flags": [

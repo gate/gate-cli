@@ -52,9 +52,9 @@ API keys and secrets for **trading** are stored per profile (for example `gate-c
 - **Multi-Collateral Loan** — multi-collateral borrowing, repayment, collateral management
 
 ### Account & Wallet
-- **Wallet** — balances, deposits, withdrawals, transfers (main/sub/cross-chain), small balance conversion
+- **Wallet** — balances, deposits, withdrawal records/status, transfers (main/sub/cross-chain), small balance conversion
 - **Account** — account detail, rate limits, STP groups, debit fee settings
-- **Withdrawal** — create withdrawal, push order (UID transfer), cancel
+- **UID transfer** — push order between main spot accounts
 
 ### Ecosystem
 - **Rebate** — partner/broker/agency commissions and transaction history
@@ -284,7 +284,7 @@ gate-cli news prediction get-market-orderbook --venue polymarket --market-id 123
 | mcl | `gate-cli cex mcl` | Multi-collateral loans |
 | wallet | `gate-cli cex wallet` | Wallet & transfers |
 | account | `gate-cli cex account` | Account details & settings |
-| withdrawal | `gate-cli cex withdrawal` | Withdrawals |
+| withdrawal | `gate-cli cex withdrawal` | UID transfers |
 | alpha | `gate-cli cex alpha` | Alpha token trading |
 | tradfi | `gate-cli cex tradfi` | CFD (MT5) trading |
 | stock | `gate-cli cex stock` | Stock market, orders, positions and assets |
