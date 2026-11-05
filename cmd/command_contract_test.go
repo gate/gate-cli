@@ -35,7 +35,7 @@ func loadCommandContracts(t *testing.T) []commandContract {
 	require.NoError(t, err)
 	var cases []commandContract
 	require.NoError(t, json.Unmarshal(raw, &cases))
-	require.Len(t, cases, 409)
+	require.Len(t, cases, 408)
 	if agentfeature.Commands {
 		raw, err := os.ReadFile("../tests/agentic/fixtures/agent_command_contracts.json")
 		require.NoError(t, err)

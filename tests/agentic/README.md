@@ -16,15 +16,15 @@ The suite covers normal responses, invalid inputs, missing credentials, resource
 
 `withdrawal_retirement_test.go` runs the real CLI with isolated profiles and
 synthetic anonymous/HMAC/OAuth/combined credentials. Cached withdrawal creation
-and cancellation paths, complete old arguments, missing arguments, unknown flags,
+cancellation and UID Push paths, complete old arguments, missing arguments, unknown flags,
 direct help and `help` paths must fail without an API call. Help and completion
-must retain UID transfers and omit the removed leaves. Only the remote peer and
+must retain the wallet group and omit the retired withdrawal group. Only the remote peer and
 credentials are replaced; parsing, discovery, exit codes and process execution
 remain real.
 
-The shared command and HTTP fixtures remove only these two positive contracts.
+The shared command and HTTP fixtures remove the three retired positive contracts.
 `TestAllCEXCommandContracts`, input/dependency-failure cases and the existing
-handler unit suite continue to exercise UID transfers, withdrawal queries and
+handler unit suite continue to exercise UID transfer history, withdrawal queries and
 all other retained operations. `make test-cli` runs both standard and Agent
 variants through the existing unified entry point.
 

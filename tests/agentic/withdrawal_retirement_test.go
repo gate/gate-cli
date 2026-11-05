@@ -23,6 +23,8 @@ func TestWithdrawalRetirementProcesses(t *testing.T) {
 		for _, args := range [][]string{
 			{"create", "--currency", "USDT", "--amount", "1", "--address", "fixture-address", "--chain", "ETH", "--memo", "fixture-memo"},
 			{"cancel", "--id", "9007199254740993"},
+			{"push-order", "--receive-uid", "9007199254740993", "--currency", "USDT", "--amount", "1"},
+			{"push-order"}, {"push-order", "--help"}, {"push-order", "--unknown"},
 			{"create"}, {"cancel"}, {"create", "--help"}, {"cancel", "--help"},
 			{"create", "--unknown"}, {"cancel", "--unknown"},
 		} {
@@ -43,22 +45,22 @@ func TestWithdrawalRetirementProcesses(t *testing.T) {
 // Removing the implementation must also remove discovery and cached help paths;
 // otherwise an agent can keep selecting a capability the product no longer has.
 func TestWithdrawalRetirementDiscovery(t *testing.T) {
-	for _, args := range [][]string{{"cex", "withdrawal", "--help"}, {"__complete", "cex", "withdrawal", ""}} {
+	for _, args := range [][]string{{"cex", "--help"}, {"__complete", "cex", ""}} {
 		out, stderr, err := runCLI(t, "http://127.0.0.1:1", false, args...)
 		if err != nil {
-			t.Fatalf("retained transfer discovery failed: %v %s", err, stderr)
+			t.Fatalf("retained CEX discovery failed: %v %s", err, stderr)
 		}
-		if !strings.Contains(string(out), "push-order") {
-			t.Fatalf("discovery lost the retained UID transfer: %s", out)
+		if !strings.Contains(string(out), "wallet") {
+			t.Fatalf("discovery lost retained wallet commands: %s", out)
 		}
 		for _, line := range strings.Split(string(out), "\n") {
 			fields := strings.Fields(line)
-			if len(fields) > 0 && (fields[0] == "create" || fields[0] == "cancel") {
+			if len(fields) > 0 && (fields[0] == "withdrawal" || fields[0] == "push-order") {
 				t.Errorf("discovery advertises a removed withdrawal: %s", line)
 			}
 		}
 	}
-	for _, leaf := range []string{"create", "cancel"} {
+	for _, leaf := range []string{"create", "cancel", "push-order"} {
 		_, stderr, err := runCLI(t, "http://127.0.0.1:1", false, "help", "cex", "withdrawal", leaf)
 		if err == nil || !strings.Contains(string(stderr), "unknown") {
 			t.Errorf("cached help accepted removed leaf %s: %v %s", leaf, err, stderr)

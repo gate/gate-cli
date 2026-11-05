@@ -24,7 +24,6 @@ import (
 	"github.com/gate/gate-cli/cmd/cex/tradfi"
 	"github.com/gate/gate-cli/cmd/cex/unified"
 	"github.com/gate/gate-cli/cmd/cex/wallet"
-	"github.com/gate/gate-cli/cmd/cex/withdrawal"
 )
 
 // Cmd is the parent command for CEX API command groups (spot, futures, wallet, …).
@@ -58,7 +57,6 @@ func init() {
 	// CrossEx, P2P, activity, coupon and welfare implementations are retained,
 	// but are not published in this release. The API transport also denies them.
 	Cmd.AddCommand(rebate.Cmd)
-	Cmd.AddCommand(withdrawal.Cmd)
 	Cmd.AddCommand(square.Cmd)
 	Cmd.AddCommand(assetswap.Cmd)
 	Cmd.AddCommand(bot.Cmd)

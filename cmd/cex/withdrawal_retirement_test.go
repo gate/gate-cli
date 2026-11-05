@@ -5,7 +5,7 @@ import "testing"
 // Cached command paths must no longer resolve to financial handlers. Retained
 // wallet reads guard against removing their parent groups with the write leaves.
 func TestWithdrawalRetirementRegistration(t *testing.T) {
-	for _, leaf := range []string{"create", "cancel"} {
+	for _, leaf := range []string{"create", "cancel", "push-order"} {
 		command, rest, err := Cmd.Find([]string{"withdrawal", leaf})
 		if err == nil && len(rest) == 0 && command.Runnable() {
 			t.Errorf("removed withdrawal leaf still registered: %s", leaf)
@@ -13,6 +13,7 @@ func TestWithdrawalRetirementRegistration(t *testing.T) {
 	}
 	for _, path := range [][]string{
 		{"wallet", "deposit", "withdrawals"},
+		{"wallet", "deposit", "push-orders"},
 		{"wallet", "market", "withdraw-status"},
 		{"wallet", "deposit", "address"},
 		{"wallet", "transfer", "create"},

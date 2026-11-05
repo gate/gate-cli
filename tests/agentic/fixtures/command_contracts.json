@@ -7710,30 +7710,6 @@
     ]
   },
   {
-    "path": "cex withdrawal push-order",
-    "use": "push-order",
-    "flags": [
-      {
-        "name": "amount",
-        "type": "string",
-        "default": "",
-        "required": true
-      },
-      {
-        "name": "currency",
-        "type": "string",
-        "default": "",
-        "required": true
-      },
-      {
-        "name": "receive-uid",
-        "type": "int64",
-        "default": "0",
-        "required": true
-      }
-    ]
-  },
-  {
     "path": "config check",
     "use": "check",
     "flags": []

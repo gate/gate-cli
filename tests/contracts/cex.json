@@ -25121,42 +25121,5 @@
     "void": false,
     "anonymous": false,
     "want_pretty": "┌───────┐\n│ TX ID │\n├───────┤\n│ 7     │\n└───────┘\n"
-  },
-  {
-    "name": "cex withdrawal push-order",
-    "operation": "WithdrawPushOrder",
-    "public": false,
-    "args": [
-      "cex",
-      "withdrawal",
-      "push-order",
-      "--amount",
-      "2.00000001",
-      "--currency",
-      "USDT",
-      "--receive-uid",
-      "1"
-    ],
-    "exchanges": [
-      {
-        "method": "POST",
-        "path": "/api/v4/withdrawals/push",
-        "query": "",
-        "body": {
-          "receive_uid": 1,
-          "currency": "USDT",
-          "amount": "2.00000001"
-        },
-        "reply": {
-          "id": "9007199254740993"
-        }
-      }
-    ],
-    "want": {
-      "id": "9007199254740993"
-    },
-    "void": false,
-    "anonymous": false,
-    "want_pretty": "┌──────────────────┐\n│     Order ID     │\n├──────────────────┤\n│ 9007199254740993 │\n└──────────────────┘\n"
   }
 ]

@@ -54,8 +54,8 @@ func Cases(t testing.TB) []Case {
 	if err := json.Unmarshal(cexJSON, &cases); err != nil {
 		t.Fatal(err)
 	}
-	if len(cases) != 397 {
-		t.Fatalf("business contracts=%d, want 397", len(cases))
+	if len(cases) != 396 {
+		t.Fatalf("business contracts=%d, want 396", len(cases))
 	}
 	return cases
 }

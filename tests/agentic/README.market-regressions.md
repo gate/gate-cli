@@ -56,7 +56,7 @@ GOMAXPROCS=2 go test -p 2 -tags 'agentic_e2e integration' ./tests/agentic -run '
 
 ## 全命令组未知子路径
 
-command_groups_test.go复用真实TestMain/runCLI，以独立fixtures/command_groups.json覆盖101个可见组（含root/default completion、84个CEX子组、config/Info/News）。每组覆盖json/pretty/table下未知子命令exit1、stdout空和明确unknown command，以及裸组正确帮助exit0；API peer计数必须为0。另覆盖未注册的组内help、help=false、flag值/分隔符、根级help、alias、动态补全和真实配置叶子位置参数落盘。cmd/command_groups_test.go将真实命令树与fixture比较，未来增删组须同步审查契约。
+command_groups_test.go复用真实TestMain/runCLI，以独立fixtures/command_groups.json覆盖100个可见组（含root/default completion、83个CEX子组、config/Info/News）。每组覆盖json/pretty/table下未知子命令exit1、stdout空和明确unknown command，以及裸组正确帮助exit0；API peer计数必须为0。另覆盖未注册的组内help、help=false、flag值/分隔符、根级help、alias、动态补全和真实配置叶子位置参数落盘。cmd/command_groups_test.go将真实命令树与fixture比较，未来增删组须同步审查契约。
 
 ```sh
 # 统一路由、格式、真实全树清单及既有帮助边界单元。

@@ -37,8 +37,8 @@ func publicCommandContracts(t *testing.T) []publicCommandContract {
 	if err := json.Unmarshal(raw, &cases); err != nil {
 		t.Fatal(err)
 	}
-	if len(cases) != 409 {
-		t.Fatalf("public command contracts=%d, want 409", len(cases))
+	if len(cases) != 408 {
+		t.Fatalf("public command contracts=%d, want 408", len(cases))
 	}
 	if agentfeature.Commands {
 		raw, err := os.ReadFile("fixtures/agent_command_contracts.json")

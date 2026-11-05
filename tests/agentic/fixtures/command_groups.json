@@ -84,7 +84,6 @@
   ["cex", "wallet", "deposit"],
   ["cex", "wallet", "market"],
   ["cex", "wallet", "transfer"],
-  ["cex", "withdrawal"],
   ["completion"],
   ["config"],
   ["info"],

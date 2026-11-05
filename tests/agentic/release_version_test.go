@@ -23,13 +23,13 @@ func TestReleaseVersionCLI(t *testing.T) {
 	t.Run("legacy", func(t *testing.T) {
 		out, stderr, err := runCLI(t, peer.URL, false, "version")
 		// Preserve Cobra's historical legacy stderr stream, even for a success.
-		if err != nil || len(out) != 0 || string(stderr) != "gate-cli version v0.9.2\n" {
+		if err != nil || len(out) != 0 || string(stderr) != "gate-cli version v0.9.3\n" {
 			t.Fatalf("legacy version: %v stdout=%s stderr=%s", err, out, stderr)
 		}
 	})
 	t.Run("root version flag", func(t *testing.T) {
 		out, stderr, err := runCLI(t, peer.URL, false, "--version")
-		if err != nil || len(stderr) != 0 || string(out) != "gate-cli version v0.9.2\n" {
+		if err != nil || len(stderr) != 0 || string(out) != "gate-cli version v0.9.3\n" {
 			t.Fatalf("root version: %v stdout=%s stderr=%s", err, out, stderr)
 		}
 	})
@@ -40,7 +40,7 @@ func TestReleaseVersionCLI(t *testing.T) {
 				Version string `json:"version"`
 				Schema  int    `json:"schema_version"`
 			}
-			if err != nil || len(stderr) != 0 || json.Unmarshal(out, &details) != nil || details.Version != "v0.9.2" || details.Schema != 1 {
+			if err != nil || len(stderr) != 0 || json.Unmarshal(out, &details) != nil || details.Version != "v0.9.3" || details.Schema != 1 {
 				t.Fatalf("details: %v stdout=%s stderr=%s", err, out, stderr)
 			}
 		})
